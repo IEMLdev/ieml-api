@@ -1,16 +1,16 @@
 from pymongo import MongoClient
-from .constants import DB_ADDRESS
+from .constants import DB_ADDRESS, DB_NAME
 
 class DBConnector(object):
     """Automatically connects when instantiated"""
 
     def __init__(self):
         self.client = MongoClient(DB_ADDRESS) # connecting to the db
-        self.db = self.client['polldata'] # opening a DB
+        self.db = self.client[DB_NAME] # opening a DB
 
 
     def pipeline_example(self, round_number):
-        """Données pour toute la france"""
+        """Mongodb pipeline example"""
 
         example_pipeline = [
             {"$group" : { "_id" : 1,
