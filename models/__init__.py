@@ -1,2 +1,1 @@
-from .base_queries import ListesQueries
-from .constants import RoundNumber
+from .base_queries import DictionnaryQueries
