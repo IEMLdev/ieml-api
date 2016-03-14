@@ -2,6 +2,8 @@ from flask_restful import Resource, reqparse
 from models import DictionnaryQueries
 
 class BaseHandler(Resource):
+    """This is the base abstract handler, instantiates a request parser,
+    and simplifies a couple of operations"""
 
     def __init__(self):
             """The constructor for this abstract class just creates a request_parser"""
@@ -17,6 +19,7 @@ class BaseHandler(Resource):
 
 
 class SearchTermsHandler(BaseHandler):
+    """Handles the terms search"""
 
     def post(self):
         self.reqparse.add_argument("searchstring", required=True, type=str)

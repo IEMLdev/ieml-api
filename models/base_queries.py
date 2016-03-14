@@ -13,6 +13,7 @@ class DBConnector(object):
 
 
 class DictionnaryQueries(DBConnector):
+    """Class mainly used for anything related to the terms collection, i.e., the dictionnary"""
 
     def search_for_terms(self, search_string):
         """Searching for terms containing the search_string, both in the IEML field and translated field"""
