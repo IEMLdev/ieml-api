@@ -25,3 +25,10 @@ class SearchTermsHandler(BaseHandler):
         self.reqparse.add_argument("searchstring", required=True, type=str)
         self.do_request_parsing()
         return DictionnaryQueries().search_for_terms(self.args["searchstring"])
+
+class GraphValidatorHandler(BaseHandler):
+    """Verifies if a give graph reprensentinf a proposition is well formated, and if it is,
+    returns the corresponding IEML string"""
+
+    def post(self):
+        pass
