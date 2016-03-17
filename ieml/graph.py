@@ -45,6 +45,7 @@ class Node(AbstractNode):
         return node in self.connected_to
 
 
+
 class Graph:
     """Stores a representation of the graph described in the visual web interface"""
 
@@ -72,7 +73,7 @@ class Graph:
         self.graph_nodes_set.add(self.nodes_table[attr_id])
 
     def _build_graph_nodes_list(self):
-        """Converts the grpah nodes set to a list so it's indexable"""
+        """Converts the graph nodes set to a list so it's indexable"""
         self.graph_nodes_list = list(self.graph_nodes_set)
 
     def _build_adjacency_matrix(self):
@@ -82,3 +83,40 @@ class Graph:
         for (x,y), cell in np.ndenumerate(self.adjacency_matrix):
             # A cell is true if node x -> node y, else it's false
             self.adjacency_matrix[x][y] = self.graph_nodes_list[x].is_connected_to(self.graph_nodes_list[y])
+
+    def check_graph(self, graph_checker):
+        pass
+
+
+class InvalidPropositionGraph(Exception):
+    pass
+
+class NoRootNodeFound(InvalidPropositionGraph):
+    pass
+
+class SeveralRootNodeFound(InvalidPropositionGraph):
+    pass
+
+class RegularGraphChecker:
+    """Takes care of checking if a graph describing an IEMl proposition respects the IEML structura
+    rules """
+
+    def __init__(self, adjacency_matrix):
+        self.adjacency_matrix = adjacency_matrix
+        self.node_count = self.adjacency_matrix.shape[0]
+
+
+    def _check_has_unique_root(self):
+        """Using the adjacency matrix, checks that the graph has a unique root"""
+        prod = np.dot(self.adjacency_matrix.transpose(), np.zeros(self.node_count, dtype=bool))
+        #checking the "root count"
+        root_count = np.dot(prod.astype(dtype=int), prod.astype(dtype=int))
+        if root_count == 0: # only one root
+            raise NoRootNodeFound()
+        elif root_count > 1:# more than one root
+            raise SeveralRootNodeFound()
+
+    def _check_only_one_parent(self):
+        pass
+
+
