@@ -20,8 +20,8 @@ class DictionnaryQueries(DBConnector):
 
         result = [{"term_id" : str(term["_id"]),
                    "ieml" : term["IEML"],
-                   "natural_language" : {"FR" : term["FR"],
-                                         "EN" : term["EN"]}}
+                   "natural_language" : {"FR" : term.get("FR"),
+                                         "EN" : term.get("EN")}}
                   for term in self.terms.find({"$text" : {"$search" : search_string}},
                                               {"IEML" : 1, "FR" : 1, "EN" : 1})]
         return result
