@@ -44,9 +44,24 @@ class Node(AbstractNode):
     def is_connected_to(self, node):
         return node in self.connected_to
 
+class GenericGraph:
+
+    def _render_ieml_sum(self, ):
+        """Simple helper function that returns the IEML string for a sum of string"""
+        return
+
+    def _generate_ieml_string(self):
+        """Generates the IEML string for the graph"""
+        pass
+
+    def validate(self, graph_checker, graph_renderer):
+        """Verifies that the graph conforms to the IEML specifications and returns the
+        corresponding IEML string if it's the case"""
+        pass
 
 
-class Graph:
+
+class PropositionGraph(GenericGraph):
     """Stores a representation of the graph described in the visual web interface"""
 
     def __init__(self, nodes_table):
@@ -84,7 +99,57 @@ class Graph:
             # A cell is true if node x -> node y, else it's false
             self.adjacency_matrix[x][y] = self.graph_nodes_list[x].is_connected_to(self.graph_nodes_list[y])
 
-    def check_graph(self, graph_checker):
+    def _generate_ieml_string(self):
+        """Generates the IEML string for the graph"""
         pass
+
+
+    def validate(self, proposition_graph_checker, proposition_graph_renderer):
+        pass
+
+
+class SentenceGraph(PropositionGraph):
+
+    def generate_ieml_string(self):
+        pass
+
+class SuperSentenceGraph(PropositionGraph):
+    pass
+
+class WordsGraph:
+    """Graph reprensenting a word. Since the graph reprensenting a word doesn't have anything to do with the graph used for
+    sentences and super-sentences, it doesn' inherit the Graph Class"""
+
+    def __init__(self, nodes_table, subst_list, attr_list):
+        self.nodes_table = {}
+        # there aren't any nullnodes here
+        for node in nodes_table:
+            self.nodes_table[node["id"]] = Node(nodes_table["id"], node["ieml_string"])
+
+        self.subst_list = [self.nodes_table[node_id] for node_id in subst_list]
+        self.attr_list = [self.nodes_table[node_id] for node_id in attr_list]
+
+    def _generate_ieml_string(self, graph_renderer):
+        """Returns the corresponding IEML string"""
+
+        subst_sum_string = graph_renderer.render_sum([node.ieml for node in self.subst_list])
+        if not self.attr_list:
+            return graph_renderer.wrap_with_brackets(
+                graph_renderer.wrap_with_parenthesis(
+                    subst_sum_string
+                )
+            )
+        else:
+            attr_sum_string = graph_renderer.render_sum([node.ieml for node in self.attr_list])
+
+            return graph_renderer.wrap_with_brackets(
+                graph_renderer.render_product(
+                    subst_sum_string, attr_sum_string
+                )
+            )
+
+    def validate(self, word_graph_checker, word_graph_renderer):
+        word_graph_checker().check(self)
+        return self._generate_ieml_string(word_graph_renderer)
 
 

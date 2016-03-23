@@ -25,8 +25,8 @@ class BasicGraphChecker:
     """Takes care of checking if a graph describing an IEMl proposition respects the IEML structura
     rules """
 
-    def __init__(self, adjacency_matrix):
-        self.adjacency_matrix = adjacency_matrix
+    def __init__(self, graph):
+        self.adjacency_matrix = graph.adjacency_matrix
         self.node_count = self.adjacency_matrix.shape[0]
         self.ones_bool = np.full(self.node_count, True, dtype=bool)
         self.ones_int = np.full(self.node_count, 1,  dtype=int)
@@ -49,8 +49,8 @@ class BasicGraphChecker:
                     self.root_node_index = index
 
     def _check_only_one_parent(self):
-        """checks that each element of the graph only has one parent. This check depends on the
-        root_node check """
+        """checks that each element of the graph only has one parent (making the graph a tree).
+        This check depends on the root_node check """
         # getting the "incoming" vertices count for each node in an array
         incoming_connection_count = np.dot(self.adjacency_matrix.astype(dtype=int), self.ones_int)
 
@@ -63,11 +63,6 @@ class BasicGraphChecker:
                     raise NodeHasNoParent(index)
 
 
-class WordGraphChecker(BasicGraphChecker):
-    """Adds a couple of verifications that are special to words"""
-    pass
-
-
 class PhraseGraphChecker(BasicGraphChecker):
     """Adds a couple of verifications that are special to phrases"""
     pass
@@ -76,3 +71,41 @@ class PhraseGraphChecker(BasicGraphChecker):
 class SuperPhraseChecker(BasicGraphChecker):
     """Adds a couple of verifications that are special to super-phrase"""
     pass
+
+class InvalidWord(InvalidPropositionGraph):
+    pass
+
+class NotDistinctTermsExist(InvalidWord):
+    pass
+
+class EmptyWordSubstance(InvalidPropositionGraph):
+    pass
+
+class WordGraphChecker:
+    """Checks the validity of a word's graph. Has nothing do to with the other regular graph checker"""
+
+    def __init__(self, graph):
+        self.subst_nodes = graph.subst_list
+        self.attr_nodes = graph.attr_list
+
+    def _check_morpheme(self, nodes_list):
+        """checks the elements of a morpheme, namely, :
+        - all distinct
+        - not intersecting
+        - well ordered"""
+        # TODO : ordering and intersection
+
+        #basically just checking for distinct terms
+        if len(nodes_list) != len(set([node.id for node in nodes_list])):
+            raise NotDistinctTermsExist()
+
+    def check(self, word_graph):
+        """Checks that the WordGraph conforms to the rules defined for both words and morphemes"""
+        # for now, basically just checks that the Substance isn't empty and that all terms are distinct
+
+        if not word_graph.subst_list:
+            raise EmptyWordSubstance()
+
+        self._check_morpheme(self.subst_nodes)
+        self._check_morpheme(self.attr_nodes)
+
