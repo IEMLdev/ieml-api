@@ -1,23 +1,12 @@
 from ieml import Parser
 import logging
 
-logging.getLogger().setLevel(logging.DEBUG)
+logging.getLogger().setLevel(logging.INFO)
 
 data = "[([a.i.-] + [i.i.-]) * ([E:A:T:.]+[E:S:.wa.-]+[E:S:.o.-])]"
 test_parser = Parser()
 
-with open("data/example_word.txt") as example:
-    test_parser.parse(example.read())
-    print(test_parser.root)
-
-with open("data/example_clause.txt") as example:
-    test_parser.parse(example.read())
-    print(test_parser.root)
-
-with open("data/example_sentence.txt") as example:
-    root = test_parser.parse(example.read())
-    print(root)
-
-with open("data/example_supersentence.txt") as example:
-    root = test_parser.parse(example.read())
-    print(root)
+for filename in ["word", "clause", "sentence", "supersentence"]:
+    with open("data/example_%s.txt" % filename) as example:
+        root = test_parser.parse(example.read())
+        print(root)
