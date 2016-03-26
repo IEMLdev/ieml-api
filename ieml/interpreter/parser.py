@@ -1,7 +1,8 @@
 import ply.yacc as yacc
-import os
-from .lexer import tokens
+import ply.lex as lex
 from ..AST import *
+from .lexer import get_lexer, tokens
+import logging
 
 class Parser:
     """
@@ -9,22 +10,11 @@ class Parser:
     """
     tokens = tokens
 
-    def __init__(self, **kw):
-        self.debug = kw.get('debug', 0)
-        self.names = { }
-        try:
-            modname = os.path.split(os.path.splitext(__file__)[0])[1] + "_" + self.__class__.__name__
-        except:
-            modname = "parser"+"_"+self.__class__.__name__
-        self.debugfile = modname + ".dbg"
-        self.tabmodule = modname + "_" + "parsetab"
-        #print self.debugfile, self.tabmodule
+    def __init__(self):
 
         # Build the lexer and parser
-        yacc.yacc(module=self,
-                  debug=self.debug,
-                  debugfile=self.debugfile,
-                  tabmodule=self.tabmodule)
+        self.lexer = get_lexer()
+        self.parser = yacc.yacc(module=self, errorlog=logging)
 
     def parse(self, s):
         yacc.parse(s)
@@ -34,11 +24,8 @@ class Parser:
     def p_ieml_proposition(self, p):
         """proposition : morpheme
                         | word
-                        | clause
-                        | sentence
-                        | superclause
-                        | supersentence"""
-        self.names[p[1]] = p[3]
+                        """
+        self.root = p[1]
 
     def p_term(self, p):
         """p_term : LBRACKET TERM RBRACKET"""
@@ -48,7 +35,7 @@ class Parser:
         """terms_sum : terms_sum PLUS p_term
                     | p_term"""
         if len(p) == 4:
-            p[0] = p[1] + p[3]
+            p[0] = p[1] + [p[3]]
         else:
             p[0] = [p[1]]
 

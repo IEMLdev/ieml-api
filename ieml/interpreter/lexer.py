@@ -1,4 +1,5 @@
 import ply.lex as lxr
+import logging
 
 tokens = (
    'TERM',
@@ -10,7 +11,7 @@ tokens = (
    'RBRACKET',
 )
 
-def get_lexer():
+def get_lexer(module=None):
     t_TERM = r'[a-zA-Z\.\-\;\:\,\']+'
     t_PLUS   = r'\+'
     t_TIMES   = r'\*'
@@ -26,7 +27,7 @@ def get_lexer():
         print("Illegal character '%s'" % t.value[0])
         t.lexer.skip(1)
 
-    return lxr.lex()
+    return lxr.lex(module=module, errorlog=logging)
 
 
 if __name__ == "__main__":
