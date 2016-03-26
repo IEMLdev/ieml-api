@@ -12,7 +12,7 @@ tokens = (
 )
 
 def get_lexer(module=None):
-    t_TERM = r'[a-zA-Z\.\-\;\:\,\']+'
+    t_TERM = r'[a-zA-Z\.\-\;\:\,\'\’\_]+'
     t_PLUS   = r'\+'
     t_TIMES   = r'\*'
     t_LPAREN  = r'\('
@@ -20,7 +20,7 @@ def get_lexer(module=None):
     t_LBRACKET = r'\['
     t_RBRACKET  = r'\]'
 
-    t_ignore  = ' \t'
+    t_ignore  = ' \t\n'
 
     # Error handling rule
     def t_error(t):

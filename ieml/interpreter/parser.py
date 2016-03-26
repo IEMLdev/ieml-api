@@ -17,23 +17,30 @@ class Parser:
         self.parser = yacc.yacc(module=self, errorlog=logging)
 
     def parse(self, s):
+        """Parses the input string, and returns a reference to the created AST's root"""
         yacc.parse(s)
+        return self.root
 
     # Parsing rules
 
     def p_ieml_proposition(self, p):
         """proposition : morpheme
                         | word
-                        """
+                        | clause
+                        | sentence"""
         self.root = p[1]
 
     def p_term(self, p):
         """p_term : LBRACKET TERM RBRACKET"""
         p[0] = Term(p[2])
 
-    def p_terms_sum(self, p):
+    def p_proposition_sum(self, p):
         """terms_sum : terms_sum PLUS p_term
-                    | p_term"""
+                    | p_term
+            clauses_sum : clauses_sum PLUS clause
+                    | clause
+            superclauses_sum : superclauses_sum PLUS superclause
+                    | superclause"""
         if len(p) == 4:
             p[0] = p[1] + [p[3]]
         else:
@@ -50,6 +57,22 @@ class Parser:
             p[0] = Word(p[2])
         else:
             p[0] = Word(p[2], p[4])
+
+    def p_clause(self, p):
+        """clause : LPAREN word TIMES word TIMES word RPAREN"""
+        p[0] = Clause(p[2], p[4], p[6])
+
+    def p_sentence(self, p):
+        """sentence : LBRACKET clauses_sum RBRACKET"""
+        p[0] = Sentence(p[2])
+
+    def p_superclause(self, p):
+        """superclause : LPAREN sentence TIMES sentence TIMES sentence RPAREN"""
+        p[0] = SuperClause(p[2], p[4], p[6])
+
+    def p_super_sentence(self, p):
+        """sentence : LBRACKET superclauses_sum RBRACKET"""
+        p[0] = SuperSentence(p[2])
 
     def p_error(self, p):
         if p:
