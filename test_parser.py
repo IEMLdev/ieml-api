@@ -3,7 +3,6 @@ import logging
 
 logging.getLogger().setLevel(logging.INFO)
 
-data = "[([a.i.-] + [i.i.-]) * ([E:A:T:.]+[E:S:.wa.-]+[E:S:.o.-])]"
 test_parser = Parser()
 
 for filename in ["word", "clause", "sentence", "supersentence"]:

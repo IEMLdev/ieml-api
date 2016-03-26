@@ -79,7 +79,3 @@ class Parser:
             print("Syntax error at '%s'" % p.value)
         else:
             print("Syntax error at EOF")
-
-if __name__ == '__main__':
-    calc = Parser()
-    calc.parse()

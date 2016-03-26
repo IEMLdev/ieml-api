@@ -1,25 +1,8 @@
 import numpy as np
 
-class InvalidPropositionGraph(Exception):
-    pass
+from ieml.exceptions import IndistintiveTermsExist, EmptyWordSubstance, NoRootNodeFound, SeveralRootNodeFound, \
+    NodeHasNoParent, NodeHasTooMuchParents
 
-class NoRootNodeFound(InvalidPropositionGraph):
-    pass
-
-class SeveralRootNodeFound(InvalidPropositionGraph):
-    pass
-
-class InvalidSingleNode(InvalidPropositionGraph):
-
-    def __init__(self, node_id):
-        super().__init__()
-        self.node_id = node_id
-
-class NodeHasNoParent(InvalidSingleNode):
-    pass
-
-class NodeHasTooMuchParents(InvalidSingleNode):
-    pass
 
 class BasicGraphChecker:
     """Takes care of checking if a graph describing an IEMl proposition respects the IEML structura
@@ -72,14 +55,6 @@ class SuperPhraseChecker(BasicGraphChecker):
     """Adds a couple of verifications that are special to super-phrase"""
     pass
 
-class InvalidWord(InvalidPropositionGraph):
-    pass
-
-class NotDistinctTermsExist(InvalidWord):
-    pass
-
-class EmptyWordSubstance(InvalidPropositionGraph):
-    pass
 
 class WordGraphChecker:
     """Checks the validity of a word's graph. Has nothing do to with the other regular graph checker"""
@@ -97,7 +72,7 @@ class WordGraphChecker:
 
         #basically just checking for distinct terms
         if len(nodes_list) != len(set([node.id for node in nodes_list])):
-            raise NotDistinctTermsExist()
+            raise IndistintiveTermsExist()
 
     def check(self, word_graph):
         """Checks that the WordGraph conforms to the rules defined for both words and morphemes"""
