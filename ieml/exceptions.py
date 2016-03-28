@@ -49,6 +49,8 @@ class InvalidSingleNode(InvalidPropositionGraph):
 class NodeHasNoParent(InvalidSingleNode):
     pass
 
+class InvalidNodeIEMLLevel(InvalidSingleNode):
+    pass
 
 class NodeHasTooMuchParents(InvalidSingleNode):
     pass

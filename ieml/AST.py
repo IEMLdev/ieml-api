@@ -1,7 +1,7 @@
 import logging
 from helpers import LoggedInstantiator, Singleton
 from models import DictionnaryQueries
-from .exceptions import IEMLTermNotFoundInDictionnary
+from .exceptions import IEMLTermNotFoundInDictionnary, IndistintiveTermsExist
 
 class TermsQueries(DictionnaryQueries, metaclass=Singleton):
     """A DB connector singleton class used by terms to prevent the number
@@ -60,6 +60,15 @@ class Morpheme(AbstractAdditiveProposition):
         return self.left_parent_symbol + \
                self.plus_symbol.join([str(element) for element in self.childs]) + \
                self.right_parent_symbol
+
+    def check(self):
+        # first, we "ask" all the terms to check themselves through the parent method
+        super().check()
+        # then we check the terms for unicity turning their objectid's into a set
+        terms_objectids_list = [term.objectid for term in self.childs]
+        if len(terms_objectids_list) != len(set([node.id for node in terms_objectids_list])):
+            raise IndistintiveTermsExist()
+
 
 
 class Word(AbstractMultiplicativeProposition):

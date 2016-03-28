@@ -1,10 +1,11 @@
 import ply.yacc as yacc
-import ply.lex as lex
+
+from helpers import Singleton
 from ..AST import *
 from .lexer import get_lexer, tokens
 import logging
 
-class Parser:
+class Parser(metaclass=Singleton):
     """
         Base class for a parser
     """
@@ -22,9 +23,9 @@ class Parser:
         return self.root
 
     # Parsing rules
-
     def p_ieml_proposition(self, p):
-        """proposition : morpheme
+        """proposition : p_term
+                        | morpheme
                         | word
                         | clause
                         | sentence"""

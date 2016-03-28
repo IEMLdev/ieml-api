@@ -1,3 +1,5 @@
+import json
+
 from flask_restful import Resource, reqparse
 from models import DictionnaryQueries
 
@@ -14,9 +16,18 @@ class BaseHandler(Resource):
         self.args = self.reqparse.parse_args()
 
     def get(self):
-
         return {"status": "Correc'"}
 
+
+class BaseDataHandler(BaseHandler):
+    def __init__(self):
+        """The constructor for this abstract class just creates a request_parser"""
+        super().__init__()
+        self.reqparse.add_argument("data", required=True, type=str)
+
+    def do_request_parsing(self):
+        super().do_request_parsing()
+        self.json_data = json.dumps(self.args["data"])
 
 class SearchTermsHandler(BaseHandler):
     """Handles the terms search"""
@@ -26,9 +37,3 @@ class SearchTermsHandler(BaseHandler):
         self.do_request_parsing()
         return DictionnaryQueries().search_for_terms(self.args["searchstring"])
 
-class GraphValidatorHandler(BaseHandler):
-    """Verifies if a give graph reprensentinf a proposition is well formated, and if it is,
-    returns the corresponding IEML string"""
-
-    def post(self):
-        pass

@@ -46,12 +46,12 @@ class BasicGraphChecker:
                     raise NodeHasNoParent(index)
 
 
-class PhraseGraphChecker(BasicGraphChecker):
+class SentenceGraphChecker(BasicGraphChecker):
     """Adds a couple of verifications that are special to phrases"""
     pass
 
 
-class SuperPhraseChecker(BasicGraphChecker):
+class SuperSentenceGraphChecker(BasicGraphChecker):
     """Adds a couple of verifications that are special to super-phrase"""
     pass
 
@@ -70,9 +70,6 @@ class WordGraphChecker:
         - well ordered"""
         # TODO : ordering and intersection
 
-        #basically just checking for distinct terms
-        if len(nodes_list) != len(set([node.id for node in nodes_list])):
-            raise IndistintiveTermsExist()
 
     def check(self, word_graph):
         """Checks that the WordGraph conforms to the rules defined for both words and morphemes"""
