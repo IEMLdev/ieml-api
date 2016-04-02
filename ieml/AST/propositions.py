@@ -1,13 +1,22 @@
 import logging
 from helpers import LoggedInstantiator, Singleton
 from models import DictionnaryQueries
-from .exceptions import IEMLTermNotFoundInDictionnary, IndistintiveTermsExist
+from ieml.exceptions import IEMLTermNotFoundInDictionnary, IndistintiveTermsExist
 
 class TermsQueries(DictionnaryQueries, metaclass=Singleton):
     """A DB connector singleton class used by terms to prevent the number
     of DictionnaryQueries class instances from exploding"""
     pass
 
+class ClosedProposition:
+    """Interface class added to propositions that can be closed to be used in a USL
+    These propositions, even if they're not truly closed in the script, are the only one
+    that can link to USL's"""
+    def __init__(self):
+        self.hyperlink = []
+
+    def add_hyperlink_list(self, usl_list):
+        self.hyperlink += usl_list
 
 class AbstractProposition(metaclass=LoggedInstantiator):
     # these are used for the proposition rendering
@@ -71,7 +80,7 @@ class Morpheme(AbstractAdditiveProposition):
 
 
 
-class Word(AbstractMultiplicativeProposition):
+class Word(AbstractMultiplicativeProposition, ClosedProposition):
 
     def __init__(self, child_subst, child_mode=None):
         super().__init__()
@@ -92,16 +101,20 @@ class Clause(AbstractMultiplicativeProposition):
     pass
 
 
-class Sentence(AbstractAdditiveProposition):
-    pass
+class Sentence(AbstractAdditiveProposition, ClosedProposition):
+
+    def __init__(self, child_elements):
+        super().__init__()
 
 
 class SuperClause(AbstractMultiplicativeProposition):
     pass
 
 
-class SuperSentence(AbstractAdditiveProposition):
-    pass
+class SuperSentence(AbstractAdditiveProposition, ClosedProposition):
+
+    def __init__(self, child_elements):
+        super().__init__()
 
 class Term(metaclass=LoggedInstantiator):
 

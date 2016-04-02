@@ -1,11 +1,11 @@
-import ply.yacc as yacc
-
-from helpers import Singleton
-from ..AST import *
-from .lexer import get_lexer, tokens
 import logging
 
-class Parser(metaclass=Singleton):
+import ply.yacc as yacc
+
+from ieml.AST import *
+from .lexer import get_lexer, tokens
+
+class PropositionsParser(metaclass=Singleton):
     """
         Base class for a parser
     """
@@ -28,7 +28,9 @@ class Parser(metaclass=Singleton):
                         | morpheme
                         | word
                         | clause
-                        | sentence"""
+                        | sentence
+                        | superclause
+                        | supersentence"""
         self.root = p[1]
 
     def p_term(self, p):
@@ -72,7 +74,7 @@ class Parser(metaclass=Singleton):
         p[0] = SuperClause(p[2], p[4], p[6])
 
     def p_super_sentence(self, p):
-        """sentence : LBRACKET superclauses_sum RBRACKET"""
+        """supersentence : LBRACKET superclauses_sum RBRACKET"""
         p[0] = SuperSentence(p[2])
 
     def p_error(self, p):
@@ -80,3 +82,78 @@ class Parser(metaclass=Singleton):
             print("Syntax error at '%s'" % p.value)
         else:
             print("Syntax error at EOF")
+
+
+class USLParser(PropositionsParser):
+    """This parser inherits from the basic propositionnal parser, but adds supports for embedded USL's.
+    Thus, some parsing rules are modified"""
+
+    # Parsing rules
+    def p_ieml_proposition(self, p):
+        """proposition : p_term
+                        | morpheme
+                        | word
+                        | clause
+                        | sentence
+                        | superclause
+                        | supersentence"""
+        p[0] = p[1]
+
+    def p_word(self, p):
+        """word : LBRACKET morpheme RBRACKET
+                | LBRACKET morpheme TIMES morpheme RBRACKET
+                | LBRACKET morpheme RBRACKET usl_list
+                | LBRACKET morpheme TIMES morpheme RBRACKET usl_list
+                """
+        if len(p) == 4 or len(p) == 5:
+            p[0] = Word(p[2])
+        else:
+            p[0] = Word(p[2], p[4])
+
+        # if there's an USL list (hyperlinks), we're attaching it to the proposition
+        if len(p) == 5 or len(p) == 7:
+            p[0].add_hyperlink(p[-1]) # last element is the usl_list
+
+    def p_sentence(self, p):
+        """sentence : LBRACKET clauses_sum RBRACKET
+                    | LBRACKET clauses_sum RBRACKET usl_list"""
+        p[0] = Sentence(p[2])
+        if len(p) == 5:
+             p[0].add_hyperlink(p[4])
+
+    def p_super_sentence(self, p):
+        """sentence : LBRACKET superclauses_sum RBRACKET
+                    | LBRACKET superclauses_sum RBRACKET usl_list"""
+        p[0] = SuperSentence(p[2])
+        if len(p) == 5:
+             p[0].add_hyperlink(p[4])
+
+    def p_closed_proposition(self, p):
+        """closed_proposition : SLASH word SLASH
+                            | SLASH sentence SLASH
+                            | SLASH super SLASH"""
+        p[0] = p[2]
+
+    def p_closed_proposition_list(self, p):
+        """closed_proposition_list : closed_proposition_list closed_proposition
+                                    | closed_proposition"""
+        if len(p) == 3:
+            p[0] = p[1] + [p[2]]
+        else:
+            p[0] = [p[1]]
+
+    def p_usl_list(self, p):
+        """usl_list : usl_list usl
+                    | usl"""
+        if len(p) == 3:
+            p[0] = p[1] + [p[2]]
+        else:
+            p[0] = [p[1]]
+
+    def p_usl(self, p):
+        """usl : L_CURLY_BRACKET closed_proposition_list R_CURLY_BRACKET"""
+        p[0] = USL(p[2])
+
+    def p_hypertext(self, p):
+        """hypertext : usl"""
+        self.root = p[1]

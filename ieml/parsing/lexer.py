@@ -9,16 +9,28 @@ tokens = (
    'RPAREN',
    'LBRACKET',
    'RBRACKET',
+   'L_CURLY_BRACKET',
+   'R_CURLY_BRACKET',
+   'SLASH',
+   'L_ANGLE_BRACKET',
+   'R_ANGLE_BRACKET',
+   'USL_TAG'
 )
 
 def get_lexer(module=None):
-    t_TERM = r'[a-zA-Z\.\-\;\:\,\'\’\_]+'
+    t_TERM = r'[EUASBTOMFIacbedgfihkjmlonpsutwyx\.\-\;\:\,\'\’\_]+'
     t_PLUS   = r'\+'
     t_TIMES   = r'\*'
     t_LPAREN  = r'\('
     t_RPAREN  = r'\)'
     t_LBRACKET = r'\['
     t_RBRACKET  = r'\]'
+    t_L_CURLY_BRACKET = r'\{'
+    t_R_CURLY_BRACKET = r'\}'
+    t_SLASH = r'\/'
+    t_L_ANGLE_BRACKET = r'\<'
+    t_R_ANGLE_BRACKET = r'\>'
+    t_USL_TAG = r'([A-Za-z0-9 _\./\\-]*)'
 
     t_ignore  = ' \t\n'
 
@@ -32,7 +44,8 @@ def get_lexer(module=None):
 
 if __name__ == "__main__":
     # Test it out
-    data = "[([a.i.-] + [i.i.-]) * ([E:A:T:.]+[E:S:.wa.-]+[E:S:.o.-])]"
+    data = '$/[([a.i.-] + [i.i.-]) * ([E:A:T:.]+[E:S:.wa.-]+[E:S:.o.-])]/' \
+           '/[([a.i.-] + [i.i.-]) * ([E:A:T:.]+[E:S:.wa.-]+[E:S:.o.-])]/<"sup dude">$'
 
     # Give the lexer some input
     lexer = get_lexer()

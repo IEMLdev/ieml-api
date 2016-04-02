@@ -1,9 +1,9 @@
-from ieml import Parser
+from ieml import PropositionsParser
 import logging
 
 logging.getLogger().setLevel(logging.INFO)
 
-test_parser = Parser()
+test_parser = PropositionsParser()
 
 for filename in ["word", "clause", "sentence", "supersentence"]:
     with open("data/example_%s.txt" % filename) as example:

@@ -1,7 +1,9 @@
 import numpy as np
-from .AST import Term, Morpheme, Word, Clause, Sentence, SuperSentence, SuperClause
-from .parsing import Parser
+
+from ieml.AST import Term, Morpheme, Word, Clause, Sentence, SuperSentence, SuperClause
 from .exceptions import InvalidNodeIEMLLevel
+from .parsing import PropositionsParser
+
 
 class Vertice:
     """Stores the representation of a vertice between nodes"""
@@ -55,7 +57,7 @@ class Node(AbstractNode):
     def ast(self):
         """This is a getter, so the AST is generated only at the right time, for error handling"""
         if not self._ast:
-            self._ast = Parser().parse(self.ieml)
+            self._ast = PropositionsParser().parse(self.ieml)
         return self._ast
 
 class GenericGraph:
