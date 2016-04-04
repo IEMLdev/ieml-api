@@ -3,10 +3,12 @@ from helpers import LoggedInstantiator, Singleton
 from models import DictionnaryQueries
 from ieml.exceptions import IEMLTermNotFoundInDictionnary, IndistintiveTermsExist
 
+
 class TermsQueries(DictionnaryQueries, metaclass=Singleton):
     """A DB connector singleton class used by terms to prevent the number
     of DictionnaryQueries class instances from exploding"""
     pass
+
 
 class ClosedProposition:
     """Interface class added to propositions that can be closed to be used in a USL
@@ -17,6 +19,12 @@ class ClosedProposition:
 
     def add_hyperlink_list(self, usl_list):
         self.hyperlink += usl_list
+
+
+class NonClosedProposition:
+    """This class acts as an interface for propositions that *cannot* be closed"""
+    pass
+
 
 class AbstractProposition(metaclass=LoggedInstantiator):
     # these are used for the proposition rendering
@@ -34,6 +42,11 @@ class AbstractProposition(metaclass=LoggedInstantiator):
         """Checks the IEML validity of the IEML proposition"""
         for child in self.childs:
             child.check()
+
+    def _gather_child_links(self):
+        return [couple for sublist in [child.gather_hyperlinks() for child in self.childs]
+                for couple in sublist]
+
 
 class AbstractAdditiveProposition(AbstractProposition):
 
@@ -63,7 +76,7 @@ class AbstractMultiplicativeProposition(AbstractProposition):
                str(self.mode) + self.right_parent_symbol
 
 
-class Morpheme(AbstractAdditiveProposition):
+class Morpheme(AbstractAdditiveProposition, NonClosedProposition):
 
     def __str__(self):
         return self.left_parent_symbol + \
@@ -79,13 +92,13 @@ class Morpheme(AbstractAdditiveProposition):
             raise IndistintiveTermsExist()
 
 
-
 class Word(AbstractMultiplicativeProposition, ClosedProposition):
 
     def __init__(self, child_subst, child_mode=None):
         super().__init__()
         self.subst = child_subst
         self.mode = child_mode
+        self.childs = (self.subst, self.mode)
 
     def __str__(self):
         if self.mode is None:
@@ -97,24 +110,44 @@ class Word(AbstractMultiplicativeProposition, ClosedProposition):
                    str(self.subst) + self.times_symbol + \
                    str(self.mode) + self.right_bracket_symbol
 
-class Clause(AbstractMultiplicativeProposition):
+    def gather_hyperlinks(self):
+        # since morphemes cannot have hyperlinks, we don't gather links for the underlying childs
+        return [(self, usl_ref) for usl_ref in self.hyperlink]
+
+
+class AbstractClause(AbstractMultiplicativeProposition, NonClosedProposition):
+
+    def gather_hyperlinks(self):
+        return self._gather_child_links()
+
+
+class Clause(AbstractClause):
     pass
 
 
-class Sentence(AbstractAdditiveProposition, ClosedProposition):
-
-    def __init__(self, child_elements):
-        super().__init__()
-
-
-class SuperClause(AbstractMultiplicativeProposition):
+class SuperClause(AbstractClause):
     pass
 
 
-class SuperSentence(AbstractAdditiveProposition, ClosedProposition):
+class AbstractSentence(AbstractAdditiveProposition, ClosedProposition):
+
+    def gather_hyperlinks(self):
+        # first we build the (object, usl) tuple list for the current object
+        links_list = [(self, usl_ref) for usl_ref in self.hyperlink]
+        # then we add the hyperlinks from the child elements
+        return links_list + self._gather_child_links()
+
+class Sentence(AbstractSentence):
 
     def __init__(self, child_elements):
-        super().__init__()
+        super().__init__(child_elements)
+
+
+class SuperSentence(AbstractSentence):
+
+    def __init__(self, child_elements):
+        super().__init__(child_elements)
+
 
 class Term(metaclass=LoggedInstantiator):
 
