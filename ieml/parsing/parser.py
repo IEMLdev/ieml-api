@@ -19,6 +19,7 @@ class PropositionsParser(metaclass=Singleton):
 
     def parse(self, s):
         """Parses the input string, and returns a reference to the created AST's root"""
+        self.root = None
         yacc.parse(s)
         return self.root
 

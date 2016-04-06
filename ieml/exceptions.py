@@ -13,7 +13,16 @@ class TermException(ASTException):
 class IEMLTermNotFoundInDictionnary(TermException):
     pass
 
+class PropositionException(ASTException):
+    def __init__(self, proposition_ref):
+        super().__init__()
+        self.proposition_ref = proposition_ref
+
+class AdditiveOrderNotRespected(PropositionException):
+    pass
+
 ### These exceptions /errors are graph_related
+
 
 class InvalidPropositionGraph(Exception):
     pass

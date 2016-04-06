@@ -1,23 +1,50 @@
+from ieml.AST.propositions import Term
 from .base import BaseDataHandler
-from ieml import *
+from ieml.AST import Word, Clause, Sentence, SuperClause, SuperSentence, Morpheme
+from ieml.exceptions import InvalidNodeIEMLLevel
+from ieml import PropositionsParser
+
+class SentenceGraph:
+
+    primitive_type = Word
+    multiplicative_type = Clause
+    additive_type = Sentence
+
+
+class SuperSentenceGraph:
+
+    primitive_type = Sentence
+    multiplicative_type = SuperClause
+    additive_type = SuperSentence
+
+
 class GraphValidatorHandler(BaseDataHandler):
     """Checks that a give graph representing a sentence/supersentence is well formed, and if it is,
     returns the corresponding IEML string"""
 
     def post(self):
-        if self.json_data["validation_type"] == 1:
-            proposition_graph = SentenceGraph(self.json_data["nodes"])
-            graph_checker_type = SentenceGraphChecker
-        else:
-            proposition_graph = SuperSentenceGraph(self.json_data["nodes"])
-            graph_checker_type = SuperSentenceGraphChecker
+        parser = PropositionsParser()
+        graph_type = SentenceGraph if self.json_data["validation_type"] == 1 else SuperSentenceGraph
+        nodes_table = {}
+        for node in self.json_data["nodes"]:
+            nodes_table[node["id"]] = parser.parse(node["ieml_string"])
+            if not isinstance(nodes_table[node["id"]], graph_type.primitive_type):
+                raise InvalidNodeIEMLLevel(node["id"])
 
-        for vertice_data in self.json_data["graph"]:
-            proposition_graph.add_vertice(vertice_data["substance"], vertice_data["attribute"], vertice_data["mode"])
-        proposition_graph.validate(graph_checker_type)
-        ast_tree = proposition_graph.to_ast()
-        ast_tree.check()
-        return {"valid" : True, "ieml" : str(ast_tree)}
+        # transforming the vertices into clauses or superclauses
+        multiplication_elems = []
+        for vertice in self.json_data["graph"]:
+            new_element = graph_type.multiplicative_type(nodes_table[vertice["substance"]],
+                                                         nodes_table[vertice["attribute"]],
+                                                         nodes_table[vertice["mode"]])
+            multiplication_elems.append(new_element)
+
+        #OH WAIT, we can make it into a sentence/supersentence now!
+        proposition_ast = graph_type.additive_type(multiplication_elems)
+        # asking the proposition to check itself
+        proposition_ast.check()
+
+        return {"valid" : True, "ieml" : str(proposition_ast)}
 
 
 class WordGraphValidatorHandler(BaseDataHandler):
@@ -25,10 +52,19 @@ class WordGraphValidatorHandler(BaseDataHandler):
     returns the corresponding IEML string"""
 
     def post(self):
-        word_graph = WordsGraph(self.json_data["nodes"],
-                                self.json_data["graph"]["substance"],
-                                self.json_data["graph"]["mode"])
-        word_graph.validate(WordGraphChecker)
-        ast_tree = word_graph.to_ast()
-        ast_tree.check()
-        return {"valid" : True, "ieml" : str(ast_tree)}
+
+        parser = PropositionsParser()
+        nodes_table = {}
+        for node in self.json_data["nodes"]:
+            nodes_table[node["id"]] = parser.parse(node["ieml_string"])
+            if not isinstance(nodes_table[node["id"]], Term):
+                raise InvalidNodeIEMLLevel(node["id"])
+
+        # making the two morphemes and then the word using the two term lists
+        substance_morpheme = Morpheme([nodes_table[id] for id in self.json_data["graph"]["substance"]])
+        mode_morpheme = Morpheme([nodes_table[id] for id in self.json_data["graph"]["mode"]])
+        word_ast = Word(substance_morpheme, mode_morpheme)
+
+        # asking the proposition to check itself
+        word_ast.check()
+        return {"valid" : True, "ieml" : str(word_ast)}

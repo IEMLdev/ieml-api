@@ -1,4 +1,5 @@
 import logging
+from  functools import total_ordering
 from helpers import LoggedInstantiator, Singleton
 from models import DictionnaryQueries
 from ieml.exceptions import IEMLTermNotFoundInDictionnary, IndistintiveTermsExist
@@ -47,6 +48,16 @@ class AbstractProposition(metaclass=LoggedInstantiator):
         return [couple for sublist in [child.gather_hyperlinks() for child in self.childs]
                 for couple in sublist]
 
+    def __eq__(self, other):
+        """Two propositions are equal if their childs'list or tuple are equal"""
+        return self.childs == other.childs
+
+    def is_ordered(self):
+        pass
+
+    def order(self):
+        pass
+
 
 class AbstractAdditiveProposition(AbstractProposition):
 
@@ -75,6 +86,13 @@ class AbstractMultiplicativeProposition(AbstractProposition):
                str(self.attr) + self.times_symbol + \
                str(self.mode) + self.right_parent_symbol
 
+    def check(self):
+        for child in self.childs:
+            child.check()
+            if not child.is_oredered():
+                logging.warning("Additive proposition %s is not ordered, ordering it now" % str(child))
+                child.order()
+
 
 class Morpheme(AbstractAdditiveProposition, NonClosedProposition):
 
@@ -90,6 +108,22 @@ class Morpheme(AbstractAdditiveProposition, NonClosedProposition):
         terms_objectids_list = [term.objectid for term in self.childs]
         if len(terms_objectids_list) != len(set([node.id for node in terms_objectids_list])):
             raise IndistintiveTermsExist()
+        # TODO : more checking
+        # - term intersection
+        # - paradigmatic intersection
+
+
+    def is_ordered(self):
+        """Returns true if its list of childs are sorted"""
+        for i in range(len(self.childs)-1):
+            if not self.childs[i] <= self.childs[i+1]:
+                return False
+
+        return True
+
+    def order(self):
+        """Orders the term"""
+        self.childs = self.childs.sort()
 
 
 class Word(AbstractMultiplicativeProposition, ClosedProposition):
@@ -149,11 +183,13 @@ class SuperSentence(AbstractSentence):
         super().__init__(child_elements)
 
 
+@total_ordering
 class Term(metaclass=LoggedInstantiator):
 
     def __init__(self, ieml_string):
         self.ieml = ieml_string
         self.objectid = None
+        self.canonical_forms = None
 
     def __str__(self):
         return "[" + self.ieml + "]"
@@ -168,6 +204,16 @@ class Term(metaclass=LoggedInstantiator):
         try:
             index = query_result_list.index(self.ieml)
             self.objectid = query_result_list[index]["_id"]
+            self.canonical_forms = query_result_list[index]["CANONICAL"]
         except ValueError:
             raise IEMLTermNotFoundInDictionnary(self.ieml)
 
+    def __hash__(self):
+        return self.objectid.__hash__()
+
+    def __eq__(self, other):
+        return self.objectid == other.objectid and self.objectid is not None
+
+    def __gt__(self, other):
+        # has to be implemented using the DB's canonical form
+        pass
