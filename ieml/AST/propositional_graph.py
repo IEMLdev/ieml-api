@@ -28,6 +28,7 @@ class PropositionGraph:
 
         self.root_node = None # this'll be set once the graph_checker has checked its existence and found it
         self.generations_table = None # This'll store the clauses by *generations* upon a method call
+        self.has_been_checked = False
 
     def _build_adjacency_matrix(self):
         """Once the graph is fully built, this function is called to build the adjacency matrix"""
@@ -42,6 +43,7 @@ class PropositionGraph:
     def check(self):
         self.graph_checker.do_checks()
         self.root_node = self.nodes_list[self.graph_checker.root_node_index]
+        self.has_been_checked = True
 
     def _build_generation_table(self):
         """This needs the reference of the root node to work"""
@@ -72,7 +74,17 @@ class PropositionGraph:
 
     def get_ordereded_clauses_list(self):
         """Returns the same set of clauses as the one in input, but put in the right order"""
-        pass
+        if self.has_been_checked:
+            self._build_generation_table()
+            ordered_clauses = []
+            for generation in self.generations_table:
+                generation.sort() #clauses/sperclauses are totally ordered, so sort works on a list of those
+                ordered_clauses += generation
+
+            return ordered_clauses
+        else:
+            # TODO : Define expression for here
+            raise Exception()
 
 
 

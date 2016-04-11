@@ -3,6 +3,7 @@ from  functools import total_ordering
 from helpers import LoggedInstantiator, Singleton
 from models import DictionnaryQueries
 from ieml.exceptions import IEMLTermNotFoundInDictionnary, IndistintiveTermsExist
+from .propositional_graph import PropositionGraph
 
 
 class TermsQueries(DictionnaryQueries, metaclass=Singleton):
@@ -138,8 +139,8 @@ class Morpheme(AbstractAdditiveProposition, NonClosedProposition):
         return True
 
     def order(self):
-        """Orders the term"""
-        # terms have the TotalORder decorator, as such, they can be automatically ordered
+        """Orders the terms"""
+        # terms have the TotalOrder decorator, as such, they can be automatically ordered
         self.childs = self.childs.sort()
 
 
@@ -165,11 +166,22 @@ class Word(AbstractMultiplicativeProposition, ClosedProposition):
         # since morphemes cannot have hyperlinks, we don't gather links for the underlying childs
         return [(self, usl_ref) for usl_ref in self.hyperlink]
 
-
+@total_ordering
 class AbstractClause(AbstractMultiplicativeProposition, NonClosedProposition):
 
     def gather_hyperlinks(self):
         return self._gather_child_links()
+
+    def __gt__(self, other):
+        if self.subst != other.subst:
+            # the comparison depends on the terms of the two substs
+            pass
+        else:
+            if self.attr != other.attr:
+                pass # the comparison depends on the terms of the two attrs
+            else:
+                # TODO : define exception for this case (which shouldn't really happen anyway)
+                raise Exception()
 
 
 class Clause(AbstractClause):
@@ -182,11 +194,31 @@ class SuperClause(AbstractClause):
 
 class AbstractSentence(AbstractAdditiveProposition, ClosedProposition):
 
+    def __init__(self, child_elements):
+        super().__init__(child_elements)
+        self.graph = None
+
     def gather_hyperlinks(self):
         # first we build the (object, usl) tuple list for the current object
         links_list = [(self, usl_ref) for usl_ref in self.hyperlink]
         # then we add the hyperlinks from the child elements
         return links_list + self._gather_child_links()
+
+    def check(self):
+        # first, we call the parent method, which, by calling the check methods on clauses or superclauses,
+        # ensures that the child elements are well ordered (especially the terms, or the underlying sentence)
+        super().check()
+        # then, we build the (super)sentence's graph using the (super)clause list
+        self.graph = PropositionGraph(self.childs)
+        self.graph.check() #the graph does some checking
+
+    def order(self):
+        """Orders the clauses/superclauses inside the sentence/supersentence, using the graph"""
+        if self.graph is not None:
+            self.childs = self.graph.get_ordereded_clauses_list()
+        else:
+            raise Exception()
+
 
 class Sentence(AbstractSentence):
 
@@ -194,12 +226,6 @@ class Sentence(AbstractSentence):
         super().__init__(child_elements)
         self.graph = None
 
-    def check(self):
-        # first, we call the parent method, which, by calling the check methods on clauses or superclauses,
-        # ensures that the child elements are well ordered (especially the terms)
-        super().check()
-        # then, we build the sentence's graph using the clause list
-        pass
 
 class SuperSentence(AbstractSentence):
 
