@@ -38,6 +38,8 @@ class AbstractProposition(metaclass=LoggedInstantiator):
 
     def __init__(self):
         self.childs = None # will be an iterable (list or tuple)
+        self._has_been_checked = False
+        self._ieml_string = None
 
     def check(self):
         """Checks the IEML validity of the IEML proposition"""
@@ -51,6 +53,10 @@ class AbstractProposition(metaclass=LoggedInstantiator):
     def __eq__(self, other):
         """Two propositions are equal if their childs'list or tuple are equal"""
         return self.childs == other.childs
+
+    def __hash__(self):
+        """Since the IEML string for any proposition AST is supposed to be unique, it can be used as a hash"""
+        return self.__str__().__hash__()
 
     def is_ordered(self):
         pass
@@ -66,6 +72,9 @@ class AbstractAdditiveProposition(AbstractProposition):
         self.childs = child_elements
 
     def __str__(self):
+        if not self._has_been_checked:
+            logging.warning("Proposition hasn't been checked for ordering and consistency")
+
         return self.left_bracket_symbol + \
                self.plus_symbol.join([str(element) for element in self.childs]) + \
                self.right_bracket_symbol
@@ -81,6 +90,9 @@ class AbstractMultiplicativeProposition(AbstractProposition):
         self.childs = (self.subst, self.attr, self.mode)
 
     def __str__(self):
+        if not self._has_been_checked:
+            logging.warning("Proposition hasn't been checked for ordering and consistency")
+
         return self.left_parent_symbol + \
                str(self.subst) + self.times_symbol + \
                str(self.attr) + self.times_symbol + \
@@ -97,6 +109,9 @@ class AbstractMultiplicativeProposition(AbstractProposition):
 class Morpheme(AbstractAdditiveProposition, NonClosedProposition):
 
     def __str__(self):
+        if not self._has_been_checked:
+            logging.warning("Proposition hasn't been checked for ordering and consistency")
+
         return self.left_parent_symbol + \
                self.plus_symbol.join([str(element) for element in self.childs]) + \
                self.right_parent_symbol
@@ -111,6 +126,7 @@ class Morpheme(AbstractAdditiveProposition, NonClosedProposition):
         # TODO : more checking
         # - term intersection
         # - paradigmatic intersection
+        self._has_been_checked = True
 
 
     def is_ordered(self):
@@ -123,6 +139,7 @@ class Morpheme(AbstractAdditiveProposition, NonClosedProposition):
 
     def order(self):
         """Orders the term"""
+        # terms have the TotalORder decorator, as such, they can be automatically ordered
         self.childs = self.childs.sort()
 
 
@@ -175,7 +192,14 @@ class Sentence(AbstractSentence):
 
     def __init__(self, child_elements):
         super().__init__(child_elements)
+        self.graph = None
 
+    def check(self):
+        # first, we call the parent method, which, by calling the check methods on clauses or superclauses,
+        # ensures that the child elements are well ordered (especially the terms)
+        super().check()
+        # then, we build the sentence's graph using the clause list
+        pass
 
 class SuperSentence(AbstractSentence):
 
@@ -215,5 +239,15 @@ class Term(metaclass=LoggedInstantiator):
         return self.objectid == other.objectid and self.objectid is not None
 
     def __gt__(self, other):
-        # has to be implemented using the DB's canonical form
-        pass
+        # we use the DB's canonical forms
+        # if the term has MORE canonical sequences, it's "BIGGER", so GT is TRUE
+        if len(self.canonical_forms) > len(other.canonical_forms):
+            return True
+        else: # else, we have to compare sequences using the regular aphabetical order
+            for i, seq in enumerate(self.canonical_forms):
+                # for each sequence, if the sequences are different, we can return the comparison
+                if self.canonical_forms[i] != other.canonical_forms[i]:
+                    return self.canonical_forms[i] > other.canonical_forms[i]
+
+        #TODO : Define an exception to be raised if the comparison doesn't return
+        raise Exception()
