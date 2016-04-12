@@ -1,1 +1,2 @@
 from .base_queries import DictionnaryQueries
+from .propositions import PropositionsQueries

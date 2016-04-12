@@ -102,7 +102,7 @@ class AbstractMultiplicativeProposition(AbstractProposition):
     def check(self):
         for child in self.childs:
             child.check()
-            if not child.is_oredered():
+            if not child.is_ordered():
                 logging.warning("Additive proposition %s is not ordered, ordering it now" % str(child))
                 child.order()
 
@@ -149,7 +149,10 @@ class Word(AbstractMultiplicativeProposition, ClosedProposition):
         super().__init__(child_subst)
         self.subst = child_subst
         self.mode = child_mode
-        self.childs = (self.subst, self.mode)
+        if self.mode is None:
+            self.childs = (self.subst,)
+        else:
+            self.childs = (self.subst, self.mode)
 
     def __str__(self):
         if self.mode is None:

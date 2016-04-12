@@ -1,6 +1,6 @@
 from .base_queries import DBConnector
 from .constants import PROPOSITION_COLLECTION
-from ieml.AST import Clause, Morpheme, Word, Sentence, SuperSentence, SuperClause, Term
+import ieml.AST
 
 
 class PropositionsQueries(DBConnector):
@@ -16,7 +16,7 @@ class PropositionsQueries(DBConnector):
 
     def _retrieve_primitive_objectid(self, ieml_string, primitive_type):
         """Retrieves the objectid of an IEML primitive"""
-        if primitive_type is Term:
+        if primitive_type is AST.Term:
             return self.terms.find_one({"IEML" : ieml_string})["_id"]
         else:
             return self.propositions.find_one({"IEML" : ieml_string,

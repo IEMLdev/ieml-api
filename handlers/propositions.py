@@ -3,6 +3,7 @@ from .base import BaseDataHandler
 from ieml.AST import Word, Clause, Sentence, SuperClause, SuperSentence, Morpheme
 from ieml.exceptions import InvalidNodeIEMLLevel
 from ieml import PropositionsParser
+from models import PropositionsQueries
 
 class SentenceGraph:
 
@@ -17,8 +18,13 @@ class SuperSentenceGraph:
     multiplicative_type = SuperClause
     additive_type = SuperSentence
 
+class QueryValidatorHandler(BaseDataHandler):
 
-class GraphValidatorHandler(BaseDataHandler):
+    def __init__(self):
+        super().__init__()
+        self.db_connector = PropositionsQueries()
+
+class GraphValidatorHandler(GraphValidatorHandler):
     """Checks that a give graph representing a sentence/supersentence is well formed, and if it is,
     returns the corresponding IEML string"""
 
@@ -47,7 +53,7 @@ class GraphValidatorHandler(BaseDataHandler):
         return {"valid" : True, "ieml" : str(proposition_ast)}
 
 
-class WordGraphValidatorHandler(BaseDataHandler):
+class WordGraphValidatorHandler(GraphValidatorHandler):
     """Checks that a give graph representing a word is well formed, and if it is,
     returns the corresponding IEML string"""
 
@@ -67,4 +73,5 @@ class WordGraphValidatorHandler(BaseDataHandler):
 
         # asking the proposition to check itself
         word_ast.check()
+        self.db_handler.save_closed_proposition(word_ast, self.json_data["tag"])
         return {"valid" : True, "ieml" : str(word_ast)}
