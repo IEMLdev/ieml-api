@@ -30,3 +30,6 @@ class DictionnaryQueries(DBConnector):
         """Does the search with an IEML string, and not the translated field"""
         return list(self.terms.find({"$text" : {"$search" : ieml_string}},
                                     {"IEML" : 1, "CANONICAL" : 1}))
+
+    def exact_ieml_term_search(self, ieml_string):
+        return self.terms.find_one({"IEML" : ieml_string})

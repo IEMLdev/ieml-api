@@ -121,8 +121,7 @@ class Morpheme(AbstractAdditiveProposition, NonClosedProposition):
         # first, we "ask" all the terms to check themselves through the parent method
         super().check()
         # then we check the terms for unicity turning their objectid's into a set
-        terms_objectids_list = [term.objectid for term in self.childs]
-        if len(terms_objectids_list) != len(set([node.id for node in terms_objectids_list])):
+        if len(self.childs) != len(set(self.childs)):
             raise IndistintiveTermsExist()
         # TODO : more checking
         # - term intersection
@@ -141,13 +140,13 @@ class Morpheme(AbstractAdditiveProposition, NonClosedProposition):
     def order(self):
         """Orders the terms"""
         # terms have the TotalOrder decorator, as such, they can be automatically ordered
-        self.childs = self.childs.sort()
+        self.childs.sort()
 
 
 class Word(AbstractMultiplicativeProposition, ClosedProposition):
 
     def __init__(self, child_subst, child_mode=None):
-        super().__init__()
+        super().__init__(child_subst)
         self.subst = child_subst
         self.mode = child_mode
         self.childs = (self.subst, self.mode)
@@ -244,18 +243,16 @@ class Term(metaclass=LoggedInstantiator):
     def __str__(self):
         return "[" + self.ieml + "]"
 
+    def __repr__(self):
+        return str(self)
+
     def check(self):
         """Checks that the term exists in the database, and if found, stores the terms's objectid"""
-        # TODO : optimize this code :
-        # for now, since I don't know how to do exact text queries in MongoDB,
-        # i'm retrieving the list of ALL mathing IEML strings and then checking if the
-        # self.ieml string is in the list
-        query_result_list = TermsQueries().search_for_ieml_terms(self.ieml)
+        result = TermsQueries().exact_ieml_term_search(self.ieml)
         try:
-            index = query_result_list.index(self.ieml)
-            self.objectid = query_result_list[index]["_id"]
-            self.canonical_forms = query_result_list[index]["CANONICAL"]
-        except ValueError:
+            self.objectid = result["_id"]
+            self.canonical_forms = result["CANONICAL"]
+        except TypeError:
             raise IEMLTermNotFoundInDictionnary(self.ieml)
 
     def __hash__(self):

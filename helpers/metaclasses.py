@@ -1,3 +1,4 @@
+import logging
 
 class LoggedInstantiator(type):
     def __call__(cls, *args, **kwargs):

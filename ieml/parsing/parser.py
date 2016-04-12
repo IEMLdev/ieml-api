@@ -2,6 +2,7 @@ import logging
 
 import ply.yacc as yacc
 
+from helpers import Singleton
 from ieml.AST import *
 from .lexer import get_lexer, tokens
 
