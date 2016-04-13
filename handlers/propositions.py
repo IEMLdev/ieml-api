@@ -18,13 +18,13 @@ class SuperSentenceGraph:
     multiplicative_type = SuperClause
     additive_type = SuperSentence
 
-class QueryValidatorHandler(BaseDataHandler):
+class ValidatorHandler(BaseDataHandler):
 
     def __init__(self):
         super().__init__()
         self.db_connector = PropositionsQueries()
 
-class GraphValidatorHandler(GraphValidatorHandler):
+class GraphValidatorHandler(ValidatorHandler):
     """Checks that a give graph representing a sentence/supersentence is well formed, and if it is,
     returns the corresponding IEML string"""
 
@@ -53,7 +53,7 @@ class GraphValidatorHandler(GraphValidatorHandler):
         return {"valid" : True, "ieml" : str(proposition_ast)}
 
 
-class WordGraphValidatorHandler(GraphValidatorHandler):
+class WordGraphValidatorHandler(ValidatorHandler):
     """Checks that a give graph representing a word is well formed, and if it is,
     returns the corresponding IEML string"""
 
@@ -73,5 +73,5 @@ class WordGraphValidatorHandler(GraphValidatorHandler):
 
         # asking the proposition to check itself
         word_ast.check()
-        self.db_handler.save_closed_proposition(word_ast, self.json_data["tag"])
+        self.db_connector.save_closed_proposition(word_ast, self.json_data["tag"])
         return {"valid" : True, "ieml" : str(word_ast)}

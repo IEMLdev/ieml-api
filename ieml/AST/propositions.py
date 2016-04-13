@@ -126,6 +126,7 @@ class Morpheme(AbstractAdditiveProposition, NonClosedProposition):
         # TODO : more checking
         # - term intersection
         # - paradigmatic intersection
+        # - term number
         self._has_been_checked = True
 
 

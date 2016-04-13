@@ -1,10 +1,22 @@
 import unittest
+from unittest.mock import Mock
 
 from bson import ObjectId
 from ieml.AST import Term, Morpheme, Word, Clause, Sentence, SuperClause, SuperSentence
 from ieml.parsing import PropositionsParser
 from ieml.exceptions import IEMLTermNotFoundInDictionnary, IndistintiveTermsExist
 from models import PropositionsQueries
+from handlers import WordGraphValidatorHandler
+
+
+def get_test_word_instance():
+    morpheme_subst = Morpheme([Term("a.i.-"), Term("i.i.-")])
+    morpheme_attr = Morpheme([Term("E:A:T:."), Term("E:S:.wa.-"),Term("E:S:.o.-")])
+    return Word(morpheme_subst, morpheme_attr)
+
+def get_test_morpheme_instance():
+    return Morpheme([Term("E:A:T:."), Term("E:S:.wa.-"),Term("E:S:.o.-")])
+
 
 class TestTermsFeatures(unittest.TestCase):
     """Checks basic AST features like hashing, ordering for words, morphemes and terms"""
@@ -109,8 +121,8 @@ class TestParser(unittest.TestCase):
 
     def setUp(self):
         self.morpheme_subst = Morpheme([Term("a.i.-"), Term("i.i.-")])
-        self.morpheme_attr = Morpheme([Term("E:A:T:."), Term("E:S:.wa.-"),Term("E:S:.o.-")])
-        self.word_object = Word(self.morpheme_subst, self.morpheme_attr)
+        self.morpheme_mode = Morpheme([Term("E:A:T:."), Term("E:S:.wa.-"), Term("E:S:.o.-")])
+        self.word_object = Word(self.morpheme_subst, self.morpheme_mode)
         self.word_object.check()
         self.parser = PropositionsParser()
 
@@ -118,7 +130,7 @@ class TestParser(unittest.TestCase):
         with open("data/example_morpheme.txt") as ieml_file:
             morpheme_ast = self.parser.parse(ieml_file.read())
         morpheme_ast.check()
-        self.assertEqual(morpheme_ast, self.morpheme_attr)
+        self.assertEqual(morpheme_ast, self.morpheme_mode)
 
     def test_parse_word(self):
         with open("data/example_word.txt") as ieml_file:
@@ -138,9 +150,40 @@ class TestDBQueries(unittest.TestCase):
         self.writable_db_connector.propositions.drop() #cleaning up!
 
     def test_write_word_to_db(self):
-        morpheme_subst = Morpheme([Term("a.i.-"), Term("i.i.-")])
-        morpheme_attr = Morpheme([Term("E:A:T:."), Term("E:S:.wa.-"),Term("E:S:.o.-")])
-        word_object = Word(morpheme_subst, morpheme_attr)
+        word_object = get_test_word_instance()
         word_object.check()
         self.writable_db_connector.save_closed_proposition(word_object, "Faire du bruit avec sa bouche")
         self.assertEquals(self.writable_db_connector.propositions.count(), 1)
+
+
+class TestGraphValidator(unittest.TestCase):
+
+    def setUp(self):
+        self.word_handler = WordGraphValidatorHandler()
+        self.word_handler.json_data = {"nodes" : [{"id" : 1,
+                                                   "ieml_string" : "[a.i.-]"},
+                                                  {"id" : 2,
+                                                   "ieml_string" : "[i.i.-]"},
+                                                  {"id" : 3,
+                                                   "ieml_string" : "[E:A:T:.]"},
+                                                  {"id" : 4,
+                                                   "ieml_string" : "[E:S:.wa.-]"},
+                                                  {"id" : 5,
+                                                   "ieml_string" : "[E:S:.o.-]"}
+                                                  ],
+                                       "graph": {"substance" : [1,2],
+                                                 "mode" : [3,4,5]
+                                                 },
+                                       "tag" : "Faire du bruit avec sa bouche"
+                                       }
+        self.word_handler.db_connector = Mock()
+
+    def test_word_validation(self):
+        """Tests the whole word validation code block without the request handling"""
+
+        request_output = self.word_handler.post()
+        word = get_test_word_instance()
+        word.check()
+        self.assertEquals(request_output["ieml"], str(word))
+
+
