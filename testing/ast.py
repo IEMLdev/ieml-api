@@ -51,6 +51,20 @@ class TestMorphemesFeatures(unittest.TestCase):
         with self.assertRaises(IndistintiveTermsExist):
             new_morpheme.check()
 
+    def _make_and_check_morphemes(self):
+        morpheme_a = Morpheme([Term("E:A:T:."), Term("E:S:.wa.-"),Term("E:S:.o.-")])
+        morpheme_b = Morpheme([Term("a.i.-"), Term("i.i.-")])
+        morpheme_a.check(), morpheme_b.check()
+        morpheme_a.order(), morpheme_b.order()
+        return morpheme_a, morpheme_b
+
+    def _make_and_check_suffixed_morphemes(self):
+        morpheme_a = Morpheme([Term("E:A:T:."), Term("E:S:.wa.-")])
+        morpheme_b = Morpheme([Term("E:A:T:."), Term("E:S:.wa.-"),Term("E:S:.o.-")])
+        morpheme_a.check(), morpheme_b.check()
+        morpheme_a.order(), morpheme_b.order()
+        return morpheme_a, morpheme_b
+
     def test_morpheme_reordering(self):
         """Create a new morpheme with terms in the wrong order, and check that it reorders
         after itself after the reorder() method is ran"""
@@ -63,7 +77,7 @@ class TestMorphemesFeatures(unittest.TestCase):
 
     def test_morpheme_equality(self):
         """Tests if two morphemes That are declared the same way are said to be equal
-         using the regular equality comparison"""
+         using the regular equality comparison. It also tests terms reordering"""
         morpheme_a = Morpheme([Term("E:A:T:."), Term("E:S:.o.-"), Term("E:S:.wa.-")])
         morpheme_b = Morpheme([Term("E:A:T:."), Term("E:S:.wa.-"), Term("E:S:.o.-")])
         morpheme_a.check(), morpheme_b.check()
@@ -71,11 +85,19 @@ class TestMorphemesFeatures(unittest.TestCase):
         self.assertEqual(morpheme_a, morpheme_b)
 
     def test_morpheme_inequality(self):
-        morpheme_a = Morpheme([Term("E:A:T:."), Term("E:S:.wa.-"),Term("E:S:.o.-")])
-        morpheme_b = Morpheme([Term("a.i.-"), Term("i.i.-")])
-        morpheme_a.check(), morpheme_b.check()
-        morpheme_a.order(), morpheme_b.order()
+        morpheme_a , morpheme_b = self._make_and_check_morphemes()
         self.assertNotEqual(morpheme_a, morpheme_b)
+
+    def test_different_morpheme_comparison(self):
+        morpheme_a, morpheme_b = self._make_and_check_morphemes()
+        # true because Term("E:A:T:.") < Term("a.i.-")
+        self.assertTrue(morpheme_b > morpheme_a)
+
+    def test_suffixed_morpheme_comparison(self):
+        morpheme_a, morpheme_b = self._make_and_check_suffixed_morphemes()
+        # true since morph_a suffix of morph_b
+        self.assertTrue(morpheme_b > morpheme_a)
+
 
 class TestWords(unittest.TestCase):
 
@@ -98,3 +120,26 @@ class TestWords(unittest.TestCase):
         word_hashmap = {new_word : 1,
                         self.word_a : 2}
         self.assertTrue(self.word_b in word_hashmap)
+
+    def test_words_with_different_substance_comparison(self):
+        word_a,word_b = Word(self.morpheme_a),  Word(self.morpheme_b)
+        word_a.check(), word_b.check()
+        # true because Term("E:A:T:.") < Term("a.i.-")
+        self.assertTrue(word_a < word_b)
+
+class TestClauses(unittest.TestCase):
+
+    def setUp(self):
+        pass
+
+    def test_simple_comparison(self):
+        a, b, c, d, e, f = tuple(get_words_list())
+        clause_a, clause_b = Clause(a,b,c), Clause(d,e,f)
+        clause_a.check(), clause_b.check()
+        self.assertTrue(clause_a < clause_b)
+
+    def test_attr_comparison(self):
+        a, b, c, d, e, f = tuple(get_words_list())
+        clause_a, clause_b = Clause(a,b,c), Clause(a,e,c)
+        clause_a.check(), clause_b.check()
+        self.assertTrue(clause_a < clause_b)

@@ -2,7 +2,7 @@ import logging
 from  functools import total_ordering
 from helpers import LoggedInstantiator, Singleton
 from models import DictionnaryQueries
-from ieml.exceptions import IEMLTermNotFoundInDictionnary, IndistintiveTermsExist
+from ieml.exceptions import IEMLTermNotFoundInDictionnary, IndistintiveTermsExist, InvalidConstructorParameter
 from .propositional_graph import PropositionGraph
 
 
@@ -70,7 +70,13 @@ class AbstractAdditiveProposition(AbstractProposition):
 
     def __init__(self, child_elements):
         super().__init__()
-        self.childs = child_elements
+        # for convenience, it's possible to input a single element which is automatically converted into a list
+        if isinstance(child_elements, list):
+            self.childs = child_elements
+        elif isinstance(child_elements, AbstractProposition) or isinstance(child_elements, Term):
+            self.childs = [child_elements]
+        else:
+            raise InvalidConstructorParameter(self)
 
     def __str__(self):
         if not self._has_been_checked:
@@ -106,7 +112,7 @@ class AbstractMultiplicativeProposition(AbstractProposition):
                 logging.warning("Additive proposition %s is not ordered, ordering it now" % str(child))
                 child.order()
 
-
+@total_ordering
 class Morpheme(AbstractAdditiveProposition, NonClosedProposition):
 
     def __str__(self):
@@ -120,9 +126,10 @@ class Morpheme(AbstractAdditiveProposition, NonClosedProposition):
     def check(self):
         # first, we "ask" all the terms to check themselves through the parent method
         super().check()
-        # then we check the terms for unicity turning their objectid's into a set
+        # then we check the terms for unicity by turning them into a set
         if len(self.childs) != len(set(self.childs)):
-            raise IndistintiveTermsExist()
+            raise IndistintiveTermsExist("There are %i indistinct terms. "
+                                         % (len(self.childs) - len(set(self.childs))))
         # TODO : more checking
         # - term intersection
         # - paradigmatic intersection
@@ -143,7 +150,19 @@ class Morpheme(AbstractAdditiveProposition, NonClosedProposition):
         # terms have the TotalOrder decorator, as such, they can be automatically ordered
         self.childs.sort()
 
+    def __gt__(self, other):
+        max_length = max(len(self.childs), len(other.childs))
+        for i in range(max_length):
+            if len(self.childs) <= i: # this morpheme is a suffix of the other one, it's "smaller"
+                return False
+            elif len(other.childs) <= i: # the morpheme is a suffix of the current one, so current one is "bigger"
+                return True
+            else:
+                if self.childs[i] != other.childs[i]:
+                    return self.childs[i] > other.childs[i]
 
+
+@total_ordering
 class Word(AbstractMultiplicativeProposition, ClosedProposition):
 
     def __init__(self, child_subst, child_mode=None):
@@ -169,6 +188,13 @@ class Word(AbstractMultiplicativeProposition, ClosedProposition):
         # since morphemes cannot have hyperlinks, we don't gather links for the underlying childs
         return [(self, usl_ref) for usl_ref in self.hyperlink]
 
+    def __gt__(self, other):
+        if self.subst != other.subst:
+            return self.subst > other.subst
+        else:
+            return self.mode > other.mode
+
+
 @total_ordering
 class AbstractClause(AbstractMultiplicativeProposition, NonClosedProposition):
 
@@ -178,17 +204,22 @@ class AbstractClause(AbstractMultiplicativeProposition, NonClosedProposition):
     def __gt__(self, other):
         if self.subst != other.subst:
             # the comparison depends on the terms of the two substs
-            pass
+            return self.subst > other.subst
         else:
             if self.attr != other.attr:
-                pass # the comparison depends on the terms of the two attrs
+                return self.attr > other.attr
             else:
                 # TODO : define exception for this case (which shouldn't really happen anyway)
                 raise Exception()
 
 
 class Clause(AbstractClause):
-    pass
+
+    def check(self):
+        # Clause won't ask for an underlying proposition to order itself, since the underlying
+        # element is a word (which cannot be ordered)
+        for child in self.childs:
+            child.check()
 
 
 class SuperClause(AbstractClause):

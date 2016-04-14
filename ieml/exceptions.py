@@ -21,6 +21,9 @@ class PropositionException(ASTException):
 class AdditiveOrderNotRespected(PropositionException):
     pass
 
+class InvalidConstructorParameter(PropositionException):
+    pass
+
 ### These exceptions /errors are graph_related
 
 
