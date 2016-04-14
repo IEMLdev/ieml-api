@@ -27,7 +27,7 @@ class BaseDataHandler(BaseHandler):
 
     def do_request_parsing(self):
         super().do_request_parsing()
-        self.json_data = json.dumps(self.args["data"])
+        self.json_data = json.loads(self.args["data"])
 
 class SearchTermsHandler(BaseHandler):
     """Handles the terms search"""

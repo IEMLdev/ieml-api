@@ -58,10 +58,13 @@ class WordGraphValidatorHandler(ValidatorHandler):
     returns the corresponding IEML string"""
 
     def post(self):
+        self.do_request_parsing()
 
         parser = PropositionsParser()
         nodes_table = {}
+        print(self.json_data)
         for node in self.json_data["nodes"]:
+
             nodes_table[node["id"]] = parser.parse(node["ieml_string"])
             if not isinstance(nodes_table[node["id"]], Term):
                 raise InvalidNodeIEMLLevel(node["id"])
