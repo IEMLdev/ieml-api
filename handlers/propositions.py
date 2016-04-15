@@ -104,39 +104,39 @@ class PropositionSearchHandler(BaseHandler):
         self.reqparse.add_argument("level", required=True, type=str)
         self.do_request_parsing()
 
-    class TextDecompositionHandler(BaseDataHandler):
+class TextDecompositionHandler(BaseDataHandler):
 
-        def entry(self, node):
-            ieml = str(node)
-            elem = DictionnaryQueries().exact_ieml_term_search(ieml)
-            if elem:
-                return {
-                    "ieml": ieml,
-                    "tags": {
-                        "FR": elem.get("FR"),
-                        "EN": elem.get("EN")
-                    }
+    def entry(self, node):
+        ieml = str(node)
+        elem = DictionnaryQueries().exact_ieml_term_search(ieml)
+        if elem:
+            return {
+                "ieml": ieml,
+                "tags": {
+                    "FR": elem.get("FR"),
+                    "EN": elem.get("EN")
                 }
-            else:
-                return {
-                    "ieml": ieml
-                }
+            }
+        else:
+            return {
+                "ieml": ieml
+            }
 
-        def prefix_walker(self, node):
-            result = [self.entry(node)]
-            for n in node.childs:
-                n_ieml = str(n)
-                for child in self.prefix_walker(n):
-                    child["ieml"] = '/'.join(n, child["ieml"])
-                    result.append(child)
+    def prefix_walker(self, node):
+        result = [self.entry(node)]
+        for n in node.childs:
+            n_ieml = str(n)
+            for child in self.prefix_walker(n):
+                child["ieml"] = '/'.join(n, child["ieml"])
+                result.append(child)
 
-            return result
+        return result
 
-        def post(self):
-            self.do_request_parsing()
+    def post(self):
+        self.do_request_parsing()
 
-            parser = USLParser()
-            text = parser.parse(self.json_data['data']);
-            result = self.prefix_walker(text)
-            print(result)
-            return result
+        parser = USLParser()
+        text = parser.parse(self.json_data['data']);
+        result = self.prefix_walker(text)
+        print(result)
+        return result
