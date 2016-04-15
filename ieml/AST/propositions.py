@@ -42,6 +42,14 @@ class AbstractProposition(metaclass=LoggedInstantiator):
         self._has_been_checked = False
         self._ieml_string = None
 
+    def __eq__(self, other):
+        """Two propositions are equal if their childs'list or tuple are equal"""
+        return self.childs == other.childs
+
+    def __hash__(self):
+        """Since the IEML string for any proposition AST is supposed to be unique, it can be used as a hash"""
+        return self.__str__().__hash__()
+
     def check(self):
         """Checks the IEML validity of the IEML proposition"""
         for child in self.childs:
@@ -50,14 +58,6 @@ class AbstractProposition(metaclass=LoggedInstantiator):
     def _gather_child_links(self):
         return [couple for sublist in [child.gather_hyperlinks() for child in self.childs]
                 for couple in sublist]
-
-    def __eq__(self, other):
-        """Two propositions are equal if their childs'list or tuple are equal"""
-        return self.childs == other.childs
-
-    def __hash__(self):
-        """Since the IEML string for any proposition AST is supposed to be unique, it can be used as a hash"""
-        return self.__str__().__hash__()
 
     def is_ordered(self):
         pass
@@ -123,6 +123,17 @@ class Morpheme(AbstractAdditiveProposition, NonClosedProposition):
                self.plus_symbol.join([str(element) for element in self.childs]) + \
                self.right_parent_symbol
 
+    def __gt__(self, other):
+        max_length = max(len(self.childs), len(other.childs))
+        for i in range(max_length):
+            if len(self.childs) <= i: # this morpheme is a suffix of the other one, it's "smaller"
+                return False
+            elif len(other.childs) <= i: # the morpheme is a suffix of the current one, so current one is "bigger"
+                return True
+            else:
+                if self.childs[i] != other.childs[i]:
+                    return self.childs[i] > other.childs[i]
+
     def check(self):
         # first, we "ask" all the terms to check themselves through the parent method
         super().check()
@@ -150,16 +161,7 @@ class Morpheme(AbstractAdditiveProposition, NonClosedProposition):
         # terms have the TotalOrder decorator, as such, they can be automatically ordered
         self.childs.sort()
 
-    def __gt__(self, other):
-        max_length = max(len(self.childs), len(other.childs))
-        for i in range(max_length):
-            if len(self.childs) <= i: # this morpheme is a suffix of the other one, it's "smaller"
-                return False
-            elif len(other.childs) <= i: # the morpheme is a suffix of the current one, so current one is "bigger"
-                return True
-            else:
-                if self.childs[i] != other.childs[i]:
-                    return self.childs[i] > other.childs[i]
+
 
 
 @total_ordering
@@ -184,22 +186,21 @@ class Word(AbstractMultiplicativeProposition, ClosedProposition):
                    str(self.subst) + self.times_symbol + \
                    str(self.mode) + self.right_bracket_symbol
 
-    def gather_hyperlinks(self):
-        # since morphemes cannot have hyperlinks, we don't gather links for the underlying childs
-        return [(self, usl_ref) for usl_ref in self.hyperlink]
-
     def __gt__(self, other):
         if self.subst != other.subst:
             return self.subst > other.subst
         else:
             return self.mode > other.mode
 
+    def gather_hyperlinks(self):
+        # since morphemes cannot have hyperlinks, we don't gather links for the underlying childs
+        return [(self, usl_ref) for usl_ref in self.hyperlink]
+
+
+
 
 @total_ordering
 class AbstractClause(AbstractMultiplicativeProposition, NonClosedProposition):
-
-    def gather_hyperlinks(self):
-        return self._gather_child_links()
 
     def __gt__(self, other):
         if self.subst != other.subst:
@@ -211,6 +212,11 @@ class AbstractClause(AbstractMultiplicativeProposition, NonClosedProposition):
             else:
                 # TODO : define exception for this case (which shouldn't really happen anyway)
                 raise Exception()
+
+    def gather_hyperlinks(self):
+        return self._gather_child_links()
+
+
 
 
 class Clause(AbstractClause):
@@ -281,15 +287,6 @@ class Term(metaclass=LoggedInstantiator):
     def __repr__(self):
         return str(self)
 
-    def check(self):
-        """Checks that the term exists in the database, and if found, stores the terms's objectid"""
-        result = TermsQueries().exact_ieml_term_search(self.ieml)
-        try:
-            self.objectid = result["_id"]
-            self.canonical_forms = result["CANONICAL"]
-        except TypeError:
-            raise IEMLTermNotFoundInDictionnary(self.ieml)
-
     def __hash__(self):
         return self.objectid.__hash__()
 
@@ -309,3 +306,13 @@ class Term(metaclass=LoggedInstantiator):
 
         #TODO : Define an exception to be raised if the comparison doesn't return
         raise Exception()
+
+    def check(self):
+        """Checks that the term exists in the database, and if found, stores the terms's objectid"""
+        result = TermsQueries().exact_ieml_term_search(self.ieml)
+        try:
+            self.objectid = result["_id"]
+            self.canonical_forms = result["CANONICAL"]
+        except TypeError:
+            raise IEMLTermNotFoundInDictionnary(self.ieml)
+

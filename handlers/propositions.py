@@ -29,6 +29,8 @@ class GraphValidatorHandler(ValidatorHandler):
     returns the corresponding IEML string"""
 
     def post(self):
+        self.do_request_parsing()
+
         parser = PropositionsParser()
         graph_type = SentenceGraph if self.json_data["validation_type"] == 1 else SuperSentenceGraph
         nodes_table = {}
@@ -59,6 +61,7 @@ class WordGraphValidatorHandler(ValidatorHandler):
 
     def post(self):
         self.do_request_parsing()
+        print(self.json_data)
 
         parser = PropositionsParser()
         nodes_table = {}
@@ -76,5 +79,5 @@ class WordGraphValidatorHandler(ValidatorHandler):
 
         # asking the proposition to check itself
         word_ast.check()
-        self.db_connector.save_closed_proposition(word_ast, self.json_data["tag"])
+        self.db_connector.save_closed_proposition(word_ast, self.json_data["tags"])
         return {"valid" : True, "ieml" : str(word_ast)}

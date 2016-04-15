@@ -1,5 +1,6 @@
 from handlers import WordGraphValidatorHandler
 from .helpers import *
+from unittest.mock import MagicMock
 
 class TestGraphValidator(unittest.TestCase):
 
@@ -19,9 +20,13 @@ class TestGraphValidator(unittest.TestCase):
                                        "graph": {"substance" : [1,2],
                                                  "mode" : [3,4,5]
                                                  },
-                                       "tag" : "Faire du bruit avec sa bouche"
+                                       "tags" : {
+                                           "fr" : "Faire du bruit avec sa bouche",
+                                           "en" : "Blah blah blah"
+                                       }
                                        }
         self.word_handler.db_connector = Mock()
+        self.word_handler.do_request_parsing = MagicMock(name="do_request_parsing")
 
     def test_word_validation(self):
         """Tests the whole word validation code block without the request handling"""

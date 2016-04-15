@@ -1,3 +1,5 @@
+import logging
+
 import numpy as np
 from ..exceptions import NodeHasNoParent, NodeHasTooMuchParents, NoRootNodeFound, SeveralRootNodeFound
 
@@ -22,6 +24,7 @@ class PropositionGraph:
 
         # since this list has been built from a set, every nodes are unique
         self.nodes_list = list(self.nodes_set)
+        self.nodes_list.sort()
         self.adjacency_matrix = None
         self._build_adjacency_matrix()
         self.graph_checker = PropositionGraphChecker(self)
@@ -78,7 +81,7 @@ class PropositionGraph:
             self._build_generation_table()
             ordered_clauses = []
             for generation in self.generations_table:
-                generation.sort() #clauses/sperclauses are totally ordered, so sort works on a list of those
+                generation.sort() # clauses/sperclauses are totally ordered, so sort works on a list of those
                 ordered_clauses += generation
 
             return ordered_clauses
@@ -97,8 +100,8 @@ class PropositionGraphChecker:
         self.node_count = self.adjacency_matrix.shape[0]
         self.ones_bool = np.full(self.node_count, True, dtype=bool)
         self.ones_int = np.full(self.node_count, 1,  dtype=int)
-        self.row_xor = np.dot(self.adjacency_matrix, self.ones_bool)
-        self.column_xor = np.dot(self.adjacency_matrix.transpose(), self.ones_bool)
+        self.row_and = np.dot(self.adjacency_matrix, self.ones_bool)
+        self.column_and = np.dot(self.adjacency_matrix.transpose(), self.ones_bool)
 
     def do_checks(self):
         """Runs the multiple checks the graph checker is in charge of, and 'finds' the graph root"""
@@ -110,22 +113,25 @@ class PropositionGraphChecker:
         """Using the adjacency matrix, checks that the graph has a unique root, and that this root
         has at least one child"""
         # checking the "root count"
-        root_count = np.dot(self.column_xor.astype(dtype=int), self.column_xor.astype(dtype=int))
+        has_parent_count = np.dot(self.column_and.astype(dtype=int), self.column_and.astype(dtype=int))
+        root_count = self.node_count - has_parent_count
         if root_count == 0: # only one root
             raise NoRootNodeFound()
         elif root_count > 1:# more than one root
             raise SeveralRootNodeFound()
         else :
             #saving the index of the root_node
-            for index, node_xor in enumerate(self.column_xor):
+            for index, node_xor in enumerate(self.column_and):
                 if not node_xor:
                     self.root_node_index = index
+                    logging.debug("Found root of graph : node %i" % index)
+                    break
 
     def _check_only_unique_parent(self):
         """checks that each element of the graph only has one parent (making the graph a tree).
         This check depends on the root_node check """
         # getting the "incoming" vertices count for each node in an array
-        incoming_connection_count = np.dot(self.adjacency_matrix.astype(dtype=int), self.ones_int)
+        incoming_connection_count = np.dot(self.adjacency_matrix.transpose().astype(dtype=int), self.ones_int)
 
         # for all node, except the root, there can and should only be ONE parent.
         for index, conn_sum in enumerate(incoming_connection_count):
