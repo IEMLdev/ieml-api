@@ -46,6 +46,7 @@ class PropositionGraph:
     def check(self):
         self.graph_checker.do_checks()
         self.root_node = self.nodes_list[self.graph_checker.root_node_index]
+        logging.debug("Root node for sentence is %s" % str(self.root_node))
         self.has_been_checked = True
 
     def _build_generation_table(self):
@@ -55,12 +56,12 @@ class PropositionGraph:
         # should have been checked by the graph_checker
 
         # buffer variables and lists
-        self.generations_table = [[]] #list of lists of clauses
+        self.generations_table = [] #list of lists of clauses
         current_gen = 0
         current_gen_parent_nodes = [self.root_node]
         while current_gen_parent_nodes: #as long as we have parents nodes...
             # finding all the clauses for the current generation
-            self.generations_table[current_gen] = []
+            self.generations_table.append([])
             for parent_node in current_gen_parent_nodes:
                 self.generations_table[current_gen] += self.parent_nodes[parent_node]
 

@@ -152,10 +152,7 @@ class TestClauses(unittest.TestCase):
 class TestSentences(unittest.TestCase):
 
     def test_adjacency_graph_building(self):
-        a, b, c, d, e, f = tuple(get_words_list())
-        clause_a, clause_b, clause_c, clause_d = Clause(a,b,f), Clause(a,c,f), Clause(b,e,f), Clause(b,d,f)
-        sentence = Sentence([clause_a, clause_b, clause_c, clause_d])
-        sentence.check()
+        sentence = get_test_sentence()
         adjancency_matrix = np.array([[False,True,True,False,False],
                                       [False,False,False,True,True],
                                       [False,False,False,False,False],
@@ -180,3 +177,8 @@ class TestSentences(unittest.TestCase):
         sentence = Sentence([Clause(a,b,f), Clause(b,c,f), Clause(c,a,f), Clause(b,d,f), Clause(c,d,f)])
         with self.assertRaises(NoRootNodeFound):
             sentence.check()
+
+    def test_clause_ordering(self):
+        sentence = get_test_sentence()
+        sentence.order()
+        self.assertEquals(sentence.childs,[clause_a, clause_b,clause_d, clause_c])

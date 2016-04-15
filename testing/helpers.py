@@ -18,3 +18,10 @@ def get_words_list():
     #this list is already sorted
     terms_list = [Term("E:A:T:."), Term("E:S:.wa.-"),Term("E:S:.o.-"), Term("u.M:M:.-"), Term("a.i.-"), Term("i.i.-")]
     return [Word(Morpheme(term)) for term in terms_list]
+
+def get_test_sentence():
+    a, b, c, d, e, f = tuple(get_words_list())
+    clause_a, clause_b, clause_c, clause_d = Clause(a,b,f), Clause(a,c,f), Clause(b,e,f), Clause(b,d,f)
+    sentence = Sentence([clause_a, clause_b, clause_c, clause_d])
+    sentence.check()
+    return sentence

@@ -16,7 +16,7 @@ class PropositionsQueries(DBConnector):
 
     def _retrieve_primitive_objectid(self, ieml_string, primitive_type):
         """Retrieves the objectid of an IEML primitive"""
-        if primitive_type is AST.Term:
+        if primitive_type is ieml.AST.Term:
             return self.terms.find_one({"IEML" : ieml_string})["_id"]
         else:
             return self.propositions.find_one({"IEML" : ieml_string,
