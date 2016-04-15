@@ -1,7 +1,7 @@
 from flask import Flask
 from flask_restful import Api
 
-from handlers import SearchTermsHandler, WordGraphValidatorHandler
+from handlers import SearchTermsHandler, WordGraphValidatorHandler, TextDecompositionHandler
 
 app = Flask(__name__)
 api = Api(app)
@@ -11,6 +11,7 @@ api = Api(app)
 
 api.add_resource(SearchTermsHandler, '/api/search_terms')
 api.add_resource(WordGraphValidatorHandler, '/api/validate_word')
+api.add_resource(TextDecompositionHandler, '/api/text_decomposition')
 
 if __name__ == '__main__':
     app.run(debug=True, host="0.0.0.0") # served on the local network

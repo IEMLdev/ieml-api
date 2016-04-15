@@ -1,4 +1,4 @@
-from handlers import WordGraphValidatorHandler
+from handlers import WordGraphValidatorHandler, TextDecompositionHandler
 from .helpers import *
 
 class TestGraphValidator(unittest.TestCase):
@@ -30,3 +30,18 @@ class TestGraphValidator(unittest.TestCase):
         word = get_test_word_instance()
         word.check()
         self.assertEquals(request_output["ieml"], str(word))
+
+class TestTextDecomposition(unittest.TestCase):
+
+    def setUp(self):
+        self.text_handler = TextDecompositionHandler()
+
+        with open("data/example_supersentence.txt") as ss:
+            self.text_handler.json_data = {"data" : "{/%s/}" % ss}
+
+        self.text_handler.db_connector = Mock()
+
+    def test_text_decomposition(self):
+        """Tests the whole word validation code block without the request handling"""
+
+        request_output = self.text_handler.post()

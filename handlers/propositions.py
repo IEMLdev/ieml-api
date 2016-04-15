@@ -3,7 +3,8 @@ from .base import BaseDataHandler
 from ieml.AST import Word, Clause, Sentence, SuperClause, SuperSentence, Morpheme
 from ieml.exceptions import InvalidNodeIEMLLevel
 from ieml import PropositionsParser
-from models import PropositionsQueries
+from ieml import USLParser
+from models import PropositionsQueries, DictionnaryQueries
 
 class SentenceGraph:
 
@@ -29,6 +30,8 @@ class GraphValidatorHandler(ValidatorHandler):
     returns the corresponding IEML string"""
 
     def post(self):
+        self.do_request_parsing()
+
         parser = PropositionsParser()
         graph_type = SentenceGraph if self.json_data["validation_type"] == 1 else SuperSentenceGraph
         nodes_table = {}
@@ -78,3 +81,45 @@ class WordGraphValidatorHandler(ValidatorHandler):
         word_ast.check()
         self.db_connector.save_closed_proposition(word_ast, self.json_data["tag"])
         return {"valid" : True, "ieml" : str(word_ast)}
+
+
+class TextDecompositionHandler(BaseDataHandler):
+
+    def entry(self, node):
+        ieml = str(node)
+        elem = DictionnaryQueries().exact_ieml_term_search(ieml)
+        if elem :
+            return {
+                "ieml" : ieml,
+                "tags" : {
+                    "FR" : elem.get("FR"),
+                    "EN" : elem.get("EN")
+                }
+            }
+        else :
+            return {
+                "ieml" : ieml
+            }
+
+
+
+    def prefix_walker(self, node):
+        result = [self.entry(node)]
+        for n in node.childs:
+            n_ieml = str(n)
+            for child in self.prefix_walker(n):
+                child["ieml"] = '/'.join(n, child["ieml"])
+                result.append(child)
+
+        return result
+
+
+
+    def post(self):
+        self.do_request_parsing()
+
+        parser = USLParser()
+        text = parser.parse(self.json_data['data']);
+        result = self.prefix_walker(text)
+        print(result)
+        return result
