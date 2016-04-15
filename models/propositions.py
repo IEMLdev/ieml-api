@@ -16,7 +16,7 @@ class PropositionsQueries(DBConnector):
 
     def _retrieve_primitive_objectid(self, ieml_string, primitive_type):
         """Retrieves the objectid of an IEML primitive"""
-        if primitive_type is AST.Term:
+        if primitive_type is ieml.AST.Term:
             return self.terms.find_one({"IEML" : ieml_string})["_id"]
         else:
             return self.propositions.find_one({"IEML" : ieml_string,
@@ -27,19 +27,19 @@ class PropositionsQueries(DBConnector):
         return [self._retrieve_primitive_objectid(str(proposition), type(proposition))
                 for proposition in proposition_list]
 
-    def _write_proposition_to_db(self, proposition, proposition_tag):
+    def _write_proposition_to_db(self, proposition, proposition_tags):
         """Saves a proposition to the db"""
         self.propositions.insert_one({"IEML" : str(proposition),
                                       "TYPE" : self._proposition_db_type(proposition),
-                                      "TAGS" : [proposition_tag]})
+                                      "TAGS" : proposition_tags})
 
-    def save_closed_proposition(self, proposition_ast, proposition_tag):
+    def save_closed_proposition(self, proposition_ast, proposition_tags):
         """Saves a valid proposition's AST into the database.
         A proposition being saved will always be a word, sentence or supersentence,
         As such, this function also saves the underlying primitives"""
 
         # for now, only does simple saving (whitout the Objectid matching stuff)
         # does check if the proposition is here or not beforehand though
-        self._write_proposition_to_db(proposition_tag, proposition_tag)
+        self._write_proposition_to_db(proposition_ast, proposition_tags)
 
 

@@ -1,4 +1,6 @@
+from ieml.exceptions import SeveralRootNodeFound, NodeHasTooMuchParents, NoRootNodeFound
 from .helpers import *
+import numpy as np
 
 class TestTermsFeatures(unittest.TestCase):
     """Checks basic AST features like hashing, ordering for words, morphemes and terms"""
@@ -133,13 +135,50 @@ class TestClauses(unittest.TestCase):
         pass
 
     def test_simple_comparison(self):
+        """Tests the comparison on two clauses not sharing the same substance"""
         a, b, c, d, e, f = tuple(get_words_list())
         clause_a, clause_b = Clause(a,b,c), Clause(d,e,f)
         clause_a.check(), clause_b.check()
         self.assertTrue(clause_a < clause_b)
 
     def test_attr_comparison(self):
+        """tests the comparison between two clauses sharing the same substance"""
         a, b, c, d, e, f = tuple(get_words_list())
         clause_a, clause_b = Clause(a,b,c), Clause(a,e,c)
         clause_a.check(), clause_b.check()
         self.assertTrue(clause_a < clause_b)
+
+
+class TestSentences(unittest.TestCase):
+
+    def test_adjacency_graph_building(self):
+        sentence = get_test_sentence()
+        adjancency_matrix = np.array([[False,True,True,False,False],
+                                      [False,False,False,True,True],
+                                      [False,False,False,False,False],
+                                      [False,False,False,False,False],
+                                      [False,False,False,False,False]])
+        self.assertTrue((sentence.graph.adjacency_matrix == adjancency_matrix).all())
+
+    def test_two_many_roots(self):
+        a, b, c, d, e, f = tuple(get_words_list())
+        sentence = Sentence([Clause(a,b,f), Clause(a,c,f), Clause(b,e,f), Clause(d,b,f)])
+        with self.assertRaises(SeveralRootNodeFound):
+            sentence.check()
+
+    def test_too_many_parents(self):
+        a, b, c, d, e, f = tuple(get_words_list())
+        sentence = Sentence([Clause(a,b,f), Clause(a,c,f), Clause(b,e,f), Clause(b,d,f), Clause(c,d,f)])
+        with self.assertRaises(NodeHasTooMuchParents):
+            sentence.check()
+
+    def test_no_root(self):
+        a, b, c, d, e, f = tuple(get_words_list())
+        sentence = Sentence([Clause(a,b,f), Clause(b,c,f), Clause(c,a,f), Clause(b,d,f), Clause(c,d,f)])
+        with self.assertRaises(NoRootNodeFound):
+            sentence.check()
+
+    def test_clause_ordering(self):
+        sentence = get_test_sentence()
+        sentence.order()
+        self.assertEquals(sentence.childs,[clause_a, clause_b,clause_d, clause_c])

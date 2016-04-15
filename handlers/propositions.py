@@ -25,6 +25,7 @@ class ValidatorHandler(BaseDataHandler):
         super().__init__()
         self.db_connector = PropositionsQueries()
 
+
 class GraphValidatorHandler(ValidatorHandler):
     """Checks that a give graph representing a sentence/supersentence is well formed, and if it is,
     returns the corresponding IEML string"""
@@ -52,7 +53,7 @@ class GraphValidatorHandler(ValidatorHandler):
         proposition_ast = graph_type.additive_type(multiplication_elems)
         # asking the proposition to check itself
         proposition_ast.check()
-
+        self.db_connector.save_closed_proposition(proposition_ast, self.json_data["tags"])
         return {"valid" : True, "ieml" : str(proposition_ast)}
 
 
@@ -65,7 +66,6 @@ class WordGraphValidatorHandler(ValidatorHandler):
 
         parser = PropositionsParser()
         nodes_table = {}
-        print(self.json_data)
         for node in self.json_data["nodes"]:
 
             nodes_table[node["id"]] = parser.parse(node["ieml_string"])
@@ -79,7 +79,7 @@ class WordGraphValidatorHandler(ValidatorHandler):
 
         # asking the proposition to check itself
         word_ast.check()
-        self.db_connector.save_closed_proposition(word_ast, self.json_data["tag"])
+        self.db_connector.save_closed_proposition(word_ast, self.json_data["tags"])
         return {"valid" : True, "ieml" : str(word_ast)}
 
 
