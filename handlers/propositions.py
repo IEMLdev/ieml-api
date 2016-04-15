@@ -5,8 +5,8 @@ from .base import BaseHandler, BaseDataHandler
 from ieml.AST import Word, Clause, Sentence, SuperClause, SuperSentence, Morpheme
 from ieml.exceptions import InvalidNodeIEMLLevel
 from .exceptions import MissingField
-from ieml import PropositionsParser
-from models import PropositionsQueries
+from ieml import PropositionsParser, USLParser
+from models import PropositionsQueries, DictionnaryQueries
 
 class SentenceGraph:
 
@@ -103,3 +103,40 @@ class PropositionSearchHandler(BaseHandler):
         self.reqparse.add_argument("searchstring", required=True, type=str)
         self.reqparse.add_argument("level", required=True, type=str)
         self.do_request_parsing()
+
+    class TextDecompositionHandler(BaseDataHandler):
+
+        def entry(self, node):
+            ieml = str(node)
+            elem = DictionnaryQueries().exact_ieml_term_search(ieml)
+            if elem:
+                return {
+                    "ieml": ieml,
+                    "tags": {
+                        "FR": elem.get("FR"),
+                        "EN": elem.get("EN")
+                    }
+                }
+            else:
+                return {
+                    "ieml": ieml
+                }
+
+        def prefix_walker(self, node):
+            result = [self.entry(node)]
+            for n in node.childs:
+                n_ieml = str(n)
+                for child in self.prefix_walker(n):
+                    child["ieml"] = '/'.join(n, child["ieml"])
+                    result.append(child)
+
+            return result
+
+        def post(self):
+            self.do_request_parsing()
+
+            parser = USLParser()
+            text = parser.parse(self.json_data['data']);
+            result = self.prefix_walker(text)
+            print(result)
+            return result

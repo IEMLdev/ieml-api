@@ -1,1 +1,1 @@
-from .parser import PropositionsParser
+from .parser import PropositionsParser, USLParser
