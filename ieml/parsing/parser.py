@@ -124,7 +124,7 @@ class USLParser(PropositionsParser):
              p[0].add_hyperlink(p[4])
 
     def p_super_sentence(self, p):
-        """sentence : LBRACKET superclauses_sum RBRACKET
+        """supersentence : LBRACKET superclauses_sum RBRACKET
                     | LBRACKET superclauses_sum RBRACKET usl_list"""
         p[0] = SuperSentence(p[2])
         if len(p) == 5:
@@ -133,7 +133,7 @@ class USLParser(PropositionsParser):
     def p_closed_proposition(self, p):
         """closed_proposition : SLASH word SLASH
                             | SLASH sentence SLASH
-                            | SLASH super SLASH"""
+                            | SLASH supersentence SLASH"""
         p[0] = p[2]
 
     def p_closed_proposition_list(self, p):

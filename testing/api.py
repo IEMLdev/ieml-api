@@ -97,3 +97,4 @@ class TestTextDecomposition(unittest.TestCase):
         """Tests the whole word validation code block without the request handling"""
 
         request_output = self.text_handler.post()
+

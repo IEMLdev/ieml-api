@@ -41,5 +41,3 @@ class PropositionsQueries(DBConnector):
         # for now, only does simple saving (whitout the Objectid matching stuff)
         # does check if the proposition is here or not beforehand though
         self._write_proposition_to_db(proposition_ast, proposition_tags)
-
-

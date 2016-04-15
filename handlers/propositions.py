@@ -104,7 +104,7 @@ class PropositionSearchHandler(BaseHandler):
         self.reqparse.add_argument("level", required=True, type=str)
         self.do_request_parsing()
 
-class TextDecompositionHandler(BaseDataHandler):
+class TextDecompositionHandler(BaseHandler):
 
     def entry(self, node):
         ieml = str(node)
@@ -129,14 +129,14 @@ class TextDecompositionHandler(BaseDataHandler):
             for child in self.prefix_walker(n):
                 child["ieml"] = '/'.join(n, child["ieml"])
                 result.append(child)
-
         return result
 
     def post(self):
+        self.reqparse.add_argument("data", required=True, type=str)
         self.do_request_parsing()
 
         parser = USLParser()
-        text = parser.parse(self.json_data['data']);
+        text = parser.parse(self.args['data']);
         result = self.prefix_walker(text)
         print(result)
         return result
