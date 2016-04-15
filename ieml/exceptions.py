@@ -66,3 +66,11 @@ class InvalidNodeIEMLLevel(InvalidSingleNode):
 
 class NodeHasTooMuchParents(InvalidSingleNode):
     pass
+
+### AST tools related errors
+
+class ToolsException(Exception):
+    pass
+
+class CannotPromoteToLowerLevel(ToolsException):
+    pass
