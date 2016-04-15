@@ -1,7 +1,10 @@
+import logging
+
 from ieml.AST.propositions import Term
-from .base import BaseDataHandler
+from .base import BaseHandler, BaseDataHandler
 from ieml.AST import Word, Clause, Sentence, SuperClause, SuperSentence, Morpheme
 from ieml.exceptions import InvalidNodeIEMLLevel
+from .exceptions import MissingField
 from ieml import PropositionsParser
 from models import PropositionsQueries
 
@@ -24,6 +27,12 @@ class ValidatorHandler(BaseDataHandler):
         super().__init__()
         self.db_connector = PropositionsQueries()
 
+    def do_request_parsing(self):
+        super().do_request_parsing()
+        for field in ["graph", "nodes"]:
+            if field not in self.json_data:
+                raise MissingField(field)
+
 
 class GraphValidatorHandler(ValidatorHandler):
     """Checks that a give graph representing a sentence/supersentence is well formed, and if it is,
@@ -33,7 +42,12 @@ class GraphValidatorHandler(ValidatorHandler):
         self.do_request_parsing()
 
         parser = PropositionsParser()
-        graph_type = SentenceGraph if self.json_data["validation_type"] == 1 else SuperSentenceGraph
+        if "validation_type" in self.json_data:
+            graph_type = SentenceGraph if self.json_data["validation_type"] == 1 else SuperSentenceGraph
+        else:
+            logging.warning("Couldn't find validation_type field, defaulting to sentence level")
+            graph_type = SentenceGraph
+
         nodes_table = {}
         for node in self.json_data["nodes"]:
             nodes_table[node["id"]] = parser.parse(node["ieml_string"])
@@ -80,3 +94,12 @@ class WordGraphValidatorHandler(ValidatorHandler):
         word_ast.check()
         self.db_connector.save_closed_proposition(word_ast, self.json_data["tags"])
         return {"valid" : True, "ieml" : str(word_ast)}
+
+
+class PropositionSearchHandler(BaseHandler):
+    """Search for primitives in the database, for all levels"""
+
+    def post(self):
+        self.reqparse.add_argument("searchstring", required=True, type=str)
+        self.reqparse.add_argument("level", required=True, type=str)
+        self.do_request_parsing()

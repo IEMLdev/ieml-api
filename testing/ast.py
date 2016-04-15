@@ -2,6 +2,14 @@ from ieml.exceptions import SeveralRootNodeFound, NodeHasTooMuchParents, NoRootN
 from .helpers import *
 import numpy as np
 
+class TestMetaFeatures(unittest.TestCase):
+    """Tests inter-class operations and metaclass related features"""
+
+    def test_class_comparison(self):
+        self.assertGreater(Word, Term)
+        self.assertGreater(Sentence, Word)
+        self.assertLess(Morpheme, SuperSentence)
+
 class TestTermsFeatures(unittest.TestCase):
     """Checks basic AST features like hashing, ordering for words, morphemes and terms"""
 
@@ -179,6 +187,9 @@ class TestSentences(unittest.TestCase):
             sentence.check()
 
     def test_clause_ordering(self):
-        sentence = get_test_sentence()
+        a, b, c, d, e, f = tuple(get_words_list())
+        clause_a, clause_b, clause_c, clause_d = Clause(a,b,f), Clause(a,c,f), Clause(b,e,f), Clause(b,d,f)
+        sentence = Sentence([clause_a, clause_b, clause_c, clause_d])
+        sentence.check()
         sentence.order()
         self.assertEquals(sentence.childs,[clause_a, clause_b,clause_d, clause_c])

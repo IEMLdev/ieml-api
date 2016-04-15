@@ -27,8 +27,19 @@ class NonClosedProposition:
     """This class acts as an interface for propositions that *cannot* be closed"""
     pass
 
+@total_ordering
+class AbstractPropositionMetaclass(LoggedInstantiator):
 
-class AbstractProposition(metaclass=LoggedInstantiator):
+    def __gt__(self, other):
+        child_list = [Term, Morpheme, Word, Clause, Sentence, SuperClause, SuperSentence]
+        return child_list.index(self) > child_list.index(other)
+
+    def __lt__(self, other):
+        child_list = [Term, Morpheme, Word, Clause, Sentence, SuperClause, SuperSentence]
+        return child_list.index(self) < child_list.index(other)
+
+
+class AbstractProposition(metaclass=AbstractPropositionMetaclass):
     # these are used for the proposition rendering
     times_symbol = "*"
     left_parent_symbol = "("
@@ -49,6 +60,11 @@ class AbstractProposition(metaclass=LoggedInstantiator):
     def __hash__(self):
         """Since the IEML string for any proposition AST is supposed to be unique, it can be used as a hash"""
         return self.__str__().__hash__()
+
+    def __str__(self):
+        if not self._has_been_checked:
+            logging.warning("Proposition %s hasn't been checked for ordering and consistency" % type(self))
+
 
     def check(self):
         """Checks the IEML validity of the IEML proposition"""
@@ -79,8 +95,7 @@ class AbstractAdditiveProposition(AbstractProposition):
             raise InvalidConstructorParameter(self)
 
     def __str__(self):
-        if not self._has_been_checked:
-            logging.warning("Proposition hasn't been checked for ordering and consistency")
+        super().__str__()
 
         return self.left_bracket_symbol + \
                self.plus_symbol.join([str(element) for element in self.childs]) + \
@@ -97,8 +112,7 @@ class AbstractMultiplicativeProposition(AbstractProposition):
         self.childs = (self.subst, self.attr, self.mode)
 
     def __str__(self):
-        if not self._has_been_checked:
-            logging.warning("Proposition hasn't been checked for ordering and consistency")
+        super().__str__()
 
         return self.left_parent_symbol + \
                str(self.subst) + self.times_symbol + \
@@ -116,8 +130,7 @@ class AbstractMultiplicativeProposition(AbstractProposition):
 class Morpheme(AbstractAdditiveProposition, NonClosedProposition):
 
     def __str__(self):
-        if not self._has_been_checked:
-            logging.warning("Proposition hasn't been checked for ordering and consistency")
+        super().__str__()
 
         return self.left_parent_symbol + \
                self.plus_symbol.join([str(element) for element in self.childs]) + \
@@ -274,7 +287,7 @@ class SuperSentence(AbstractSentence):
 
 
 @total_ordering
-class Term(metaclass=LoggedInstantiator):
+class Term(metaclass=AbstractPropositionMetaclass):
 
     def __init__(self, ieml_string):
         self.ieml = ieml_string

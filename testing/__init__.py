@@ -1,4 +1,5 @@
-from .api import WordGraphValidatorHandler, TestWordGraphValidator
-from .ast import TestTermsFeatures, TestMorphemesFeatures, TestWords, TestClauses, TestSentences
+from .api import WordGraphValidatorHandler, TestSentenceGraphValidator
+from .ast import TestTermsFeatures, TestMorphemesFeatures, TestWords, TestClauses, \
+    TestSentences, TestMetaFeatures
 from .db import TestDBQueries
 from .parser import TestParser
