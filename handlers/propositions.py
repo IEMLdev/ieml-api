@@ -100,7 +100,7 @@ class SearchPropositionsHandler(BaseHandler):
 
     def post(self):
         self.reqparse.add_argument("searchstring", required=True, type=str)
-        self.reqparse.add_argument("level", required=True, type=str) # 1 is word, 2 sentence, 3 supersentence
+        self.reqparse.add_argument("level", required=True, type=int) # 1 is word, 2 sentence, 3 supersentence
         self.do_request_parsing()
 
         level_to_type_table = {
