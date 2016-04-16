@@ -62,7 +62,7 @@ class PropositionsQueries(DBConnector):
 
         result = self.propositions.find({"$text" : {"$search" : search_string},
                                          "TYPE": type_filter},
-                                        {"IEML" : 1, "TAGS" : 1})
+                                        {"IEML" : 1, "TAGS" : 1, "TYPE" : 1})
 
         return list(result)
 
