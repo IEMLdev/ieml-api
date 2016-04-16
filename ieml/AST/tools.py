@@ -24,6 +24,7 @@ def null_element(ast_level_type):
     }
     return null_elements_table[ast_level_type]
 
+
 def promote_to(proposition, level_type):
     if proposition.__class__ == level_type:
         return proposition

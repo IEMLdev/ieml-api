@@ -1,3 +1,4 @@
+from models.exceptions import PropositionAlreadyExists
 from .base_queries import DBConnector
 from .constants import PROPOSITION_COLLECTION
 import ieml.AST
@@ -40,13 +41,18 @@ class PropositionsQueries(DBConnector):
 
         # for now, only does simple saving (whitout the Objectid matching stuff)
         # does check if the proposition is here or not beforehand though
-        self._write_proposition_to_db(proposition_ast, proposition_tags)
+        if self.propositions.find_one({"IEML" : str(proposition_ast)}) is None:
+            self._write_proposition_to_db(proposition_ast, proposition_tags)
+        else:
+            PropositionAlreadyExists()
 
 
     def search_for_propositions(self, search_string, max_level):
 
         if max_level == ieml.AST.Sentence:
             type_filter = {"$in": ["WORD", "SENTENCE"]}
+        elif max_level == ieml.AST.SuperSentence:
+            type_filter = {"$in": ["WORD", "SENTENCE", "SUPERSENTENCE"]}
         else:
             type_filter = "WORD"
 

@@ -104,12 +104,13 @@ class PropositionSearchHandler(BaseHandler):
         self.reqparse.add_argument("level", required=True, type=str) # 1 is word, 2 sentence, 3 supersentence
         self.do_request_parsing()
 
-        if self.args["level"] == 1:
-            max_primitive_level = Term
-        elif self.args["level"] == 2:
-            max_primitive_level = Word
-        else:
-            max_primitive_level = Sentence
+        level_to_type_table = {
+            1 : Term,
+            2 : Word,
+            3 : Sentence,
+            4 : SuperSentence
+        }
+        max_primitive_level = level_to_type_table[self.args["level"]]
 
         result = []
         for term in DictionnaryQueries().search_for_terms(self.args["searchstring"]):

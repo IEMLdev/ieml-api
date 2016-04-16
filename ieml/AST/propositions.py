@@ -175,8 +175,6 @@ class Morpheme(AbstractAdditiveProposition, NonClosedProposition):
         self.childs.sort()
 
 
-
-
 @total_ordering
 class Word(AbstractMultiplicativeProposition, ClosedProposition):
 
