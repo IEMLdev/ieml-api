@@ -113,7 +113,7 @@ class SearchPropositionsHandler(BaseHandler):
 
         result = []
         for term in DictionnaryQueries().search_for_terms(self.args["searchstring"]):
-            term["IEML"] = str(promote_to(Term("[%s]" % term["ieml"]), max_primitive_level))
+            term["IEML"] = str(promote_to(Term(term["ieml"]), max_primitive_level))
             term["ORIGINAL"] = "TERM"
             term["TAGS"] = {"FR" : term["natural_language"]["FR"],
                             "EN" : term["natural_language"]["EN"]}

@@ -11,6 +11,11 @@ class TestPromotion(unittest.TestCase):
         self.assertEquals(sentence.__class__, Sentence)
         self.assertEquals(str(sentence), "[([([a.i.-]+[i.i.-])*([E:A:T:.]+[E:S:.wa.-]+[E:S:.o.-])]*[([E:])]*[([E:])])]")
 
+    def test_terms_promotion(self):
+        term = Term("E:A:T:.")
+        term.check()
+        self.assertEquals(str(promote_to(term, Word)), "[([E:A:T:.])]")
+
     def test_wrong_promotion(self):
         word = get_test_word_instance()
         word.check()
