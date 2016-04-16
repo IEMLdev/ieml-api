@@ -2,6 +2,7 @@ import json
 
 from flask_restful import Resource, reqparse
 from models import DictionnaryQueries
+from ieml.exceptions import ASTException
 
 class BaseHandler(Resource):
     """This is the base abstract handler, instantiates a request parser,
@@ -43,9 +44,10 @@ class ErrorCatcher:
     def __init__(self, post_function):
         self.post = post_function
 
-    def __call__(self):
+    def __call__(self, *args, **kwargs):
 
         try:
-            self.post()
-        except Exception as e:
+            self.post(*args, **kwargs)
+        except ASTException as e:
+            # probably going to use a table that'll do error type -> json message conversion
             pass
