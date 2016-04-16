@@ -4,3 +4,6 @@ class DBException(Exception):
 
 class PropositionAlreadyExists(DBException):
     pass
+
+class ObjectTypeNotStoredinDB(DBException):
+    pass

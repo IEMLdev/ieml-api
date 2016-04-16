@@ -1,4 +1,5 @@
-from models.exceptions import PropositionAlreadyExists
+
+from models.exceptions import PropositionAlreadyExists, ObjectTypeNotStoredinDB
 from .base_queries import DBConnector
 from .constants import PROPOSITION_COLLECTION
 import ieml.AST
@@ -15,17 +16,20 @@ class PropositionsQueries(DBConnector):
         """Returns the DB name for a proposition"""
         return proposition.__class__.__name__.upper()
 
-    def _retrieve_primitive_objectid(self, ieml_string, primitive_type):
+    def retrieve_proposition_objectid(self, proposition):
         """Retrieves the objectid of an IEML primitive"""
-        if primitive_type is ieml.AST.Term:
-            return self.terms.find_one({"IEML" : ieml_string})["_id"]
+        if isinstance(proposition,ieml.AST.Term):
+            return self.terms.find_one({"IEML" : proposition.ieml})["_id"]
+
+        elif isinstance(proposition, (ieml.AST.Sentence, ieml.AST.Word, ieml.AST.SuperSentence)):
+            return self.propositions.find_one({"IEML" : str(proposition),
+                                               "TYPE" : self._proposition_db_type(proposition)})["_id"]
         else:
-            return self.propositions.find_one({"IEML" : ieml_string,
-                                               "TYPE" : primitive_type.__name__.upper()})["_id"]
+            raise ObjectTypeNotStoredinDB()
 
     def _retrieve_propositions_objectids(self, proposition_list):
         """Helper function to iterate through the list"""
-        return [self._retrieve_primitive_objectid(str(proposition), type(proposition))
+        return [self.retrieve_proposition_objectid(proposition)
                 for proposition in proposition_list]
 
     def _write_proposition_to_db(self, proposition, proposition_tags):
