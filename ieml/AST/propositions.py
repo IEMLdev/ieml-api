@@ -2,7 +2,8 @@ import logging
 from  functools import total_ordering
 from helpers import LoggedInstantiator, Singleton
 from models import DictionnaryQueries
-from ieml.exceptions import IEMLTermNotFoundInDictionnary, IndistintiveTermsExist, InvalidConstructorParameter
+from ieml.exceptions import IEMLTermNotFoundInDictionnary, IndistintiveTermsExist, InvalidConstructorParameter, \
+    InvalidClauseComparison, TermComparisonFailed
 from .propositional_graph import PropositionGraph
 
 
@@ -221,8 +222,7 @@ class AbstractClause(AbstractMultiplicativeProposition, NonClosedProposition):
             if self.attr != other.attr:
                 return self.attr > other.attr
             else:
-                # TODO : define exception for this case (which shouldn't really happen anyway)
-                raise Exception()
+                raise InvalidClauseComparison()
 
     def gather_hyperlinks(self):
         return self._gather_child_links()
@@ -315,8 +315,7 @@ class Term(metaclass=AbstractPropositionMetaclass):
                 if self.canonical_forms[i] != other.canonical_forms[i]:
                     return self.canonical_forms[i] > other.canonical_forms[i]
 
-        #TODO : Define an exception to be raised if the comparison doesn't return
-        raise Exception()
+        raise TermComparisonFailed(self.ieml, other.ieml)
 
     def check(self):
         """Checks that the term exists in the database, and if found, stores the terms's objectid"""

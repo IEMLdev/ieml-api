@@ -37,3 +37,15 @@ class SearchTermsHandler(BaseHandler):
         self.do_request_parsing()
         return DictionnaryQueries().search_for_terms(self.args["searchstring"])
 
+
+class ErrorCatcher:
+
+    def __init__(self, post_function):
+        self.post = post_function
+
+    def __call__(self):
+
+        try:
+            self.post()
+        except Exception as e:
+            pass

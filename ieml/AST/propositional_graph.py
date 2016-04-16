@@ -78,17 +78,16 @@ class PropositionGraph:
 
     def get_ordereded_clauses_list(self):
         """Returns the same set of clauses as the one in input, but put in the right order"""
-        if self.has_been_checked:
-            self._build_generation_table()
-            ordered_clauses = []
-            for generation in self.generations_table:
-                generation.sort() # clauses/sperclauses are totally ordered, so sort works on a list of those
-                ordered_clauses += generation
+        if not self.has_been_checked:
+            self.check()
 
-            return ordered_clauses
-        else:
-            # TODO : Define expression for here
-            raise Exception()
+        self._build_generation_table()
+        ordered_clauses = []
+        for generation in self.generations_table:
+            generation.sort() # clauses/sperclauses are totally ordered, so sort works on a list of those
+            ordered_clauses += generation
+
+        return ordered_clauses
 
 
 
