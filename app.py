@@ -12,7 +12,7 @@ api = Api(app)
 # search for a term in the DB
 api.add_resource(SearchTermsHandler, '/api/search_terms')
 # search for a proposition/term in the DB, returns a normalized list of propositions
-api.add_resource(SearchPropositionsHandler, 'api/search_proposition')
+api.add_resource(SearchPropositionsHandler, '/api/search_proposition')
 # validate and save a word object, and return its IEML string
 api.add_resource(WordGraphValidatorHandler, '/api/validate_word')
 # validate and save a proposition (sentence or supersentence) graph, and return its IEML string
