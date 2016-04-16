@@ -132,7 +132,7 @@ class PropositionSearchHandler(BaseHandler):
 
 class TextDecompositionHandler(BaseHandler):
 
-    def entry(self, node):
+    def _entry(self, node):
         ieml = str(node)
         elem = DictionnaryQueries().exact_ieml_term_search(ieml)
         if elem:
@@ -148,12 +148,12 @@ class TextDecompositionHandler(BaseHandler):
                 "ieml": ieml
             }
 
-    def prefix_walker(self, node):
-        result = [self.entry(node)]
+    def _prefix_walker(self, node):
+        result = [self._entry(node)]
         if not isinstance(node, Term):
+            n_ieml = str(node)
             for n in node.childs:
-                n_ieml = str(n)
-                for child in self.prefix_walker(n):
+                for child in self._prefix_walker(n):
                     child["ieml"] = n_ieml + '/' + child["ieml"]
                     result.append(child)
         return result
@@ -164,7 +164,7 @@ class TextDecompositionHandler(BaseHandler):
 
         parser = USLParser()
         text = parser.parse(self.args['data']);
-        l = [self.prefix_walker(proposition) for proposition in text.propositions]
+        l = [self._prefix_walker(proposition) for proposition in text.propositions]
         result = [item for sublist in l for item in sublist]
         print(result)
         return result

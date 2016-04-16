@@ -8,7 +8,6 @@ class USL:
 
     def __init__(self, propositions_list):
         self.propositions = propositions_list
-        self.childs = self.propositions
         self.hyperlinks_table = {} # key : a proposition, value : a USL list
         self.tags_table = {} # key : a proposition, value : a tag
 
