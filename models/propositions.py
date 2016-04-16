@@ -43,3 +43,16 @@ class PropositionsQueries(DBConnector):
         self._write_proposition_to_db(proposition_ast, proposition_tags)
 
 
+    def search_for_propositions(self, search_string, max_level):
+
+        if max_level == ieml.AST.Sentence:
+            type_filter = {"$in": ["WORD", "SENTENCE"]}
+        else:
+            type_filter = "WORD"
+
+        result = self.propositions.find({"$text" : {"$search" : search_string},
+                                         "TYPE": type_filter},
+                                        {"IEML" : 1, "TAGS" : 1})
+
+        return list(result)
+

@@ -2,11 +2,11 @@ import logging
 
 from ieml.AST.propositions import Term
 from .base import BaseHandler, BaseDataHandler
-from ieml.AST import Word, Clause, Sentence, SuperClause, SuperSentence, Morpheme
+from ieml.AST import Word, Clause, Sentence, SuperClause, SuperSentence, Morpheme, Term, promote_to
 from ieml.exceptions import InvalidNodeIEMLLevel
 from .exceptions import MissingField
 from ieml import PropositionsParser
-from models import PropositionsQueries
+from models import PropositionsQueries, DictionnaryQueries
 
 class SentenceGraph:
 
@@ -101,5 +101,29 @@ class PropositionSearchHandler(BaseHandler):
 
     def post(self):
         self.reqparse.add_argument("searchstring", required=True, type=str)
-        self.reqparse.add_argument("level", required=True, type=str)
+        self.reqparse.add_argument("level", required=True, type=str) # 1 is word, 2 sentence, 3 supersentence
         self.do_request_parsing()
+
+        if self.args["level"] == 1:
+            max_primitive_level = Term
+        elif self.args["level"] == 2:
+            max_primitive_level = Word
+        else:
+            max_primitive_level = Sentence
+
+        result = []
+        for term in DictionnaryQueries().search_for_terms(self.args["searchstring"]):
+            term["IEML"] = str(promote_to(Term("[%s]" % term["ieml"]), max_primitive_level))
+            term["ORIGINAL"] = "TERM"
+            term["TAGS"] = {"FR" : term["FR"], "EN" : term["EN"]}
+            result.append(term)
+
+        parser = PropositionsParser()
+        for proposition in PropositionsQueries().search_for_propositions(self.args["searchstring"],
+                                                                         max_primitive_level):
+            proposition_ast = parser.parse(proposition["IEML"])
+            proposition["IEML"] = str(promote_to(proposition_ast, max_primitive_level))
+            proposition["ORIGINAL"] = proposition["TYPE"]
+            result.append(proposition)
+
+        return result

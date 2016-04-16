@@ -21,15 +21,11 @@ class DictionnaryQueries(DBConnector):
         result = [{"term_id" : str(term["_id"]),
                    "ieml" : term["IEML"],
                    "natural_language" : {"FR" : term.get("FR"),
-                                         "EN" : term.get("EN")}}
+                                         "EN" : term.get("EN")},
+                   "paradigm": False if term["PARADIGM"] == "0" else True}
                   for term in self.terms.find({"$text" : {"$search" : search_string}},
-                                              {"IEML" : 1, "FR" : 1, "EN" : 1})]
+                                              {"IEML" : 1, "FR" : 1, "EN" : 1, "PARADIGM" : 1})]
         return result
-
-    def search_for_ieml_terms(self, ieml_string):
-        """Does the search with an IEML string, and not the translated field"""
-        return list(self.terms.find({"$text" : {"$search" : ieml_string}},
-                                    {"IEML" : 1, "CANONICAL" : 1}))
 
     def exact_ieml_term_search(self, ieml_string):
         return self.terms.find_one({"IEML" : ieml_string})

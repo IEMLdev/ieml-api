@@ -7,3 +7,9 @@ db.terms.createIndex(
         EN: "text"
     }
 )
+db.propositions.createIndex(
+    {
+        IEML: "text",
+        TAGS: "text",
+    }
+)
