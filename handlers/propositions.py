@@ -138,6 +138,7 @@ class TextDecompositionHandler(BaseHandler):
 
         parser = USLParser()
         text = parser.parse(self.args['data']);
-        result = self.prefix_walker(text)
+        l = [self.prefix_walker(proposition) for proposition in text.propositions]
+        result = [item for sublist in l for item in sublist]
         print(result)
         return result
