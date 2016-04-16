@@ -150,11 +150,12 @@ class TextDecompositionHandler(BaseHandler):
 
     def prefix_walker(self, node):
         result = [self.entry(node)]
-        for n in node.childs:
-            n_ieml = str(n)
-            for child in self.prefix_walker(n):
-                child["ieml"] = '/'.join(n, child["ieml"])
-                result.append(child)
+        if not isinstance(node, Term):
+            for n in node.childs:
+                n_ieml = str(n)
+                for child in self.prefix_walker(n):
+                    child["ieml"] = n_ieml + '/' + child["ieml"]
+                    result.append(child)
         return result
 
     def post(self):
@@ -163,6 +164,7 @@ class TextDecompositionHandler(BaseHandler):
 
         parser = USLParser()
         text = parser.parse(self.args['data']);
-        result = self.prefix_walker(text)
+        l = [self.prefix_walker(proposition) for proposition in text.propositions]
+        result = [item for sublist in l for item in sublist]
         print(result)
         return result
