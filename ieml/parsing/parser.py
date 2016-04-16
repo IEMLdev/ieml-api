@@ -6,6 +6,7 @@ from helpers import Singleton
 from ieml.AST import *
 from .lexer import get_lexer, tokens
 
+
 class PropositionsParser(metaclass=Singleton):
     """
         Base class for a parser
@@ -81,7 +82,7 @@ class PropositionsParser(metaclass=Singleton):
 
     def p_error(self, p):
         if p:
-            print("Syntax error at '%s'" % p.value)
+            print("Syntax error at '%s' (%d, %d)" % (p.value, p.lineno, p.lexpos))
         else:
             print("Syntax error at EOF")
 
@@ -89,6 +90,15 @@ class PropositionsParser(metaclass=Singleton):
 class USLParser(PropositionsParser):
     """This parser inherits from the basic propositionnal parser, but adds supports for embedded USL's.
     Thus, some parsing rules are modified"""
+
+    def __init__(self):
+        # Build the lexer and parser
+        self.lexer = get_lexer()
+        self.parser = yacc.yacc(module=self, errorlog=logging, start='hypertext')
+
+    def p_hypertext(self, p):
+        """hypertext : usl"""
+        self.root = p[1]
 
     # Parsing rules
     def p_ieml_proposition(self, p):
@@ -155,7 +165,3 @@ class USLParser(PropositionsParser):
     def p_usl(self, p):
         """usl : L_CURLY_BRACKET closed_proposition_list R_CURLY_BRACKET"""
         p[0] = USL(p[2])
-
-    def p_hypertext(self, p):
-        """hypertext : usl"""
-        self.root = p[1]

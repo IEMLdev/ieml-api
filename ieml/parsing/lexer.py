@@ -14,7 +14,7 @@ tokens = (
    'SLASH',
    'L_ANGLE_BRACKET',
    'R_ANGLE_BRACKET',
-   'USL_TAG'
+#   'USL_TAG'
 )
 
 def get_lexer(module=None):
@@ -30,7 +30,7 @@ def get_lexer(module=None):
     t_SLASH = r'\/'
     t_L_ANGLE_BRACKET = r'\<'
     t_R_ANGLE_BRACKET = r'\>'
-    t_USL_TAG = r'([A-Za-z0-9 _\./\\-]+)'
+#    t_USL_TAG = r'([A-Za-z0-9 _\./\\-]+)'
 
     t_ignore  = ' \t\n'
 
