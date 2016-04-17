@@ -36,7 +36,8 @@ class PropositionsQueries(DBConnector):
         """Saves a proposition to the db"""
         self.propositions.insert_one({"IEML" : str(proposition),
                                       "TYPE" : self._proposition_db_type(proposition),
-                                      "TAGS" : proposition_tags})
+                                      "TAGS" : {"FR" : proposition_tags["FR"],
+                                                "EN" : proposition_tags["EN"]}})
 
     def save_closed_proposition(self, proposition_ast, proposition_tags):
         """Saves a valid proposition's AST into the database.

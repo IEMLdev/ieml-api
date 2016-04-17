@@ -13,3 +13,6 @@ db.propositions.createIndex(
         TAGS: "text",
     }
 )
+db.propositions.ensureIndex({"TAGS.FR" : 1})
+db.propositions.ensureIndex({"TAGS.EN" : 1})
+
