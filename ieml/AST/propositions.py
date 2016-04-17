@@ -259,9 +259,13 @@ class AbstractSentence(AbstractAdditiveProposition, ClosedProposition):
         # first, we call the parent method, which, by calling the check methods on clauses or superclauses,
         # ensures that the child elements are well ordered (especially the terms, or the underlying sentence)
         super().check()
-        # then, we build the (super)sentence's graph using the (super)clause list
-        self.graph = PropositionGraph(self.childs)
-        self.graph.check() #the graph does some checking
+
+        if len(self.childs) != 1:
+            # then, we build the (super)sentence's graph using the (super)clause list
+            self.graph = PropositionGraph(self.childs)
+            self.graph.check() #the graph does some checking
+
+        self._has_been_checked = True
 
     def order(self):
         """Orders the clauses/superclauses inside the sentence/supersentence, using the graph"""
