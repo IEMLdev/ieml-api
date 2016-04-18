@@ -69,16 +69,20 @@ class InvalidGraphNode(InvalidPropositionGraph):
 class NodeHasNoParent(InvalidGraphNode):
     pass
 
+
 class InvalidNodeIEMLLevel(InvalidGraphNode):
     pass
+
 
 class NodeHasTooMuchParents(InvalidGraphNode):
     pass
 
 ### AST tools related errors
 
+
 class ToolsException(Exception):
     pass
+
 
 class CannotPromoteToLowerLevel(ToolsException):
     pass

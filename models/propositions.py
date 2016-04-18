@@ -19,10 +19,10 @@ class PropositionsQueries(DBConnector):
     def retrieve_proposition_objectid(self, proposition):
         """Retrieves the objectid of an IEML primitive"""
         if isinstance(proposition,ieml.AST.Term):
-            return self.terms.find_one({"IEML" : proposition.ieml})["_id"]
+            return self.terms.find_one({"_id" : proposition.ieml})["_id"]
 
         elif isinstance(proposition, (ieml.AST.Sentence, ieml.AST.Word, ieml.AST.SuperSentence)):
-            return self.propositions.find_one({"IEML" : str(proposition),
+            return self.propositions.find_one({"_id" : str(proposition),
                                                "TYPE" : self._proposition_db_type(proposition)})["_id"]
         else:
             raise ObjectTypeNotStoredinDB()
@@ -34,7 +34,7 @@ class PropositionsQueries(DBConnector):
 
     def _write_proposition_to_db(self, proposition, proposition_tags):
         """Saves a proposition to the db"""
-        self.propositions.insert_one({"IEML" : str(proposition),
+        self.propositions.insert_one({"_id" : str(proposition),
                                       "TYPE" : self._proposition_db_type(proposition),
                                       "TAGS" : {"FR" : proposition_tags["FR"],
                                                 "EN" : proposition_tags["EN"]}})
@@ -46,7 +46,7 @@ class PropositionsQueries(DBConnector):
 
         # for now, only does simple saving (whitout the Objectid matching stuff)
         # does check if the proposition is here or not beforehand though
-        if self.propositions.find_one({"IEML" : str(proposition_ast)}) is None:
+        if self.propositions.find_one({"_id" : str(proposition_ast)}) is None:
             self._write_proposition_to_db(proposition_ast, proposition_tags)
         else:
             PropositionAlreadyExists()
@@ -63,7 +63,7 @@ class PropositionsQueries(DBConnector):
 
         result = self.propositions.find({"$text" : {"$search" : search_string},
                                          "TYPE": type_filter},
-                                        {"IEML" : 1, "TAGS" : 1, "TYPE" : 1})
+                                        {"TAGS" : 1, "TYPE" : 1})
 
         return list(result)
 
