@@ -266,6 +266,7 @@ class AbstractSentence(AbstractAdditiveProposition, ClosedProposition):
         # ensures that the child elements are well ordered (especially the terms, or the underlying sentence)
         super().check()
 
+        # if it's a single-clause list, no graph building
         if len(self.childs) != 1:
             # then, we build the (super)sentence's graph using the (super)clause list
             self.graph = PropositionGraph(self.childs)
@@ -275,10 +276,9 @@ class AbstractSentence(AbstractAdditiveProposition, ClosedProposition):
 
     def order(self):
         """Orders the clauses/superclauses inside the sentence/supersentence, using the graph"""
-        if self.graph is not None:
+        if not self._has_been_checked:
             self.childs = self.graph.get_ordereded_clauses_list()
-        else:
-            raise Exception()
+        # else, it's just a single-clause list
 
     def __str__(self):
         return super().__str__() + self._str_hyperlink()
