@@ -202,7 +202,7 @@ class Word(AbstractMultiplicativeProposition, ClosedProposition):
             result = self.left_bracket_symbol + \
                    str(self.subst) + self.times_symbol + \
                    str(self.mode) + self.right_bracket_symbol
-        return result + self._str_hyperlink()
+        return result
 
     def __gt__(self, other):
         if self.subst != other.subst:
@@ -280,8 +280,6 @@ class AbstractSentence(AbstractAdditiveProposition, ClosedProposition):
             self.childs = self.graph.get_ordereded_clauses_list()
         # else, it's just a single-clause list
 
-    def __str__(self):
-        return super().__str__() + self._str_hyperlink()
 
 class Sentence(AbstractSentence):
 

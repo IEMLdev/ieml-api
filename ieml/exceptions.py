@@ -82,3 +82,9 @@ class ToolsException(Exception):
 
 class CannotPromoteToLowerLevel(ToolsException):
     pass
+
+
+### USL errors ###
+
+class InvalidPathException(Exception):
+    pass

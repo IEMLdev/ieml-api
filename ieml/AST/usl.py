@@ -1,3 +1,4 @@
+from ieml.exceptions import InvalidPathException
 
 class Tag:
 
@@ -33,6 +34,24 @@ class USL:
     # def __eq__(self, other):
     #     return self.propositions == other.propositions \
     #            and self.hyperlinks_table == other.hyperlinks_table
+
+    def get_path_from_ieml(self, ieml_list):
+        proposition_list = []
+        childs = self.propositions
+        for ieml in ieml_list:
+            for elem in childs:
+                if str(elem) == ieml:
+                    proposition_list.append(elem)
+                    if hasattr(elem, 'childs'):
+                        childs = elem.childs
+                    else:
+                        raise InvalidPathException()
+                    break
+            else:
+                raise InvalidPathException()
+
+
+
 
 class PropositionPath:
     def __init__(self, current_path, proposition):
