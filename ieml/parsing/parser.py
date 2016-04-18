@@ -124,21 +124,21 @@ class USLParser(PropositionsParser):
 
         # if there's an USL list (hyperlinks), we're attaching it to the proposition
         if len(p) == 5 or len(p) == 7:
-            p[0].add_hyperlink(p[-1]) # last element is the usl_list
+            p[0].add_hyperlink_list(p[len(p) - 1]) # last element is the usl_list
 
     def p_sentence(self, p):
         """sentence : LBRACKET clauses_sum RBRACKET
                     | LBRACKET clauses_sum RBRACKET usl_list"""
         p[0] = Sentence(p[2])
         if len(p) == 5:
-             p[0].add_hyperlink(p[4])
+             p[0].add_hyperlink_list(p[4])
 
     def p_super_sentence(self, p):
         """supersentence : LBRACKET superclauses_sum RBRACKET
                     | LBRACKET superclauses_sum RBRACKET usl_list"""
         p[0] = SuperSentence(p[2])
         if len(p) == 5:
-             p[0].add_hyperlink(p[4])
+             p[0].add_hyperlink_list(p[4])
 
     def p_closed_proposition(self, p):
         """closed_proposition : SLASH word SLASH
