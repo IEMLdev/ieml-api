@@ -2,8 +2,10 @@ import logging
 
 import numpy as np
 
-from ieml.exceptions import InvalidGraphNode
+from ieml.AST.constants import MAX_NODES_IN_SENTENCE
+from ieml.exceptions import InvalidGraphNode, TooManyNodesInGraph
 from ..exceptions import NodeHasNoParent, NodeHasTooMuchParents, NoRootNodeFound, SeveralRootNodeFound
+
 
 class PropositionGraph:
     """Stores a representation of the graph described in the visual web interface"""
@@ -51,6 +53,9 @@ class PropositionGraph:
         except InvalidGraphNode as err:
             err.set_node_ieml(str(self.nodes_list[err.node_id]))
             raise err
+
+        if len(self.nodes_list) > MAX_NODES_IN_SENTENCE:
+            raise TooManyNodesInGraph()
 
         self.root_node = self.nodes_list[self.graph_checker.root_node_index]
         logging.debug("Root node for sentence is %s" % str(self.root_node))
@@ -115,7 +120,6 @@ class PropositionGraphChecker:
         self._check_has_unique_root()
         self._check_only_unique_parent()
 
-
     def _check_has_unique_root(self):
         """Using the adjacency matrix, checks that the graph has a unique root, and that this root
         has at least one child"""
@@ -147,3 +151,5 @@ class PropositionGraphChecker:
                     raise NodeHasTooMuchParents(index)
                 else:
                     raise NodeHasNoParent(index)
+
+

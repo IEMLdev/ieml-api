@@ -1,24 +1,13 @@
 import logging
 
 from ieml import PropositionsParser
-from ieml.AST import Word, Clause, Sentence, SuperClause, SuperSentence, Morpheme, Term, promote_to
+from ieml.AST import Word, Sentence, SuperSentence, Morpheme, Term, promote_to
+from ieml.AST.tools import SentenceGraph, SuperSentenceGraph
 from ieml.exceptions import InvalidNodeIEMLLevel
 from models import PropositionsQueries, DictionnaryQueries
-from .base import BaseHandler, BaseDataHandler, ErrorCatcher
+from .base import BaseHandler, BaseDataHandler
 from .exceptions import MissingField
 
-class SentenceGraph:
-
-    primitive_type = Word
-    multiplicative_type = Clause
-    additive_type = Sentence
-
-
-class SuperSentenceGraph:
-
-    primitive_type = Sentence
-    multiplicative_type = SuperClause
-    additive_type = SuperSentence
 
 class ValidatorHandler(BaseDataHandler):
 

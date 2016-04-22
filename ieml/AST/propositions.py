@@ -1,9 +1,10 @@
 import logging
 from  functools import total_ordering
 from helpers import LoggedInstantiator, Singleton
+from ieml.AST.constants import MAX_TERMS_IN_MORPHEME
 from models import DictionnaryQueries
 from ieml.exceptions import IEMLTermNotFoundInDictionnary, IndistintiveTermsExist, InvalidConstructorParameter, \
-    InvalidClauseComparison, TermComparisonFailed, SentenceHasntBeenChecked
+    InvalidClauseComparison, TermComparisonFailed, SentenceHasntBeenChecked, TooManyTermsInMorpheme
 from .propositional_graph import PropositionGraph
 
 
@@ -155,10 +156,13 @@ class Morpheme(AbstractAdditiveProposition, NonClosedProposition):
         if len(self.childs) != len(set(self.childs)):
             raise IndistintiveTermsExist("There are %i indistinct terms. "
                                          % (len(self.childs) - len(set(self.childs))))
+
+        if len(self.childs) > MAX_TERMS_IN_MORPHEME:
+            raise TooManyTermsInMorpheme()
+
         # TODO : more checking
         # - term intersection
         # - paradigmatic intersection
-        # - term number
         self._has_been_checked = True
 
 

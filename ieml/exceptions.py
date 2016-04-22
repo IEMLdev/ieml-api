@@ -44,6 +44,8 @@ class SentenceHasntBeenChecked(PropositionException):
 class IndistintiveTermsExist(ASTException):
     pass
 
+class TooManyTermsInMorpheme(ASTException):
+    pass
 
 ### These exceptions /errors are graph_related
 
@@ -51,6 +53,8 @@ class IndistintiveTermsExist(ASTException):
 class InvalidPropositionGraph(ASTException):
     pass
 
+class TooManyNodesInGraph(InvalidPropositionGraph):
+    message = "Nodes limit in the graph exceeded"
 
 class NoRootNodeFound(InvalidPropositionGraph):
     message = "Cannot find a root node for this graph"
