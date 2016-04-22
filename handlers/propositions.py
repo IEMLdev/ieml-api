@@ -127,6 +127,8 @@ class SearchPropositionsHandler(BaseHandler):
                            "ORIGINAL" : proposition["TYPE"],
                            "TAGS" : proposition["TAGS"]})
 
+        return result
+
 class TextDecompositionHandler(BaseDataHandler):
 
     def entry(self, node):
