@@ -67,3 +67,5 @@ class PropositionsQueries(DBConnector):
 
         return list(result)
 
+    def exact_ieml_search(self, ieml_proposition):
+        return self.propositions.find_one({"IEML" : ieml_proposition})

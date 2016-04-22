@@ -17,7 +17,7 @@ class PropositionsParser(metaclass=Singleton):
 
         # Build the lexer and parser
         self.lexer = get_lexer()
-        self.parser = yacc.yacc(module=self, errorlog=logging)
+        self.parser = yacc.yacc(module=self, errorlog=logging, start='proposition')
 
     def parse(self, s):
         """Parses the input string, and returns a reference to the created AST's root"""
@@ -95,21 +95,11 @@ class USLParser(PropositionsParser):
         # Build the lexer and parser
         self.lexer = get_lexer()
         self.parser = yacc.yacc(module=self, errorlog=logging, start='hypertext')
+        self.p_ieml_proposition = None
 
     def p_hypertext(self, p):
         """hypertext : usl"""
         self.root = p[1]
-
-    # Parsing rules
-    def p_ieml_proposition(self, p):
-        """proposition : p_term
-                        | morpheme
-                        | word
-                        | clause
-                        | sentence
-                        | superclause
-                        | supersentence"""
-        p[0] = p[1]
 
     def p_word(self, p):
         """word : LBRACKET morpheme RBRACKET
@@ -164,4 +154,4 @@ class USLParser(PropositionsParser):
 
     def p_usl(self, p):
         """usl : L_CURLY_BRACKET closed_proposition_list R_CURLY_BRACKET"""
-        p[0] = HyperText(Text(p[2]), [])
+        p[0] = HyperText(Text(p[2]))
