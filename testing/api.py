@@ -2,8 +2,7 @@ from handlers import WordGraphValidatorHandler, GraphValidatorHandler, TextDecom
 from .helpers import *
 from unittest.mock import MagicMock
 
-
-class TestWordGraphValidator(unittest.TestCase):
+class TestGraphValidator(unittest.TestCase):
 
     def setUp(self):
         self.word_handler = WordGraphValidatorHandler()
@@ -85,11 +84,13 @@ class TestSentenceGraphValidator(unittest.TestCase):
         self.assertEquals(request_output["ieml"], str(sentence))
 
 class TestTextDecomposition(unittest.TestCase):
+
     def setUp(self):
         self.text_handler = TextDecompositionHandler()
 
         with open("data/example_supersentence.txt") as ss:
             self.text_handler.json_data = {"data": "{/%s/}" % ss}
+
 
         self.text_handler.db_connector = Mock()
 

@@ -7,6 +7,7 @@ from models import PropositionsQueries, DictionaryQueries
 from .base import BaseHandler, BaseDataHandler
 from .exceptions import MissingField
 
+
 class SentenceGraph:
 
     primitive_type = Word
@@ -127,6 +128,34 @@ class SearchPropositionsHandler(BaseHandler):
                            "ORIGINAL" : proposition["TYPE"],
                            "TAGS" : proposition["TAGS"]})
 
+class TextDecompositionHandler(BaseDataHandler):
+
+    def entry(self, node):
+        ieml = str(node)
+        elem = DictionaryQueries().exact_ieml_term_search(ieml)
+        if elem :
+            return {
+                "ieml" : ieml,
+                "tags" : {
+                    "FR" : elem.get("FR"),
+                    "EN" : elem.get("EN")
+                }
+            }
+        else :
+            return {
+                "ieml" : ieml
+            }
+
+
+
+    def prefix_walker(self, node):
+        result = [self.entry(node)]
+        for n in node.childs:
+            n_ieml = str(n)
+            for child in self.prefix_walker(n):
+                child["ieml"] = '/'.join(n, child["ieml"])
+                result.append(child)
+
         return result
 
 
@@ -141,3 +170,4 @@ class PropositionDecompositionHandler(BaseHandler):
 
         connector = PropositionsQueries()
         return map(connector.retrieve_proposition, proposition.childs)
+
