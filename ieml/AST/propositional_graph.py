@@ -50,6 +50,7 @@ class PropositionGraph:
             self.graph_checker.do_checks()
         except InvalidGraphNode as err:
             err.set_node_ieml(str(self.nodes_list[err.node_id]))
+            raise err
 
         self.root_node = self.nodes_list[self.graph_checker.root_node_index]
         logging.debug("Root node for sentence is %s" % str(self.root_node))

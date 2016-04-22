@@ -188,8 +188,8 @@ class TestSentences(unittest.TestCase):
 
     def test_clause_ordering(self):
         a, b, c, d, e, f = tuple(get_words_list())
-        clause_a, clause_b, clause_c, clause_d = Clause(a,b,f), Clause(a,c,f), Clause(b,e,f), Clause(b,d,f)
+        clause_a, clause_b, clause_c, clause_d = Clause(a,b,f), Clause(a,c,f), Clause(b,d,f), Clause(b,e,f)
         sentence = Sentence([clause_a, clause_b, clause_c, clause_d])
         sentence.check()
         sentence.order()
-        self.assertEquals(sentence.childs,[clause_a, clause_b,clause_d, clause_c])
+        self.assertEquals(sentence.childs,[clause_a, clause_b,clause_c, clause_d])

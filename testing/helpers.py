@@ -21,7 +21,7 @@ def get_words_list():
 
 def get_test_sentence():
     a, b, c, d, e, f = tuple(get_words_list())
-    clause_a, clause_b, clause_c, clause_d = Clause(a,b,f), Clause(a,c,f), Clause(b,e,f), Clause(b,d,f)
-    sentence = Sentence([clause_a, clause_b, clause_c, clause_d])
+    clause_a, clause_b, clause_c, clause_d = Clause(a,b,f), Clause(a,c,f), Clause(b,d,f), Clause(b,e,f)
+    sentence = Sentence([clause_b, clause_a, clause_d, clause_c])
     sentence.check()
     return sentence

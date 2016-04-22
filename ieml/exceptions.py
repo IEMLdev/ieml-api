@@ -38,10 +38,15 @@ class InvalidConstructorParameter(PropositionException):
 class InvalidClauseComparison(PropositionException):
     pass
 
+class SentenceHasntBeenChecked(PropositionException):
+    pass
+
 class IndistintiveTermsExist(ASTException):
     pass
 
+
 ### These exceptions /errors are graph_related
+
 
 class InvalidPropositionGraph(ASTException):
     pass

@@ -65,6 +65,7 @@ class GraphValidatorHandler(ValidatorHandler):
         proposition_ast = graph_type.additive_type(multiplication_elems)
         # asking the proposition to check itself
         proposition_ast.check()
+        proposition_ast.order()
         self.db_connector.save_closed_proposition(proposition_ast, self.json_data["tags"])
         return {"valid" : True, "ieml" : str(proposition_ast)}
 

@@ -3,7 +3,7 @@ from  functools import total_ordering
 from helpers import LoggedInstantiator, Singleton
 from models import DictionnaryQueries
 from ieml.exceptions import IEMLTermNotFoundInDictionnary, IndistintiveTermsExist, InvalidConstructorParameter, \
-    InvalidClauseComparison, TermComparisonFailed
+    InvalidClauseComparison, TermComparisonFailed, SentenceHasntBeenChecked
 from .propositional_graph import PropositionGraph
 
 
@@ -270,8 +270,10 @@ class AbstractSentence(AbstractAdditiveProposition, ClosedProposition):
 
     def order(self):
         """Orders the clauses/superclauses inside the sentence/supersentence, using the graph"""
-        if not self._has_been_checked:
+        if self._has_been_checked:
             self.childs = self.graph.get_ordereded_clauses_list()
+        else:
+            raise SentenceHasntBeenChecked()
         # else, it's just a single-clause list
 
 
@@ -279,7 +281,6 @@ class Sentence(AbstractSentence):
 
     def __init__(self, child_elements):
         super().__init__(child_elements)
-        self.graph = None
 
 
 class SuperSentence(AbstractSentence):
