@@ -14,5 +14,6 @@ class TestDBQueries(unittest.TestCase):
     def test_write_word_to_db(self):
         word_object = get_test_word_instance()
         word_object.check()
-        self.writable_db_connector.save_closed_proposition(word_object, "Faire du bruit avec sa bouche")
+        self.writable_db_connector.save_closed_proposition(word_object, {"FR" : "Faire du bruit avec sa bouche",
+                                                                         "EN" : "Badababi dou baba boup"})
         self.assertEquals(self.writable_db_connector.propositions.count(), 1)

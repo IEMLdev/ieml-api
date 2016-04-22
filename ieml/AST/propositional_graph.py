@@ -1,6 +1,8 @@
 import logging
 
 import numpy as np
+
+from ieml.exceptions import InvalidGraphNode
 from ..exceptions import NodeHasNoParent, NodeHasTooMuchParents, NoRootNodeFound, SeveralRootNodeFound
 
 class PropositionGraph:
@@ -44,7 +46,11 @@ class PropositionGraph:
             self.adjacency_matrix[x][y] = True
 
     def check(self):
-        self.graph_checker.do_checks()
+        try:
+            self.graph_checker.do_checks()
+        except InvalidGraphNode as err:
+            err.set_node_ieml(str(self.nodes_list[err.node_id]))
+
         self.root_node = self.nodes_list[self.graph_checker.root_node_index]
         logging.debug("Root node for sentence is %s" % str(self.root_node))
         self.has_been_checked = True

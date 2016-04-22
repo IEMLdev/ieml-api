@@ -11,12 +11,18 @@ class TermException(ASTException):
         self.terms_ieml = terms_ieml
 
 class IEMLTermNotFoundInDictionnary(TermException):
-    pass
+
+    def __str__(self):
+        return "Cannot find term %s in the dictionnary" % self.terms_ieml
 
 class TermComparisonFailed(TermException):
     def __init__(self, terms_ieml, other_terms_ieml):
         super().__init__(terms_ieml)
         self.other_term = other_terms_ieml
+
+    def __str__(self):
+        return "Comparison between term %s and %s failed" \
+               % (self.terms_ieml, self.other_term)
 
 class PropositionException(ASTException):
     def __init__(self, proposition_ref):
@@ -32,6 +38,8 @@ class InvalidConstructorParameter(PropositionException):
 class InvalidClauseComparison(PropositionException):
     pass
 
+class IndistintiveTermsExist(ASTException):
+    pass
 
 ### These exceptions /errors are graph_related
 
@@ -39,41 +47,42 @@ class InvalidPropositionGraph(ASTException):
     pass
 
 
-class InvalidWord(InvalidPropositionGraph):
-    pass
-
-
-class IndistintiveTermsExist(InvalidWord):
-    pass
-
-
-class EmptyWordSubstance(InvalidPropositionGraph):
-    pass
-
-
 class NoRootNodeFound(InvalidPropositionGraph):
-    pass
+    message = "Cannot find a root node for this graph"
 
 
 class SeveralRootNodeFound(InvalidPropositionGraph):
-    pass
+    message = "Several root nodes exist for this graph"
 
 
 class InvalidGraphNode(InvalidPropositionGraph):
+    message = "%s"
 
     def __init__(self, node_id):
         super().__init__()
         self.node_id = node_id
+        self.node_ieml = None
+
+    def set_node_ieml(self, ieml):
+        self.node_ieml = ieml
+
+    def __str__(self):
+        if self.node_ieml is not None:
+            return self.message % self.node_ieml
+        else:
+            return self.message % str(self.node_id)
 
 
 class NodeHasNoParent(InvalidGraphNode):
-    pass
+    message = "Node %s has no parent"
+
 
 class InvalidNodeIEMLLevel(InvalidGraphNode):
-    pass
+    message = "Node %s doesn't have the right level to be used as a primitive for this level"
+
 
 class NodeHasTooMuchParents(InvalidGraphNode):
-    pass
+    message = "Node %s has several parents, "
 
 ### AST tools related errors
 

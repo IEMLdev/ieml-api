@@ -4,7 +4,7 @@ from ieml import PropositionsParser
 from ieml.AST import Word, Clause, Sentence, SuperClause, SuperSentence, Morpheme, Term, promote_to
 from ieml.exceptions import InvalidNodeIEMLLevel
 from models import PropositionsQueries, DictionnaryQueries
-from .base import BaseHandler, BaseDataHandler
+from .base import BaseHandler, BaseDataHandler, ErrorCatcher
 from .exceptions import MissingField
 
 class SentenceGraph:
@@ -28,7 +28,7 @@ class ValidatorHandler(BaseDataHandler):
 
     def do_request_parsing(self):
         super().do_request_parsing()
-        for field in ["graph", "nodes"]:
+        for field in ["graph", "nodes", "tags"]:
             if field not in self.json_data:
                 raise MissingField(field)
 
