@@ -3,7 +3,7 @@ import logging
 from ieml import PropositionsParser
 from ieml.AST import Word, Clause, Sentence, SuperClause, SuperSentence, Morpheme, Term, promote_to
 from ieml.exceptions import InvalidNodeIEMLLevel
-from models import PropositionsQueries, DictionnaryQueries
+from models import PropositionsQueries, DictionaryQueries
 from .base import BaseHandler, BaseDataHandler
 from .exceptions import MissingField
 
@@ -112,7 +112,7 @@ class SearchPropositionsHandler(BaseHandler):
         max_primitive_level = level_to_type_table[self.args["level"]]
 
         result = []
-        for term in DictionnaryQueries().search_for_terms(self.args["searchstring"]):
+        for term in DictionaryQueries().search_for_terms(self.args["searchstring"]):
             term["IEML"] = str(promote_to(Term(term["ieml"]), max_primitive_level))
             term["ORIGINAL"] = "TERM"
             term["TAGS"] = {"FR" : term["natural_language"]["FR"],
@@ -130,3 +130,14 @@ class SearchPropositionsHandler(BaseHandler):
         return result
 
 
+class PropositionDecompositionHandler(BaseHandler):
+
+    def post(self):
+        self.reqparse.add_argument("ieml", required=True, type=str)
+        self.do_request_parsing()
+
+        parser = PropositionsParser()
+        proposition = parser.parse(self.args["ieml"])
+
+        connector = PropositionsQueries()
+        return map(connector.retrieve_proposition, proposition.childs)

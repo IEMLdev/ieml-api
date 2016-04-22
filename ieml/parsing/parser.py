@@ -164,4 +164,4 @@ class USLParser(PropositionsParser):
 
     def p_usl(self, p):
         """usl : L_CURLY_BRACKET closed_proposition_list R_CURLY_BRACKET"""
-        p[0] = USL(p[2])
+        p[0] = HyperText(Text(p[2]), [])

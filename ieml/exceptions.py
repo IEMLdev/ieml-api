@@ -88,3 +88,9 @@ class CannotPromoteToLowerLevel(ToolsException):
 
 class InvalidPathException(Exception):
     pass
+
+class OpenPropositionInTextException(Exception):
+    pass
+
+class EmptyTextException(Exception):
+    pass

@@ -1,14 +1,14 @@
 import logging
-from  functools import total_ordering
+from functools import total_ordering
 from helpers import LoggedInstantiator, Singleton
-from models import DictionnaryQueries
+from models import DictionaryQueries
 from ieml.exceptions import IEMLTermNotFoundInDictionnary, IndistintiveTermsExist, InvalidConstructorParameter, \
     InvalidClauseComparison, TermComparisonFailed
 from .propositional_graph import PropositionGraph
-from .usl import PropositionPath
+from .utils import PropositionPath
 
 
-class TermsQueries(DictionnaryQueries, metaclass=Singleton):
+class TermsQueries(DictionaryQueries, metaclass=Singleton):
     """A DB connector singleton class used by terms to prevent the number
     of DictionnaryQueries class instances from exploding"""
     pass
@@ -89,6 +89,15 @@ class AbstractProposition(metaclass=AbstractPropositionMetaclass):
     def order(self):
         pass
 
+    def render_hyperlinks(self, hyperlinks, path):
+        current_path = PropositionPath(path, self)
+        result = self._do_render_hyperlinks(hyperlinks, current_path)
+
+        if hyperlinks[str(current_path)]:
+            result += ''.join(map(str, hyperlinks[str(current_path)]))
+
+        return result
+
 
 class AbstractAdditiveProposition(AbstractProposition):
 
@@ -107,6 +116,10 @@ class AbstractAdditiveProposition(AbstractProposition):
                self.plus_symbol.join([str(element) for element in self.childs]) + \
                self.right_bracket_symbol
 
+    def _do_render_hyperlinks(self, hyperlinks, path):
+        return self.left_bracket_symbol + \
+               self.plus_symbol.join([element.render_hyperlinks(hyperlinks, path) for element in self.childs]) + \
+               self.right_bracket_symbol
 
 class AbstractMultiplicativeProposition(AbstractProposition):
 
@@ -116,6 +129,12 @@ class AbstractMultiplicativeProposition(AbstractProposition):
         self.attr = child_attr
         self.mode = child_mode
         self.childs = (self.subst, self.attr, self.mode)
+
+    def _do_render_hyperlinks(self, hyperlinks, path):
+        return self.left_parent_symbol + \
+               self.subst.render_hyperlinks(hyperlinks, path) + self.times_symbol + \
+               self.attr.render_hyperlinks(hyperlinks, path) + self.times_symbol + \
+               self.mode.render_hyperlinks(hyperlinks, path) + self.right_parent_symbol
 
     def __str__(self):
         super().__str__()
@@ -193,6 +212,17 @@ class Word(AbstractMultiplicativeProposition, ClosedProposition):
         else:
             self.childs = (self.subst, self.mode)
 
+    def _do_render_hyperlinks(self, hyperlinks, path):
+        if self.mode is None:
+            result = self.left_bracket_symbol + \
+                     self.subst.render_hyperlinks(hyperlinks, path) + \
+                     self.right_bracket_symbol
+        else:
+            result = self.left_bracket_symbol + \
+                     self.subst.render_hyperlinks(hyperlinks, path) + self.times_symbol + \
+                     self.mode.render_hyperlinks(hyperlinks, path) + self.right_bracket_symbol
+        return result
+
     def __str__(self):
         if self.mode is None:
             result = self.left_bracket_symbol + \
@@ -213,9 +243,6 @@ class Word(AbstractMultiplicativeProposition, ClosedProposition):
     def gather_hyperlinks(self, current_path):
         # since morphemes cannot have hyperlinks, we don't gather links for the underlying childs
         return [(PropositionPath(current_path, self), usl_ref) for usl_ref in self.hyperlink]
-
-
-
 
 @total_ordering
 class AbstractClause(AbstractMultiplicativeProposition, NonClosedProposition):
@@ -301,6 +328,9 @@ class Term(metaclass=AbstractPropositionMetaclass):
         self.ieml = ieml_string
         self.objectid = None
         self.canonical_forms = None
+
+    def _do_render_hyperlinks(self, hyperlinks, path):
+        return "[" + self.ieml + "]"
 
     def __str__(self):
         return "[" + self.ieml + "]"

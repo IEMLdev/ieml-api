@@ -1,7 +1,7 @@
 import json
 
 from flask_restful import Resource, reqparse
-from models import DictionnaryQueries
+from models import DictionaryQueries
 from ieml.exceptions import ASTException
 
 class BaseHandler(Resource):
@@ -36,7 +36,7 @@ class SearchTermsHandler(BaseHandler):
     def post(self):
         self.reqparse.add_argument("searchstring", required=True, type=str)
         self.do_request_parsing()
-        return DictionnaryQueries().search_for_terms(self.args["searchstring"])
+        return DictionaryQueries().search_for_terms(self.args["searchstring"])
 
 
 class ErrorCatcher:

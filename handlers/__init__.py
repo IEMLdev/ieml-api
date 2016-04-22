@@ -1,3 +1,3 @@
 from .base import SearchTermsHandler
-from .propositions import GraphValidatorHandler, WordGraphValidatorHandler, SearchPropositionsHandler
-from .usl import TextDecompositionHandler
+from .propositions import GraphValidatorHandler, WordGraphValidatorHandler, SearchPropositionsHandler, PropositionDecompositionHandler
+from .usl import TextDecompositionHandler, TextValidatorHandler, HyperTextValidatorHandler

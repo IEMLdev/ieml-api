@@ -20,5 +20,10 @@ api.add_resource(GraphValidatorHandler, '/api/validate_tree')
 #
 api.add_resource(TextDecompositionHandler, '/api/decomposition_text')
 
+api.add_resource(PropositionDecompositionHandler, '/api/decomposition_proposition')
+
+api.add_resource(TextValidatorHandler, '/api/validate_text')
+api.add_resource(HyperTextValidatorHandler, '/api/validate_hypertext')
+
 if __name__ == '__main__':
     app.run(debug=True, host="0.0.0.0") # served on the local network

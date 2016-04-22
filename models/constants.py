@@ -6,3 +6,5 @@ TERMS_COLLECTION = "terms"
 PROPOSITION_COLLECTION = "propositions"
 TEXT_COLLECTION = "texts"
 HYPERTEXT_COLLECTION = "hypertexts"
+
+TAG_LANGUAGES = ["FR", "EN"]

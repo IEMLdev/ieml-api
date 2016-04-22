@@ -1,7 +1,8 @@
 from pymongo import MongoClient
 
-from models.constants import TERMS_COLLECTION
+from models.constants import TERMS_COLLECTION, TAG_LANGUAGES
 from .constants import DB_ADDRESS, DB_NAME
+
 
 class DBConnector(object):
     """Automatically connects when instantiated"""
@@ -12,7 +13,7 @@ class DBConnector(object):
         self.terms = self.db[TERMS_COLLECTION]
 
 
-class DictionnaryQueries(DBConnector):
+class DictionaryQueries(DBConnector):
     """Class mainly used for anything related to the terms collection, i.e., the dictionnary"""
 
     def search_for_terms(self, search_string):
@@ -29,3 +30,9 @@ class DictionnaryQueries(DBConnector):
 
     def exact_ieml_term_search(self, ieml_string):
         return self.terms.find_one({"IEML" : ieml_string})
+
+
+class Tag:
+    @staticmethod
+    def check_tags(tags):
+        return all([hasattr(tags, lang) for lang in TAG_LANGUAGES])
