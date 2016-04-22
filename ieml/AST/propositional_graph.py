@@ -46,7 +46,7 @@ class AbstractGraph:
         # thus, for each vertice, we set the (subst_node_index,attr_node_index) cell to true
         for x in self.parent_nodes:
             for y in self.parent_nodes[x]:
-                self.adjacency_matrix[self.nodes_list.index(x)][self.nodes_list.index(y)] = True
+                self.adjacency_matrix[self.nodes_list.index(x)][self.nodes_list.index(y[1])] = True
 
     def check(self):
         self.graph_checker.do_checks()
