@@ -1,7 +1,7 @@
 import random
 
 from ieml.AST import Word, Clause, Sentence, SuperClause, SuperSentence
-from ieml.AST.constants import MAX_TERMS_IN_MORPHEME
+from ieml.AST.constants import MAX_TERMS_IN_MORPHEME, MAX_NODES_IN_SENTENCE
 from ieml.exceptions import CannotPromoteToLowerLevel
 from models.base_queries import DictionnaryQueries
 from .propositions import Term, Word, Morpheme, Clause, Sentence, SuperSentence, SuperClause, \
@@ -73,7 +73,7 @@ class RandomPropositionGenerator(metaclass=Singleton):
         self.db = DictionnaryQueries()
 
     def _make_random_morpheme(self):
-        term_count = random.randint(0,MAX_TERMS_IN_MORPHEME)
+        term_count = random.randint(1, MAX_TERMS_IN_MORPHEME)
         return Morpheme([Term(term_ieml) for term_ieml in self.db.get_random_terms(term_count)])
 
     def _make_random_word(self):
@@ -100,18 +100,18 @@ class RandomPropositionGenerator(metaclass=Singleton):
         graph_type = SentenceGraph if type == Sentence else SuperSentenceGraph
 
         #first generating the nodes
-        if type == Sentence:
-            initial_nodes = [self._make_random_word() for i in range(random.randint(0, MAX_TERMS_IN_MORPHEME))]
+        if type is Sentence:
+            initial_nodes = [self._make_random_word() for i in range(random.randint(1, MAX_NODES_IN_SENTENCE))]
             mode_nodes = [self._make_random_word() for i in range(len(initial_nodes))]
         else:
-            initial_nodes = [self._make_random_sentence(Sentence) for i in range(random.randint(0, MAX_TERMS_IN_MORPHEME))]
+            initial_nodes = [self._make_random_sentence(Sentence) for i in range(random.randint(1, MAX_NODES_IN_SENTENCE))]
             mode_nodes = [self._make_random_word() for i in range(len(initial_nodes))]
 
         clauses_list = []
         current_parrents = [initial_nodes.pop(0)]
         while current_parrents:
             current_parrent = current_parrents.pop()
-            for i in range(random.randint(0,4)):
+            for i in range(random.randint(1,4)):
                 try:
                     child_node = initial_nodes.pop()
                     mode_node = mode_nodes.pop()
@@ -128,9 +128,9 @@ class RandomPropositionGenerator(metaclass=Singleton):
     def get_random_proposition(self, ast_type):
         """Returns an unchecked, unordered (but hopefully correct) proposition of level ast_type"""
 
-        if ast_type == Morpheme:
+        if ast_type is Morpheme:
             return self._make_random_morpheme()
-        elif ast_type == Word:
+        elif ast_type is Word:
             return self._make_random_word()
         elif ast_type in [Sentence, SuperSentence]:
             return self._make_random_sentence(ast_type)
