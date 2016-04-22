@@ -7,7 +7,6 @@ from models import PropositionsQueries, DictionaryQueries
 from .base import BaseHandler, BaseDataHandler
 from .exceptions import MissingField
 
-
 class SentenceGraph:
 
     primitive_type = Word
@@ -158,7 +157,6 @@ class TextDecompositionHandler(BaseDataHandler):
 
         return result
 
-
 class PropositionDecompositionHandler(BaseHandler):
 
     def post(self):
@@ -170,4 +168,3 @@ class PropositionDecompositionHandler(BaseHandler):
 
         connector = PropositionsQueries()
         return map(connector.retrieve_proposition, proposition.childs)
-
