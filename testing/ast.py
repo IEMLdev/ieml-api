@@ -1,3 +1,4 @@
+from ieml.AST.tools import RandomPropositionGenerator
 from ieml.exceptions import SeveralRootNodeFound, NodeHasTooMuchParents, NoRootNodeFound
 from .helpers import *
 import numpy as np
@@ -32,6 +33,11 @@ class TestTermsFeatures(unittest.TestCase):
         other_instance.check()
         self.assertEquals(self.term_a, other_instance)
         self.assertFalse(self.term_a is other_instance) # checking they really are two different instances
+
+    def test_terms_comparison(self):
+        term_a, term_b = Term("S:M:.e.-M:M:.u.-'+B:M:.e.-M:M:.a.-'+T:M:.e.-M:M:.i.-'"), Term("S:M:.e.-M:M:.u.-'")
+        term_b.check(), term_a.check()
+        self.assertLess(term_b, term_a)
 
     def test_term_ordering(self):
         """Checks that terms are properly ordered, through the """
@@ -193,3 +199,18 @@ class TestSentences(unittest.TestCase):
         sentence.check()
         sentence.order()
         self.assertEquals(sentence.childs,[clause_a, clause_b,clause_c, clause_d])
+
+
+class TestSuperSentence(unittest.TestCase):
+
+    def setUp(self):
+        self.rnd_gen = RandomPropositionGenerator()
+
+    def test_supersentence_creation(self):
+        a, b, c, d, e, f = tuple(self.rnd_gen.get_random_proposition(Sentence) for i in range(6))
+        super_sentence = Sentence([SuperClause(a,b,f), SuperClause(a,c,f), SuperClause(b,e,f), SuperClause(b,d,f)])
+        try:
+            super_sentence.check()
+        except Exception as err:
+            # self.fail("Super sentence creation failed, error : %s" % str(err))
+            raise err

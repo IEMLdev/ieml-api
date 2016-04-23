@@ -3,3 +3,4 @@ from .ast import TestTermsFeatures, TestMorphemesFeatures, TestWords, TestClause
     TestSentences, TestMetaFeatures
 from .db import TestDBQueries
 from .parser import TestParser
+from .tools import TestRandomGenerator, TestPromotion

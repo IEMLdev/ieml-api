@@ -71,7 +71,8 @@ class AbstractProposition(metaclass=AbstractPropositionMetaclass):
 
     def __str__(self):
         if not self._has_been_checked:
-            logging.warning("Proposition %s hasn't been checked for ordering and consistency" % type(self))
+            logging.warning("Proposition %s hasn't been checked for ordering and consistency,"
+                            "its ieml render might not be correct" % type(self))
 
 
     def check(self):
@@ -83,12 +84,6 @@ class AbstractProposition(metaclass=AbstractPropositionMetaclass):
         path = current_path + [self]
         return [couple for sublist in [child.gather_hyperlinks(path) for child in self.childs]
                 for couple in sublist]
-
-    def is_ordered(self):
-        pass
-
-    def order(self):
-        pass
 
 
 class AbstractAdditiveProposition(AbstractProposition):
@@ -107,6 +102,17 @@ class AbstractAdditiveProposition(AbstractProposition):
         return self.left_bracket_symbol + \
                self.plus_symbol.join([str(element) for element in self.childs]) + \
                self.right_bracket_symbol
+
+    def __gt__(self, other):
+        max_length = max(len(self.childs), len(other.childs))
+        for i in range(max_length):
+            if len(self.childs) <= i: # this morpheme is a suffix of the other one, it's "smaller"
+                return False
+            elif len(other.childs) <= i: # the morpheme is a suffix of the current one, so current one is "bigger"
+                return True
+            else:
+                if self.childs[i] != other.childs[i]:
+                    return self.childs[i] > other.childs[i]
 
 
 class AbstractMultiplicativeProposition(AbstractProposition):
@@ -143,16 +149,6 @@ class Morpheme(AbstractAdditiveProposition, NonClosedProposition):
                self.plus_symbol.join([str(element) for element in self.childs]) + \
                self.right_parent_symbol
 
-    def __gt__(self, other):
-        max_length = max(len(self.childs), len(other.childs))
-        for i in range(max_length):
-            if len(self.childs) <= i: # this morpheme is a suffix of the other one, it's "smaller"
-                return False
-            elif len(other.childs) <= i: # the morpheme is a suffix of the current one, so current one is "bigger"
-                return True
-            else:
-                if self.childs[i] != other.childs[i]:
-                    return self.childs[i] > other.childs[i]
 
     def check(self):
         # first, we "ask" all the terms to check themselves through the parent method
@@ -219,8 +215,6 @@ class Word(AbstractMultiplicativeProposition, ClosedProposition):
         return [(PropositionPath(current_path, self), usl_ref) for usl_ref in self.hyperlink]
 
 
-
-
 @total_ordering
 class AbstractClause(AbstractMultiplicativeProposition, NonClosedProposition):
 
@@ -238,8 +232,6 @@ class AbstractClause(AbstractMultiplicativeProposition, NonClosedProposition):
         return self._gather_child_links(current_path)
 
 
-
-
 class Clause(AbstractClause):
 
     def check(self):
@@ -253,11 +245,13 @@ class SuperClause(AbstractClause):
     pass
 
 
+@total_ordering
 class AbstractSentence(AbstractAdditiveProposition, ClosedProposition):
 
     def __init__(self, child_elements):
         super().__init__(child_elements)
         self.graph = None
+        self._has_been_ordered = False
 
     def gather_hyperlinks(self, current_path):
         # first we build the (object, usl) tuple list for the current object
@@ -283,8 +277,12 @@ class AbstractSentence(AbstractAdditiveProposition, ClosedProposition):
         if self._has_been_checked:
             self.childs = self.graph.get_ordereded_clauses_list()
         else:
-            raise SentenceHasntBeenChecked()
+            raise SentenceHasntBeenChecked(self)
         # else, it's just a single-clause list
+        self._has_been_ordered = True
+
+    def is_ordered(self):
+        return self._has_been_ordered
 
 
 class Sentence(AbstractSentence):
@@ -322,8 +320,9 @@ class Term(metaclass=AbstractPropositionMetaclass):
     def __gt__(self, other):
         # we use the DB's canonical forms
         # if the term has MORE canonical sequences, it's "BIGGER", so GT is TRUE
-        if len(self.canonical_forms) > len(other.canonical_forms):
-            return True
+        if len(self.canonical_forms) != len(other.canonical_forms):
+            return len(self.canonical_forms) > len(other.canonical_forms)
+
         else: # else, we have to compare sequences using the regular aphabetical order
             for i, seq in enumerate(self.canonical_forms):
                 # for each sequence, if the sequences are different, we can return the comparison
