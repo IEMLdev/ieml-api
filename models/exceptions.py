@@ -10,3 +10,6 @@ class ObjectTypeNotStoredinDB(DBException):
 
 class InvalidTags(DBException):
     pass
+
+class ObjectNotFound(DBException):
+    pass

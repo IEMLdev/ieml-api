@@ -5,10 +5,10 @@ from ieml.AST import Word, Clause, Sentence, SuperClause, SuperSentence, Morphem
 from ieml.exceptions import InvalidNodeIEMLLevel
 from models import PropositionsQueries, DictionaryQueries
 from .base import BaseHandler, BaseDataHandler
-from .exceptions import MissingField
+from .exceptions import MissingField,PromotingToInvalidLevel
+
 
 class SentenceGraph:
-
     primitive_type = Word
     multiplicative_type = Clause
     additive_type = Sentence
@@ -129,44 +129,43 @@ class SearchPropositionsHandler(BaseHandler):
 
         return result
 
-class TextDecompositionHandler(BaseDataHandler):
 
-    def entry(self, node):
-        ieml = str(node)
-        elem = DictionaryQueries().exact_ieml_term_search(ieml)
-        if elem :
-            return {
-                "ieml" : ieml,
-                "tags" : {
-                    "FR" : elem.get("FR"),
-                    "EN" : elem.get("EN")
-                }
-            }
-        else :
-            return {
-                "ieml" : ieml
-            }
+class PropositionPromoter(BaseHandler):
+    def __init__(self):
+        super().__init__()
+        self.reqparse.add_argument("ieml", required=True, type=str)
+        self.reqparse.add_argument("promotion_lvl", required=True, type=str)
+        self.reqparse.add_argument("term", required=True, type=bool)
 
-
-
-    def prefix_walker(self, node):
-        result = [self.entry(node)]
-        for n in node.childs:
-            n_ieml = str(n)
-            for child in self.prefix_walker(n):
-                child["ieml"] = '/'.join(n, child["ieml"])
-                result.append(child)
-
-        return result
-
-class PropositionDecompositionHandler(BaseHandler):
+        self.db_connector_proposition = PropositionsQueries()
+        self.db_connector_term = DictionaryQueries()
+        self.level_to_class = {
+            '0': Term,
+            '1': Word,
+            '2': Sentence,
+            '3': SuperSentence
+        }
+        self.parser = PropositionsParser()
 
     def post(self):
-        self.reqparse.add_argument("ieml", required=True, type=str)
         self.do_request_parsing()
 
-        parser = PropositionsParser()
-        proposition = parser.parse(self.args["ieml"])
+        if self.args['term']:
+            proposition_entry = self.db_connector_term.exact_ieml_term_search(self.args['ieml'])
+            proposition_entry['TAGS'] = {
+                'FR': proposition_entry['FR'],
+                'EN': proposition_entry['EN']
+            }
+            proposition = self.parser.parse('[' + self.args['ieml'] + ']')
+        else:
+            proposition = self.parser.parse(self.args['ieml'])
+            proposition_entry = self.db_connector_proposition.exact_ieml_search(proposition)
 
-        connector = PropositionsQueries()
-        return map(connector.retrieve_proposition, proposition.childs)
+        level = self.args['promotion_lvl']
+        if level not in self.level_to_class:
+            raise PromotingToInvalidLevel()
+
+        self.db_connector_proposition.save_closed_proposition(promote_to(proposition, self.level_to_class[level]),
+                                                              proposition_entry['TAGS'])
+
+        return {'valid': True}

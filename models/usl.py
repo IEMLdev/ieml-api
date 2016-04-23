@@ -15,13 +15,20 @@ class TextQueries(DBConnector):
         })
 
     def get_text_from_ieml(self, text_ieml):
-        return  self.texts.find_one({"IEML" : text_ieml})
+        return self.texts.find_one({"IEML" : text_ieml})
 
     def save_text(self, text, tags):
         if not Tag.check_tags(tags):
             raise InvalidTags()
 
+
         self._write_text_to_db(text, tags)
+
+    def search_text(self, search_string):
+        result = self.texts.find({"$text": {"$search": search_string}},
+                                        {"TAGS": 1, "TYPE": 1})
+        return list(result)
+
 
 class HyperTextQueries(TextQueries):
     def __init__(self):

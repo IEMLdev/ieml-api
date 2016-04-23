@@ -143,3 +143,19 @@ class TextDecompositionHandler(BaseHandler):
 
         print(tree)
         return tree
+
+
+class SearchTextHandler(BaseHandler):
+    def __init__(self):
+        super().__init__()
+
+        self.reqparse.add_argument("searchstring", required=True, type=str)
+        self.db_connector_text = TextQueries()
+
+    def post(self):
+        self.do_request_parsing()
+
+        result = self.db_connector_text.search_text(self.args['searchstring'])
+
+        return result
+

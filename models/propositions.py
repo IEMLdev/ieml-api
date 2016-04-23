@@ -1,5 +1,5 @@
 
-from models.exceptions import PropositionAlreadyExists, ObjectTypeNotStoredinDB
+from models.exceptions import PropositionAlreadyExists, ObjectTypeNotStoredinDB, ObjectNotFound
 from .base_queries import DBConnector
 from .constants import PROPOSITION_COLLECTION
 import ieml.AST
@@ -67,5 +67,13 @@ class PropositionsQueries(DBConnector):
 
         return list(result)
 
-    def exact_ieml_search(self, ieml_proposition):
-        return self.propositions.find_one({"IEML" : ieml_proposition})
+    def exact_ieml_search(self, proposition):
+        if isinstance(proposition, (ieml.AST.Sentence, ieml.AST.Word, ieml.AST.SuperSentence)):
+            proposition_db = self.propositions.find_one({"_id": str(proposition)})
+        else:
+            raise ObjectTypeNotStoredinDB()
+
+        if proposition_db:
+            return proposition_db
+        else :
+            raise ObjectNotFound()
