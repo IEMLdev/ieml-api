@@ -16,6 +16,7 @@ api.add_resource(SearchTermsHandler, '/api/search_terms')
 api.add_resource(SearchPropositionsHandler, '/api/search_proposition')
 # search for a text in the DB, return a list of text
 api.add_resource(SearchTextHandler, '/api/search_text')
+api.add_resource(SearchPropositionNoPromotionHandler, '/api/search_proposition_text')
 
 # Validation endpoint
 # validate and save a word object, and return its IEML string

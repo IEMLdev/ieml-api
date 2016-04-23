@@ -11,7 +11,7 @@ class TextQueries(DBConnector):
         self.texts.insert_one({
             "IEML" : str(text),
             "TAGS" : tags,
-            "PROPOSITIONS" : map(str, text.propositions)
+            "PROPOSITIONS" : [str(e) for e in text.childs]
         })
 
     def get_text_from_ieml(self, text_ieml):

@@ -17,7 +17,7 @@ class TextValidatorHandler(BaseDataHandler):
         #create the list of proposition (sould we parse or retrieve from the db ?)
         parser = PropositionsParser()
         print(self.json_data["propositions"])
-        proposition_list = [parser.parse(proposition['IEML']) for proposition in self.json_data["propositions"]]
+        proposition_list = [parser.parse(proposition['ieml']) for proposition in self.json_data["propositions"]]
 
         #create the text and check
         text = Text(proposition_list)

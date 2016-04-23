@@ -40,4 +40,4 @@ class DictionaryQueries(DBConnector):
 class Tag:
     @staticmethod
     def check_tags(tags):
-        return all([hasattr(tags, lang) for lang in TAG_LANGUAGES])
+        return all(lang in tags for lang in TAG_LANGUAGES)

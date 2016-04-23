@@ -308,7 +308,8 @@ class AbstractSentence(AbstractAdditiveProposition, ClosedProposition):
     def order(self):
         """Orders the clauses/superclauses inside the sentence/supersentence, using the graph"""
         if self._has_been_checked:
-            self.childs = self.graph.get_ordereded_clauses_list()
+            if len(self.childs) != 1:
+                self.childs = self.graph.get_ordereded_clauses_list()
         else:
             raise SentenceHasntBeenChecked()
         # else, it's just a single-clause list

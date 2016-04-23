@@ -84,6 +84,30 @@ class WordGraphValidatorHandler(ValidatorHandler):
         self.db_connector.save_closed_proposition(word_ast, self.json_data["tags"])
         return {"valid" : True, "ieml" : str(word_ast)}
 
+class SearchPropositionNoPromotionHandler(BaseHandler):
+    def post(self):
+        self.reqparse.add_argument("searchstring", required=True, type=str)
+        self.do_request_parsing()
+
+        level_to_type_table = {
+            1: Term,
+            2: Word,
+            3: Sentence,
+            4: SuperSentence
+        }
+
+        result = []
+
+        parser = PropositionsParser()
+        for proposition in PropositionsQueries().search_for_propositions(self.args["searchstring"], SuperSentence):
+            proposition_ast = parser.parse(proposition["_id"])
+            result.append({"IEML": str(proposition_ast),
+                           "ORIGINAL": proposition["TYPE"],
+                           "TAGS": proposition["TAGS"],
+                           "ORIGINAL_IEML": str(proposition_ast)})
+
+        return result
+
 
 class SearchPropositionsHandler(BaseHandler):
     """Search for primitives in the database, for all levels"""
@@ -107,15 +131,18 @@ class SearchPropositionsHandler(BaseHandler):
             term["ORIGINAL"] = "TERM"
             term["TAGS"] = {"FR" : term["natural_language"]["FR"],
                             "EN" : term["natural_language"]["EN"]}
+            term["ORIGINAL_IEML"] = term["ieml"]
+
             result.append(term)
 
         parser = PropositionsParser()
         for proposition in PropositionsQueries().search_for_propositions(self.args["searchstring"],
                                                                          max_primitive_level):
-            proposition_ast = parser.parse(proposition["IEML"])
+            proposition_ast = parser.parse(proposition["_id"])
             result.append({"IEML" : str(promote_to(proposition_ast, max_primitive_level)),
                            "ORIGINAL" : proposition["TYPE"],
-                           "TAGS" : proposition["TAGS"]})
+                           "TAGS" : proposition["TAGS"],
+                           "ORIGINAL_IEML" : str(proposition_ast)})
 
         return result
 

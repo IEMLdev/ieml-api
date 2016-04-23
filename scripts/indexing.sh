@@ -11,6 +11,7 @@ db.propositions.createIndex(
     {
         IEML: "text",
         TAGS: "text",
+        _id: "text"
     }
 )
 db.propositions.ensureIndex({"TAGS.FR" : 1})
