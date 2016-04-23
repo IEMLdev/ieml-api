@@ -5,6 +5,7 @@ from ieml.exceptions import CannotPromoteToLowerLevel
 from .propositions import Term, Word, Morpheme, Clause, Sentence, SuperSentence, SuperClause, \
     AbstractAdditiveProposition, AbstractClause
 from helpers import Singleton
+from models import DictionaryQueries
 
 terms_level_order = [Term, Morpheme, Word, Clause, Sentence, SuperClause, SuperSentence]
 
@@ -68,10 +69,10 @@ def promote_to(proposition, level_type):
 class RandomPropositionGenerator(metaclass=Singleton):
 
     def __init__(self):
-        self.db = DictionnaryQueries()
+        self.db = DictionaryQueries()
 
     def _make_random_morpheme(self):
-        term_count = random.randint(1, MAX_TERMS_IN_MORPHEME)
+        term_count = random.randint(1, 3)
         return Morpheme([Term(term_ieml) for term_ieml in self.db.get_random_terms(term_count)])
 
     def _make_random_word(self):
@@ -88,7 +89,7 @@ class RandomPropositionGenerator(metaclass=Singleton):
         if type == Clause:
             return Clause(*(self._make_random_word() for i in range(3)))
         else:
-            return Clause(*(self._make_random_sentence(Sentence) for i in range(3)))
+            return SuperClause(*(self._make_random_sentence(Sentence) for i in range(3)))
 
     def _make_random_sentence(self, type):
         """Returns a random sentence/supersentence depending on type"""
@@ -97,18 +98,19 @@ class RandomPropositionGenerator(metaclass=Singleton):
 
         graph_type = SentenceGraph if type == Sentence else SuperSentenceGraph
 
-        #first generating the nodes
+        # first,  generating the nodes
         if type is Sentence:
-            initial_nodes = [self._make_random_word() for i in range(random.randint(1, MAX_NODES_IN_SENTENCE))]
+            initial_nodes = [self._make_random_word() for i in range(random.randint(3, MAX_NODES_IN_SENTENCE))]
             mode_nodes = [self._make_random_word() for i in range(len(initial_nodes))]
         else:
-            initial_nodes = [self._make_random_sentence(Sentence) for i in range(random.randint(1, MAX_NODES_IN_SENTENCE))]
-            mode_nodes = [self._make_random_word() for i in range(len(initial_nodes))]
+            initial_nodes = [self._make_random_sentence(Sentence) for i in range(random.randint(3, MAX_NODES_IN_SENTENCE))]
+            mode_nodes = [self._make_random_sentence(Sentence) for i in range(len(initial_nodes))]
 
+        # then, constructing a tree using a priority queue (current_parents)
         clauses_list = []
-        current_parrents = [initial_nodes.pop(0)]
-        while current_parrents:
-            current_parrent = current_parrents.pop()
+        current_parents = [initial_nodes.pop(0)]
+        while current_parents:
+            current_parent = current_parents.pop()
             for i in range(random.randint(1,4)):
                 try:
                     child_node = initial_nodes.pop()
@@ -116,9 +118,9 @@ class RandomPropositionGenerator(metaclass=Singleton):
                 except IndexError:
                     break
 
-                #building either a clause or super clause with the current parrent and a new child node
-                clauses_list.append(graph_type.multiplicative_type(current_parrent, child_node, mode_node))
-                current_parrents.append(child_node)
+                # instantiating either a clause or super clause with the current parent and a new child node
+                clauses_list.append(graph_type.multiplicative_type(current_parent, child_node, mode_node))
+                current_parents.append(child_node)
 
         return type(clauses_list)
 

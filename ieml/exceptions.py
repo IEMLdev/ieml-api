@@ -93,7 +93,7 @@ class InvalidNodeIEMLLevel(InvalidGraphNode):
 
 
 class NodeHasTooMuchParents(InvalidGraphNode):
-    message = "Node %s has several parents, "
+    message = "Node %s has several parents"
 
 ### AST tools related errors
 
