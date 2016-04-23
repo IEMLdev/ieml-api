@@ -4,9 +4,9 @@ from ieml import PropositionsParser
 from ieml.AST import Word, Sentence, SuperSentence, Morpheme, Term, promote_to
 from ieml.AST.tools import SentenceGraph, SuperSentenceGraph
 from ieml.exceptions import InvalidNodeIEMLLevel
-from models import PropositionsQueries, DictionnaryQueries
+from models import PropositionsQueries, DictionaryQueries
 from .base import BaseHandler, BaseDataHandler
-from .exceptions import MissingField
+from .exceptions import MissingField,PromotingToInvalidLevel
 
 
 class ValidatorHandler(BaseDataHandler):
@@ -102,7 +102,7 @@ class SearchPropositionsHandler(BaseHandler):
         max_primitive_level = level_to_type_table[self.args["level"]]
 
         result = []
-        for term in DictionnaryQueries().search_for_terms(self.args["searchstring"]):
+        for term in DictionaryQueries().search_for_terms(self.args["searchstring"]):
             term["IEML"] = str(promote_to(Term(term["ieml"]), max_primitive_level))
             term["ORIGINAL"] = "TERM"
             term["TAGS"] = {"FR" : term["natural_language"]["FR"],
@@ -120,3 +120,42 @@ class SearchPropositionsHandler(BaseHandler):
         return result
 
 
+class PropositionPromoter(BaseHandler):
+    def __init__(self):
+        super().__init__()
+        self.reqparse.add_argument("ieml", required=True, type=str)
+        self.reqparse.add_argument("promotion_lvl", required=True, type=str)
+        self.reqparse.add_argument("term", required=True, type=bool)
+
+        self.db_connector_proposition = PropositionsQueries()
+        self.db_connector_term = DictionaryQueries()
+        self.level_to_class = {
+            '0': Term,
+            '1': Word,
+            '2': Sentence,
+            '3': SuperSentence
+        }
+        self.parser = PropositionsParser()
+
+    def post(self):
+        self.do_request_parsing()
+
+        if self.args['term']:
+            proposition_entry = self.db_connector_term.exact_ieml_term_search(self.args['ieml'])
+            proposition_entry['TAGS'] = {
+                'FR': proposition_entry['FR'],
+                'EN': proposition_entry['EN']
+            }
+            proposition = self.parser.parse('[' + self.args['ieml'] + ']')
+        else:
+            proposition = self.parser.parse(self.args['ieml'])
+            proposition_entry = self.db_connector_proposition.exact_ieml_search(proposition)
+
+        level = self.args['promotion_lvl']
+        if level not in self.level_to_class:
+            raise PromotingToInvalidLevel()
+
+        self.db_connector_proposition.save_closed_proposition(promote_to(proposition, self.level_to_class[level]),
+                                                              proposition_entry['TAGS'])
+
+        return {'valid': True}

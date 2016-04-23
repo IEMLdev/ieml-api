@@ -1,12 +1,11 @@
 import random
 
-from ieml.AST import Word, Clause, Sentence, SuperClause, SuperSentence
 from ieml.AST.constants import MAX_TERMS_IN_MORPHEME, MAX_NODES_IN_SENTENCE
 from ieml.exceptions import CannotPromoteToLowerLevel
-from models.base_queries import DictionnaryQueries
 from .propositions import Term, Word, Morpheme, Clause, Sentence, SuperSentence, SuperClause, \
     AbstractAdditiveProposition, AbstractClause
 from helpers import Singleton
+from models import DictionaryQueries
 
 terms_level_order = [Term, Morpheme, Word, Clause, Sentence, SuperClause, SuperSentence]
 
@@ -70,7 +69,7 @@ def promote_to(proposition, level_type):
 class RandomPropositionGenerator(metaclass=Singleton):
 
     def __init__(self):
-        self.db = DictionnaryQueries()
+        self.db = DictionaryQueries()
 
     def _make_random_morpheme(self):
         term_count = random.randint(1, 3)

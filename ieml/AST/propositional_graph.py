@@ -6,46 +6,49 @@ from ieml.AST.constants import MAX_NODES_IN_SENTENCE
 from ieml.exceptions import InvalidGraphNode, TooManyNodesInGraph
 from ..exceptions import NodeHasNoParent, NodeHasTooMuchParents, NoRootNodeFound, SeveralRootNodeFound
 
-
-class PropositionGraph:
-    """Stores a representation of the graph described in the visual web interface"""
-
-    def __init__(self, clause_list):
+class AbstractGraph:
+    def __init__(self, transitions_list):
         # this table stores each parent node (node that is a substance in a clause) and
         # the clause that it is the substance of
-        self.parent_nodes = {}
-        self.vertices_list = clause_list #
-        self.nodes_set = set()
+        self.nodes_set = None
+        self.parent_nodes = None
+        self.nodes_list = None
+        self._build_node_list(transitions_list)
 
-        for clause in self.vertices_list:
-            #we add the current clause to the "parent" node table
-            if clause.subst not in self.parent_nodes:
-                self.parent_nodes[clause.subst] = list()
-            self.parent_nodes[clause.subst].append(clause)
-            #we add the end and start node to the node table
-            for node in [clause.attr, clause.subst]:
+        self.adjacency_matrix = None
+        self._build_adjacency_matrix()
+        self.graph_checker = GraphChecker(self)
+
+        self.root_node = None  # this'll be set once the graph_checker has checked its existence and found it
+        self.has_been_checked = False
+
+    def _build_node_list(self, transition_list):
+        self.nodes_set = set()
+        self.parent_nodes = {}
+
+        for transition in transition_list:
+            # we add the current clause to the "parent" node table
+            if transition[0] not in self.parent_nodes:
+                self.parent_nodes[transition[0]] = list()
+            self.parent_nodes[transition[0]].append(transition)
+            # we add the end and start node to the node table
+            for node in (transition[0], transition[1]):
                 self.nodes_set.add(node)
 
         # since this list has been built from a set, every nodes are unique
         self.nodes_list = list(self.nodes_set)
         self.nodes_list.sort()
-        self.adjacency_matrix = None
-        self._build_adjacency_matrix()
-        self.graph_checker = PropositionGraphChecker(self)
-
-        self.root_node = None # this'll be set once the graph_checker has checked its existence and found it
-        self.generations_table = None # This'll store the clauses by *generations* upon a method call
-        self.has_been_checked = False
 
     def _build_adjacency_matrix(self):
         """Once the graph is fully built, this function is called to build the adjacency matrix"""
 
         self.adjacency_matrix = np.zeros((len(self.nodes_list), len(self.nodes_list)), dtype=bool)
-        for vertice in self.vertices_list:
-            # A cell is true if node x -> node y, else it's false
-            # thus, for each vertice, we set the (subst_node_index,attr_node_index) cell to true
-            x,y = self.nodes_list.index(vertice.subst), self.nodes_list.index(vertice.attr)
-            self.adjacency_matrix[x][y] = True
+
+        # A cell is true if node x -> node y, else it's false
+        # thus, for each vertice, we set the (subst_node_index,attr_node_index) cell to true
+        for x in self.parent_nodes:
+            for y in self.parent_nodes[x]:
+                self.adjacency_matrix[self.nodes_list.index(x)][self.nodes_list.index(y[1])] = True
 
     def check(self):
         try:
@@ -60,6 +63,21 @@ class PropositionGraph:
         self.root_node = self.nodes_list[self.graph_checker.root_node_index]
         logging.debug("Root node for sentence is %s" % str(self.root_node))
         self.has_been_checked = True
+
+
+class HyperTextGraph(AbstractGraph):
+    def __init__(self, hypertext):
+        super().__init__(hypertext.transitions)
+
+
+class PropositionGraph(AbstractGraph):
+    """Stores a representation of the graph described in the visual web interface"""
+
+    def __init__(self, clause_list):
+        super().__init__([(clause.subst, clause.attr) for clause in clause_list])
+        self.clause_table = {(clause.subst, clause.attr): clause for clause in clause_list}
+
+        self.generations_table = None # This'll store the clauses by *generations* upon a method call
 
     def _build_generation_table(self):
         """This needs the reference of the root node to work"""
@@ -81,8 +99,8 @@ class PropositionGraph:
             # and setting them as the next iterations's parent nodes
             next_gen_parent_nodes = []
             for clause in self.generations_table[current_gen]:
-                if clause.attr in self.parent_nodes:
-                    next_gen_parent_nodes.append(clause.attr)
+                if clause[1] in self.parent_nodes:
+                    next_gen_parent_nodes.append(clause[1])
 
             # "closing" the loop
             current_gen_parent_nodes = next_gen_parent_nodes
@@ -96,14 +114,14 @@ class PropositionGraph:
         self._build_generation_table()
         ordered_clauses = []
         for generation in self.generations_table:
-            generation.sort() # clauses/sperclauses are totally ordered, so sort works on a list of those
-            ordered_clauses += generation
+            generation_clauses = [self.clause_table[transition] for transition in generation]
+            generation_clauses.sort() # clauses/sperclauses are totally ordered, so sort works on a list of those
+            ordered_clauses += generation_clauses
 
         return ordered_clauses
 
 
-
-class PropositionGraphChecker:
+class GraphChecker:
     """Takes care of checking if a graph describing an IEMl proposition respects the IEML structura
     rules """
 

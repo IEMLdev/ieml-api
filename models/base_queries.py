@@ -2,8 +2,9 @@ from random import randint
 
 from pymongo import MongoClient
 
-from models.constants import TERMS_COLLECTION
+from models.constants import TERMS_COLLECTION, TAG_LANGUAGES
 from .constants import DB_ADDRESS, DB_NAME
+
 
 class DBConnector(object):
     """Automatically connects when instantiated"""
@@ -14,7 +15,7 @@ class DBConnector(object):
         self.terms = self.db[TERMS_COLLECTION]
 
 
-class DictionnaryQueries(DBConnector):
+class DictionaryQueries(DBConnector):
     """Class mainly used for anything related to the terms collection, i.e., the dictionnary"""
 
     def search_for_terms(self, search_string):
@@ -34,4 +35,9 @@ class DictionnaryQueries(DBConnector):
 
     def get_random_terms(self, count):
         total_count = self.terms.count()
-        return  [term["IEML"] for term in self.terms.find().limit(count).skip(randint(0, total_count - 1))]
+        return [term["IEML"] for term in self.terms.find().limit(count).skip(randint(0, total_count - 1))]
+
+class Tag:
+    @staticmethod
+    def check_tags(tags):
+        return all([hasattr(tags, lang) for lang in TAG_LANGUAGES])

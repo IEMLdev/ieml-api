@@ -86,8 +86,10 @@ class NodeHasNoParent(InvalidGraphNode):
     message = "Node %s has no parent"
 
 
+
 class InvalidNodeIEMLLevel(InvalidGraphNode):
     message = "Node %s doesn't have the right level to be used as a primitive for this level"
+
 
 
 class NodeHasTooMuchParents(InvalidGraphNode):
@@ -95,8 +97,10 @@ class NodeHasTooMuchParents(InvalidGraphNode):
 
 ### AST tools related errors
 
+
 class ToolsException(Exception):
     pass
+
 
 class CannotPromoteToLowerLevel(ToolsException):
     pass
@@ -105,4 +109,10 @@ class CannotPromoteToLowerLevel(ToolsException):
 ### USL errors ###
 
 class InvalidPathException(Exception):
+    pass
+
+class OpenPropositionInTextException(Exception):
+    pass
+
+class EmptyTextException(Exception):
     pass
