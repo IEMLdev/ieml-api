@@ -1,8 +1,10 @@
 import logging
 
 import numpy as np
-from ..exceptions import NodeHasNoParent, NodeHasTooMuchParents, NoRootNodeFound, SeveralRootNodeFound
 
+from ieml.AST.constants import MAX_NODES_IN_SENTENCE
+from ieml.exceptions import InvalidGraphNode, TooManyNodesInGraph
+from ..exceptions import NodeHasNoParent, NodeHasTooMuchParents, NoRootNodeFound, SeveralRootNodeFound
 
 class AbstractGraph:
     def __init__(self, transitions_list):
@@ -49,7 +51,15 @@ class AbstractGraph:
                 self.adjacency_matrix[self.nodes_list.index(x)][self.nodes_list.index(y[1])] = True
 
     def check(self):
-        self.graph_checker.do_checks()
+        try:
+            self.graph_checker.do_checks()
+        except InvalidGraphNode as err:
+            err.set_node_ieml(str(self.nodes_list[err.node_id]))
+            raise err
+
+        if len(self.nodes_list) > MAX_NODES_IN_SENTENCE:
+            raise TooManyNodesInGraph()
+
         self.root_node = self.nodes_list[self.graph_checker.root_node_index]
         logging.debug("Root node for sentence is %s" % str(self.root_node))
         self.has_been_checked = True
@@ -88,8 +98,8 @@ class PropositionGraph(AbstractGraph):
             # and setting them as the next iterations's parent nodes
             next_gen_parent_nodes = []
             for clause in self.generations_table[current_gen]:
-                if clause.attr in self.parent_nodes:
-                    next_gen_parent_nodes.append(clause.attr)
+                if clause[1] in self.parent_nodes:
+                    next_gen_parent_nodes.append(clause[1])
 
             # "closing" the loop
             current_gen_parent_nodes = next_gen_parent_nodes
@@ -126,7 +136,6 @@ class GraphChecker:
         self._check_has_unique_root()
         self._check_only_unique_parent()
 
-
     def _check_has_unique_root(self):
         """Using the adjacency matrix, checks that the graph has a unique root, and that this root
         has at least one child"""
@@ -158,3 +167,5 @@ class GraphChecker:
                     raise NodeHasTooMuchParents(index)
                 else:
                     raise NodeHasNoParent(index)
+
+

@@ -1,24 +1,13 @@
 import logging
 
 from ieml import PropositionsParser
-from ieml.AST import Word, Clause, Sentence, SuperClause, SuperSentence, Morpheme, Term, promote_to
+from ieml.AST import Word, Sentence, SuperSentence, Morpheme, Term, promote_to
+from ieml.AST.tools import SentenceGraph, SuperSentenceGraph
 from ieml.exceptions import InvalidNodeIEMLLevel
 from models import PropositionsQueries, DictionaryQueries
 from .base import BaseHandler, BaseDataHandler
 from .exceptions import MissingField,PromotingToInvalidLevel
 
-
-class SentenceGraph:
-    primitive_type = Word
-    multiplicative_type = Clause
-    additive_type = Sentence
-
-
-class SuperSentenceGraph:
-
-    primitive_type = Sentence
-    multiplicative_type = SuperClause
-    additive_type = SuperSentence
 
 class ValidatorHandler(BaseDataHandler):
 
@@ -28,7 +17,7 @@ class ValidatorHandler(BaseDataHandler):
 
     def do_request_parsing(self):
         super().do_request_parsing()
-        for field in ["graph", "nodes"]:
+        for field in ["graph", "nodes", "tags"]:
             if field not in self.json_data:
                 raise MissingField(field)
 
@@ -65,6 +54,7 @@ class GraphValidatorHandler(ValidatorHandler):
         proposition_ast = graph_type.additive_type(multiplication_elems)
         # asking the proposition to check itself
         proposition_ast.check()
+        proposition_ast.order()
         self.db_connector.save_closed_proposition(proposition_ast, self.json_data["tags"])
         return {"valid" : True, "ieml" : str(proposition_ast)}
 

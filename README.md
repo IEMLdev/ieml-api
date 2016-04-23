@@ -1,20 +1,8 @@
 # Setting up the RESTful API
 
 Here's what you need to do to set up the API
-___
 
-**Table des matières**
-- [Dépendances logicielles](#dépendances-logicielles)
-- [Peuplement de la base](#peuplement-de-la-base)
-    - [Première méthode : à la main](#première-méthode--à-la-main)
-	- [Deuxième méthode : en automatique](#deuxième-méthode--en-automatique)
-- [Lancement du serveur de l'API](#lancement-du-serveur-de-lapi)
-- [Configuration nécessaire pour avoir l'API et le client sur la même machine](#configuration-nécessaire-pour-avoir-lapi-et-le-client-sur-la-même-machine)
-- [Recharger les bases](#recharger-les-bases)
-
-___
-
-## Dépendances logicielles
+## Dependencies
 
 You'll need a mongodb 3.2 server running on your machine. 
 On Ubuntu, use this tutorial to set it up: https://www.digitalocean.com/community/tutorials/how-to-install-mongodb-on-ubuntu-14-04

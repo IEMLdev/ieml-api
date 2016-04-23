@@ -81,7 +81,7 @@ class TestSentenceGraphValidator(unittest.TestCase):
         request_output = self.sentence_handler.post()
         sentence = get_test_sentence()
         sentence.order()
-        self.assertEquals(request_output["ieml"], str(sentence))
+        self.assertEqual(request_output["ieml"], str(sentence))
 
 class TestTextDecomposition(unittest.TestCase):
 

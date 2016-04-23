@@ -2,8 +2,9 @@ import logging
 from functools import total_ordering
 from helpers import LoggedInstantiator, Singleton
 from models import DictionaryQueries
+from ieml.AST.constants import MAX_TERMS_IN_MORPHEME
 from ieml.exceptions import IEMLTermNotFoundInDictionnary, IndistintiveTermsExist, InvalidConstructorParameter, \
-    InvalidClauseComparison, TermComparisonFailed
+    InvalidClauseComparison, TermComparisonFailed, SentenceHasntBeenChecked, TooManyTermsInMorpheme
 from .propositional_graph import PropositionGraph
 from .utils import PropositionPath
 
@@ -179,10 +180,13 @@ class Morpheme(AbstractAdditiveProposition, NonClosedProposition):
         if len(self.childs) != len(set(self.childs)):
             raise IndistintiveTermsExist("There are %i indistinct terms. "
                                          % (len(self.childs) - len(set(self.childs))))
+
+        if len(self.childs) > MAX_TERMS_IN_MORPHEME:
+            raise TooManyTermsInMorpheme()
+
         # TODO : more checking
         # - term intersection
         # - paradigmatic intersection
-        # - term number
         self._has_been_checked = True
 
 
@@ -303,8 +307,10 @@ class AbstractSentence(AbstractAdditiveProposition, ClosedProposition):
 
     def order(self):
         """Orders the clauses/superclauses inside the sentence/supersentence, using the graph"""
-        if not self._has_been_checked:
+        if self._has_been_checked:
             self.childs = self.graph.get_ordereded_clauses_list()
+        else:
+            raise SentenceHasntBeenChecked()
         # else, it's just a single-clause list
 
 
@@ -312,7 +318,6 @@ class Sentence(AbstractSentence):
 
     def __init__(self, child_elements):
         super().__init__(child_elements)
-        self.graph = None
 
 
 class SuperSentence(AbstractSentence):
