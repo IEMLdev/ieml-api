@@ -6,6 +6,7 @@ from models import DictionnaryQueries
 from ieml.exceptions import IEMLTermNotFoundInDictionnary, IndistintiveTermsExist, InvalidConstructorParameter, \
     InvalidClauseComparison, TermComparisonFailed, SentenceHasntBeenChecked, TooManyTermsInMorpheme
 from .propositional_graph import PropositionGraph
+from .usl import PropositionPath
 
 
 class TermsQueries(DictionnaryQueries, metaclass=Singleton):
@@ -19,10 +20,14 @@ class ClosedProposition:
     These propositions, even if they're not truly closed in the script, are the only one
     that can link to USL's"""
     def __init__(self):
+        super().__init__()
         self.hyperlink = []
 
     def add_hyperlink_list(self, usl_list):
         self.hyperlink += usl_list
+
+    def _str_hyperlink(self):
+        return ''.join(map(str, self.hyperlink))
 
 
 class NonClosedProposition:
@@ -51,6 +56,7 @@ class AbstractProposition(metaclass=AbstractPropositionMetaclass):
     right_bracket_symbol = "]"
 
     def __init__(self):
+        super().__init__()
         self.childs = None # will be an iterable (list or tuple)
         self._has_been_checked = False
         self._ieml_string = None
@@ -73,8 +79,9 @@ class AbstractProposition(metaclass=AbstractPropositionMetaclass):
         for child in self.childs:
             child.check()
 
-    def _gather_child_links(self):
-        return [couple for sublist in [child.gather_hyperlinks() for child in self.childs]
+    def _gather_child_links(self, current_path):
+        path = current_path + [self]
+        return [couple for sublist in [child.gather_hyperlinks(path) for child in self.childs]
                 for couple in sublist]
 
     def is_ordered(self):
@@ -97,8 +104,6 @@ class AbstractAdditiveProposition(AbstractProposition):
             raise InvalidConstructorParameter(self)
 
     def __str__(self):
-        super().__str__()
-
         return self.left_bracket_symbol + \
                self.plus_symbol.join([str(element) for element in self.childs]) + \
                self.right_bracket_symbol
@@ -194,13 +199,14 @@ class Word(AbstractMultiplicativeProposition, ClosedProposition):
 
     def __str__(self):
         if self.mode is None:
-            return self.left_bracket_symbol + \
+            result = self.left_bracket_symbol + \
                    str(self.subst) +\
                    self.right_bracket_symbol
         else:
-            return self.left_bracket_symbol + \
+            result = self.left_bracket_symbol + \
                    str(self.subst) + self.times_symbol + \
                    str(self.mode) + self.right_bracket_symbol
+        return result
 
     def __gt__(self, other):
         if self.subst != other.subst:
@@ -208,9 +214,9 @@ class Word(AbstractMultiplicativeProposition, ClosedProposition):
         else:
             return self.mode > other.mode
 
-    def gather_hyperlinks(self):
+    def gather_hyperlinks(self, current_path):
         # since morphemes cannot have hyperlinks, we don't gather links for the underlying childs
-        return [(self, usl_ref) for usl_ref in self.hyperlink]
+        return [(PropositionPath(current_path, self), usl_ref) for usl_ref in self.hyperlink]
 
 
 
@@ -228,8 +234,8 @@ class AbstractClause(AbstractMultiplicativeProposition, NonClosedProposition):
             else:
                 raise InvalidClauseComparison()
 
-    def gather_hyperlinks(self):
-        return self._gather_child_links()
+    def gather_hyperlinks(self, current_path):
+        return self._gather_child_links(current_path)
 
 
 
@@ -253,11 +259,11 @@ class AbstractSentence(AbstractAdditiveProposition, ClosedProposition):
         super().__init__(child_elements)
         self.graph = None
 
-    def gather_hyperlinks(self):
+    def gather_hyperlinks(self, current_path):
         # first we build the (object, usl) tuple list for the current object
-        links_list = [(self, usl_ref) for usl_ref in self.hyperlink]
+        links_list = [(PropositionPath(current_path, self), usl_ref) for usl_ref in self.hyperlink]
         # then we add the hyperlinks from the child elements
-        return links_list + self._gather_child_links()
+        return links_list + self._gather_child_links(current_path)
 
     def check(self):
         # first, we call the parent method, which, by calling the check methods on clauses or superclauses,
