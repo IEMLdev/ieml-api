@@ -117,8 +117,11 @@ class TextDecompositionHandler(BaseHandler):
         result = [e for child in hypertext.childs[0].childs for e in self._prefix_walker(child)]
         tree = {}
 
-        #transform the list into a node hierachie and only keep closed proposition
+        # Transform the list into a node hierachie and only keep closed proposition
+        # Sorting in growing size of list of ieml (tree hierachie)
         result.sort(key=lambda e : len(e['IEML']))
+
+        # Build the tree structure
         root = {}
         for r in result:
             current = root
@@ -128,9 +131,11 @@ class TextDecompositionHandler(BaseHandler):
                 else:
                     current[e] = {'data' : r}
 
+        # Build the json structure
         def build_tree(node):
-            if isinstance(node, dict):
-                data = node['data']
+            # if isinstance(node, dict):
+            data = node['data']
+
             return {
                 'id' : id(data['IEML']),
                 'name' : data['TAGS']['EN'],
@@ -140,8 +145,6 @@ class TextDecompositionHandler(BaseHandler):
 
         tree = build_tree(root[result[0]['IEML'][0]])
 
-
-        print(tree)
         return tree
 
 
