@@ -156,6 +156,11 @@ class SearchTextHandler(BaseHandler):
         self.do_request_parsing()
 
         result = self.db_connector_text.search_text(self.args['searchstring'])
-
-        return result
+        return [
+            {
+                'IEML': e['_id'],
+                'ORIGINAL': 'TEXT',
+                'TAGS': e['TAGS'],
+                'ORIGINAL_IEML': 'TEXT'
+            } for e in result]
 

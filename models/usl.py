@@ -9,13 +9,13 @@ class TextQueries(DBConnector):
 
     def _write_text_to_db(self, text, tags):
         self.texts.insert_one({
-            "IEML" : str(text),
+            "_id" : str(text),
             "TAGS" : tags,
             "PROPOSITIONS" : [str(e) for e in text.childs]
         })
 
     def get_text_from_ieml(self, text_ieml):
-        return self.texts.find_one({"IEML" : text_ieml})
+        return self.texts.find_one({"_id" : text_ieml})
 
     def save_text(self, text, tags):
         if not Tag.check_tags(tags):
@@ -26,7 +26,7 @@ class TextQueries(DBConnector):
 
     def search_text(self, search_string):
         result = self.texts.find({"$text": {"$search": search_string}},
-                                        {"TAGS": 1, "TYPE": 1})
+                                        {"TAGS": 1})
         return list(result)
 
 
@@ -38,7 +38,7 @@ class HyperTextQueries(TextQueries):
     def _write_hypertext_to_db(self, hypertext, tags):
         self.hypertexts.insert_one({
             "TAGS" : tags,
-            "IEML" : str(hypertext),
+            "_id" : str(hypertext),
             "TEXTS" : map(str, hypertext.texts),
             "HYPERLINK" : [
                 {'substance': transition[0],
