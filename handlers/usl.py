@@ -1,7 +1,8 @@
 from ieml import USLParser, PropositionsParser
-from ieml.AST import Term, Text,HyperText, AbstractProposition
+from ieml.AST import Term, Text,HyperText, AbstractProposition, Word, Sentence, SuperSentence
 from models import DictionaryQueries, TextQueries, PropositionsQueries, HyperTextQueries
 from .base import BaseDataHandler, BaseHandler
+import json
 
 
 class TextValidatorHandler(BaseDataHandler):
@@ -76,36 +77,45 @@ class TextDecompositionHandler(BaseHandler):
         self.reqparse.add_argument("data", required=True, type=str)
         self.db_connector_term = DictionaryQueries()
         self.db_connector_proposition = PropositionsQueries()
+        self.proposition_parser = PropositionsParser()
 
     def _entry(self, node):
         ieml = str(node)
+
         if isinstance(node, AbstractProposition):
-            elem = self.db_connector_proposition.exact_ieml_search(ieml)
+            if isinstance(node, (Term, Word, Sentence, SuperSentence)):
+                elem = self.db_connector_proposition.exact_ieml_search(node)
+                # Getting the children of the node.
+                # If the node is from a promotion, the child is the promoted proposition.
+                if "PROMOTION" in elem:
+                    children = [self.proposition_parser.parse(elem["PROMOTION"]["IEML"])]
+                else:
+                    children = node.childs
+            else:
+                elem = None
+                children = node.childs
         else:
             elem = self.db_connector_term.exact_ieml_term_search(ieml)
+            children = []
 
-        if not elem:
-            elem = {"TAGS": {
-                "FR": "Inconnu",
-                "EN": "Unknown"}}
-
-        return {
-           "IEML" : [ieml],
-            "TAGS" : elem['TAGS']
+        entry = {
+            "IEML": [ieml],
+            "TAGS": elem['TAGS'] if elem else {"FR": "Inconnu", "EN": "Unknown"}
         }
 
+        return children, entry
+
     def _prefix_walker(self, node):
-        result = [self._entry(node)]
+        children, entry = self._entry(node)
+        result = [entry] if isinstance(node, (Term, Word, Sentence, SuperSentence)) else []
 
         if not isinstance(node, Term):
             n_ieml = str(node)
-            for n in node.childs:
+            for n in children:
                 for child in self._prefix_walker(n):
                     child["IEML"].insert(0, n_ieml)
                     result.append(child)
         return result
-
-
 
     def post(self):
         self.do_request_parsing()
@@ -115,21 +125,25 @@ class TextDecompositionHandler(BaseHandler):
         hypertext = parser.parse(self.args['data'])
 
         result = [e for child in hypertext.childs[0].childs for e in self._prefix_walker(child)]
-        tree = {}
 
         # Transform the list into a node hierachie and only keep closed proposition
         # Sorting in growing size of list of ieml (tree hierachie)
-        result.sort(key=lambda e : len(e['IEML']))
+        result.sort(key=lambda e: len(e['IEML']))
 
         # Build the tree structure
-        root = {}
+        root = {
+            'data': {
+                "IEML": [self.args['data']],
+                "TAGS": {"FR": "Inconnu", "EN": "Unknown"}
+            }
+        }
         for r in result:
             current = root
             for e in r['IEML']:
                 if e in current:
                     current = current[e]
                 else:
-                    current[e] = {'data' : r}
+                    current[e] = {'data': r}
 
         # Build the json structure
         def build_tree(node):
@@ -137,14 +151,15 @@ class TextDecompositionHandler(BaseHandler):
             data = node['data']
 
             return {
-                'id' : id(data['IEML']),
-                'name' : data['TAGS']['EN'],
-                'data' : data,
-                'children' : [build_tree(node[key]) for key in node if key != 'data']
+                'id': id(data['IEML']),
+                'name': data['TAGS']['EN'],
+                'data': data,
+                'children': [build_tree(node[key]) for key in node if key != 'data']
             }
 
-        tree = build_tree(root[result[0]['IEML'][0]])
+        tree = build_tree(root)
 
+        print(json.dumps(tree, indent=4))
         return tree
 
 

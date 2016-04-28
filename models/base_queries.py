@@ -31,11 +31,12 @@ class DictionaryQueries(DBConnector):
         return result
 
     def exact_ieml_term_search(self, ieml_string):
-        return self.terms.find_one({"IEML" : ieml_string})
+        return self.terms.find_one({"IEML": ieml_string})
 
     def get_random_terms(self, count):
         total_count = self.terms.count()
         return [term["IEML"] for term in self.terms.find().limit(count).skip(randint(0, total_count - 1))]
+
 
 class Tag:
     @staticmethod

@@ -4,7 +4,7 @@ from ieml import PropositionsParser
 from ieml.AST import Word, Sentence, SuperSentence, Morpheme, Term, promote_to
 from ieml.AST.tools import SentenceGraph, SuperSentenceGraph
 from ieml.exceptions import InvalidNodeIEMLLevel
-from models import PropositionsQueries, DictionaryQueries
+from models import PropositionsQueries, DictionaryQueries, PropositionAlreadyExists
 from .base import BaseHandler, BaseDataHandler
 from .exceptions import MissingField,PromotingToInvalidLevel
 
@@ -82,19 +82,13 @@ class WordGraphValidatorHandler(ValidatorHandler):
         # asking the proposition to check itself
         word_ast.check()
         self.db_connector.save_closed_proposition(word_ast, self.json_data["tags"])
-        return {"valid" : True, "ieml" : str(word_ast)}
+        return {"valid": True, "ieml": str(word_ast)}
+
 
 class SearchPropositionNoPromotionHandler(BaseHandler):
     def post(self):
         self.reqparse.add_argument("searchstring", required=True, type=str)
         self.do_request_parsing()
-
-        level_to_type_table = {
-            1: Term,
-            2: Word,
-            3: Sentence,
-            4: SuperSentence
-        }
 
         result = []
 
@@ -118,10 +112,10 @@ class SearchPropositionsHandler(BaseHandler):
         self.do_request_parsing()
 
         level_to_type_table = {
-            1 : Term,
-            2 : Word,
-            3 : Sentence,
-            4 : SuperSentence
+            1: Term,
+            2: Word,
+            3: Sentence,
+            4: SuperSentence
         }
         max_primitive_level = level_to_type_table[self.args["level"]]
 
@@ -142,7 +136,7 @@ class SearchPropositionsHandler(BaseHandler):
             result.append({"IEML" : str(promote_to(proposition_ast, max_primitive_level)),
                            "ORIGINAL" : proposition["TYPE"],
                            "TAGS" : proposition["TAGS"],
-                           "ORIGINAL_IEML" : str(proposition_ast)})
+                           "ORIGINAL_IEML": str(proposition_ast)})
 
         return result
 
@@ -152,7 +146,7 @@ class PropositionPromoter(BaseHandler):
         super().__init__()
         self.reqparse.add_argument("ieml", required=True, type=str)
         self.reqparse.add_argument("promotion_lvl", required=True, type=str)
-        self.reqparse.add_argument("term", required=True, type=bool)
+        self.reqparse.add_argument("term", required=True, type=int)
 
         self.db_connector_proposition = PropositionsQueries()
         self.db_connector_term = DictionaryQueries()
@@ -182,7 +176,12 @@ class PropositionPromoter(BaseHandler):
         if level not in self.level_to_class:
             raise PromotingToInvalidLevel()
 
-        self.db_connector_proposition.save_closed_proposition(promote_to(proposition, self.level_to_class[level]),
-                                                              proposition_entry['TAGS'])
+        try:
+            self.db_connector_proposition.save_promoted_proposition(
+                promote_to(proposition, self.level_to_class[level]),
+                proposition_entry['TAGS'],
+                proposition)
+        except PropositionAlreadyExists:
+            pass
 
         return {'valid': True}
