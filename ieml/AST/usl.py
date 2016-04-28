@@ -80,7 +80,6 @@ class HyperText:
         self.transitions = None
         self._build_graph()
 
-
     def _build_hyperlink(self):
         """Gather the hyper links from children texts"""
         self._hyperlinks = {}
@@ -124,7 +123,7 @@ class HyperText:
                 self.texts += child.texts
 
                 # We had the transitions from the child to ours, with the offset to match the index of ours text list
-                self.transitions.update(map(lambda t : (t[0] + offset, t[1] + offset, t[2]), child.transitions))
+                self.transitions.update(map(lambda t: (t[0] + offset, t[1] + offset, t[2]), child.transitions))
 
                 # We had this transition to the child hypertext
                 self.transitions.add((0, offset, path))
