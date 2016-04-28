@@ -10,6 +10,7 @@ from .exceptions import MissingField,PromotingToInvalidLevel
 
 
 class ValidatorHandler(BaseDataHandler):
+    """Abstract handler for both proposition-related handlers. Factorizes the JSON data field-checking"""
 
     def __init__(self):
         super().__init__()

@@ -108,11 +108,17 @@ class CannotPromoteToLowerLevel(ToolsException):
 
 ### USL errors ###
 
-class InvalidPathException(Exception):
+class USLException(Exception):
     pass
 
-class OpenPropositionInTextException(Exception):
+
+class InvalidPathException(USLException):
     pass
 
-class EmptyTextException(Exception):
+
+class OpenPropositionInTextException(USLException):
+    pass
+
+
+class EmptyTextException(USLException):
     pass

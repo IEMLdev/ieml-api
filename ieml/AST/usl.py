@@ -1,5 +1,5 @@
 from ieml.exceptions import InvalidPathException, EmptyTextException
-from .propositions import ClosedProposition
+from .propositions import ClosedProposition, Word, Sentence, SuperSentence
 from .propositional_graph import HyperTextGraph
 from .utils import PropositionPath
 
@@ -9,6 +9,8 @@ class Tag:
 
 
 class Text:
+    """A text is basically a list of *closed* propositions"""
+
     def __init__(self, propositions):
         super().__init__()
         if len(propositions) == 0:
@@ -23,13 +25,13 @@ class Text:
         return self.__str__().__hash__()
 
     def __eq__(self, other):
-        return self.childs == other
+        return self.childs == other.childs
 
     def check(self):
-        for p in self.childs:
-            if not isinstance(p, ClosedProposition):
+        for child in self.childs:
+            if not isinstance(child, ClosedProposition):
                 raise InvalidPathException()
-            p.check()
+            child.check()
 
     def render(self, hyperlinks):
         return '{/' + '//'.join([p.render_hyperlinks(hyperlinks, PropositionPath()) for p in self.childs]) + '/}'
@@ -50,8 +52,18 @@ class Text:
 
         return PropositionPath(proposition_list)
 
+    def order(self):
+        """Orders the propositions in a text. First the words, then the sentences, and the super-sentences"""
+        # TODO : Test this ordering
+        childs_by_level = { Word : [], Sentence : [], SuperSentence : []}
+        for child in self.childs:
+            childs_by_level[type(child)].append(child)
+        self.childs = childs_by_level[Word].sort() + \
+                      childs_by_level[Sentence].sort() + \
+                      childs_by_level[SuperSentence].sort()
 
 class HyperText:
+    """An hypertext contains a list of texts and an hyperlink table"""
 
     def __init__(self, text):
         super().__init__()
@@ -70,11 +82,14 @@ class HyperText:
 
 
     def _build_hyperlink(self):
+        """Gather the hyper links from children texts"""
         self._hyperlinks = {}
-        for hyperlink in self.childs[0].get_hyperlinks():
-            self._add_hyperlink(*hyperlink)
+        for path, hypertex in self.childs[0].get_hyperlinks():
+            self._add_hyperlink(path, hypertex)
 
     def _add_hyperlink(self, path, hypertext):
+        """Adds the hyperlink to the hypertext's hyperlink table,
+        with the path as a key and the hypertext as one of the values in the list"""
         if path not in self._hyperlinks:
             self._hyperlinks[path] = []
         self._hyperlinks[path].append(hypertext)
@@ -103,10 +118,10 @@ class HyperText:
         self.transitions = set()
         for path in self._hyperlinks:
             for child in self._hyperlinks[path]:
-                offset = len(self.text)
+                offset = len(self.texts)
                 # append the text list of the child at the end of the text list, the child text is at offset position
                 # the parent (this text) is still at index 0
-                self.text += child.text
+                self.texts += child.texts
 
                 # We had the transitions from the child to ours, with the offset to match the index of ours text list
                 self.transitions.update(map(lambda t : (t[0] + offset, t[1] + offset, t[2]), child.transitions))

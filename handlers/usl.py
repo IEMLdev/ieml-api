@@ -5,6 +5,7 @@ from .base import BaseDataHandler, BaseHandler
 
 
 class TextValidatorHandler(BaseDataHandler):
+    """Validates an IEML text, stores it in the text database collection, and returns its IEML form"""
 
     def __init__(self):
         super().__init__()
@@ -43,7 +44,6 @@ class HyperTextValidatorHandler(BaseDataHandler):
             Request :  {    tags : {..}
                             texts : [{ ieml : str, index : str}, ... ] ,
                             graph : [{ substance : str (index), attribute : str(index), mode : [str, str, ... ](path)},...]}
-        :return:
         """
         self.do_request_parsing()
 
