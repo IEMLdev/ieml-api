@@ -16,4 +16,4 @@ class PropositionPath:
         return self.path == other.path
 
     def to_ieml_list(self):
-        return map(str, self.path)
+        return [str(e) for e in self.path]

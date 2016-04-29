@@ -83,8 +83,8 @@ class HyperText:
     def _build_hyperlink(self):
         """Gather the hyper links from children texts"""
         self._hyperlinks = {}
-        for path, hypertex in self.childs[0].get_hyperlinks():
-            self._add_hyperlink(path, hypertex)
+        for path, hypertext in self.childs[0].get_hyperlinks():
+            self._add_hyperlink(path, hypertext)
 
     def _add_hyperlink(self, path, hypertext):
         """Adds the hyperlink to the hypertext's hyperlink table,

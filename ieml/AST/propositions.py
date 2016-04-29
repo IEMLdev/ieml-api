@@ -86,11 +86,11 @@ class AbstractProposition(metaclass=AbstractPropositionMetaclass):
                 for couple in sublist]
 
     def render_hyperlinks(self, hyperlinks, path):
-        current_path = PropositionPath(path, self)
+        current_path = PropositionPath(path.path, self)
         result = self._do_render_hyperlinks(hyperlinks, current_path)
 
-        if hyperlinks[str(current_path)]:
-            result += ''.join(map(str, hyperlinks[str(current_path)]))
+        if current_path in hyperlinks:
+            result += ''.join(map(str, hyperlinks[current_path]))
 
         return result
 
@@ -334,6 +334,15 @@ class Term(metaclass=AbstractPropositionMetaclass):
         self.ieml = ieml_string
         self.objectid = None
         self.canonical_forms = None
+
+    def render_hyperlinks(self, hyperlinks, path):
+        current_path = PropositionPath(path.path, self)
+        result = self._do_render_hyperlinks(hyperlinks, current_path)
+
+        if current_path in hyperlinks:
+            result += ''.join(map(str, hyperlinks[str(current_path)]))
+
+        return result
 
     def _do_render_hyperlinks(self, hyperlinks, path):
         return "[" + self.ieml + "]"
