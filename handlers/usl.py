@@ -51,7 +51,7 @@ class HyperTextValidatorHandler(BaseDataHandler):
         #get the list of text from the db
         hypertexts = {}
         for text in self.json_data["texts"]:
-            hypertexts[text["index"]] = HyperText(self.db_connector_text.get_text_from_ieml(text["ieml"]))
+            hypertexts[text["id"]] = HyperText(self.db_connector_text.get_text_from_ieml(text["ieml_string"]))
 
         #parse the graph and add hyperlink, check the cycle
         for hyperlink in self.json_data["graph"]:
