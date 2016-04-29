@@ -29,7 +29,7 @@ class TestUSLParser(unittest.TestCase):
 
     def test_text(self):
         """Weak test of the USL with hyperlink parsing"""
-        with open("../data/example_text.txt") as ieml_file:
+        with open("data/example_text.txt") as ieml_file:
             usl_obj = self.parser.parse(ieml_file.read())
         self.assertEqual(len(usl_obj.texts), 1)
         self.assertEqual(len(usl_obj.childs), 1)
@@ -38,6 +38,6 @@ class TestUSLParser(unittest.TestCase):
 
     def test_with_hyperlink(self):
         """Weak test of the USL with hyperlink parsing"""
-        with open("../data/example_usl.txt") as ieml_file:
+        with open("data/example_usl.txt") as ieml_file:
             usl_obj = self.parser.parse(ieml_file.read())
         self.assertEqual(len(usl_obj.texts), 2)
