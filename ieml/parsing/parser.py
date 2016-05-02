@@ -22,10 +22,7 @@ class PropositionsParser(metaclass=Singleton):
     def parse(self, s):
         """Parses the input string, and returns a reference to the created AST's root"""
         self.root = None
-
-        log = logging.getLogger()
-        log.setLevel(logging.INFO)
-        self.parser.parse(s, debug=log)
+        self.parser.parse(s)
         return self.root
 
     # Parsing rules

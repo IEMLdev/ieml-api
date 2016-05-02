@@ -37,10 +37,10 @@ class HyperTextQueries(TextQueries):
 
     def _write_hypertext_to_db(self, hypertext, tags):
         self.hypertexts.insert_one({
-            "TAGS" : tags,
-            "_id" : str(hypertext),
-            "TEXTS" : map(str, hypertext.texts),
-            "HYPERLINK" : [
+            "TAGS": tags,
+            "_id": str(hypertext),
+            "TEXTS": [str(t) for t in hypertext.texts],
+            "HYPERLINK": [
                 {'substance': transition[0],
                  'attribute': transition[1],
                  'mode': transition[2].to_ieml_list()} for transition in hypertext.transitions
