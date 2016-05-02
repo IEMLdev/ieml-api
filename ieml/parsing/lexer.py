@@ -18,7 +18,7 @@ tokens = (
 )
 
 def get_lexer(module=None):
-    t_TERM = r'[EUASBTOMFIacbedgfihkjmlonpsutwyx\.\-\;\:\,\'\’\_]+'
+    t_TERM = r'[EUASBTOMFIacbedgfihkjmlonpsutwyx\.\-\;\:\,\'\’\_+]+'
     t_PLUS   = r'\+'
     t_TIMES   = r'\*'
     t_LPAREN  = r'\('
