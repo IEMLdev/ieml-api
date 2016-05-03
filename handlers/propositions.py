@@ -22,14 +22,19 @@ class ValidatorHandler(BaseDataHandler):
             if field not in self.json_data:
                 raise MissingField(field)
 
+    def _build_ieml_ast(self):
+        """Using the data from the JSON requests, builds an AST of the IEML object being checked. Returns a
+        checked and ordered IEML object"""
+        pass
 
-class GraphValidatorHandler(ValidatorHandler):
+    def _save_closed_proposition(self, closed_proposition_ast):
+        self.db_connector.save_closed_proposition(closed_proposition_ast, self.json_data["tags"])
+
+class GraphCheckerHandler(ValidatorHandler):
     """Checks that a give graph representing a sentence/supersentence is well formed, and if it is,
     returns the corresponding IEML string"""
 
-    def post(self):
-        self.do_request_parsing()
-
+    def _build_ieml_ast(self):
         parser = PropositionsParser()
         if "validation_type" in self.json_data:
             graph_type = SentenceGraph if self.json_data["validation_type"] == 1 else SuperSentenceGraph
@@ -51,22 +56,37 @@ class GraphValidatorHandler(ValidatorHandler):
                                                          nodes_table[vertice["mode"]])
             multiplication_elems.append(new_element)
 
-        #OH WAIT, we can make it into a sentence/supersentence now!
-        proposition_ast = graph_type.additive_type(multiplication_elems)
-        # asking the proposition to check itself
+        #OH WAIT, we can make it into a sentence/supersentence now, and return it
+        proposition_ast =  graph_type.additive_type(multiplication_elems)
+        # asking the proposition to check then order itself
         proposition_ast.check()
         proposition_ast.order()
-        self.db_connector.save_closed_proposition(proposition_ast, self.json_data["tags"])
-        return {"valid" : True, "ieml" : str(proposition_ast)}
-
-
-class WordGraphValidatorHandler(ValidatorHandler):
-    """Checks that a give graph representing a word is well formed, and if it is,
-    returns the corresponding IEML string"""
+        return proposition_ast
 
     def post(self):
         self.do_request_parsing()
+        # retrieving a checked and ordered proposition
+        proposition_ast = self._build_ieml_ast()
+        return {"valid" : True, "ieml" : str(proposition_ast)}
 
+
+class GraphSavingHandler(GraphCheckerHandler):
+    """Checks the graph of a sentence/supersentence is correct (alike the graph checker), and saves it."""
+
+    def post(self):
+        self.do_request_parsing()
+        # retrieving a checked and ordered proposition
+        proposition_ast = self._build_ieml_ast()
+        # saving it to the database
+        self._save_closed_proposition(proposition_ast)
+        return {"valid" : True, "ieml" : str(proposition_ast)}
+
+
+class WordGraphCheckerHandler(ValidatorHandler):
+    """Checks that a give graph representing a word is well formed, and if it is,
+    returns the corresponding IEML string"""
+
+    def _build_ieml_ast(self):
         parser = PropositionsParser()
         nodes_table = {}
         for node in self.json_data["nodes"]:
@@ -82,17 +102,33 @@ class WordGraphValidatorHandler(ValidatorHandler):
 
         # asking the proposition to check itself
         word_ast.check()
-        self.db_connector.save_closed_proposition(word_ast, self.json_data["tags"])
+        return word_ast
+
+    def post(self):
+        self.do_request_parsing()
+        # retrieving the checked word ast
+        word_ast = self._build_ieml_ast()
+        return {"valid": True, "ieml": str(word_ast)}
+
+
+class WordGraphSavingHandler(WordGraphCheckerHandler):
+    """Checks the graph of a word is correct (alike the word graph checker), and saves it."""
+
+    def post(self):
+        self.do_request_parsing()
+        # retrieving the checked word ast
+        word_ast = self._build_ieml_ast()
+        self._save_closed_proposition(word_ast)
         return {"valid": True, "ieml": str(word_ast)}
 
 
 class SearchPropositionNoPromotionHandler(BaseHandler):
+
     def post(self):
         self.reqparse.add_argument("searchstring", required=True, type=str)
         self.do_request_parsing()
 
         result = []
-
         parser = PropositionsParser()
         for proposition in PropositionsQueries().search_for_propositions(self.args["searchstring"], SuperSentence):
             proposition_ast = parser.parse(proposition["_id"])
@@ -109,7 +145,8 @@ class SearchPropositionsHandler(BaseHandler):
 
     def post(self):
         self.reqparse.add_argument("searchstring", required=True, type=str)
-        self.reqparse.add_argument("level", required=True, type=int) # 1 is word, 2 sentence, 3 supersentence
+        # 1 is to build a word, 2 a sentence, 3 a supersentence, 4 a USL
+        self.reqparse.add_argument("level", required=True, type=int)
         self.do_request_parsing()
 
         level_to_type_table = {

@@ -1,11 +1,11 @@
-from handlers import WordGraphValidatorHandler, GraphValidatorHandler, TextDecompositionHandler
+from handlers import WordGraphCheckerHandler, GraphCheckerHandler, TextDecompositionHandler
 from .helpers import *
 from unittest.mock import MagicMock
 
 class TestGraphValidator(unittest.TestCase):
 
     def setUp(self):
-        self.word_handler = WordGraphValidatorHandler()
+        self.word_handler = WordGraphCheckerHandler()
         self.word_handler.json_data = {"nodes" : [{"id" : 1,
                                                    "ieml_string" : "[a.i.-]"},
                                                   {"id" : 2,
@@ -39,7 +39,7 @@ class TestGraphValidator(unittest.TestCase):
 class TestSentenceGraphValidator(unittest.TestCase):
 
     def setUp(self):
-        self.sentence_handler = GraphValidatorHandler()
+        self.sentence_handler = GraphCheckerHandler()
         a, b, c, d, e, f = tuple(get_words_list())
         self.sentence_handler.json_data = {"validation_type" : 1,
                                            "nodes" : [{"id" : 1,
