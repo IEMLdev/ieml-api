@@ -56,6 +56,11 @@ class ErrorCatcher:
             if issubclass(error_type, type):
                 return self.SUPPORTED_ERRORS_TYPE.index(error_type)
 
+    def __get__(self, obj, objtype):
+        """Support instance methods."""
+        import functools
+        return functools.partial(self.__call__, obj)
+
     def __call__(self, *args, **kwargs):
 
         try:

@@ -5,7 +5,7 @@ from ieml.AST import Word, Sentence, SuperSentence, Morpheme, Term, promote_to
 from ieml.AST.tools import SentenceGraph, SuperSentenceGraph
 from ieml.exceptions import InvalidNodeIEMLLevel
 from models import PropositionsQueries, DictionaryQueries, PropositionAlreadyExists
-from .base import BaseHandler, BaseDataHandler
+from .base import BaseHandler, BaseDataHandler, ErrorCatcher
 from .exceptions import MissingField,PromotingToInvalidLevel
 
 
@@ -63,6 +63,7 @@ class GraphCheckerHandler(ValidatorHandler):
         proposition_ast.order()
         return proposition_ast
 
+    @ErrorCatcher
     def post(self):
         self.do_request_parsing()
         # retrieving a checked and ordered proposition
@@ -73,6 +74,7 @@ class GraphCheckerHandler(ValidatorHandler):
 class GraphSavingHandler(GraphCheckerHandler):
     """Checks the graph of a sentence/supersentence is correct (alike the graph checker), and saves it."""
 
+    @ErrorCatcher
     def post(self):
         self.do_request_parsing()
         # retrieving a checked and ordered proposition
@@ -104,6 +106,7 @@ class WordGraphCheckerHandler(ValidatorHandler):
         word_ast.check()
         return word_ast
 
+    @ErrorCatcher
     def post(self):
         self.do_request_parsing()
         # retrieving the checked word ast
@@ -114,6 +117,7 @@ class WordGraphCheckerHandler(ValidatorHandler):
 class WordGraphSavingHandler(WordGraphCheckerHandler):
     """Checks the graph of a word is correct (alike the word graph checker), and saves it."""
 
+    @ErrorCatcher
     def post(self):
         self.do_request_parsing()
         # retrieving the checked word ast
