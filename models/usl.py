@@ -1,6 +1,7 @@
 from .base_queries import DBConnector, Tag
 from .constants import TEXT_COLLECTION, HYPERTEXT_COLLECTION
 from .exceptions import InvalidTags
+import re
 
 class TextQueries(DBConnector):
     def __init__(self):
@@ -25,8 +26,11 @@ class TextQueries(DBConnector):
         self._write_text_to_db(text, tags)
 
     def search_text(self, search_string):
-        result = self.texts.find({"$text": {"$search": search_string}},
-                                        {"TAGS": 1})
+        regex = re.compile(search_string)
+        result = self.texts.find({'$or': [
+                        {'_id': {'$regex': regex}},
+                        {'TAGS.FR': {'$regex': regex}},
+                        {'TAGS.EN': {'$regex': regex}}]})
         return list(result)
 
 

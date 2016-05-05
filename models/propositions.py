@@ -1,4 +1,4 @@
-
+import re
 from models.exceptions import PropositionAlreadyExists, ObjectTypeNotStoredinDB, ObjectNotFound
 from .base_queries import DBConnector
 from .constants import PROPOSITION_COLLECTION
@@ -76,9 +76,11 @@ class PropositionsQueries(DBConnector):
         else:
             type_filter = "WORD"
 
-        result = self.propositions.find({"$text": {"$search": search_string},
-                                         "TYPE": type_filter},
-                                        {"TAGS": 1, "TYPE": 1})
+        regex = re.compile(search_string)
+        result = self.propositions.find({'$or': [
+                        {'_id': {'$regex': regex}},
+                        {'TAGS.FR': {'$regex': regex}},
+                        {'TAGS.EN': {'$regex': regex}}]})
 
         return list(result)
 

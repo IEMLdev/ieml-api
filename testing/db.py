@@ -3,6 +3,7 @@ import string, random
 from pymongo import MongoClient
 from pymongo.errors import DuplicateKeyError
 from models import *
+from ieml.AST import Sentence, Word
 
 
 class TestDBQueries(unittest.TestCase):
@@ -11,6 +12,7 @@ class TestDBQueries(unittest.TestCase):
         self.writable_db_connector = PropositionsQueries()
         # we replace the actual collection by a "fake" one:
         self.writable_db_connector.propositions = self.writable_db_connector.db["prop_test"]
+        self.term_connector = DictionaryQueries()
 
     def tearDown(self):
         self.writable_db_connector.propositions.drop() #cleaning up!
@@ -21,6 +23,15 @@ class TestDBQueries(unittest.TestCase):
         self.writable_db_connector.save_closed_proposition(word_object, {"FR" : "Faire du bruit avec sa bouche",
                                                                          "EN" : "Badababi dou baba boup"})
         self.assertEquals(self.writable_db_connector.propositions.count(), 1)
+
+    def test_search(self):
+        result = self.term_connector.search_for_terms("w")
+        self.assertTrue(len(result) != 0)
+
+        result = self.term_connector.search_for_terms("possessif")
+        self.assertTrue(len(result) != 0)
+        for e in result:
+            self.assertIn("possessif", e['natural_language']['FR'])
 
 
 class TestUnicityDb(unittest.TestCase):

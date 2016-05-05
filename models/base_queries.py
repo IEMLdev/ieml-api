@@ -1,5 +1,5 @@
 from random import randint
-
+import re
 from pymongo import MongoClient
 
 from models.constants import TERMS_COLLECTION, TAG_LANGUAGES
@@ -20,14 +20,19 @@ class DictionaryQueries(DBConnector):
 
     def search_for_terms(self, search_string):
         """Searching for terms containing the search_string, both in the IEML field and translated field"""
+        regex = re.compile(search_string)
 
         result = [{"term_id" : str(term["_id"]),
                    "ieml" : term["IEML"],
                    "natural_language" : {"FR" : term.get("FR"),
                                          "EN" : term.get("EN")},
                    "paradigm": False if term["PARADIGM"] == "0" else True}
-                  for term in self.terms.find({"$text" : {"$search" : search_string}},
-                                              {"IEML" : 1, "FR" : 1, "EN" : 1, "PARADIGM" : 1})]
+                  for term in self.terms.find(
+                    {'$or': [
+                        {'IEML': {'$regex': regex}},
+                        {'FR': {'$regex': regex}},
+                        {'EN': {'$regex': regex}}]},
+                    {"IEML" : 1, "FR" : 1, "EN" : 1, "PARADIGM" : 1})]
         return result
 
     def exact_ieml_term_search(self, ieml_string):
