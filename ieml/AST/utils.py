@@ -1,4 +1,7 @@
 class PropositionPath:
+    """Stores a path to a 'closable' proposition *inside* another closed proposition, in a text.
+    Used by hyperlinks to figure out which proposition is the right one"""
+
     def __init__(self, path=None, proposition=None):
         self.path = []
         if path:
