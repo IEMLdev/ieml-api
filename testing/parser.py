@@ -22,6 +22,13 @@ class TestPropositionParser(unittest.TestCase):
         word_ast.check()
         self.assertEqual(word_ast, self.word_object)
 
+    def test_parse_term_plus(self):
+        term = Term("f.-O:M:.-+M:O:.-s.y.-'")
+        term.check()
+        to_check = self.parser.parse("[f.-O:M:.-+M:O:.-s.y.-']")
+        to_check.check()
+        self.assertEqual(to_check, term)
+
 class TestUSLParser(unittest.TestCase):
 
     def setUp(self):

@@ -1,6 +1,7 @@
 from .helpers import *
 import string, random
 from pymongo import MongoClient
+from pymongo.errors import DuplicateKeyError
 from models import *
 
 
@@ -41,7 +42,7 @@ class TestUnicityDb(unittest.TestCase):
                         "FR": "test_unicity",
                         "EN": "test_unicity"
                     }})
-            except:
+            except DuplicateKeyError:
                 count += 1
 
         return count == 3
