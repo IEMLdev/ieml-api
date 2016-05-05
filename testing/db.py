@@ -1,5 +1,8 @@
 from .helpers import *
-from models import PropositionsQueries
+import string, random
+from pymongo import MongoClient
+from models import *
+
 
 class TestDBQueries(unittest.TestCase):
 
@@ -17,3 +20,37 @@ class TestDBQueries(unittest.TestCase):
         self.writable_db_connector.save_closed_proposition(word_object, {"FR" : "Faire du bruit avec sa bouche",
                                                                          "EN" : "Badababi dou baba boup"})
         self.assertEquals(self.writable_db_connector.propositions.count(), 1)
+
+
+class TestUnicityDb(unittest.TestCase):
+    def setUp(self):
+        self.client = MongoClient(DB_ADDRESS)  # connecting to the db
+        self.db = self.client[DB_NAME]  # opening a DB
+        self.collections = [self.db[PROPOSITION_COLLECTION], self.db[TEXT_COLLECTION], self.db[HYPERTEXT_COLLECTION]]
+
+        self.tags = {'EN' : "test unicity unit test", 'FR' : "test de l'unicité unit test"}
+
+    def _save_to_db(self):
+        count = 0
+        for collection in self.collections:
+            try:
+                collection.insert_one({
+                    "_id": ''.join(random.sample(string.ascii_letters, 20)),
+                    "TYPE": "test_unicity",
+                    "TAGS": {
+                        "FR": "test_unicity",
+                        "EN": "test_unicity"
+                    }})
+            except:
+                count += 1
+
+        return count == 3
+
+    def tearDown(self):
+        for collection in self.collections:
+            collection.delete_many({"TAGS.FR": "test_unicity"})
+
+    def test_unicity_on_tags(self):
+        self._save_to_db()
+        self.assertEqual(self._save_to_db(), True)
+

@@ -3,6 +3,7 @@ from ieml.AST import Term, Text,HyperText, AbstractProposition, Word, Sentence, 
 from models import DictionaryQueries, TextQueries, PropositionsQueries, HyperTextQueries
 from .base import BaseDataHandler, BaseHandler
 import json
+from .exceptions import InvalidIEMLReference
 
 
 class TextValidatorHandler(BaseDataHandler):
@@ -26,7 +27,8 @@ class TextValidatorHandler(BaseDataHandler):
         text.check()
 
         # check all propositions are stored in database
-        all(map(self.db_connector_proposition.retrieve_proposition_objectid, proposition_list))
+        if any(map(not self.db_connector_proposition.check_proposition_stored, proposition_list)):
+            raise InvalidIEMLReference()
 
         #save the text to the db
         self.db_connector_text.save_text(text, self.json_data["tags"])

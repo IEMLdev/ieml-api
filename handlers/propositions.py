@@ -57,7 +57,7 @@ class GraphValidatorHandler(ValidatorHandler):
         proposition_ast.check()
         proposition_ast.order()
         self.db_connector.save_closed_proposition(proposition_ast, self.json_data["tags"])
-        return {"valid" : True, "ieml" : str(proposition_ast)}
+        return {"valid": True, "ieml": str(proposition_ast)}
 
 
 class WordGraphValidatorHandler(ValidatorHandler):

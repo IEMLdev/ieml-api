@@ -357,7 +357,7 @@ class Term(metaclass=AbstractPropositionMetaclass):
         return self.objectid.__hash__()
 
     def __eq__(self, other):
-        return self.objectid == other.objectid and self.objectid is not None
+        return self.objectid is not None and self.objectid == other.objectid
 
     def __gt__(self, other):
         # we use the DB's canonical forms

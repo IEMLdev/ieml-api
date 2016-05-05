@@ -6,30 +6,23 @@ import ieml.AST
 
 
 class PropositionsQueries(DBConnector):
-
     def __init__(self):
         super().__init__()
         self.propositions = self.db[PROPOSITION_COLLECTION]
 
-    def _proposition_db_type(self, proposition):
+    @staticmethod
+    def _proposition_db_type(proposition):
         """Returns the DB name for a proposition"""
         return proposition.__class__.__name__.upper()
 
-    def retrieve_proposition_objectid(self, proposition):
+    def check_proposition_stored(self, proposition):
         """Retrieves the objectid of an IEML primitive"""
-        if isinstance(proposition,ieml.AST.Term):
-            return self.terms.find_one({"_id" : proposition.ieml})["_id"]
-
+        if isinstance(proposition, ieml.AST.Term):
+            return self.terms.find_one({"_id": proposition.ieml}) is not None
         elif isinstance(proposition, (ieml.AST.Sentence, ieml.AST.Word, ieml.AST.SuperSentence)):
-            return self.propositions.find_one({"_id" : str(proposition),
-                                               "TYPE" : self._proposition_db_type(proposition)})["_id"]
+            return self._check_proposition_exist(str(proposition))
         else:
             raise ObjectTypeNotStoredinDB()
-
-    def _retrieve_propositions_objectids(self, proposition_list):
-        """Helper function to iterate through the list"""
-        return [self.retrieve_proposition_objectid(proposition)
-                for proposition in proposition_list]
 
     def _write_proposition_to_db(self, proposition, proposition_tags, promotion=None):
         """Saves a proposition to the db"""

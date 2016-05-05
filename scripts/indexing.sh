@@ -7,25 +7,19 @@ db.terms.createIndex(
         EN: "text"
     }
 )
-db.propositions.createIndex(
-    {
-        IEML: "text",
-        TAGS: "text",
-        _id: "text"
-    }
-)
-db.propositions.ensureIndex({"TAGS.FR" : 1})
-db.propositions.ensureIndex({"TAGS.EN" : 1})
 
-db.texts.createIndex(
-    {
-        IEML: "text",
-        TAGS: "text",
-        _id: "text"
-    }
-)
-db.texts.ensureIndex({"TAGS.FR" : 1})
-db.texts.ensureIndex({"TAGS.EN" : 1})
+db.propositions.createIndex({ TAGS: "text", _id: "text" }, {unique : true})
+db.propositions.createIndex({ "TAGS.FR" : 1 }, { unique: true })
+db.propositions.createIndex({"TAGS.EN" : 1}, {unique: true})
+
+db.texts.createIndex({TAGS: "text",_id: "text"}, {unique : true})
+db.texts.createIndex({ "TAGS.FR" : 1 }, { unique: true })
+db.texts.createIndex({ "TAGS.EN" : 1 }, { unique: true })
+
+db.hypertexts.createIndex({TAGS: "text",_id: "text"}, {unique : true})
+db.hypertexts.createIndex({ "TAGS.FR" : 1 }, { unique: true })
+db.hypertexts.createIndex({ "TAGS.EN" : 1 }, { unique: true })
+
 
 
 
