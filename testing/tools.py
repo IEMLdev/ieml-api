@@ -1,5 +1,5 @@
 from ieml.AST.tools import RandomPropositionGenerator
-from .helpers import *
+from .helper import *
 from ieml.AST import promote_to
 from ieml.exceptions import CannotPromoteToLowerLevel
 

@@ -1,7 +1,7 @@
 from ieml.exceptions import InvalidPathException, EmptyTextException
-from .propositions import ClosedProposition, Word, Sentence, SuperSentence
-from .propositional_graph import HyperTextGraph
-from .utils import PropositionPath
+from ieml.AST.propositions import ClosedProposition, Word, Sentence, SuperSentence
+from ieml.AST.propositional_graph import HyperTextGraph
+from ieml.AST.utils import PropositionPath
 
 class Tag:
     def __init__(self, tag_content):
@@ -58,9 +58,15 @@ class Text:
         childs_by_level = { Word : [], Sentence : [], SuperSentence : []}
         for child in self.childs:
             childs_by_level[type(child)].append(child)
-        self.childs = childs_by_level[Word].sort() + \
-                      childs_by_level[Sentence].sort() + \
-                      childs_by_level[SuperSentence].sort()
+            child.order()
+
+        childs_by_level[Word].sort()
+        childs_by_level[Sentence].sort()
+        childs_by_level[SuperSentence].sort()
+        self.childs = childs_by_level[Word] + \
+                      childs_by_level[Sentence] + \
+                      childs_by_level[SuperSentence]
+
 
 class HyperText:
     """An hypertext contains a list of texts and an hyperlink table"""
@@ -105,8 +111,16 @@ class HyperText:
 
     def check(self):
         # Check cycle and root node
-        graph = HyperTextGraph(self)
-        graph.check()
+        if len(self._hyperlinks) != 0:
+            graph = HyperTextGraph(self)
+            graph.check()
+
+        for text in self.texts:
+            text.check()
+
+    def order(self):
+        for text in self.texts:
+            text.order()
 
     def get_path_from_ieml(self, ieml_list):
         return self.childs[0].get_path_from_ieml(ieml_list)

@@ -127,12 +127,17 @@ class RandomPropositionGenerator(metaclass=Singleton):
 
     def get_random_proposition(self, ast_type):
         """Returns an unchecked, unordered (but hopefully correct) proposition of level ast_type"""
-
+        result = None
         if ast_type is Morpheme:
-            return self._make_random_morpheme()
+            result = self._make_random_morpheme()
         elif ast_type is Word:
-            return self._make_random_word()
+            result = self._make_random_word()
         elif ast_type in [Sentence, SuperSentence]:
-            return self._make_random_sentence(ast_type)
+            result = self._make_random_sentence(ast_type)
         else:
-            return self._make_random_clause(ast_type)
+            result = self._make_random_clause(ast_type)
+
+        result.check()
+        result.order()
+
+        return result

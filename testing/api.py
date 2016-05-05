@@ -1,5 +1,5 @@
 from handlers import WordGraphValidatorHandler, GraphValidatorHandler, TextDecompositionHandler
-from .helpers import *
+from .helper import *
 from unittest.mock import MagicMock
 
 class TestGraphValidator(unittest.TestCase):

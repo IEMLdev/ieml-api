@@ -74,7 +74,6 @@ class AbstractProposition(metaclass=AbstractPropositionMetaclass):
             logging.warning("Proposition %s hasn't been checked for ordering and consistency,"
                             "its ieml render might not be correct" % type(self))
 
-
     def check(self):
         """Checks the IEML validity of the IEML proposition"""
         for child in self.childs:
@@ -93,6 +92,13 @@ class AbstractProposition(metaclass=AbstractPropositionMetaclass):
             result += ''.join(map(str, hyperlinks[current_path]))
 
         return result
+
+    def order(self):
+        pass
+
+    def is_checked(self):
+        return self._has_been_checked
+
 
 class AbstractAdditiveProposition(AbstractProposition):
 
@@ -127,6 +133,7 @@ class AbstractAdditiveProposition(AbstractProposition):
                self.plus_symbol.join([element.render_hyperlinks(hyperlinks, path) for element in self.childs]) + \
                self.right_bracket_symbol
 
+
 class AbstractMultiplicativeProposition(AbstractProposition):
 
     def __init__(self, child_subst, child_attr=None, child_mode=None):
@@ -157,6 +164,9 @@ class AbstractMultiplicativeProposition(AbstractProposition):
                 logging.warning("Additive proposition %s is not ordered, ordering it now" % str(child))
                 child.order()
 
+        self._has_been_checked = True
+
+
 @total_ordering
 class Morpheme(AbstractAdditiveProposition, NonClosedProposition):
 
@@ -166,7 +176,6 @@ class Morpheme(AbstractAdditiveProposition, NonClosedProposition):
         return self.left_parent_symbol + \
                self.plus_symbol.join([str(element) for element in self.childs]) + \
                self.right_parent_symbol
-
 
     def check(self):
         # first, we "ask" all the terms to check themselves through the parent method
@@ -183,7 +192,6 @@ class Morpheme(AbstractAdditiveProposition, NonClosedProposition):
         # - term intersection
         # - paradigmatic intersection
         self._has_been_checked = True
-
 
     def is_ordered(self):
         """Returns true if its list of childs are sorted"""
@@ -236,8 +244,14 @@ class Word(AbstractMultiplicativeProposition, ClosedProposition):
     def __gt__(self, other):
         if self.subst != other.subst:
             return self.subst > other.subst
+        elif self.mode is not None:
+            if other.mode is not None:
+                return self.mode > other.mode
+            else:
+                return True
         else:
-            return self.mode > other.mode
+            return False
+
 
     def gather_hyperlinks(self, current_path):
         # since morphemes cannot have hyperlinks, we don't gather links for the underlying childs
@@ -268,7 +282,7 @@ class Clause(AbstractClause):
         # element is a word (which cannot be ordered)
         for child in self.childs:
             child.check()
-
+        self._has_been_checked = True
 
 class SuperClause(AbstractClause):
     pass
@@ -382,3 +396,5 @@ class Term(metaclass=AbstractPropositionMetaclass):
         except TypeError:
             raise IEMLTermNotFoundInDictionnary(self.ieml)
 
+    def order(self):
+        pass

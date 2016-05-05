@@ -1,4 +1,4 @@
-from .helpers import *
+from .helper import *
 import string, random
 from pymongo import MongoClient
 from pymongo.errors import DuplicateKeyError
@@ -22,7 +22,7 @@ class TestDBQueries(unittest.TestCase):
         word_object.check()
         self.writable_db_connector.save_closed_proposition(word_object, {"FR" : "Faire du bruit avec sa bouche",
                                                                          "EN" : "Badababi dou baba boup"})
-        self.assertEquals(self.writable_db_connector.propositions.count(), 1)
+        self.assertEqual(self.writable_db_connector.propositions.count(), 1)
 
     def test_search(self):
         result = self.term_connector.search_for_terms("w")

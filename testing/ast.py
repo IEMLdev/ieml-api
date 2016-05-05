@@ -1,6 +1,6 @@
 from ieml.AST.tools import RandomPropositionGenerator
 from ieml.exceptions import SeveralRootNodeFound, NodeHasTooMuchParents, NoRootNodeFound
-from .helpers import *
+from .helper import *
 import numpy as np
 
 class TestMetaFeatures(unittest.TestCase):
@@ -20,7 +20,7 @@ class TestTermsFeatures(unittest.TestCase):
 
     def test_term_check(self):
         """Tests that a term actually "finds itself" in the database"""
-        self.assertEquals(self.term_a.objectid, ObjectId("55d220df6653c32453c0ac94"))
+        self.assertEqual(self.term_a.objectid, ObjectId("55d220df6653c32453c0ac94"))
 
     def test_term_check_fail(self):
         term = Term("E:A:Tqsdf")
@@ -31,7 +31,7 @@ class TestTermsFeatures(unittest.TestCase):
         """tests that two different instance of a term are still considered equal once linked against the DB"""
         other_instance = Term("E:A:T:.")
         other_instance.check()
-        self.assertEquals(self.term_a, other_instance)
+        self.assertEqual(self.term_a, other_instance)
         self.assertFalse(self.term_a is other_instance) # checking they really are two different instances
 
     def test_terms_comparison(self):
@@ -56,7 +56,7 @@ class TestTermsFeatures(unittest.TestCase):
         other_a_instance = Term("E:A:T:.")
         other_a_instance.check()
         terms_set = {self.term_b, self.term_a, self.term_c, other_a_instance}
-        self.assertEquals(len(terms_set), 3)
+        self.assertEqual(len(terms_set), 3)
 
 
 class TestMorphemesFeatures(unittest.TestCase):
@@ -89,7 +89,7 @@ class TestMorphemesFeatures(unittest.TestCase):
         self.assertFalse(new_morpheme.is_ordered())
         new_morpheme.order()
         self.assertTrue(new_morpheme.is_ordered())
-        self.assertEquals(str(new_morpheme.childs[2]), '[E:S:.o.-]') # last term is right?
+        self.assertEqual(str(new_morpheme.childs[2]), '[E:S:.o.-]') # last term is right?
 
     def test_morpheme_equality(self):
         """Tests if two morphemes That are declared the same way are said to be equal
@@ -127,7 +127,7 @@ class TestWords(unittest.TestCase):
 
     def test_words_equality(self):
         """Checks that the == operator works well on words build from the same elements"""
-        self.assertEquals(self.word_b, self.word_a)
+        self.assertEqual(self.word_b, self.word_a)
 
     def test_words_hashing(self):
         """Verifies words can be used as keys in a hashmap"""
@@ -142,6 +142,7 @@ class TestWords(unittest.TestCase):
         word_a.check(), word_b.check()
         # true because Term("E:A:T:.") < Term("a.i.-")
         self.assertTrue(word_a < word_b)
+
 
 class TestClauses(unittest.TestCase):
 
@@ -198,7 +199,7 @@ class TestSentences(unittest.TestCase):
         sentence = Sentence([clause_a, clause_b, clause_c, clause_d])
         sentence.check()
         sentence.order()
-        self.assertEquals(sentence.childs,[clause_a, clause_b,clause_c, clause_d])
+        self.assertEqual(sentence.childs,[clause_a, clause_b,clause_c, clause_d])
 
 
 class TestSuperSentence(unittest.TestCase):

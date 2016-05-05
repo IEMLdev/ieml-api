@@ -65,6 +65,8 @@ class HyperTextValidatorHandler(BaseDataHandler):
         root = hypertexts[max(hypertexts, key=lambda key: hypertexts[key].strate)]
 
         #verification of the usl
+        root.check()
+        root.order()
 
         #save to db
         self.db_connector_text.save_hypertext(root, self.json_data["tags"])
