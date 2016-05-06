@@ -12,11 +12,12 @@ def get_test_word_instance():
     return Word(morpheme_subst, morpheme_attr)
 
 def get_test_morpheme_instance():
-    return Morpheme([Term("E:A:T:."), Term("E:S:.wa.-"),Term("E:S:.o.-")])
+    morpheme = Morpheme([Term("E:A:T:."), Term("E:S:.wa.-"),Term("E:S:.o.-")])
+    return morpheme
 
 def get_words_list():
     #this list is already sorted
-    terms_list = [Term("E:A:T:."), Term("E:S:.wa.-"),Term("E:S:.o.-"), Term("u.M:M:.-"), Term("a.i.-"), Term("i.i.-")]
+    terms_list = [Term("E:A:T:."), Term("E:S:.wa.-"), Term("E:S:.o.-"), Term("u.M:M:.-"), Term("a.i.-"), Term("i.i.-")]
     return [Word(Morpheme(term)) for term in terms_list]
 
 def get_test_sentence():

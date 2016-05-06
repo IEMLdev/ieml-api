@@ -1,5 +1,5 @@
 from handlers import WordGraphValidatorHandler, GraphValidatorHandler, TextDecompositionHandler
-from .helper import *
+from testing.helper import *
 from unittest.mock import MagicMock
 
 class TestGraphValidator(unittest.TestCase):
@@ -40,7 +40,11 @@ class TestSentenceGraphValidator(unittest.TestCase):
 
     def setUp(self):
         self.sentence_handler = GraphValidatorHandler()
-        a, b, c, d, e, f = tuple(get_words_list())
+        word_list = get_words_list()
+        for word in word_list:
+            word.check()
+        a, b, c, d, e, f = tuple(word_list)
+
         self.sentence_handler.json_data = {"validation_type" : 1,
                                            "nodes" : [{"id" : 1,
                                                        "ieml_string" : str(a)},
@@ -82,20 +86,3 @@ class TestSentenceGraphValidator(unittest.TestCase):
         sentence = get_test_sentence()
         sentence.order()
         self.assertEqual(request_output["ieml"], str(sentence))
-
-class TestTextDecomposition(unittest.TestCase):
-
-    def setUp(self):
-        self.text_handler = TextDecompositionHandler()
-
-        with open("data/example_supersentence.txt") as ss:
-            self.text_handler.json_data = {"data": "{/%s/}" % ss}
-
-
-        self.text_handler.db_connector = Mock()
-
-    def test_text_decomposition(self):
-        """Tests the whole word validation code block without the request handling"""
-
-        request_output = self.text_handler.post()
-

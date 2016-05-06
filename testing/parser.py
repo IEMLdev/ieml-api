@@ -33,6 +33,7 @@ class TestPropositionParser(unittest.TestCase):
         self.assertTrue(supersentence_ast.is_ordered())
         self.assertTrue(supersentence_ast.is_checked())
 
+
 class TestUSLParser(unittest.TestCase):
 
     def setUp(self):

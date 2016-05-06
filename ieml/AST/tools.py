@@ -50,18 +50,22 @@ def promote_to(proposition, level_type):
     if proposition.__class__ == level_type:
         return proposition
     elif proposition.__class__ < level_type:
+        result = None
         proposition_higher_type = terms_level_order[terms_level_order.index(proposition.__class__) + 1]
         if issubclass(proposition_higher_type, AbstractAdditiveProposition):
-            return promote_to(proposition_higher_type([proposition]),
+            result = promote_to(proposition_higher_type([proposition]),
                               level_type)
         elif issubclass(proposition_higher_type, AbstractClause):
-            return promote_to(proposition_higher_type(proposition,
+            result = promote_to(proposition_higher_type(proposition,
                                                       null_element(type(proposition)),
                                                       null_element(type(proposition))),
                               level_type)
         elif issubclass(proposition_higher_type, Word):
-            return promote_to(Word(proposition),
+            result = promote_to(Word(proposition),
                               level_type)
+
+        result.check()
+        return result
     elif proposition.__class__ > level_type:
         raise CannotPromoteToLowerLevel()
 

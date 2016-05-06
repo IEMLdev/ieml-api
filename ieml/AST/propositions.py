@@ -1,12 +1,11 @@
-import logging
 from functools import total_ordering
 from helpers import LoggedInstantiator, Singleton
 from models import DictionaryQueries
 from ieml.AST.constants import MAX_TERMS_IN_MORPHEME
 from ieml.exceptions import IEMLTermNotFoundInDictionnary, IndistintiveTermsExist, InvalidConstructorParameter, \
     InvalidClauseComparison, TermComparisonFailed, SentenceHasntBeenChecked, TooManyTermsInMorpheme
-from .propositional_graph import PropositionGraph
-from .utils import PropositionPath
+from ieml.AST.propositional_graph import PropositionGraph
+from ieml.AST.utils import PropositionPath, TreeStructure
 
 
 class TermsQueries(DictionaryQueries, metaclass=Singleton):
@@ -34,6 +33,7 @@ class NonClosedProposition:
     """This class acts as an interface for propositions that *cannot* be closed"""
     pass
 
+
 @total_ordering
 class AbstractPropositionMetaclass(LoggedInstantiator):
 
@@ -46,7 +46,7 @@ class AbstractPropositionMetaclass(LoggedInstantiator):
         return child_list.index(self) < child_list.index(other)
 
 
-class AbstractProposition(metaclass=AbstractPropositionMetaclass):
+class AbstractProposition(TreeStructure, metaclass=AbstractPropositionMetaclass):
     # these are used for the proposition rendering
     times_symbol = "*"
     left_parent_symbol = "("
@@ -57,27 +57,6 @@ class AbstractProposition(metaclass=AbstractPropositionMetaclass):
 
     def __init__(self):
         super().__init__()
-        self.childs = None # will be an iterable (list or tuple)
-        self._has_been_checked = False
-        self._ieml_string = None
-
-    def __eq__(self, other):
-        """Two propositions are equal if their childs'list or tuple are equal"""
-        return self.childs == other.childs
-
-    def __hash__(self):
-        """Since the IEML string for any proposition AST is supposed to be unique, it can be used as a hash"""
-        return self.__str__().__hash__()
-
-    def __str__(self):
-        if not self._has_been_checked:
-            logging.warning("Proposition %s hasn't been checked for ordering and consistency,"
-                            "its ieml render might not be correct" % type(self))
-
-    def check(self):
-        """Checks the IEML validity of the IEML proposition"""
-        for child in self.childs:
-            child.check()
 
     def _gather_child_links(self, current_path):
         path = current_path + [self]
@@ -93,11 +72,6 @@ class AbstractProposition(metaclass=AbstractPropositionMetaclass):
 
         return result
 
-    def order(self):
-        pass
-
-    def is_checked(self):
-        return self._has_been_checked
 
 
 class AbstractAdditiveProposition(AbstractProposition):
@@ -112,8 +86,8 @@ class AbstractAdditiveProposition(AbstractProposition):
         else:
             raise InvalidConstructorParameter(self)
 
-    def __str__(self):
-        return self.left_bracket_symbol + \
+    def _do_precompute_str(self):
+        self._str = self.left_bracket_symbol + \
                self.plus_symbol.join([str(element) for element in self.childs]) + \
                self.right_bracket_symbol
 
@@ -149,37 +123,22 @@ class AbstractMultiplicativeProposition(AbstractProposition):
                self.attr.render_hyperlinks(hyperlinks, path) + self.times_symbol + \
                self.mode.render_hyperlinks(hyperlinks, path) + self.right_parent_symbol
 
-    def __str__(self):
-        super().__str__()
-
-        return self.left_parent_symbol + \
+    def _do_precompute_str(self):
+        self._str = self.left_parent_symbol + \
                str(self.subst) + self.times_symbol + \
                str(self.attr) + self.times_symbol + \
                str(self.mode) + self.right_parent_symbol
-
-    def check(self):
-        for child in self.childs:
-            child.check()
-            if not child.is_ordered():
-                logging.warning("Additive proposition %s is not ordered, ordering it now" % str(child))
-                child.order()
-
-        self._has_been_checked = True
 
 
 @total_ordering
 class Morpheme(AbstractAdditiveProposition, NonClosedProposition):
 
-    def __str__(self):
-        super().__str__()
-
-        return self.left_parent_symbol + \
+    def _do_precompute_str(self):
+       self._str = self.left_parent_symbol + \
                self.plus_symbol.join([str(element) for element in self.childs]) + \
                self.right_parent_symbol
 
-    def check(self):
-        # first, we "ask" all the terms to check themselves through the parent method
-        super().check()
+    def _do_checking(self):
         # then we check the terms for unicity by turning them into a set
         if len(self.childs) != len(set(self.childs)):
             raise IndistintiveTermsExist("There are %i indistinct terms. "
@@ -191,17 +150,8 @@ class Morpheme(AbstractAdditiveProposition, NonClosedProposition):
         # TODO : more checking
         # - term intersection
         # - paradigmatic intersection
-        self._has_been_checked = True
 
-    def is_ordered(self):
-        """Returns true if its list of childs are sorted"""
-        for i in range(len(self.childs)-1):
-            if not self.childs[i] <= self.childs[i+1]:
-                return False
-
-        return True
-
-    def order(self):
+    def _do_ordering(self):
         """Orders the terms"""
         # terms have the TotalOrder decorator, as such, they can be automatically ordered
         self.childs.sort()
@@ -230,16 +180,15 @@ class Word(AbstractMultiplicativeProposition, ClosedProposition):
                      self.mode.render_hyperlinks(hyperlinks, path) + self.right_bracket_symbol
         return result
 
-    def __str__(self):
+    def _do_precompute_str(self):
         if self.mode is None:
-            result = self.left_bracket_symbol + \
+            self._str = self.left_bracket_symbol + \
                    str(self.subst) +\
                    self.right_bracket_symbol
         else:
-            result = self.left_bracket_symbol + \
+            self._str = self.left_bracket_symbol + \
                    str(self.subst) + self.times_symbol + \
                    str(self.mode) + self.right_bracket_symbol
-        return result
 
     def __gt__(self, other):
         if self.subst != other.subst:
@@ -251,7 +200,6 @@ class Word(AbstractMultiplicativeProposition, ClosedProposition):
                 return True
         else:
             return False
-
 
     def gather_hyperlinks(self, current_path):
         # since morphemes cannot have hyperlinks, we don't gather links for the underlying childs
@@ -276,13 +224,8 @@ class AbstractClause(AbstractMultiplicativeProposition, NonClosedProposition):
 
 
 class Clause(AbstractClause):
+    pass
 
-    def check(self):
-        # Clause won't ask for an underlying proposition to order itself, since the underlying
-        # element is a word (which cannot be ordered)
-        for child in self.childs:
-            child.check()
-        self._has_been_checked = True
 
 class SuperClause(AbstractClause):
     pass
@@ -294,7 +237,6 @@ class AbstractSentence(AbstractAdditiveProposition, ClosedProposition):
     def __init__(self, child_elements):
         super().__init__(child_elements)
         self.graph = None
-        self._has_been_ordered = False
 
     def gather_hyperlinks(self, current_path):
         # first we build the (object, usl) tuple list for the current object
@@ -302,31 +244,20 @@ class AbstractSentence(AbstractAdditiveProposition, ClosedProposition):
         # then we add the hyperlinks from the child elements
         return links_list + self._gather_child_links(current_path)
 
-    def check(self):
-        # first, we call the parent method, which, by calling the check methods on clauses or superclauses,
-        # ensures that the child elements are well ordered (especially the terms, or the underlying sentence)
-        super().check()
-
+    def _do_checking(self):
         # if it's a single-clause list, no graph building
         if len(self.childs) != 1:
             # then, we build the (super)sentence's graph using the (super)clause list
             self.graph = PropositionGraph(self.childs)
             self.graph.check() #the graph does some checking
 
-        self._has_been_checked = True
-
-    def order(self):
+    def _do_ordering(self):
         """Orders the clauses/superclauses inside the sentence/supersentence, using the graph"""
         if self._has_been_checked:
             if len(self.childs) != 1:
                 self.childs = self.graph.get_ordereded_clauses_list()
         else:
             raise SentenceHasntBeenChecked(self)
-        # else, it's just a single-clause list
-        self._has_been_ordered = True
-
-    def is_ordered(self):
-        return self._has_been_ordered
 
 
 class Sentence(AbstractSentence):
