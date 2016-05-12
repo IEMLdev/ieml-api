@@ -1,6 +1,8 @@
 from ieml.AST.tools import RandomPropositionGenerator
 from ieml.exceptions import SeveralRootNodeFound, NodeHasTooMuchParents, NoRootNodeFound
-from .helper import *
+from testing.helper import *
+from ieml.AST.usl import Text, HyperText
+from ieml.AST.utils import PropositionPath
 import numpy as np
 
 class TestMetaFeatures(unittest.TestCase):
@@ -10,6 +12,26 @@ class TestMetaFeatures(unittest.TestCase):
         self.assertGreater(Word, Term)
         self.assertGreater(Sentence, Word)
         self.assertLess(Morpheme, SuperSentence)
+
+    def test_precompute_string(self):
+        proposition = RandomPropositionGenerator().get_random_proposition(SuperSentence)
+        proposition.check()
+        self.assertIsNotNone(proposition._str)
+        self.assertTrue(proposition.is_checked())
+        self.assertTrue(proposition.is_ordered())
+
+        text = Text([proposition])
+        text.check()
+        self.assertIsNotNone(text._str)
+        self.assertTrue(text.is_checked())
+        self.assertTrue(text.is_ordered())
+
+        hypertext = HyperText(text)
+        hypertext.check()
+        self.assertIsNotNone(hypertext._str)
+        self.assertTrue(hypertext.is_checked())
+        self.assertTrue(hypertext.is_ordered())
+
 
 class TestTermsFeatures(unittest.TestCase):
     """Checks basic AST features like hashing, ordering for words, morphemes and terms"""
@@ -86,8 +108,6 @@ class TestMorphemesFeatures(unittest.TestCase):
         after itself after the reorder() method is ran"""
         new_morpheme = Morpheme([Term("E:A:T:."), Term("E:S:.o.-"), Term("E:S:.wa.-")])
         new_morpheme.check()
-        self.assertFalse(new_morpheme.is_ordered())
-        new_morpheme.order()
         self.assertTrue(new_morpheme.is_ordered())
         self.assertEqual(str(new_morpheme.childs[2]), '[E:S:.o.-]') # last term is right?
 
@@ -124,6 +144,7 @@ class TestWords(unittest.TestCase):
         self.word_b = Word(Morpheme([Term("E:A:T:."), Term("E:S:.o.-"), Term("E:S:.wa.-")]),
                           Morpheme([Term("a.i.-"), Term("i.i.-")]))
         self.word_a.check(), self.word_b.check()
+        self.word_a.order(), self.word_b.order()
 
     def test_words_equality(self):
         """Checks that the == operator works well on words build from the same elements"""
@@ -133,6 +154,7 @@ class TestWords(unittest.TestCase):
         """Verifies words can be used as keys in a hashmap"""
         new_word = Word(Morpheme([Term("E:A:T:."), Term("E:S:.o.-"), Term("E:S:.wa.-")]))
         new_word.check()
+        new_word.order()
         word_hashmap = {new_word : 1,
                         self.word_a : 2}
         self.assertTrue(self.word_b in word_hashmap)
@@ -215,3 +237,16 @@ class TestSuperSentence(unittest.TestCase):
         except Exception as err:
             # self.fail("Super sentence creation failed, error : %s" % str(err))
             raise err
+
+class TestHypertext(unittest.TestCase):
+    def test_addhyperlink(self):
+        """Test if adding an hyperlink trigger a valid recompute"""
+
+        proposition = RandomPropositionGenerator().get_random_proposition(Sentence)
+        hypertext = HyperText(Text([proposition]))
+        hyperlink = HyperText(Text([RandomPropositionGenerator().get_random_proposition(Word)]))
+        hypertext.check()
+        hyperlink.check()
+        str_first = hypertext._str
+        hypertext.add_hyperlink(PropositionPath(proposition=proposition), hyperlink)
+        self.assertNotEqual(str_first, hypertext._str)

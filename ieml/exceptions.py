@@ -106,6 +106,9 @@ class CannotPromoteToLowerLevel(ToolsException):
     pass
 
 
+class CannotRenderElementWithoutOrdering(ToolsException):
+    pass
+
 ### USL errors ###
 
 class USLException(Exception):

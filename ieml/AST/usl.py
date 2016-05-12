@@ -1,14 +1,15 @@
 from ieml.exceptions import InvalidPathException, EmptyTextException
 from ieml.AST.propositions import ClosedProposition, Word, Sentence, SuperSentence
 from ieml.AST.propositional_graph import HyperTextGraph
-from ieml.AST.utils import PropositionPath
+from ieml.AST.utils import PropositionPath, TreeStructure
+
 
 class Tag:
     def __init__(self, tag_content):
         self.content = tag_content
 
 
-class Text:
+class Text(TreeStructure):
     """A text is basically a list of *closed* propositions"""
 
     def __init__(self, propositions):
@@ -18,8 +19,8 @@ class Text:
 
         self.childs = propositions
 
-    def __str__(self):
-        return '{/' + '//'.join(map(str, self.childs)) + '/}'
+    def _do_precompute_str(self):
+        self._str = '{/' + '//'.join(map(str, self.childs)) + '/}'
 
     def __hash__(self):
         return self.__str__().__hash__()
@@ -27,11 +28,10 @@ class Text:
     def __eq__(self, other):
         return self.childs == other.childs
 
-    def check(self):
+    def _do_checking(self):
         for child in self.childs:
             if not isinstance(child, ClosedProposition):
                 raise InvalidPathException()
-            child.check()
 
     def render(self, hyperlinks):
         return '{/' + '//'.join([p.render_hyperlinks(hyperlinks, PropositionPath()) for p in self.childs]) + '/}'
@@ -52,13 +52,12 @@ class Text:
 
         return PropositionPath(proposition_list)
 
-    def order(self):
+    def _do_ordering(self):
         """Orders the propositions in a text. First the words, then the sentences, and the super-sentences"""
         # TODO : Test this ordering
         childs_by_level = { Word : [], Sentence : [], SuperSentence : []}
         for child in self.childs:
             childs_by_level[type(child)].append(child)
-            child.order()
 
         childs_by_level[Word].sort()
         childs_by_level[Sentence].sort()
@@ -68,12 +67,15 @@ class Text:
                       childs_by_level[SuperSentence]
 
 
-class HyperText:
+class HyperText(TreeStructure):
     """An hypertext contains a list of texts and an hyperlink table"""
 
     def __init__(self, text):
         super().__init__()
         self.childs = [text]
+
+        # need to get the string of the text for generating the hyperlinks
+        text.check()
 
         self._hyperlinks = None
         self._build_hyperlink()
@@ -90,6 +92,8 @@ class HyperText:
         """Gather the hyper links from children texts"""
         self._hyperlinks = {}
         for path, hypertext in self.childs[0].get_hyperlinks():
+            # check the hypertext, it will not be checked otherwise
+            hypertext.check()
             self._add_hyperlink(path, hypertext)
 
     def _add_hyperlink(self, path, hypertext):
@@ -103,24 +107,17 @@ class HyperText:
         self._add_hyperlink(path, hypertext)
         self._build_graph()
 
-    def __str__(self):
-        return self.render()
+    def _do_precompute_str(self):
+        self._str = self.render()
 
     def render(self):
         return self.childs[0].render(self._hyperlinks)
 
-    def check(self):
+    def _do_checking(self):
         # Check cycle and root node
         if len(self._hyperlinks) != 0:
             graph = HyperTextGraph(self)
             graph.check()
-
-        for text in self.texts:
-            text.check()
-
-    def order(self):
-        for text in self.texts:
-            text.order()
 
     def get_path_from_ieml(self, ieml_list):
         return self.childs[0].get_path_from_ieml(ieml_list)
@@ -143,3 +140,7 @@ class HyperText:
                 self.transitions.add((0, offset, path))
 
                 self.strate = max((child.strate + 1, self.strate))
+
+                # need to recompute the ieml string and redo the checking
+                self._do_checking()
+                self._do_precompute_str()

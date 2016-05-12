@@ -6,6 +6,14 @@ class PropositionAlreadyExists(DBException):
     pass
 
 
+class TextAlreadyExists(DBException):
+    pass
+
+
+class HypertextAlreadyExists(DBException):
+    pass
+
+
 class ObjectTypeNotStoredinDB(DBException):
     pass
 

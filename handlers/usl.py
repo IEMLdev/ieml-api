@@ -19,7 +19,6 @@ class TextValidatorHandler(BaseDataHandler):
 
         #create the list of proposition (sould we parse or retrieve from the db ?)
         parser = PropositionsParser()
-        print(self.json_data["propositions"])
         proposition_list = [parser.parse(proposition['ieml']) for proposition in self.json_data["propositions"]]
 
         #create the text and check
@@ -27,7 +26,7 @@ class TextValidatorHandler(BaseDataHandler):
         text.check()
 
         # check all propositions are stored in database
-        if any(map(not self.db_connector_proposition.check_proposition_stored, proposition_list)):
+        if not all(map(self.db_connector_proposition.check_proposition_stored, proposition_list)):
             raise InvalidIEMLReference()
 
         #save the text to the db
@@ -66,12 +65,11 @@ class HyperTextValidatorHandler(BaseDataHandler):
 
         #verification of the usl
         root.check()
-        root.order()
 
         #save to db
         self.db_connector_text.save_hypertext(root, self.json_data["tags"])
 
-        return {'valid' : True, "IEML" : str(root)}
+        return {'valid': True, "ieml": str(root)}
 
 
 class TextDecompositionHandler(BaseHandler):
@@ -164,7 +162,6 @@ class TextDecompositionHandler(BaseHandler):
 
         tree = build_tree(root)
 
-        print(json.dumps(tree, indent=4))
         return tree
 
 
