@@ -18,7 +18,11 @@ def get_test_morpheme_instance():
 def get_words_list():
     #this list is already sorted
     terms_list = [Term("E:A:T:."), Term("E:S:.wa.-"), Term("E:S:.o.-"), Term("u.M:M:.-"), Term("a.i.-"), Term("i.i.-")]
-    return [Word(Morpheme(term)) for term in terms_list]
+    # a small yield to check the word before returning it :-°
+    for term in terms_list:
+        word_obj = Word(Morpheme(term))
+        word_obj.check()
+        yield word_obj
 
 def get_test_sentence():
     a, b, c, d, e, f = tuple(get_words_list())

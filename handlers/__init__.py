@@ -1,5 +1,5 @@
 from .base import SearchTermsHandler
-from .propositions import GraphValidatorHandler, WordGraphValidatorHandler, SearchPropositionsHandler,\
-    PropositionPromoter, SearchPropositionNoPromotionHandler
+from .propositions import GraphCheckerHandler, WordGraphCheckerHandler, SearchPropositionsHandler,\
+    PropositionPromoter, SearchPropositionNoPromotionHandler, GraphSavingHandler, WordGraphSavingHandler
 from .usl import TextDecompositionHandler, TextValidatorHandler, HyperTextValidatorHandler, SearchTextHandler
 

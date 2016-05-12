@@ -18,11 +18,16 @@ api.add_resource(SearchPropositionsHandler, '/api/search_proposition')
 api.add_resource(SearchTextHandler, '/api/search_text')
 api.add_resource(SearchPropositionNoPromotionHandler, '/api/search_proposition_text')
 
-# Validation endpoint
+# Proposition validation and saving endpoints
 # validate and save a word object, and return its IEML string
-api.add_resource(WordGraphValidatorHandler, '/api/validate_word')
+api.add_resource(WordGraphCheckerHandler, '/api/validate_word')
+api.add_resource(WordGraphSavingHandler, '/api/save_word')
+
 # validate and save a proposition (sentence or supersentence) graph, and return its IEML string
-api.add_resource(GraphValidatorHandler, '/api/validate_tree')
+api.add_resource(GraphCheckerHandler, '/api/validate_tree')
+api.add_resource(GraphSavingHandler, '/api/save_tree')
+
+# USL validation and saving endpoints
 api.add_resource(TextValidatorHandler, '/api/validate_text')
 api.add_resource(HyperTextValidatorHandler, '/api/validate_hypertext')
 
