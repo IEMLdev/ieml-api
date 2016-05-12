@@ -99,7 +99,8 @@ class SearchPropositionNoPromotionHandler(BaseHandler):
             result.append({"IEML": str(proposition_ast),
                            "ORIGINAL": proposition["TYPE"],
                            "TAGS": proposition["TAGS"],
-                           "ORIGINAL_IEML": str(proposition_ast)})
+                           "ORIGINAL_IEML": str(proposition_ast), # this field is there for request homogeneity
+                           "PROMOTED_TO" : proposition["TYPE"]}) # (this one as well)
 
         return result
 
@@ -137,7 +138,8 @@ class SearchPropositionsHandler(BaseHandler):
             result.append({"IEML" : str(promote_to(proposition_ast, max_primitive_level)),
                            "ORIGINAL" : proposition["TYPE"],
                            "TAGS" : proposition["TAGS"],
-                           "ORIGINAL_IEML": str(proposition_ast)})
+                           "ORIGINAL_IEML": str(proposition_ast),
+                           "PROMOTED_TO" : max_primitive_level})
 
         return result
 
