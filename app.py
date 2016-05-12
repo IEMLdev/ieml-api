@@ -14,9 +14,11 @@ api = Api(app)
 api.add_resource(SearchTermsHandler, '/api/search_terms')
 # search for a proposition/term in the DB, returns a normalized list of propositions
 api.add_resource(SearchPropositionsHandler, '/api/search_proposition')
+# search for propositions, without propoting the terms
+api.add_resource(SearchPropositionNoPromotionHandler, '/api/search_propositions_no_promomotion')
 # search for a text in the DB, return a list of text
 api.add_resource(SearchTextHandler, '/api/search_text')
-api.add_resource(SearchPropositionNoPromotionHandler, '/api/search_proposition_text')
+
 
 # Proposition validation and saving endpoints
 # validate and save a word object, and return its IEML string
