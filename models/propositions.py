@@ -80,7 +80,8 @@ class PropositionsQueries(DBConnector):
         result = self.propositions.find({'$or': [
                         {'_id': {'$regex': regex}},
                         {'TAGS.FR': {'$regex': regex}},
-                        {'TAGS.EN': {'$regex': regex}}]})
+                        {'TAGS.EN': {'$regex': regex}}],
+                        "TYPE": type_filter})
 
         return list(result)
 
