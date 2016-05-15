@@ -26,7 +26,6 @@ class TextQueries(DBConnector):
         if not Tag.check_tags(tags):
             raise InvalidTags()
 
-
         self._write_text_to_db(text, tags)
 
     def search_text(self, search_string):
@@ -36,6 +35,9 @@ class TextQueries(DBConnector):
                         {'TAGS.FR': {'$regex': regex}},
                         {'TAGS.EN': {'$regex': regex}}]})
         return list(result)
+
+    def check_tag_exist(self, tag, language):
+        return self.texts.find_one({'TAGS.' + language: tag}) is not None
 
 
 class HyperTextQueries(TextQueries):
@@ -63,3 +65,6 @@ class HyperTextQueries(TextQueries):
             raise InvalidTags()
 
         self._write_hypertext_to_db(hypertext, tag)
+
+    def check_tag_exist(self, tag, language):
+        return self.texts.find_one({'TAGS.' + language: tag}) is not None and super().check_tag_exist(tag, language)

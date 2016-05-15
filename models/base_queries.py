@@ -23,7 +23,7 @@ class DictionaryQueries(DBConnector):
         regex = re.compile(search_string)
 
         result = [{"term_id" : str(term["_id"]),
-                   "ieml" : term["IEML"],
+                   "ieml" : '[' + term["IEML"] + ']',
                    "natural_language" : {"FR" : term.get("FR"),
                                          "EN" : term.get("EN")},
                    "paradigm": False if term["PARADIGM"] == "0" else True}
@@ -36,6 +36,9 @@ class DictionaryQueries(DBConnector):
         return result
 
     def exact_ieml_term_search(self, ieml_string):
+        if ieml_string[0] == '[' and ieml_string[-1] == ']':
+            ieml_string = ieml_string[1:-1]
+
         return self.terms.find_one({"IEML": ieml_string})
 
     def get_random_terms(self, count):

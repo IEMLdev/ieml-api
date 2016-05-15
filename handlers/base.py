@@ -4,6 +4,7 @@ from flask_restful import Resource, reqparse
 
 from ieml.exceptions import IEMLTermNotFoundInDictionnary, ToolsException, InvalidGraphNode, NoRootNodeFound, SeveralRootNodeFound
 from models.exceptions import DBException
+import traceback
 
 class BaseHandler(Resource):
     """This is the base abstract handler, instantiates a request parser,
@@ -59,25 +60,31 @@ class ErrorCatcher:
             return self.post(*args, **kwargs)
 
         except DBException as e:
+            traceback.print_exc()
             return {"ERROR_CODE" :1,
                     "MESSAGE" : "Something went wrong the database"}
 
         except InvalidGraphNode as e:
+            traceback.print_exc()
             return {"ERROR_CODE" : 2,
                     "MESSAGE" : "Incorrect proposition: " + str(e)}
 
         except (NoRootNodeFound, SeveralRootNodeFound) as e:
+            traceback.print_exc()
             return {"ERROR_CODE" : 3,
                     "MESSAGE" : "Incorrect proposition: " + e.message}
 
         except IEMLTermNotFoundInDictionnary as e:
+            traceback.print_exc()
             return {"ERROR_CODE" : 4,
                     "MESSAGE" : str(e)}
 
         except ToolsException:
+            traceback.print_exc()
             return {"ERROR_CODE" : 5,
                     "MESSAGE" : "Something went wrong trying to raise the level of an IEML proposition"}
 
         except Exception as e:
+            traceback.print_exc()
             return {"ERROR_CODE" : 0,
                     "MESSAGE" : "Internal error : " + str(e)}

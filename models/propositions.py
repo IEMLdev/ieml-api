@@ -3,6 +3,7 @@ from models.exceptions import PropositionAlreadyExists, ObjectTypeNotStoredinDB,
 from .base_queries import DBConnector
 from .constants import PROPOSITION_COLLECTION
 import ieml.AST
+from pymongo.errors import DuplicateKeyError
 
 
 class PropositionsQueries(DBConnector):
@@ -14,6 +15,9 @@ class PropositionsQueries(DBConnector):
     def _proposition_db_type(proposition):
         """Returns the DB name for a proposition"""
         return proposition.__class__.__name__.upper()
+
+    def check_tag_exist(self, tag, language):
+        return self.propositions.find_one({'TAGS.' + language: tag}) is not None
 
     def check_proposition_stored(self, proposition):
         """Retrieves the objectid of an IEML primitive"""
@@ -39,7 +43,10 @@ class PropositionsQueries(DBConnector):
                 "IEML": promotion["IEML"]
             }
 
-        self.propositions.insert_one(entry)
+        try:
+            self.propositions.insert_one(entry)
+        except DuplicateKeyError:
+            raise PropositionAlreadyExists()
 
     def _check_proposition_exist(self, _id):
         return self.propositions.find_one({"_id": str(_id)}) is not None
@@ -80,7 +87,8 @@ class PropositionsQueries(DBConnector):
         result = self.propositions.find({'$or': [
                         {'_id': {'$regex': regex}},
                         {'TAGS.FR': {'$regex': regex}},
-                        {'TAGS.EN': {'$regex': regex}}]})
+                        {'TAGS.EN': {'$regex': regex}}],
+                        "TYPE": type_filter})
 
         return list(result)
 

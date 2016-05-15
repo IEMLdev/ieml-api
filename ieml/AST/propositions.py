@@ -285,7 +285,11 @@ class SuperSentence(AbstractSentence):
 class Term(metaclass=AbstractPropositionMetaclass):
 
     def __init__(self, ieml_string):
-        self.ieml = ieml_string
+        if ieml_string[0] == '[' and ieml_string[-1] == ']':
+            self.ieml = ieml_string[1:-1]
+        else:
+            self.ieml = ieml_string
+
         self.objectid = None
         self.canonical_forms = None
 
