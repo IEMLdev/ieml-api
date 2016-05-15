@@ -37,5 +37,7 @@ api.add_resource(PropositionPromoter, '/api/promote_proposition')
 #
 api.add_resource(TextDecompositionHandler, '/api/decomposition_text')
 
+api.add_resource(CheckTagExist, '/api/check_tag_exist')
+
 if __name__ == '__main__':
     app.run(debug=True, host="0.0.0.0") # served on the local network

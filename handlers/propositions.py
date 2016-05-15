@@ -4,7 +4,7 @@ from ieml import PropositionsParser
 from ieml.AST import Word, Sentence, SuperSentence, Morpheme, Term, promote_to
 from ieml.AST.tools import SentenceGraph, SuperSentenceGraph
 from ieml.exceptions import InvalidNodeIEMLLevel
-from models import PropositionsQueries, DictionaryQueries, PropositionAlreadyExists
+from models import PropositionsQueries, DictionaryQueries, PropositionAlreadyExists, TextQueries, HyperTextQueries
 from .base import BaseHandler, BaseDataHandler, ErrorCatcher
 from .exceptions import MissingField,PromotingToInvalidLevel,InvalidIEMLReference
 
@@ -130,7 +130,7 @@ class WordGraphSavingHandler(WordGraphCheckerHandler):
 
 
 class SearchPropositionNoPromotionHandler(BaseHandler):
-
+    @ErrorCatcher
     def post(self):
         self.reqparse.add_argument("searchstring", required=True, type=str)
         self.do_request_parsing()
@@ -151,6 +151,7 @@ class SearchPropositionNoPromotionHandler(BaseHandler):
 class SearchPropositionsHandler(BaseHandler):
     """Search for primitives in the database, for all levels"""
 
+    @ErrorCatcher
     def post(self):
         self.reqparse.add_argument("searchstring", required=True, type=str)
         # 1 is to build a word, 2 a sentence, 3 a supersentence, 4 a USL
@@ -206,6 +207,7 @@ class PropositionPromoter(BaseHandler):
         }
         self.parser = PropositionsParser()
 
+    @ErrorCatcher
     def post(self):
         self.do_request_parsing()
 
@@ -233,3 +235,23 @@ class PropositionPromoter(BaseHandler):
             pass
 
         return {'valid': True}
+
+
+class CheckTagExist(BaseHandler):
+    def __init__(self):
+        super().__init__()
+        self.reqparse.add_argument("tag", required=True, type=str)
+        self.reqparse.add_argument("language", required=True, type=str)
+
+        self.db_connector = PropositionsQueries()
+        self.db_connector_hypertext = HyperTextQueries()
+
+    @ErrorCatcher
+    def post(self):
+        self.do_request_parsing()
+
+        tag = self.args['tag']
+        language = self.args['language']
+
+        return {'exist': self.db_connector.check_tag_exist(tag, language) and self.db_connector_hypertext.check_tag_exist(tag, language)}
+

@@ -16,6 +16,9 @@ class PropositionsQueries(DBConnector):
         """Returns the DB name for a proposition"""
         return proposition.__class__.__name__.upper()
 
+    def check_tag_exist(self, tag, language):
+        return self.propositions.find_one({'TAGS.' + language: tag}) is not None
+
     def check_proposition_stored(self, proposition):
         """Retrieves the objectid of an IEML primitive"""
         if isinstance(proposition, ieml.AST.Term):
