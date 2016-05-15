@@ -6,7 +6,7 @@ from ieml.AST.tools import SentenceGraph, SuperSentenceGraph
 from ieml.exceptions import InvalidNodeIEMLLevel
 from models import PropositionsQueries, DictionaryQueries, PropositionAlreadyExists
 from .base import BaseHandler, BaseDataHandler, ErrorCatcher
-from .exceptions import MissingField,PromotingToInvalidLevel
+from .exceptions import MissingField,PromotingToInvalidLevel,InvalidIEMLReference
 
 
 class ValidatorHandler(BaseDataHandler):
@@ -16,12 +16,6 @@ class ValidatorHandler(BaseDataHandler):
         super().__init__()
         self.db_connector = PropositionsQueries()
 
-    def do_request_parsing(self):
-        super().do_request_parsing()
-        for field in ["graph", "nodes", "tags"]:
-            if field not in self.json_data:
-                raise MissingField(field)
-
     def _build_ieml_ast(self):
         """Using the data from the JSON requests, builds an AST of the IEML object being checked. Returns a
         checked and ordered IEML object"""
@@ -30,9 +24,16 @@ class ValidatorHandler(BaseDataHandler):
     def _save_closed_proposition(self, closed_proposition_ast):
         self.db_connector.save_closed_proposition(closed_proposition_ast, self.json_data["tags"])
 
+
 class GraphCheckerHandler(ValidatorHandler):
     """Checks that a give graph representing a sentence/supersentence is well formed, and if it is,
     returns the corresponding IEML string"""
+
+    def do_request_parsing(self):
+        super().do_request_parsing()
+        for field in ["graph", "nodes", "tags"]:
+            if field not in self.json_data:
+                raise MissingField(field)
 
     def _build_ieml_ast(self):
         parser = PropositionsParser()
@@ -88,22 +89,24 @@ class WordGraphCheckerHandler(ValidatorHandler):
     """Checks that a give graph representing a word is well formed, and if it is,
     returns the corresponding IEML string"""
 
+    def do_request_parsing(self):
+        super().do_request_parsing()
+        for field in ["substance", "mode", "tags"]:
+            if field not in self.json_data:
+                raise MissingField(field)
+
     def _build_ieml_ast(self):
         parser = PropositionsParser()
-        nodes_table = {}
-        for node in self.json_data["nodes"]:
 
-            nodes_table[node["id"]] = parser.parse(node["ieml_string"])
-            if not isinstance(nodes_table[node["id"]], Term):
-                raise InvalidNodeIEMLLevel(node["id"])
+        substance_list = [parser.parse(substance) for substance in self.json_data["substance"]]
+        mode_list = [parser.parse(mode) for mode in self.json_data["mode"]]
 
         # making the two morphemes and then the word using the two term lists
-        substance_morpheme = Morpheme([nodes_table[id] for id in self.json_data["graph"]["substance"]])
-        mode_morpheme = Morpheme([nodes_table[id] for id in self.json_data["graph"]["mode"]])
-        word_ast = Word(substance_morpheme, mode_morpheme)
+        word_ast = Word(Morpheme(substance_list), Morpheme(mode_list))
 
         # asking the proposition to check itself
         word_ast.check()
+
         return word_ast
 
     @ErrorCatcher
@@ -177,11 +180,11 @@ class SearchPropositionsHandler(BaseHandler):
             for proposition in PropositionsQueries().search_for_propositions(self.args["searchstring"],
                                                                              max_primitive_level):
                 proposition_ast = parser.parse(proposition["_id"])
-                result.append({"IEML" : str(promote_to(proposition_ast, max_primitive_level)),
-                               "ORIGINAL" : proposition["TYPE"],
-                               "TAGS" : proposition["TAGS"],
+                result.append({"IEML": str(promote_to(proposition_ast, max_primitive_level)),
+                               "ORIGINAL": proposition["TYPE"],
+                               "TAGS": proposition["TAGS"],
                                "ORIGINAL_IEML": str(proposition_ast),
-                               "PROMOTED_TO" : str(max_primitive_level)})
+                               "PROMOTED_TO": max_primitive_level.__name__.upper()})
 
         return result
 
@@ -206,15 +209,15 @@ class PropositionPromoter(BaseHandler):
     def post(self):
         self.do_request_parsing()
 
+        proposition = self.parser.parse(self.args['ieml'])
+
         if self.args['term']:
             proposition_entry = self.db_connector_term.exact_ieml_term_search(self.args['ieml'])
             proposition_entry['TAGS'] = {
                 'FR': proposition_entry['FR'],
                 'EN': proposition_entry['EN']
             }
-            proposition = self.parser.parse('[' + self.args['ieml'] + ']')
         else:
-            proposition = self.parser.parse(self.args['ieml'])
             proposition_entry = self.db_connector_proposition.exact_ieml_search(proposition)
 
         level = self.args['promotion_lvl']

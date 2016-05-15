@@ -3,6 +3,7 @@ from models.exceptions import PropositionAlreadyExists, ObjectTypeNotStoredinDB,
 from .base_queries import DBConnector
 from .constants import PROPOSITION_COLLECTION
 import ieml.AST
+from pymongo.errors import DuplicateKeyError
 
 
 class PropositionsQueries(DBConnector):
@@ -39,7 +40,10 @@ class PropositionsQueries(DBConnector):
                 "IEML": promotion["IEML"]
             }
 
-        self.propositions.insert_one(entry)
+        try:
+            self.propositions.insert_one(entry)
+        except DuplicateKeyError:
+            raise PropositionAlreadyExists()
 
     def _check_proposition_exist(self, _id):
         return self.propositions.find_one({"_id": str(_id)}) is not None
