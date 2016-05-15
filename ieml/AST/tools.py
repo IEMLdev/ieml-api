@@ -1,7 +1,7 @@
 import random
 
 from ieml.AST.constants import MAX_TERMS_IN_MORPHEME, MAX_NODES_IN_SENTENCE
-from ieml.exceptions import CannotPromoteToLowerLevel, CannotDemoteProposition
+from ieml.exceptions import CannotPromoteToLowerLevel, CannotDemoteProposition, PropositionNotIncluded
 from .propositions import Term, Word, Morpheme, Clause, Sentence, SuperSentence, SuperClause, \
     AbstractAdditiveProposition, AbstractClause, AbstractProposition
 from helpers import Singleton
@@ -82,6 +82,18 @@ def demote_once(proposition):
         return proposition.childs[0]
     else:
         raise CannotDemoteProposition()
+
+
+def compute_path_between_propositions(proposition, included_proposition):
+
+    if proposition == included_proposition:
+        return [str(proposition)]
+    else:
+        for child in proposition.childs:
+            if included_proposition in child:
+                return [str(proposition)] + compute_path_between_propositions(child, included_proposition)
+
+    raise PropositionNotIncluded()
 
 
 class RandomPropositionGenerator(metaclass=Singleton):

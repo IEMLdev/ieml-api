@@ -32,7 +32,7 @@ class ClosedProposition:
         """Returns only the child closed propositions of a closed proposition,
         e.g, words for a sentence, or sentences for a super-sentence"""
         # TODO : might be optimized, since this set is basically already computed in the proposition graph
-        return set(subchild for child in self.childs for subchild in child)
+        return set(subchild for child in self.childs for subchild in child.childs)
 
 
 class NonClosedProposition:
@@ -78,6 +78,22 @@ class AbstractProposition(TreeStructure, metaclass=AbstractPropositionMetaclass)
 
         return result
 
+    def __contains__(self, proposition):
+        """Tests if the input proposition is contained in the current one, or in one of its child"""
+        if proposition.__class__ < self.__class__:
+            # first testing if it's one of the child
+            for child in self.childs:
+                if proposition == child:
+                    return True
+            # then testing if it's contained in one of the child
+            for child in self.childs:
+                if proposition in child:
+                    return True
+            # contained nowhere!
+            return False
+        else:
+            # can't be contained if the level is higher
+            return False
 
 
 class AbstractAdditiveProposition(AbstractProposition):
@@ -315,7 +331,10 @@ class Term(metaclass=AbstractPropositionMetaclass):
         return self.objectid.__hash__()
 
     def __eq__(self, other):
-        return self.objectid is not None and self.objectid == other.objectid
+        if isinstance(other, Term):
+            return self.objectid is not None and self.objectid == other.objectid
+        else:
+            return False
 
     def __gt__(self, other):
         # we use the DB's canonical forms

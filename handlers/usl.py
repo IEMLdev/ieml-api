@@ -86,8 +86,8 @@ class TextDecompositionHandler(BaseHandler):
 
     def _build_data_field(self, proposition, tags, parent_proposition_data=None):
         """Returns the representation of the ieml *closed* proposition JSON, loading it from the database"""
-        return {"IEML": [str(proposition)] if parent_proposition_data is None
-                         else parent_proposition_data["IEML"] + str(proposition),
+        return {"PATH": [str(proposition)] if parent_proposition_data is None
+                         else parent_proposition_data["IEML"] + [str(proposition)],
                 "TAGS": tags,
                 "TYPE" : proposition.level}
 
@@ -125,7 +125,7 @@ class TextDecompositionHandler(BaseHandler):
         """Recursive function. Returns a JSON "tree" of the closed propositions for and IEML node,
         each node of that tree containing data for that proposition and its closed children"""
         node_db_entry = self.db_connector_proposition.exact_ieml_search(ast_node)
-        proposition_data = self._build_data_field(ast_node, node_db_entry["tags"], parent_node_data)
+        proposition_data = self._build_data_field(ast_node, node_db_entry["TAGS"], parent_node_data)
 
         if "PROMOTION" in node_db_entry:
             # if the proposition/node is a promotion of a lower one, we the generation
@@ -150,7 +150,7 @@ class TextDecompositionHandler(BaseHandler):
         hypertext = parser.parse(self.args['data'])
 
         # for each proposition, we build the JSON tree data representation of itself and its child closed proposition
-        return [self._ast_walker(child) for child in hypertext.childs[0]]
+        return [self._ast_walker(child) for child in hypertext.childs[0].childs]
 
 
 class SearchTextHandler(BaseHandler):

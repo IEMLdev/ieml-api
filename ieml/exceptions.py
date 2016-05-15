@@ -109,7 +109,12 @@ class CannotPromoteToLowerLevel(ToolsException):
 class CannotRenderElementWithoutOrdering(ToolsException):
     pass
 
+
 class CannotDemoteProposition(ToolsException):
+    pass
+
+
+class PropositionNotIncluded(ToolsException):
     pass
 
 ### USL errors ###
