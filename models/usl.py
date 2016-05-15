@@ -39,6 +39,11 @@ class TextQueries(DBConnector):
     def check_tag_exist(self, tag, language):
         return self.texts.find_one({'TAGS.' + language: tag}) is not None
 
+    def update_tags(self, ieml, tags_dict):
+        """Updates the tag of a text identified by the input IEML"""
+        self.texts.update_one({'_id': ieml},
+                              {'$set': {'TAGS': tags_dict}})
+
 
 class HyperTextQueries(TextQueries):
     def __init__(self):
@@ -68,3 +73,8 @@ class HyperTextQueries(TextQueries):
 
     def check_tag_exist(self, tag, language):
         return self.texts.find_one({'TAGS.' + language: tag}) is not None and super().check_tag_exist(tag, language)
+
+    def update_tags(self, ieml, tags_dict):
+        """Updates the tag of a text identified by the input IEML"""
+        self.hypertexts.update_one({'_id': ieml},
+                                   {'$set': {'TAGS': tags_dict}})

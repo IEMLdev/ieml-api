@@ -97,8 +97,8 @@ class PropositionsQueries(DBConnector):
             return self.propositions.find_one({"_id": str(proposition)})
         else:
             raise ObjectTypeNotStoredinDB()
-        #
-        # if proposition_db:
-        #     return proposition_db
-        # else:
-        #     raise ObjectNotFound()
+
+    def update_tags(self, ieml, tags_dict):
+        """Updates the tag of a proposition identified by the input IEML"""
+        self.propositions.update_one({'_id': ieml},
+                                     {'$set': {'TAGS': tags_dict}})
