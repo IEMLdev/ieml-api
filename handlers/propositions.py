@@ -253,5 +253,7 @@ class CheckTagExist(BaseHandler):
         tag = self.args['tag']
         language = self.args['language']
 
-        return {'exist': self.db_connector.check_tag_exist(tag, language) and self.db_connector_hypertext.check_tag_exist(tag, language)}
+        result = self.db_connector.check_tag_exist(tag, language) or self.db_connector_hypertext.check_tag_exist(tag, language)
+
+        return {'exist': result}
 
