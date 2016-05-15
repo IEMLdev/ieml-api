@@ -1,8 +1,9 @@
+from uuid import uuid4
+
 from ieml import USLParser, PropositionsParser
 from ieml.AST import Term, Text,HyperText, AbstractProposition, Word, Sentence, SuperSentence
 from models import DictionaryQueries, TextQueries, PropositionsQueries, HyperTextQueries
 from .base import BaseDataHandler, BaseHandler
-import json
 from .exceptions import InvalidIEMLReference
 
 
@@ -103,12 +104,47 @@ class TextDecompositionHandler(BaseHandler):
 
         entry = {
             "IEML": [ieml],
-            "TAGS": elem['TAGS'] if elem else {"FR": "Inconnu", "EN": "Unknown"}
+            "TAGS": elem['TAGS'] if elem else {"FR": "Inconnu", "EN": "Unknown"},
+            "TYPE" : elem["TYPE"]
         }
 
         return children, entry
 
+    def _build_data_field(self, proposition, parent_proposition_data=None):
+        """Returns the representation of the ieml closed proposition JSON, loading it from the database"""
+        return {"IEML": [str(proposition)] if parent_proposition_data is None
+                         else parent_proposition_data["IEML"] + str(proposition),
+                "TAGS": proposition['TAGS'],
+                "TYPE" : proposition["TYPE"]}
+
+    def _promoted_proposition_walker(self, node, node_db_entry=None):
+        return []
+
+    def _ast_walker(self, ast_node, parent_node_data=None):
+        """Recursive function. Returns a JSON "tree" of the closed propositions for and IEML node,
+        each node of that tree containing data for that proposition and its closed children"""
+        node_db_entry = self.db_connector_proposition.exact_ieml_search(ast_node)
+        proposition_data = self._build_data_field(ast_node, parent_node_data)
+
+        if "PROMOTION" in node_db_entry:
+            # if the proposition/node is a promotion of a lower one, we the generation
+            # to the _promoted_proposition_walker
+            children_data = self._promoted_proposition_walker(ast_node, node_db_entry)
+        else:
+            if isinstance(ast_node, (Sentence, SuperSentence)):
+                children_data = [self._ast_walker(child, proposition_data) for child in ast_node.childs]
+            elif isinstance(ast_node, Word):
+                children_data = []
+
+        return {
+            'id': str(uuid4()), #unique ID for this node, needed by the client's graph library
+            'name': proposition_data['TAGS']['EN'],
+            'data': proposition_data,
+            'children': children_data
+            }
+
     def _prefix_walker(self, node):
+        """Generates a list of the """
         children, entry = self._entry(node)
         result = [entry] if isinstance(node, (Term, Word, Sentence, SuperSentence)) else []
 
@@ -127,10 +163,10 @@ class TextDecompositionHandler(BaseHandler):
         parser = USLParser()
         hypertext = parser.parse(self.args['data'])
 
-        result = [e for child in hypertext.childs[0].childs for e in self._prefix_walker(child)]
+        result = [proposition for child in hypertext.childs[0].childs for proposition in self._prefix_walker(child)]
 
-        # Transform the list into a node hierachie and only keep closed proposition
-        # Sorting in growing size of list of ieml (tree hierachie)
+        # Transform the list into a node hierarchy and only keep closed proposition
+        # Sorting in growing size of list of ieml (tree hierarchy)
         result.sort(key=lambda e: len(e['IEML']))
 
         # Build the tree structure
@@ -178,9 +214,9 @@ class SearchTextHandler(BaseHandler):
         result = self.db_connector_text.search_text(self.args['searchstring'])
         return [
             {
-                'IEML': e['_id'],
+                'IEML': text['_id'],
                 'ORIGINAL': 'TEXT',
-                'TAGS': e['TAGS'],
+                'TAGS': text['TAGS'],
                 'ORIGINAL_IEML': 'TEXT'
-            } for e in result]
+            } for text in result]
 

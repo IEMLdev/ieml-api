@@ -1,9 +1,9 @@
 import random
 
 from ieml.AST.constants import MAX_TERMS_IN_MORPHEME, MAX_NODES_IN_SENTENCE
-from ieml.exceptions import CannotPromoteToLowerLevel
+from ieml.exceptions import CannotPromoteToLowerLevel, CannotDemoteProposition
 from .propositions import Term, Word, Morpheme, Clause, Sentence, SuperSentence, SuperClause, \
-    AbstractAdditiveProposition, AbstractClause
+    AbstractAdditiveProposition, AbstractClause, AbstractProposition
 from helpers import Singleton
 from models import DictionaryQueries
 
@@ -47,20 +47,25 @@ def null_element(ast_level_type):
 
 def promote_to(proposition, level_type):
     """Recursive function that promotes a proposition to the type of level_type"""
+    # TODO : do some type checking, like is it an abstract proposition or not, etc...
     if proposition.__class__ == level_type:
+        # if the proposition is already at the right level, we just return it
         return proposition
-    elif proposition.__class__ < level_type:
+    elif proposition.__class__ < level_type: # else, we have to raise it one level, and recurse.
         result = None
+        # the higher type is the type just above the level_type in the hierarchy, eg, Word for Morpheme
         proposition_higher_type = terms_level_order[terms_level_order.index(proposition.__class__) + 1]
         if issubclass(proposition_higher_type, AbstractAdditiveProposition):
+            #  if the higher type is an additive proposition
             result = promote_to(proposition_higher_type([proposition]),
                               level_type)
         elif issubclass(proposition_higher_type, AbstractClause):
+            # if the higher type is a multiplicative proposition
             result = promote_to(proposition_higher_type(proposition,
                                                       null_element(type(proposition)),
                                                       null_element(type(proposition))),
                               level_type)
-        elif issubclass(proposition_higher_type, Word):
+        elif issubclass(proposition_higher_type, Word): # year, word is a bit special since it only has one
             result = promote_to(Word(proposition),
                               level_type)
 
@@ -68,6 +73,15 @@ def promote_to(proposition, level_type):
         return result
     elif proposition.__class__ > level_type:
         raise CannotPromoteToLowerLevel()
+
+
+def demote_once(proposition):
+    """Lowers the level of a proposition of 1 level.
+    Supposed to be used on promoted propositions and/or additive propositions with only 1 element."""
+    if isinstance(proposition, AbstractProposition):
+        return proposition.childs[0]
+    else:
+        raise CannotDemoteProposition()
 
 
 class RandomPropositionGenerator(metaclass=Singleton):

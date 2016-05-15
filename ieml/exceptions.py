@@ -109,6 +109,9 @@ class CannotPromoteToLowerLevel(ToolsException):
 class CannotRenderElementWithoutOrdering(ToolsException):
     pass
 
+class CannotDemoteProposition(ToolsException):
+    pass
+
 ### USL errors ###
 
 class USLException(Exception):

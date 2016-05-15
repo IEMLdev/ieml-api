@@ -28,6 +28,12 @@ class ClosedProposition:
     def _str_hyperlink(self):
         return ''.join(map(str, self.hyperlink))
 
+    def get_closed_childs(self):
+        """Returns only the child closed propositions of a closed proposition,
+        e.g, words for a sentence, or sentences for a super-sentence"""
+        # TODO : might be optimized, since this set is basically already computed in the proposition graph
+        return set(subchild for child in self.childs for subchild in child)
+
 
 class NonClosedProposition:
     """This class acts as an interface for propositions that *cannot* be closed"""
@@ -204,6 +210,9 @@ class Word(AbstractMultiplicativeProposition, ClosedProposition):
     def gather_hyperlinks(self, current_path):
         # since morphemes cannot have hyperlinks, we don't gather links for the underlying childs
         return [(PropositionPath(current_path, self), usl_ref) for usl_ref in self.hyperlink]
+
+    def get_closed_childs(self):
+        pass
 
 
 @total_ordering
