@@ -52,13 +52,13 @@ class HyperTextValidatorHandler(BaseDataHandler):
 
         #get the list of text from the db
         hypertexts = {}
-        for text in self.json_data["texts"]:
+        for text in self.json_data["nodes"]:
             hypertexts[text["id"]] = self.parser.parse(text["ieml_string"])
 
         #parse the graph and add hyperlink, check the cycle
         for hyperlink in self.json_data["graph"]:
-            path = hypertexts[hyperlink['substance']].get_path_from_ieml(hyperlink['mode']['data']['IEML'])
-            hypertexts[hyperlink['substance']].add_hyperlink(path, hypertexts[hyperlink['attribut']])
+            path = hypertexts[hyperlink['substance']].get_path_from_ieml(hyperlink['mode']['selection']['ieml'])
+            hypertexts[hyperlink['substance']].add_hyperlink(path, hypertexts[hyperlink['attribute']])
 
         #get the root hypertext, the one with the biggest strate
         root = hypertexts[max(hypertexts, key=lambda key: hypertexts[key].strate)]
@@ -88,6 +88,7 @@ class TextDecompositionHandler(BaseHandler):
         if isinstance(node, AbstractProposition):
             if isinstance(node, (Term, Word, Sentence, SuperSentence)):
                 elem = self.db_connector_proposition.exact_ieml_search(node)
+
                 # Getting the children of the node.
                 # If the node is from a promotion, the child is the promoted proposition.
                 if "PROMOTION" in elem:
@@ -99,6 +100,7 @@ class TextDecompositionHandler(BaseHandler):
                 children = node.childs
         else:
             elem = self.db_connector_term.exact_ieml_term_search(ieml)
+            elem['TAGS'] = {'FR' : elem['FR'], 'EN' : elem['EN']}
             children = []
 
         entry = {
