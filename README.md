@@ -17,7 +17,7 @@ sudo apt-get install python3 python3-pip python3-numpy
 Then, we'll install flask, pymongo and flask-restful :
 
 ```bash
-sudo pip3 install pymongo flask flask-restful
+sudo pip3 install pymongo flask flask-restful ply
 ```
 
 ## Setting up the DB
