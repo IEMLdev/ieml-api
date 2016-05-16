@@ -186,7 +186,11 @@ class SearchPropositionsHandler(BaseHandler):
             parser = PropositionsParser()
             for proposition in PropositionsQueries().search_for_propositions(self.args["searchstring"],
                                                                              max_primitive_level):
-                proposition_ast = parser.parse(proposition["_id"])
+                try:
+                    proposition_ast = parser.parse(proposition["_id"])
+                except Exception:
+                    continue
+
                 result.append({"IEML": str(promote_to(proposition_ast, max_primitive_level)),
                                "ORIGINAL": proposition["TYPE"],
                                "TAGS": proposition["TAGS"],

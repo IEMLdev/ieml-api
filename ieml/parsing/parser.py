@@ -23,9 +23,12 @@ class PropositionsParser(metaclass=Singleton):
         """Parses the input string, and returns a reference to the created AST's root"""
         self.root = None
         self.parser.parse(s)
-        self.root.check()
-        self.root.order()
-        return self.root
+        if self.root is None:
+            self.root.check()
+            self.root.order()
+            return self.root
+        else:
+            raise Exception()
 
     # Parsing rules
     def p_ieml_proposition(self, p):
