@@ -6,7 +6,7 @@ from ieml.AST.tools import SentenceGraph, SuperSentenceGraph
 from ieml.exceptions import InvalidNodeIEMLLevel
 from models import PropositionsQueries, DictionaryQueries, PropositionAlreadyExists, TextQueries, HyperTextQueries
 from .base import BaseHandler, BaseDataHandler, ErrorCatcher
-from .exceptions import MissingField,PromotingToInvalidLevel,InvalidIEMLReference
+from .exceptions import MissingField,PromotingToInvalidLevel,InvalidIEMLReference, EmptyUslChecking
 
 
 class ValidatorHandler(BaseDataHandler):
@@ -100,6 +100,12 @@ class WordGraphCheckerHandler(ValidatorHandler):
 
         substance_list = [parser.parse(substance) for substance in self.json_data["substance"]]
         mode_list = [parser.parse(mode) for mode in self.json_data["mode"]]
+
+        if len(mode_list) == 0:
+            mode_list = None
+
+        if len(substance_list) == 0:
+            raise EmptyUslChecking()
 
         # making the two morphemes and then the word using the two term lists
         word_ast = Word(Morpheme(substance_list), Morpheme(mode_list))
