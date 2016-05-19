@@ -1,11 +1,13 @@
 from functools import total_ordering
 from helpers import LoggedInstantiator, Singleton
+from ieml.AST.tree_metadata import ClosedPropositionMetadata, NonClosedPropositionMetadata
 from models import DictionaryQueries
 from ieml.AST.constants import MAX_TERMS_IN_MORPHEME
 from ieml.exceptions import IEMLTermNotFoundInDictionnary, IndistintiveTermsExist, InvalidConstructorParameter, \
     InvalidClauseComparison, TermComparisonFailed, SentenceHasntBeenChecked, TooManyTermsInMorpheme
 from ieml.AST.propositional_graph import PropositionGraph
 from ieml.AST.utils import PropositionPath, TreeStructure
+from .tree_metadata import PropositionMetadata
 
 
 class TermsQueries(DictionaryQueries, metaclass=Singleton):
@@ -34,14 +36,19 @@ class ClosedProposition:
         # TODO : might be optimized, since this set is basically already computed in the proposition graph
         return set(subchild for child in self.childs for subchild in child.childs)
 
+    def _retrieve_metadata_instance(self):
+        return ClosedPropositionMetadata(self)
+
 
 class NonClosedProposition:
     """This class acts as an interface for propositions that *cannot* be closed"""
-    pass
+    def _retrieve_metadata_instance(self):
+        return NonClosedPropositionMetadata(self)
 
 
 @total_ordering
 class AbstractPropositionMetaclass(LoggedInstantiator):
+    """This metaclass enables the comparison of class times, such as (Sentence > Word) == True"""
 
     def __gt__(self, other):
         child_list = [Term, Morpheme, Word, Clause, Sentence, SuperClause, SuperSentence]
@@ -53,13 +60,17 @@ class AbstractPropositionMetaclass(LoggedInstantiator):
 
 
 class AbstractProposition(TreeStructure, metaclass=AbstractPropositionMetaclass):
-    # these are used for the proposition rendering
-    times_symbol = "*"
-    left_parent_symbol = "("
-    right_parent_symbol = ")"
-    plus_symbol = "+"
-    left_bracket_symbol = "["
-    right_bracket_symbol = "]"
+    """This class is the parent class of all propositions, namely Morpheme, Word,
+    Clause, Sentence, Superclause, Supersentence"""
+
+    class RenderSymbols:
+        """This class is just a container for the rendering symbols"""
+        times = "*"
+        left_parent = "("
+        right_parent = ")"
+        plus = "+"
+        left_bracket = "["
+        right_bracket = "]"
 
     def __init__(self):
         super().__init__()
@@ -109,9 +120,9 @@ class AbstractAdditiveProposition(AbstractProposition):
             raise InvalidConstructorParameter(self)
 
     def _do_precompute_str(self):
-        self._str = self.left_bracket_symbol + \
-               self.plus_symbol.join([str(element) for element in self.childs]) + \
-               self.right_bracket_symbol
+        self._str = self.RenderSymbols.left_bracket+ \
+               self.RenderSymbols.plus.join([str(element) for element in self.childs]) + \
+                    self.RenderSymbols.right_bracket
 
     def __gt__(self, other):
         max_length = max(len(self.childs), len(other.childs))
@@ -125,9 +136,9 @@ class AbstractAdditiveProposition(AbstractProposition):
                     return self.childs[i] > other.childs[i]
 
     def _do_render_hyperlinks(self, hyperlinks, path):
-        return self.left_bracket_symbol + \
-               self.plus_symbol.join([element.render_hyperlinks(hyperlinks, path) for element in self.childs]) + \
-               self.right_bracket_symbol
+        return self.RenderSymbols.left_bracket + \
+               self.RenderSymbols.plus.join([element.render_hyperlinks(hyperlinks, path) for element in self.childs]) + \
+               self.RenderSymbols.right_bracket
 
 
 class AbstractMultiplicativeProposition(AbstractProposition):
@@ -140,25 +151,25 @@ class AbstractMultiplicativeProposition(AbstractProposition):
         self.childs = (self.subst, self.attr, self.mode)
 
     def _do_render_hyperlinks(self, hyperlinks, path):
-        return self.left_parent_symbol + \
-               self.subst.render_hyperlinks(hyperlinks, path) + self.times_symbol + \
-               self.attr.render_hyperlinks(hyperlinks, path) + self.times_symbol + \
-               self.mode.render_hyperlinks(hyperlinks, path) + self.right_parent_symbol
+        return self.RenderSymbols.left_parent + \
+               self.subst.render_hyperlinks(hyperlinks, path) + self.RenderSymbols.times + \
+               self.attr.render_hyperlinks(hyperlinks, path) + self.RenderSymbols.times + \
+               self.mode.render_hyperlinks(hyperlinks, path) + self.RenderSymbols.right_parent
 
     def _do_precompute_str(self):
-        self._str = self.left_parent_symbol + \
-               str(self.subst) + self.times_symbol + \
-               str(self.attr) + self.times_symbol + \
-               str(self.mode) + self.right_parent_symbol
+        self._str = self.RenderSymbols.left_parent + \
+               str(self.subst) + self.RenderSymbols.times + \
+               str(self.attr) + self.RenderSymbols.times + \
+               str(self.mode) + self.RenderSymbols.right_parent
 
 
 @total_ordering
 class Morpheme(AbstractAdditiveProposition, NonClosedProposition):
 
     def _do_precompute_str(self):
-       self._str = self.left_parent_symbol + \
-               self.plus_symbol.join([str(element) for element in self.childs]) + \
-               self.right_parent_symbol
+        self._str = self.RenderSymbols.left_parent + \
+                    self.RenderSymbols.plus.join([str(element) for element in self.childs]) + \
+                    self.RenderSymbols.right_parent
 
     def _do_checking(self):
         # then we check the terms for unicity by turning them into a set
@@ -193,24 +204,24 @@ class Word(AbstractMultiplicativeProposition, ClosedProposition):
 
     def _do_render_hyperlinks(self, hyperlinks, path):
         if self.mode is None:
-            result = self.left_bracket_symbol + \
+            result = self.RenderSymbols.left_bracket + \
                      self.subst.render_hyperlinks(hyperlinks, path) + \
-                     self.right_bracket_symbol
+                     self.RenderSymbols.right_bracket
         else:
-            result = self.left_bracket_symbol + \
-                     self.subst.render_hyperlinks(hyperlinks, path) + self.times_symbol + \
-                     self.mode.render_hyperlinks(hyperlinks, path) + self.right_bracket_symbol
+            result = self.RenderSymbols.left_bracket + \
+                     self.subst.render_hyperlinks(hyperlinks, path) + self.RenderSymbols.times + \
+                     self.mode.render_hyperlinks(hyperlinks, path) + self.RenderSymbols.right_bracket
         return result
 
     def _do_precompute_str(self):
         if self.mode is None:
-            self._str = self.left_bracket_symbol + \
-                   str(self.subst) +\
-                   self.right_bracket_symbol
+            self._str = self.RenderSymbols.left_bracket + \
+                        str(self.subst) + \
+                        self.RenderSymbols.right_bracket
         else:
-            self._str = self.left_bracket_symbol + \
-                   str(self.subst) + self.times_symbol + \
-                   str(self.mode) + self.right_bracket_symbol
+            self._str = self.RenderSymbols.left_bracket + \
+                        str(self.subst) + self.RenderSymbols.times + \
+                        str(self.mode) + self.RenderSymbols.right_bracket
 
     def __gt__(self, other):
         if self.subst != other.subst:

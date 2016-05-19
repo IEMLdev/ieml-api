@@ -14,3 +14,6 @@ class PromotingToInvalidLevel(APIException):
 
 class InvalidIEMLReference(APIException):
     pass
+
+class EmptyUslChecking(APIException):
+    pass

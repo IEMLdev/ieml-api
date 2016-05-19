@@ -31,6 +31,7 @@ class TreeStructure:
         self._has_been_checked = False
         self._has_been_ordered = False
         self._str = None
+        self._metadata = None
         self.childs = None  # will be an iterable (list or tuple)
 
     def __eq__(self, other):
@@ -52,6 +53,32 @@ class TreeStructure:
         """Returns the level of an IEML object, such as TEXT, WORD, SENTENCE, ..."""
         return self.__class__.__name__.upper()
 
+    def __eq__(self, other):
+        """Two propositions are equal if their childs'list or tuple are equal"""
+        return self.childs == other.childs
+
+    def __hash__(self):
+        """Since the IEML string for any proposition AST is supposed to be unique, it can be used as a hash"""
+        return self.__str__().__hash__()
+
+    def __str__(self):
+        if self._str is not None:
+            return self._str
+        else:
+            raise CannotRenderElementWithoutOrdering()
+
+    @property
+    def metadata(self):
+        if self._metadata is None:
+            self._metadata = self._retrieve_metadata_instance()
+            if self._metadata is not None:
+                return self._metadata
+            else:
+                # TODO : define exception for this (when it's not possible to find the metadata)
+                raise Exception("Cannot retrieve metadata for this element")
+        else:
+            return self._metadata
+
     def _do_precompute_str(self):
         pass
 
@@ -68,7 +95,6 @@ class TreeStructure:
 
     def _do_checking(self):
         pass
-
 
     def check(self):
         """Checks the IEML validity of the IEML proposition"""

@@ -93,10 +93,7 @@ class PropositionsQueries(DBConnector):
         return list(result)
 
     def exact_ieml_search(self, proposition):
-        if isinstance(proposition, (ieml.AST.Sentence, ieml.AST.Word, ieml.AST.SuperSentence)):
-            return self.propositions.find_one({"_id": str(proposition)})
-        else:
-            raise ObjectTypeNotStoredinDB()
+        return self.propositions.find_one({"_id": str(proposition)})
 
     def update_tags(self, ieml, tags_dict):
         """Updates the tag of a proposition identified by the input IEML"""
