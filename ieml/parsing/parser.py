@@ -3,7 +3,7 @@ import logging
 import ply.yacc as yacc
 
 from helpers.metaclasses import Singleton
-from ieml.AST import *
+from ieml.AST import Word, Morpheme, Clause, SuperClause, Sentence, SuperSentence, Term, Text, HyperText
 from .lexer import get_lexer, tokens
 
 
@@ -23,11 +23,12 @@ class PropositionsParser(metaclass=Singleton):
         """Parses the input string, and returns a reference to the created AST's root"""
         self.root = None
         self.parser.parse(s)
-        if self.root is None:
+        if self.root is not None:
             self.root.check()
             self.root.order()
             return self.root
         else:
+            # TODO : set an error for this exception
             raise Exception()
 
     # Parsing rules

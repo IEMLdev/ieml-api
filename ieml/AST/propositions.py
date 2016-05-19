@@ -6,6 +6,7 @@ from ieml.exceptions import IEMLTermNotFoundInDictionnary, IndistintiveTermsExis
     InvalidClauseComparison, TermComparisonFailed, SentenceHasntBeenChecked, TooManyTermsInMorpheme
 from ieml.AST.propositional_graph import PropositionGraph
 from ieml.AST.utils import PropositionPath, TreeStructure
+from .tree_metadata import PropositionMetadata
 
 
 class TermsQueries(DictionaryQueries, metaclass=Singleton):
@@ -36,6 +37,7 @@ class NonClosedProposition:
 
 @total_ordering
 class AbstractPropositionMetaclass(LoggedInstantiator):
+    """This metaclass enables the comparison of class times, such as (Sentence > Word) == True"""
 
     def __gt__(self, other):
         child_list = [Term, Morpheme, Word, Clause, Sentence, SuperClause, SuperSentence]
@@ -75,6 +77,9 @@ class AbstractProposition(TreeStructure, metaclass=AbstractPropositionMetaclass)
             result += ''.join(map(str, hyperlinks[current_path]))
 
         return result
+
+    def _retrieve_metadata(self):
+        return PropositionMetadata(str(self))
 
 class AbstractAdditiveProposition(AbstractProposition):
 
