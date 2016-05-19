@@ -34,6 +34,12 @@ class TreeStructure:
         self._metadata = None
         self.childs = None  # will be an iterable (list or tuple)
 
+    def __str__(self):
+        if self._str is not None:
+            return self._str
+        else:
+            raise CannotRenderElementWithoutOrdering()
+
     def __eq__(self, other):
         """Two propositions are equal if their childs'list or tuple are equal"""
         return self.childs == other.childs
@@ -42,30 +48,12 @@ class TreeStructure:
         """Since the IEML string for any proposition AST is supposed to be unique, it can be used as a hash"""
         return self.__str__().__hash__()
 
-    def __str__(self):
-        if self._str is not None:
-            return self._str
-        else:
-            raise CannotRenderElementWithoutOrdering()
 
     @property
     def level(self):
         """Returns the level of an IEML object, such as TEXT, WORD, SENTENCE, ..."""
         return self.__class__.__name__.upper()
 
-    def __eq__(self, other):
-        """Two propositions are equal if their childs'list or tuple are equal"""
-        return self.childs == other.childs
-
-    def __hash__(self):
-        """Since the IEML string for any proposition AST is supposed to be unique, it can be used as a hash"""
-        return self.__str__().__hash__()
-
-    def __str__(self):
-        if self._str is not None:
-            return self._str
-        else:
-            raise CannotRenderElementWithoutOrdering()
 
     @property
     def metadata(self):
