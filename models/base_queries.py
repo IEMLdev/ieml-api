@@ -2,11 +2,12 @@ from random import randint
 import re
 from pymongo import MongoClient
 
+from helpers.metaclasses import Singleton
 from models.constants import TERMS_COLLECTION, TAG_LANGUAGES
 from .constants import DB_ADDRESS, DB_NAME
 
 
-class DBConnector(object):
+class DBConnector(object, metaclass=Singleton):
     """Automatically connects when instantiated"""
 
     def __init__(self):

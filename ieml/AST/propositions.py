@@ -1,5 +1,6 @@
 from functools import total_ordering
 from helpers import LoggedInstantiator, Singleton
+from ieml.AST.tree_metadata import ClosedPropositionMetadata, NonClosedPropositionMetadata
 from models import DictionaryQueries
 from ieml.AST.constants import MAX_TERMS_IN_MORPHEME
 from ieml.exceptions import IEMLTermNotFoundInDictionnary, IndistintiveTermsExist, InvalidConstructorParameter, \
@@ -29,10 +30,14 @@ class ClosedProposition:
     def _str_hyperlink(self):
         return ''.join(map(str, self.hyperlink))
 
+    def _retrieve_metadata_instance(self):
+        return ClosedPropositionMetadata(self)
+
 
 class NonClosedProposition:
     """This class acts as an interface for propositions that *cannot* be closed"""
-    pass
+    def _retrieve_metadata_instance(self):
+        return NonClosedPropositionMetadata(self)
 
 
 @total_ordering
@@ -77,9 +82,6 @@ class AbstractProposition(TreeStructure, metaclass=AbstractPropositionMetaclass)
             result += ''.join(map(str, hyperlinks[current_path]))
 
         return result
-
-    def _retrieve_metadata(self):
-        return PropositionMetadata(str(self))
 
 class AbstractAdditiveProposition(AbstractProposition):
 

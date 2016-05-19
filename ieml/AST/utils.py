@@ -51,7 +51,7 @@ class TreeStructure:
     @property
     def metadata(self):
         if self._metadata is None:
-            self._metadata = self._retrieve_metadata()
+            self._metadata = self._retrieve_metadata_instance()
             if self._metadata is not None:
                 return self._metadata
             else:
@@ -60,13 +60,8 @@ class TreeStructure:
         else:
             return self._metadata
 
-    def _retrieve_metadata(self):
-        """Method that returns the metadata object to be stored in the the _metadata attribute"""
-        pass
-
     def _do_precompute_str(self):
         pass
-
 
     def _do_ordering(self):
         pass
