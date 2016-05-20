@@ -59,7 +59,7 @@ def promote_once(proposition):
                                          null_element(type(proposition)))
 
     elif issubclass(proposition_higher_type, Word):  # year, word is a bit special since it only has one child
-        result = Word(proposition),
+        result = Word(proposition)
     result.check()
     return result
 

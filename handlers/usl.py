@@ -6,6 +6,7 @@ from ieml.AST.tools import demote_once, promote_to
 from models import DictionaryQueries, TextQueries, PropositionsQueries, HyperTextQueries
 from .base import BaseDataHandler, BaseHandler
 from .exceptions import InvalidIEMLReference
+from ieml.AST import ClosedPropositionMetadata
 
 
 class TextValidatorHandler(BaseDataHandler):
@@ -102,7 +103,7 @@ class TextDecompositionHandler(BaseHandler):
                 children_data = [self._ast_walker(subpath) for subpath in path_to_node.get_childs_subpaths(depth=2)]
         else:
             demoted_current_node = demote_once(current_node)
-            new_path = PropositionPath(path_to_node.path + [demoted_current_node + demote_once(demoted_current_node)])
+            new_path = PropositionPath(path_to_node.path + [demoted_current_node, demote_once(demoted_current_node)])
             children_data = [self._promoted_proposition_walker(new_path, end_node, tags)]
 
         return {'id': str(uuid4()),  # unique ID for this node, needed by the client's graph library
@@ -122,16 +123,16 @@ class TextDecompositionHandler(BaseHandler):
             end_node_ast = original_proposition_ast
 
         return self._promoted_proposition_walker(path_to_node,
-                                                 end_node_ast)
+                                                 end_node_ast, current_node.metadata["TAGS"])
     def _ast_walker(self, path_to_node):
         """Recursive function. Returns a JSON "tree" of the closed propositions for and IEML node,
         each node of that tree containing data for that proposition and its closed children"""
         current_node = path_to_node.path[-1] # current node is the last one in the path
 
-        if current_node.metadata.get("PROMOTION"): # cannot use the "in" operator on metadata
+        if "PROMOTION" in current_node.metadata: # cannot use the "in" operator on metadata
             # if the proposition/node is a promotion of a lower one, we the generation
             # to the _promoted_proposition_walker
-            return self._promoted_proposition_walker(path_to_node)
+            return self._promoted_proposition_chain(path_to_node)
         else:
             proposition_data = self._build_data_field(path_to_node, current_node.metadata["TAGS"])
 
@@ -152,8 +153,9 @@ class TextDecompositionHandler(BaseHandler):
         parser = USLParser()
         hypertext = parser.parse(self.args['data'])
 
+        ClosedPropositionMetadata.set_connector(self.db_connector_proposition)
         # for each proposition, we build the JSON tree data representation of itself and its child closed proposition
-        return [self._ast_walker(PropositionPath(child)) for child in hypertext.childs[0].childs]
+        return [self._ast_walker(PropositionPath([child])) for child in hypertext.childs[0].childs]
 
 
 class SearchTextHandler(BaseHandler):

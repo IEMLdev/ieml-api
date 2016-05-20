@@ -35,19 +35,21 @@ class PropositionMetadata(TreeElementMetadata):
 
 class ClosedPropositionMetadata(PropositionMetadata):
 
-    def __getitem__(self, item):
-        if self.db_entry is None:
-            self._retrieve_from_db()
+    def __init__(self, element_ref):
+        super().__init__(element_ref)
+        self._retrieve_from_db()
 
+    @needs_db
+    def __getitem__(self, item):
         return self.db_entry[item]
 
     @needs_db
+    def __contains__(self, item):
+        return item in self.db_entry
+
+    @needs_db
     def _retrieve_from_db(self):
-        result = self.db_entry = self._db_connector.exact_ieml_search(self.element_ref)
-        if result is None:
-            raise ObjectTypeNotStoredinDB()
-        else:
-            return result
+        self.db_entry = self._db_connector.exact_ieml_search(self.element_ref)
 
 class NonClosedPropositionMetadata(PropositionMetadata):
     pass
