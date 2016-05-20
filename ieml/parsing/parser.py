@@ -3,7 +3,7 @@ import logging
 import ply.yacc as yacc
 
 from helpers.metaclasses import Singleton
-from ieml.AST import *
+from ieml.AST import Word, Morpheme, Clause, SuperClause, Sentence, SuperSentence, Term, Text, HyperText
 from .lexer import get_lexer, tokens
 
 
@@ -29,6 +29,7 @@ class PropositionsParser(metaclass=Singleton):
             self.root.order()
             return self.root
         else:
+            # TODO : set an error for this exception
             raise Exception()
 
     # Parsing rules

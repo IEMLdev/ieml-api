@@ -1,4 +1,4 @@
-from ieml.AST.tools import RandomPropositionGenerator
+from ieml.AST.tools import RandomPropositionGenerator, compute_path_between_propositions
 from .helper import *
 from ieml.AST import promote_to
 from ieml.exceptions import CannotPromoteToLowerLevel
@@ -22,6 +22,23 @@ class TestPromotion(unittest.TestCase):
         word.check()
         with self.assertRaises(CannotPromoteToLowerLevel):
             promote_to(word, Morpheme)
+
+
+class TestDemotion(unittest.TestCase):
+    pass
+    # TODO : Do the fuken demotions tests
+
+
+class TestPathPathComputation(unittest.TestCase):
+
+    def setUp(self):
+        self.parser = PropositionsParser()
+
+    def test_word_in_sentence_path(self):
+        sentence = self.parser.parse("""[([([h.O:T:.-])]*[([E:O:.T:M:.-])]*[([E:F:.O:O:.-])])+
+            ([([h.O:T:.-])]*[([wu.T:.-])]*[([h.O:B:.-])])]""")
+        word = self.parser.parse("[([h.O:T:.-])]")
+        self.assertListEqual(compute_path_between_propositions(sentence, word), [str(sentence), ])
 
 
 class TestRandomGenerator(unittest.TestCase):

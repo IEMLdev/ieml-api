@@ -6,7 +6,7 @@ from models import *
 from ieml.AST import Sentence, Word
 
 
-class TestDBQueries(unittest.TestCase):
+class BaseDBTest(unittest.TestCase):
 
     def setUp(self):
         self.writable_db_connector = PropositionsQueries()
@@ -15,7 +15,10 @@ class TestDBQueries(unittest.TestCase):
         self.term_connector = DictionaryQueries()
 
     def tearDown(self):
-        self.writable_db_connector.propositions.drop() #cleaning up!
+        self.writable_db_connector.propositions.drop()  # cleaning up!
+
+
+class TestDBQueries(BaseDBTest):
 
     def test_write_word_to_db(self):
         word_object = get_test_word_instance()

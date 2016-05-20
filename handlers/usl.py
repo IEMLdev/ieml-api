@@ -1,9 +1,13 @@
+from uuid import uuid4
+
 from ieml import USLParser, PropositionsParser
-from ieml.AST import Term, Text,HyperText, AbstractProposition, Word, Sentence, SuperSentence
+from ieml.AST import Term, Text,HyperText, AbstractProposition, Word, Sentence, SuperSentence, PropositionPath
+from ieml.AST.tools import demote_once, promote_to
 from models import DictionaryQueries, TextQueries, PropositionsQueries, HyperTextQueries
 from .base import BaseDataHandler, BaseHandler
 import json
 from .exceptions import InvalidIEMLReference
+from ieml.AST import ClosedPropositionMetadata
 
 
 class TextValidatorHandler(BaseDataHandler):
@@ -58,7 +62,7 @@ class HyperTextValidatorHandler(BaseDataHandler):
         #parse the graph and add hyperlink, check the cycle
         for hyperlink in self.json_data["graph"]:
             path = hypertexts[hyperlink['substance']].get_path_from_ieml(hyperlink['mode']['selection']['ieml'])
-            hypertexts[hyperlink['substance']].add_hyperlink(path, hypertexts[hyperlink['attribute']])
+            hypertexts[hyperlink['substance']].add_hyperlink(path, hypertexts[hyperlink['attribut']])
 
         #get the root hypertext, the one with the biggest strate
         root = hypertexts[max(hypertexts, key=lambda key: hypertexts[key].strate)]
@@ -82,44 +86,66 @@ class TextDecompositionHandler(BaseHandler):
         self.db_connector_proposition = PropositionsQueries()
         self.proposition_parser = PropositionsParser()
 
-    def _entry(self, node):
-        ieml = str(node)
+    def _build_data_field(self, proposition_path, tags):
+        """Returns the representation of the ieml *closed* proposition JSON, loading it from the database"""
+        return {"PATH": proposition_path.to_ieml_list(),
+                "TAGS": tags,
+                "TYPE" : proposition_path.path[-1].level} # last node is the current node
 
-        if isinstance(node, AbstractProposition):
-            if isinstance(node, (Term, Word, Sentence, SuperSentence)):
-                elem = self.db_connector_proposition.exact_ieml_search(node)
+    def _promoted_proposition_walker(self, path_to_node, end_node, tags):
+        """Recursive function. Handles the JSON creation for promoted propositions"""
+        current_node = path_to_node.path[-1]
+        proposition_data = self._build_data_field(path_to_node, tags)
 
-                # Getting the children of the node.
-                # If the node is from a promotion, the child is the promoted proposition.
-                if elem is not None and "PROMOTION" in elem:
-                    children = [self.proposition_parser.parse(elem["PROMOTION"]["IEML"])]
-                else:
-                    children = node.childs
+        if current_node == end_node:
+            if isinstance(end_node, Word): # if endnode it's a word, let's stop, else, we go back to the regular walker
+                children_data = []
             else:
-                elem = None
-                children = node.childs
+                children_data = [self._ast_walker(subpath) for subpath in path_to_node.get_childs_subpaths(depth=2)]
         else:
-            elem = self.db_connector_term.exact_ieml_term_search(ieml)
-            children = []
+            demoted_current_node = demote_once(current_node)
+            new_path = PropositionPath(path_to_node.path + [demoted_current_node, demote_once(demoted_current_node)])
+            children_data = [self._promoted_proposition_walker(new_path, end_node, tags)]
 
-        entry = {
-            "IEML": [ieml],
-            "TAGS": elem['TAGS'] if elem else {"FR": "Inconnu", "EN": "Unknown"}
-        }
+        return {'id': str(uuid4()),  # unique ID for this node, needed by the client's graph library
+                'name': tags['EN'],
+                'data': proposition_data,
+                'children': children_data}
 
-        return children, entry
+    def _promoted_proposition_chain(self, path_to_node):
+        """Prepares the call for the recursive _promoted_proposition_walker, which is itself recursive"""
+        current_node = path_to_node.path[-1]
+        original_proposition_ast = self.proposition_parser.parse(current_node.metadata["PROMOTION"]["IEML"])
 
-    def _prefix_walker(self, node):
-        children, entry = self._entry(node)
-        result = [entry] if isinstance(node, (Term, Word, Sentence, SuperSentence)) else []
+        if current_node.metadata["PROMOTION"]["TYPE"] == "TERM":
+            # if the original proposition is a term, then we can't go down that far, let's raise end_node to word
+            end_node_ast = promote_to(original_proposition_ast, Word)
+        else: # else it's probably a word or a sentence
+            end_node_ast = original_proposition_ast
 
-        if not isinstance(node, Term):
-            n_ieml = str(node)
-            for n in children:
-                for child in self._prefix_walker(n):
-                    child["IEML"].insert(0, n_ieml)
-                    result.append(child)
-        return result
+        return self._promoted_proposition_walker(path_to_node,
+                                                 end_node_ast, current_node.metadata["TAGS"])
+    def _ast_walker(self, path_to_node):
+        """Recursive function. Returns a JSON "tree" of the closed propositions for and IEML node,
+        each node of that tree containing data for that proposition and its closed children"""
+        current_node = path_to_node.path[-1] # current node is the last one in the path
+
+        if "PROMOTION" in current_node.metadata: # cannot use the "in" operator on metadata
+            # if the proposition/node is a promotion of a lower one, we the generation
+            # to the _promoted_proposition_walker
+            return self._promoted_proposition_chain(path_to_node)
+        else:
+            proposition_data = self._build_data_field(path_to_node, current_node.metadata["TAGS"])
+
+            if isinstance(current_node, (Sentence, SuperSentence)):
+                children_data = [self._ast_walker(subpath) for subpath in path_to_node.get_childs_subpaths(depth=2)]
+            elif isinstance(current_node, Word):
+                children_data = []
+
+            return {'id': str(uuid4()), #unique ID for this node, needed by the client's graph library
+                    'name': current_node.metadata['TAGS']['EN'],
+                    'data': proposition_data,
+                    'children': children_data}
 
     def post(self):
         self.do_request_parsing()
@@ -128,42 +154,9 @@ class TextDecompositionHandler(BaseHandler):
         parser = USLParser()
         hypertext = parser.parse(self.args['data'])
 
-        result = [e for child in hypertext.childs[0].childs for e in self._prefix_walker(child)]
-
-        # Transform the list into a node hierachie and only keep closed proposition
-        # Sorting in growing size of list of ieml (tree hierachie)
-        result.sort(key=lambda e: len(e['IEML']))
-
-        # Build the tree structure
-        root = {
-            'data': {
-                "IEML": [self.args['data']],
-                "TAGS": {"FR": "Inconnu", "EN": "Unknown"}
-            }
-        }
-        for r in result:
-            current = root
-            for e in r['IEML']:
-                if e in current:
-                    current = current[e]
-                else:
-                    current[e] = {'data': r}
-
-        # Build the json structure
-        def build_tree(node):
-            # if isinstance(node, dict):
-            data = node['data']
-
-            return {
-                'id': id(data['IEML']),
-                'name': data['TAGS']['EN'],
-                'data': data,
-                'children': [build_tree(node[key]) for key in node if key != 'data']
-            }
-
-        tree = build_tree(root)
-
-        return tree
+        ClosedPropositionMetadata.set_connector(self.db_connector_proposition)
+        # for each proposition, we build the JSON tree data representation of itself and its child closed proposition
+        return [self._ast_walker(PropositionPath([child])) for child in hypertext.childs[0].childs]
 
 
 class SearchTextHandler(BaseHandler):
@@ -179,9 +172,9 @@ class SearchTextHandler(BaseHandler):
         result = self.db_connector_text.search_text(self.args['searchstring'])
         return [
             {
-                'IEML': e['_id'],
+                'IEML': text['_id'],
                 'ORIGINAL': 'TEXT',
-                'TAGS': e['TAGS'],
+                'TAGS': text['TAGS'],
                 'ORIGINAL_IEML': 'TEXT'
-            } for e in result]
+            } for text in result]
 

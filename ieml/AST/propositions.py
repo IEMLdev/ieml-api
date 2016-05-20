@@ -1,10 +1,13 @@
 from functools import total_ordering
 from helpers import LoggedInstantiator, Singleton
+from ieml.AST.tree_metadata import ClosedPropositionMetadata, NonClosedPropositionMetadata
+from models import DictionaryQueries
 from ieml.AST.constants import MAX_TERMS_IN_MORPHEME
 from ieml.exceptions import IEMLTermNotFoundInDictionnary, IndistintiveTermsExist, InvalidConstructorParameter, \
     InvalidClauseComparison, TermComparisonFailed, SentenceHasntBeenChecked, TooManyTermsInMorpheme
 from ieml.AST.propositional_graph import PropositionGraph
 from ieml.AST.utils import PropositionPath, TreeStructure
+from .tree_metadata import PropositionMetadata
 
 
 # class TermsQueries(DictionaryQueries, metaclass=Singleton):
@@ -27,14 +30,25 @@ class ClosedProposition:
     def _str_hyperlink(self):
         return ''.join(map(str, self.hyperlink))
 
+    def get_closed_childs(self):
+        """Returns only the child closed propositions of a closed proposition,
+        e.g, words for a sentence, or sentences for a super-sentence"""
+        # TODO : might be optimized, since this set is basically already computed in the proposition graph
+        return set(subchild for child in self.childs for subchild in child.childs)
+
+    def _retrieve_metadata_instance(self):
+        return ClosedPropositionMetadata(self)
+
 
 class NonClosedProposition:
     """This class acts as an interface for propositions that *cannot* be closed"""
-    pass
+    def _retrieve_metadata_instance(self):
+        return NonClosedPropositionMetadata(self)
 
 
 @total_ordering
 class AbstractPropositionMetaclass(LoggedInstantiator):
+    """This metaclass enables the comparison of class times, such as (Sentence > Word) == True"""
 
     def __gt__(self, other):
         child_list = [Term, Morpheme, Word, Clause, Sentence, SuperClause, SuperSentence]
@@ -74,6 +88,23 @@ class AbstractProposition(TreeStructure, metaclass=AbstractPropositionMetaclass)
             result += ''.join(map(str, hyperlinks[current_path]))
 
         return result
+
+    def __contains__(self, proposition):
+        """Tests if the input proposition is contained in the current one, or in one of its child"""
+        if proposition == self:
+            return True
+        else: # could be contained in the childs proposition
+            if proposition.__class__ < self.__class__:
+                # testing if it's contained in one of the child
+                for child in self.childs:
+                    if proposition in child:
+                        return True
+                # contained nowhere!
+                return False
+            else:
+                # can't be contained if the level is higher
+                return False
+
 
 class AbstractAdditiveProposition(AbstractProposition):
 
@@ -206,6 +237,9 @@ class Word(AbstractMultiplicativeProposition, ClosedProposition):
         # since morphemes cannot have hyperlinks, we don't gather links for the underlying childs
         return [(PropositionPath(current_path, self), usl_ref) for usl_ref in self.hyperlink]
 
+    def get_closed_childs(self):
+        pass
+
 
 @total_ordering
 class AbstractClause(AbstractMultiplicativeProposition, NonClosedProposition):
@@ -307,7 +341,10 @@ class Term(metaclass=AbstractPropositionMetaclass):
         return self.objectid.__hash__()
 
     def __eq__(self, other):
-        return self.objectid is not None and self.objectid == other.objectid
+        if isinstance(other, Term):
+            return self.objectid is not None and self.objectid == other.objectid
+        else:
+            return False
 
     def __gt__(self, other):
         # we use the DB's canonical forms

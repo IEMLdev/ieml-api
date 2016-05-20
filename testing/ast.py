@@ -33,6 +33,25 @@ class TestMetaFeatures(unittest.TestCase):
         self.assertTrue(hypertext.is_ordered())
 
 
+class TestPropositionsInclusion(unittest.TestCase):
+
+    def setUp(self):
+        self.parser = PropositionsParser()
+        self.sentence = self.parser.parse("""[([([h.O:T:.-])]*[([E:O:.T:M:.-])]*[([E:F:.O:O:.-])])+
+                                     ([([h.O:T:.-])]*[([wu.T:.-])]*[([h.O:B:.-])])]""")
+
+    def test_word_in_sentence(self):
+        word = self.parser.parse("[([h.O:T:.-])]")
+        self.assertIn(word, self.sentence)
+
+    def test_term_in_sentence(self):
+        term = self.parser.parse("[h.O:T:.-]")
+        self.assertIn(term, self.sentence)
+
+    def test_word_not_in_sentence(self):
+        word = self.parser.parse("[([wo.S:.-])]")
+        self.assertNotIn(word, self.sentence)
+
 class TestTermsFeatures(unittest.TestCase):
     """Checks basic AST features like hashing, ordering for words, morphemes and terms"""
 
