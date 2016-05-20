@@ -31,6 +31,7 @@ NULL_SENTENCE = Sentence([NULL_CLAUSE])
 NULL_SUPERCLAUSE = SuperClause(NULL_SENTENCE, NULL_SENTENCE, NULL_SENTENCE)
 NULL_SUPERSENTENCE = SuperSentence([NULL_SUPERCLAUSE])
 
+
 def null_element(ast_level_type):
     """Returns the null element for the input ast_level_type"""
     null_elements_table = {
@@ -45,32 +46,32 @@ def null_element(ast_level_type):
     return null_elements_table[ast_level_type]
 
 
+def promote_once(proposition):
+    proposition_higher_type = terms_level_order[terms_level_order.index(proposition.__class__) + 1]
+    result = None
+    if issubclass(proposition_higher_type, AbstractAdditiveProposition):
+        #  if the higher type is an additive proposition
+        result = proposition_higher_type([proposition])
+    elif issubclass(proposition_higher_type, AbstractClause):
+        # if the higher type is a multiplicative proposition
+        result = proposition_higher_type(proposition,
+                                         null_element(type(proposition)),
+                                         null_element(type(proposition)))
+
+    elif issubclass(proposition_higher_type, Word):  # year, word is a bit special since it only has one child
+        result = Word(proposition),
+    result.check()
+    return result
+
+
 def promote_to(proposition, level_type):
-    """Recursive function that promotes a proposition to the type of level_type"""
+    """Recursive function. Promotes a proposition to the type of level_type"""
     # TODO : do some type checking, like is it an abstract proposition or not, etc...
     if proposition.__class__ == level_type:
         # if the proposition is already at the right level, we just return it
         return proposition
     elif proposition.__class__ < level_type: # else, we have to raise it one level, and recurse.
-        result = None
-        # the higher type is the type just above the level_type in the hierarchy, eg, Word for Morpheme
-        proposition_higher_type = terms_level_order[terms_level_order.index(proposition.__class__) + 1]
-        if issubclass(proposition_higher_type, AbstractAdditiveProposition):
-            #  if the higher type is an additive proposition
-            result = promote_to(proposition_higher_type([proposition]),
-                              level_type)
-        elif issubclass(proposition_higher_type, AbstractClause):
-            # if the higher type is a multiplicative proposition
-            result = promote_to(proposition_higher_type(proposition,
-                                                      null_element(type(proposition)),
-                                                      null_element(type(proposition))),
-                              level_type)
-        elif issubclass(proposition_higher_type, Word): # year, word is a bit special since it only has one
-            result = promote_to(Word(proposition),
-                              level_type)
-
-        result.check()
-        return result
+        return promote_to(promote_once(proposition), level_type)
     elif proposition.__class__ > level_type:
         raise CannotPromoteToLowerLevel()
 
@@ -84,16 +85,14 @@ def demote_once(proposition):
         raise CannotDemoteProposition()
 
 
-def compute_path_between_propositions(proposition, included_proposition):
-
-    if proposition == included_proposition:
-        return [str(proposition)]
+def demote_to(proposition, level_type):
+    """Recursive function. Demotes a proposition to a given level"""
+    if type(proposition) < level_type:
+        raise Exception("Cannot demote to higher level!") # TODO : make exception for this case
+    elif isinstance(proposition, level_type):
+        return proposition
     else:
-        for child in proposition.childs:
-            if included_proposition in child:
-                return [str(proposition)] + compute_path_between_propositions(child, included_proposition)
-
-    raise PropositionNotIncluded()
+        return demote_to(demote_once(proposition), level_type)
 
 
 class RandomPropositionGenerator(metaclass=Singleton):
@@ -154,10 +153,8 @@ class RandomPropositionGenerator(metaclass=Singleton):
 
         return type(clauses_list)
 
-
     def get_random_proposition(self, ast_type):
         """Returns an unchecked, unordered (but hopefully correct) proposition of level ast_type"""
-        result = None
         if ast_type is Morpheme:
             result = self._make_random_morpheme()
         elif ast_type is Word:

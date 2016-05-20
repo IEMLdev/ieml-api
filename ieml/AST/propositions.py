@@ -91,20 +91,19 @@ class AbstractProposition(TreeStructure, metaclass=AbstractPropositionMetaclass)
 
     def __contains__(self, proposition):
         """Tests if the input proposition is contained in the current one, or in one of its child"""
-        if proposition.__class__ < self.__class__:
-            # first testing if it's one of the child
-            for child in self.childs:
-                if proposition == child:
-                    return True
-            # then testing if it's contained in one of the child
-            for child in self.childs:
-                if proposition in child:
-                    return True
-            # contained nowhere!
-            return False
-        else:
-            # can't be contained if the level is higher
-            return False
+        if proposition == self:
+            return True
+        else: # could be contained in the childs proposition
+            if proposition.__class__ < self.__class__:
+                # testing if it's contained in one of the child
+                for child in self.childs:
+                    if proposition in child:
+                        return True
+                # contained nowhere!
+                return False
+            else:
+                # can't be contained if the level is higher
+                return False
 
 
 class AbstractAdditiveProposition(AbstractProposition):

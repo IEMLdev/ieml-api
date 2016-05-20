@@ -1,8 +1,8 @@
 from uuid import uuid4
 
 from ieml import USLParser, PropositionsParser
-from ieml.AST import Term, Text,HyperText, AbstractProposition, Word, Sentence, SuperSentence
-from ieml.AST.tools import demote_once
+from ieml.AST import Term, Text,HyperText, AbstractProposition, Word, Sentence, SuperSentence, PropositionPath
+from ieml.AST.tools import demote_once, promote_to
 from models import DictionaryQueries, TextQueries, PropositionsQueries, HyperTextQueries
 from .base import BaseDataHandler, BaseHandler
 from .exceptions import InvalidIEMLReference
@@ -84,61 +84,64 @@ class TextDecompositionHandler(BaseHandler):
         self.db_connector_proposition = PropositionsQueries()
         self.proposition_parser = PropositionsParser()
 
-    def _build_data_field(self, proposition, tags, parent_proposition_data=None):
+    def _build_data_field(self, proposition_path, tags):
         """Returns the representation of the ieml *closed* proposition JSON, loading it from the database"""
-        return {"PATH": [str(proposition)] if parent_proposition_data is None
-                         else parent_proposition_data["IEML"] + [str(proposition)],
+        return {"PATH": proposition_path.to_ieml_list(),
                 "TAGS": tags,
-                "TYPE" : proposition.level}
+                "TYPE" : proposition_path.path[-1].level} # last node is the current node
 
-    def _promoted_proposition_walker(self, node, highest_promotion_data, parent_proposition_data):
-        """Recursive function. builds the JSON tree repr of a promoted proposition. Basically the node
-        it until it reaches the "real" version"""
-        if isinstance(node, Word):
-            # the current node is a Word, we can't go further down, so that's the last iteration
-            current_data = self._build_data_field(node, highest_promotion_data["TAGS"], parent_proposition_data)
-            children_data = []
-        else: # either it's the "highest" promotion data, or it's an intermediate level
-            if highest_promotion_data["IEML"] == str(node):
-                current_data = highest_promotion_data
-                children_data = [self._promoted_proposition_walker(demote_once(demote_once(node)),
-                                                                   highest_promotion_data,
-                                                                   highest_promotion_data)]
+    def _promoted_proposition_walker(self, path_to_node, end_node, tags):
+        """Recursive function. Handles the JSON creation for promoted propositions"""
+        current_node = path_to_node.path[-1]
+        proposition_data = self._build_data_field(path_to_node, tags)
+
+        if current_node == end_node:
+            if isinstance(end_node, Word): # if endnode it's a word, let's stop, else, we go back to the regular walker
+                children_data = []
             else:
-                # if we're at an intermediate level, we should check if there's anything in the DB
-                node_db_entry = self.db_connector_proposition.exact_ieml_search(node)
-                if node_db_entry is None:
-                    current_data = self._build_data_field(node, highest_promotion_data["TAGS"], parent_proposition_data)
-                    children_data = [self._promoted_proposition_walker(demote_once(demote_once(node)),
-                                                                       highest_promotion_data,
-                                                                       current_data)]
-                else: #we've reached the non-promoted version of the proposition
-                    current_data = self._build_data_field(node, node_db_entry["TAGS"], parent_proposition_data)
-                    children_data = [self._ast_walker(child, current_data) for child in node.get_closed_childs()]
+                children_data = [self._ast_walker(subpath) for subpath in path_to_node.get_childs_subpaths(depth=2)]
+        else:
+            demoted_current_node = demote_once(current_node)
+            new_path = PropositionPath(path_to_node.path + [demoted_current_node + demote_once(demoted_current_node)])
+            children_data = [self._promoted_proposition_walker(new_path, end_node, tags)]
 
         return {'id': str(uuid4()),  # unique ID for this node, needed by the client's graph library
-                'name': highest_promotion_data['TAGS']['EN'],
-                'data': current_data,
+                'name': tags['EN'],
+                'data': proposition_data,
                 'children': children_data}
 
-    def _ast_walker(self, ast_node, parent_node_data=None):
+    def _promoted_proposition_chain(self, path_to_node):
+        """Prepares the call for the recursive _promoted_proposition_walker, which is itself recursive"""
+        current_node = path_to_node.path[-1]
+        original_proposition_ast = self.proposition_parser.parse(current_node.metadata["PROMOTION"]["IEML"])
+
+        if current_node.metadata["PROMOTION"]["TYPE"] == "TERM":
+            # if the original proposition is a term, then we can't go down that far, let's raise end_node to word
+            end_node_ast = promote_to(original_proposition_ast, Word)
+        else: # else it's probably a word or a sentence
+            end_node_ast = original_proposition_ast
+
+        return self._promoted_proposition_walker(path_to_node,
+                                                 end_node_ast)
+    def _ast_walker(self, path_to_node):
         """Recursive function. Returns a JSON "tree" of the closed propositions for and IEML node,
         each node of that tree containing data for that proposition and its closed children"""
-        node_db_entry = self.db_connector_proposition.exact_ieml_search(ast_node)
-        proposition_data = self._build_data_field(ast_node, node_db_entry["TAGS"], parent_node_data)
+        current_node = path_to_node.path[-1] # current node is the last one in the path
 
-        if "PROMOTION" in node_db_entry:
+        if current_node.metadata.get("PROMOTION"): # cannot use the "in" operator on metadata
             # if the proposition/node is a promotion of a lower one, we the generation
             # to the _promoted_proposition_walker
-            return self._promoted_proposition_walker(ast_node, node_db_entry, proposition_data)
+            return self._promoted_proposition_walker(path_to_node)
         else:
-            if isinstance(ast_node, (Sentence, SuperSentence)):
-                children_data = [self._ast_walker(child, proposition_data) for child in ast_node.get_closed_childs()]
-            elif isinstance(ast_node, Word):
+            proposition_data = self._build_data_field(path_to_node, current_node.metadata["TAGS"])
+
+            if isinstance(current_node, (Sentence, SuperSentence)):
+                children_data = [self._ast_walker(subpath) for subpath in path_to_node.get_childs_subpaths(depth=2)]
+            elif isinstance(current_node, Word):
                 children_data = []
 
             return {'id': str(uuid4()), #unique ID for this node, needed by the client's graph library
-                    'name': proposition_data['TAGS']['EN'],
+                    'name': current_node.metadata['TAGS']['EN'],
                     'data': proposition_data,
                     'children': children_data}
 
@@ -150,7 +153,7 @@ class TextDecompositionHandler(BaseHandler):
         hypertext = parser.parse(self.args['data'])
 
         # for each proposition, we build the JSON tree data representation of itself and its child closed proposition
-        return [self._ast_walker(child) for child in hypertext.childs[0].childs]
+        return [self._ast_walker(PropositionPath(child)) for child in hypertext.childs[0].childs]
 
 
 class SearchTextHandler(BaseHandler):
