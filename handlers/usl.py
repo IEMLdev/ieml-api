@@ -91,7 +91,7 @@ class TextDecompositionHandler(BaseHandler):
 
                 # Getting the children of the node.
                 # If the node is from a promotion, the child is the promoted proposition.
-                if "PROMOTION" in elem:
+                if elem is not None and "PROMOTION" in elem:
                     children = [self.proposition_parser.parse(elem["PROMOTION"]["IEML"])]
                 else:
                     children = node.childs

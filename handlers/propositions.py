@@ -102,13 +102,15 @@ class WordGraphCheckerHandler(ValidatorHandler):
         mode_list = [parser.parse(mode) for mode in self.json_data["mode"]]
 
         if len(mode_list) == 0:
-            mode_list = None
+            mode = None
+        else:
+            mode = Morpheme(mode_list)
 
         if len(substance_list) == 0:
             raise EmptyUslChecking()
 
         # making the two morphemes and then the word using the two term lists
-        word_ast = Word(Morpheme(substance_list), Morpheme(mode_list))
+        word_ast = Word(Morpheme(substance_list), mode)
 
         # asking the proposition to check itself
         word_ast.check()
@@ -174,13 +176,13 @@ class SearchPropositionsHandler(BaseHandler):
 
         result = []
         for term in DictionaryQueries().search_for_terms(self.args["searchstring"]):
-            term["IEML"] = str(promote_to(Term(term["ieml"]), max_primitive_level))
-            term["ORIGINAL"] = "TERM"
-            term["TAGS"] = {"FR" : term["natural_language"]["FR"],
-                            "EN" : term["natural_language"]["EN"]}
-            term["ORIGINAL_IEML"] = term["ieml"]
-
-            result.append(term)
+            result.append({
+                "IEML": str(promote_to(Term(term["ieml"]), max_primitive_level)),
+                "ORIGINAL": "TERM",
+                "TAGS": {"FR": term["natural_language"]["FR"],
+                         "EN": term["natural_language"]["EN"]},
+                "ORIGINAL_IEML": term["ieml"],
+                "PROMOTED_TO": max_primitive_level.__name__.upper()})
 
         if max_primitive_level > Term:
             parser = PropositionsParser()

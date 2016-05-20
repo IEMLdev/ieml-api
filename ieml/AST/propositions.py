@@ -291,7 +291,7 @@ class Term(metaclass=AbstractPropositionMetaclass):
         result = self._do_render_hyperlinks(hyperlinks, current_path)
 
         if current_path in hyperlinks:
-            result += ''.join(map(str, hyperlinks[str(current_path)]))
+            result += ''.join(map(str, hyperlinks[current_path]))
 
         return result
 

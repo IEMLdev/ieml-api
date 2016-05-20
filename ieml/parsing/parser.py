@@ -23,7 +23,8 @@ class PropositionsParser(metaclass=Singleton):
         """Parses the input string, and returns a reference to the created AST's root"""
         self.root = None
         self.parser.parse(s)
-        if self.root is None:
+
+        if self.root is not None:
             self.root.check()
             self.root.order()
             return self.root
