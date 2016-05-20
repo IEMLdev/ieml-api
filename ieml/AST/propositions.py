@@ -1,6 +1,5 @@
 from functools import total_ordering
 from helpers import LoggedInstantiator, Singleton
-from models import DictionaryQueries
 from ieml.AST.constants import MAX_TERMS_IN_MORPHEME
 from ieml.exceptions import IEMLTermNotFoundInDictionnary, IndistintiveTermsExist, InvalidConstructorParameter, \
     InvalidClauseComparison, TermComparisonFailed, SentenceHasntBeenChecked, TooManyTermsInMorpheme
@@ -8,10 +7,10 @@ from ieml.AST.propositional_graph import PropositionGraph
 from ieml.AST.utils import PropositionPath, TreeStructure
 
 
-class TermsQueries(DictionaryQueries, metaclass=Singleton):
-    """A DB connector singleton class used by terms to prevent the number
-    of DictionnaryQueries class instances from exploding"""
-    pass
+# class TermsQueries(DictionaryQueries, metaclass=Singleton):
+#     """A DB connector singleton class used by terms to prevent the number
+#     of DictionnaryQueries class instances from exploding"""
+#     pass
 
 
 class ClosedProposition:
@@ -326,12 +325,13 @@ class Term(metaclass=AbstractPropositionMetaclass):
 
     def check(self):
         """Checks that the term exists in the database, and if found, stores the terms's objectid"""
-        result = TermsQueries().exact_ieml_term_search(self.ieml)
-        try:
-            self.objectid = result["_id"]
-            self.canonical_forms = result["CANONICAL"]
-        except TypeError:
-            raise IEMLTermNotFoundInDictionnary(self.ieml)
+        pass
+        # result = TermsQueries().exact_ieml_term_search(self.ieml)
+        # try:
+        #     self.objectid = result["_id"]
+        #     self.canonical_forms = result["CANONICAL"]
+        # except TypeError:
+        #     raise IEMLTermNotFoundInDictionnary(self.ieml)
 
     def order(self):
         pass

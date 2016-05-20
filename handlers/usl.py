@@ -100,7 +100,6 @@ class TextDecompositionHandler(BaseHandler):
                 children = node.childs
         else:
             elem = self.db_connector_term.exact_ieml_term_search(ieml)
-            elem['TAGS'] = {'FR' : elem['FR'], 'EN' : elem['EN']}
             children = []
 
         entry = {

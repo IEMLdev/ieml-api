@@ -19,6 +19,8 @@ api.add_resource(SearchPropositionNoPromotionHandler, '/api/search_propositions_
 # search for a text in the DB, return a list of text
 api.add_resource(SearchTextHandler, '/api/search_text')
 
+api.add_resource(BroadSearchHandler, '/api/search_broad')
+
 
 # Proposition validation and saving endpoints
 # validate and save a word object, and return its IEML string
@@ -37,7 +39,7 @@ api.add_resource(PropositionPromoter, '/api/promote_proposition')
 #
 api.add_resource(TextDecompositionHandler, '/api/decomposition_text')
 
-api.add_resource(CheckTagExist, '/api/check_tag_exist')
+api.add_resource(CheckTagExistHandler, '/api/check_tag_exist')
 
 if __name__ == '__main__':
     app.run(debug=True, host="0.0.0.0") # served on the local network

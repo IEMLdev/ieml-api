@@ -18,20 +18,25 @@ class DBConnector(object):
 class DictionaryQueries(DBConnector):
     """Class mainly used for anything related to the terms collection, i.e., the dictionnary"""
 
+    def _format_response(self, term):
+        return {
+            "IEML": '[' + term["IEML"] + ']',
+            "TAGS": {
+                "FR": term.get("FR"),
+                "EN": term.get("EN")},
+            "TYPE" : "TERM"}
+
     def search_for_terms(self, search_string):
         """Searching for terms containing the search_string, both in the IEML field and translated field"""
         regex = re.compile(search_string)
 
-        result = [{"term_id" : str(term["_id"]),
-                   "ieml" : '[' + term["IEML"] + ']',
-                   "natural_language" : {"FR" : term.get("FR"),
-                                         "EN" : term.get("EN")},
-                   "paradigm": False if term["PARADIGM"] == "0" else True}
+        result = [self._format_response(term)
                   for term in self.terms.find(
                     {'$or': [
                         {'IEML': {'$regex': regex}},
                         {'FR': {'$regex': regex}},
-                        {'EN': {'$regex': regex}}]},
+                        {'EN': {'$regex': regex}}]
+                    },
                     {"IEML" : 1, "FR" : 1, "EN" : 1, "PARADIGM" : 1})]
         return result
 
@@ -46,6 +51,23 @@ class DictionaryQueries(DBConnector):
         total_count = self.terms.count()
         return [term["IEML"] for term in self.terms.find().limit(count).skip(randint(0, total_count - 1))]
 
+    def search_terms(self, search_string, languages=None, category=None, type=None):
+        regex = {'$regex': re.compile(search_string)}
+
+        categories = []
+        if languages:
+            for language in languages:
+                categories.append({language: regex})
+        else:
+            for language in TAG_LANGUAGES:
+                categories.append({language: regex})
+
+        query = {'$or': categories}
+        #query['CLASS'] with category
+        #query['PARADIGM'] with type
+
+        return [self._format_response(term)
+                for term in self.terms.find(query)]
 
 class Tag:
     @staticmethod

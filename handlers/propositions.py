@@ -137,70 +137,6 @@ class WordGraphSavingHandler(WordGraphCheckerHandler):
         return {"valid": True, "ieml": str(word_ast)}
 
 
-class SearchPropositionNoPromotionHandler(BaseHandler):
-    @ErrorCatcher
-    def post(self):
-        self.reqparse.add_argument("searchstring", required=True, type=str)
-        self.do_request_parsing()
-
-        result = []
-        parser = PropositionsParser()
-        for proposition in PropositionsQueries().search_for_propositions(self.args["searchstring"], SuperSentence):
-            proposition_ast = parser.parse(proposition["_id"])
-            result.append({"IEML": str(proposition_ast),
-                           "ORIGINAL": proposition["TYPE"],
-                           "TAGS": proposition["TAGS"],
-                           "ORIGINAL_IEML": str(proposition_ast), # this field is there for request homogeneity
-                           "PROMOTED_TO" : proposition["TYPE"]}) # (this one as well)
-
-        return result
-
-
-class SearchPropositionsHandler(BaseHandler):
-    """Search for primitives in the database, for all levels"""
-
-    @ErrorCatcher
-    def post(self):
-        self.reqparse.add_argument("searchstring", required=True, type=str)
-        # 1 is to build a word, 2 a sentence, 3 a supersentence, 4 a USL
-        self.reqparse.add_argument("level", required=True, type=int)
-        self.do_request_parsing()
-
-        level_to_type_table = {
-            1: Term,
-            2: Word,
-            3: Sentence,
-            4: SuperSentence
-        }
-        max_primitive_level = level_to_type_table[self.args["level"]]
-
-        result = []
-        for term in DictionaryQueries().search_for_terms(self.args["searchstring"]):
-            result.append({
-                "IEML": str(promote_to(Term(term["ieml"]), max_primitive_level)),
-                "ORIGINAL": "TERM",
-                "TAGS": {"FR": term["natural_language"]["FR"],
-                         "EN": term["natural_language"]["EN"]},
-                "ORIGINAL_IEML": term["ieml"],
-                "PROMOTED_TO": max_primitive_level.__name__.upper()})
-
-        if max_primitive_level > Term:
-            parser = PropositionsParser()
-            for proposition in PropositionsQueries().search_for_propositions(self.args["searchstring"],
-                                                                             max_primitive_level):
-                try:
-                    proposition_ast = parser.parse(proposition["_id"])
-                except Exception:
-                    continue
-
-                result.append({"IEML": str(promote_to(proposition_ast, max_primitive_level)),
-                               "ORIGINAL": proposition["TYPE"],
-                               "TAGS": proposition["TAGS"],
-                               "ORIGINAL_IEML": str(proposition_ast),
-                               "PROMOTED_TO": max_primitive_level.__name__.upper()})
-
-        return result
-
 
 class PropositionPromoter(BaseHandler):
     def __init__(self):
@@ -227,10 +163,6 @@ class PropositionPromoter(BaseHandler):
 
         if self.args['term']:
             proposition_entry = self.db_connector_term.exact_ieml_term_search(self.args['ieml'])
-            proposition_entry['TAGS'] = {
-                'FR': proposition_entry['FR'],
-                'EN': proposition_entry['EN']
-            }
         else:
             proposition_entry = self.db_connector_proposition.exact_ieml_search(proposition)
 
@@ -247,25 +179,4 @@ class PropositionPromoter(BaseHandler):
             pass
 
         return {'valid': True}
-
-
-class CheckTagExist(BaseHandler):
-    def __init__(self):
-        super().__init__()
-        self.reqparse.add_argument("tag", required=True, type=str)
-        self.reqparse.add_argument("language", required=True, type=str)
-
-        self.db_connector = PropositionsQueries()
-        self.db_connector_hypertext = HyperTextQueries()
-
-    @ErrorCatcher
-    def post(self):
-        self.do_request_parsing()
-
-        tag = self.args['tag']
-        language = self.args['language']
-
-        result = self.db_connector.check_tag_exist(tag, language) or self.db_connector_hypertext.check_tag_exist(tag, language)
-
-        return {'exist': result}
 

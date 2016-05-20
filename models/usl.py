@@ -1,6 +1,7 @@
 from .base_queries import DBConnector, Tag
-from .constants import TEXT_COLLECTION, HYPERTEXT_COLLECTION
+from .constants import TEXT_COLLECTION, HYPERTEXT_COLLECTION, TAG_LANGUAGES
 from .exceptions import InvalidTags, TextAlreadyExists, HypertextAlreadyExists
+from ieml.AST import HyperText, Text
 import re
 from pymongo.errors import DuplicateKeyError
 
@@ -68,3 +69,33 @@ class HyperTextQueries(TextQueries):
 
     def check_tag_exist(self, tag, language):
         return self.texts.find_one({'TAGS.' + language: tag}) is not None and super().check_tag_exist(tag, language)
+
+    def _format_response(self, response, hypertext=True):
+        return {
+            "IEML": response['_id'],
+            "TAGS": response['TAGS'],
+            "TYPE": "HYPERTEXT" if hypertext else "TEXT"
+        }
+
+    def search_request(self, search_string, languages, levels):
+        query = {}
+        regex = {'$regex': re.compile(search_string)}
+
+        conditions = [{'_id': regex}]
+        if languages:
+            for language in languages:
+                conditions.append({'TAGS.' + language: regex})
+        else:
+            for language in TAG_LANGUAGES:
+                conditions.append({'TAGS.' + language: regex})
+
+        query['$or'] = conditions
+
+        result = []
+        if levels and HyperText in levels:
+            result = [self._format_response(entry, False) for entry in self.hypertexts.find(query)]
+
+        if levels and Text in levels:
+            result.extend([self._format_response(entry, False) for entry in self.texts.find(query)])
+
+        return result

@@ -1,7 +1,6 @@
 import json
 
 from flask_restful import Resource, reqparse
-from models import DictionaryQueries
 from ieml.exceptions import IEMLTermNotFoundInDictionnary, ToolsException, InvalidGraphNode, NoRootNodeFound, SeveralRootNodeFound
 from models.exceptions import DBException
 import traceback
@@ -31,14 +30,6 @@ class BaseDataHandler(BaseHandler):
     def do_request_parsing(self):
         super().do_request_parsing()
         self.json_data = json.loads(self.args["data"])
-
-class SearchTermsHandler(BaseHandler):
-    """Handles the terms search"""
-
-    def post(self):
-        self.reqparse.add_argument("searchstring", required=True, type=str)
-        self.do_request_parsing()
-        return DictionaryQueries().search_for_terms(self.args["searchstring"])
 
 
 class ErrorCatcher:

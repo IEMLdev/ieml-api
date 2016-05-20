@@ -1,7 +1,7 @@
 import re
 from models.exceptions import PropositionAlreadyExists, ObjectTypeNotStoredinDB, ObjectNotFound
 from .base_queries import DBConnector
-from .constants import PROPOSITION_COLLECTION
+from .constants import PROPOSITION_COLLECTION, TAG_LANGUAGES
 import ieml.AST
 from pymongo.errors import DuplicateKeyError
 
@@ -92,13 +92,39 @@ class PropositionsQueries(DBConnector):
 
         return list(result)
 
+    def _format_response(self, response):
+        return {
+            "IEML": response['_id'],
+            "TAGS": response['TAGS'],
+            "TYPE": response['TYPE']
+        }
+
+    def search_propositions(self, search_string, languages=None, levels=None):
+        query = {}
+        regex = {'$regex': re.compile(search_string)}
+        conditions = [{'_id': regex}]
+
+        if levels:
+            query['TYPE'] = {"$in": [level.__name__.upper() for level in levels]}
+
+        regex = {'$regex': re.compile(search_string)}
+        conditions = [{'_id': regex}]
+
+        if languages:
+            for language in languages:
+                conditions.append({'TAGS.' + language: regex})
+        else:
+            for language in TAG_LANGUAGES:
+                conditions.append({'TAGS.' + language: regex})
+
+        query['$or'] = conditions
+
+        result = self.propositions.find(query)
+
+        return [self._format_response(entry) for entry in result]
+
     def exact_ieml_search(self, proposition):
         if isinstance(proposition, (ieml.AST.Sentence, ieml.AST.Word, ieml.AST.SuperSentence)):
             return self.propositions.find_one({"_id": str(proposition)})
         else:
             raise ObjectTypeNotStoredinDB()
-        #
-        # if proposition_db:
-        #     return proposition_db
-        # else:
-        #     raise ObjectNotFound()
