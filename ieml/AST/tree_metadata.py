@@ -1,6 +1,3 @@
-from models.exceptions import ObjectTypeNotStoredinDB
-
-
 def needs_db(method):
     def wrapper(*args, **kwargs):
         if args[0]._db_connector is None:

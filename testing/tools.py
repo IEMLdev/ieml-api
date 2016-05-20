@@ -1,4 +1,4 @@
-from ieml.AST.tools import RandomPropositionGenerator, compute_path_between_propositions
+from ieml.AST.tools import RandomPropositionGenerator
 from .helper import *
 from ieml.AST import promote_to
 from ieml.exceptions import CannotPromoteToLowerLevel

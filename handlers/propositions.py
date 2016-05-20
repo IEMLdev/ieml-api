@@ -137,7 +137,6 @@ class WordGraphSavingHandler(WordGraphCheckerHandler):
         return {"valid": True, "ieml": str(word_ast)}
 
 
-
 class PropositionPromoter(BaseHandler):
     def __init__(self):
         super().__init__()

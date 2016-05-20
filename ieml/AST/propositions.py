@@ -1,14 +1,12 @@
 from functools import total_ordering
-from helpers import LoggedInstantiator, Singleton
+from helpers import LoggedInstantiator
 from ieml.AST.tree_metadata import ClosedPropositionMetadata, NonClosedPropositionMetadata
-from models import DictionaryQueries
 from ieml.AST.constants import MAX_TERMS_IN_MORPHEME
-from ieml.exceptions import IEMLTermNotFoundInDictionnary, IndistintiveTermsExist, InvalidConstructorParameter, \
-    InvalidClauseComparison, TermComparisonFailed, SentenceHasntBeenChecked, TooManyTermsInMorpheme
+from ieml.exceptions import IndistintiveTermsExist, InvalidConstructorParameter, \
+    InvalidClauseComparison, TermComparisonFailed, SentenceHasntBeenChecked, TooManyTermsInMorpheme,\
+    IEMLTermNotFoundInDictionnary
 from ieml.AST.propositional_graph import PropositionGraph
 from ieml.AST.utils import PropositionPath, TreeStructure
-from .tree_metadata import PropositionMetadata
-
 
 # class TermsQueries(DictionaryQueries, metaclass=Singleton):
 #     """A DB connector singleton class used by terms to prevent the number
@@ -346,6 +344,9 @@ class Term(metaclass=AbstractPropositionMetaclass):
         else:
             return False
 
+    def __contains__(self, proposition):
+        return proposition == self
+
     def __gt__(self, other):
         # we use the DB's canonical forms
         # if the term has MORE canonical sequences, it's "BIGGER", so GT is TRUE
@@ -362,13 +363,13 @@ class Term(metaclass=AbstractPropositionMetaclass):
 
     def check(self):
         """Checks that the term exists in the database, and if found, stores the terms's objectid"""
-        pass
-        # result = TermsQueries().exact_ieml_term_search(self.ieml)
-        # try:
-        #     self.objectid = result["_id"]
-        #     self.canonical_forms = result["CANONICAL"]
-        # except TypeError:
-        #     raise IEMLTermNotFoundInDictionnary(self.ieml)
+        from models.base_queries import DictionaryQueries
+        result = DictionaryQueries().exact_ieml_term_search(self.ieml)
+        try:
+            self.objectid = result["_id"]
+            self.canonical_forms = result["CANONICAL"]
+        except TypeError:
+            raise IEMLTermNotFoundInDictionnary(self.ieml)
 
     def order(self):
         pass

@@ -125,6 +125,7 @@ class TextDecompositionHandler(BaseHandler):
 
         return self._promoted_proposition_walker(path_to_node,
                                                  end_node_ast, current_node.metadata["TAGS"])
+
     def _ast_walker(self, path_to_node):
         """Recursive function. Returns a JSON "tree" of the closed propositions for and IEML node,
         each node of that tree containing data for that proposition and its closed children"""

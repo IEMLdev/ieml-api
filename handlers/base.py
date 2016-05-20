@@ -1,18 +1,21 @@
 import json
 
 from flask_restful import Resource, reqparse
-from ieml.exceptions import IEMLTermNotFoundInDictionnary, ToolsException, InvalidGraphNode, NoRootNodeFound, SeveralRootNodeFound
+from ieml.exceptions import IEMLTermNotFoundInDictionnary, ToolsException, InvalidGraphNode, NoRootNodeFound, \
+    SeveralRootNodeFound
 from models.exceptions import DBException
 import traceback
+
 
 class BaseHandler(Resource):
     """This is the base abstract handler, instantiates a request parser,
     and simplifies a couple of operations"""
 
     def __init__(self):
-            """The constructor for this abstract class just creates a request_parser"""
-            super().__init__()
-            self.reqparse = reqparse.RequestParser()
+        """The constructor for this abstract class just creates a request_parser"""
+        super().__init__()
+        self.reqparse = reqparse.RequestParser()
+        self.args = None
 
     def do_request_parsing(self):
         self.args = self.reqparse.parse_args()

@@ -34,7 +34,7 @@ class TestDBQueries(BaseDBTest):
         result = self.term_connector.search_for_terms("possessif")
         self.assertTrue(len(result) != 0)
         for e in result:
-            self.assertIn("possessif", e['natural_language']['FR'])
+            self.assertIn("possessif", e['TAGS']['FR'])
 
 
 class TestUnicityDb(unittest.TestCase):
