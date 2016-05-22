@@ -24,25 +24,35 @@ class TermComparisonFailed(TermException):
         return "Comparison between term %s and %s failed" \
                % (self.terms_ieml, self.other_term)
 
+
 class PropositionException(ASTException):
     def __init__(self, proposition_ref):
         super().__init__()
         self.proposition_ref = proposition_ref
 
+
 class AdditiveOrderNotRespected(PropositionException):
     pass
+
 
 class InvalidConstructorParameter(PropositionException):
     pass
 
+
 class InvalidClauseComparison(PropositionException):
-    pass
+
+    def __init__(self, proposition_ref, other_ref):
+        super().__init__(proposition_ref)
+        self.other_ref = other_ref
+
 
 class SentenceHasntBeenChecked(PropositionException):
     pass
 
+
 class IndistintiveTermsExist(ASTException):
     pass
+
 
 class TooManyTermsInMorpheme(ASTException):
     pass
@@ -132,4 +142,14 @@ class OpenPropositionInTextException(USLException):
 
 
 class EmptyTextException(USLException):
+    pass
+
+### Parser-related Errors
+
+
+class ParserErrors(Exception):
+    pass
+
+
+class CannotParse(ParserErrors):
     pass

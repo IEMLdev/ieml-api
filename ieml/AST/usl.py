@@ -74,7 +74,7 @@ class HyperText(TreeStructure):
         super().__init__()
         self.childs = [text]
 
-        # need to get the string of the text for generating the hyperlinks
+        # we need to ensure that the text is checked to be able to generate the hyperlinks
         text.check()
 
         self._hyperlinks = None
