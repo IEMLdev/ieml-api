@@ -47,7 +47,7 @@ class GraphCheckerHandler(ValidatorHandler):
         for node in self.json_data["nodes"]:
             nodes_table[node["id"]] = parser.parse(node["ieml_string"])
             if not isinstance(nodes_table[node["id"]], graph_type.primitive_type):
-                raise InvalidNodeIEMLLevel(node["id"])
+                nodes_table[node["id"]] = promote_to(nodes_table[node["id"]], graph_type.primitive_type)
 
         # transforming the vertices into clauses or superclauses
         multiplication_elems = []
@@ -58,10 +58,10 @@ class GraphCheckerHandler(ValidatorHandler):
             multiplication_elems.append(new_element)
 
         #OH WAIT, we can make it into a sentence/supersentence now, and return it
-        proposition_ast =  graph_type.additive_type(multiplication_elems)
+        proposition_ast = graph_type.additive_type(multiplication_elems)
         # asking the proposition to check then order itself
         proposition_ast.check()
-        proposition_ast.order()
+
         return proposition_ast
 
     @ErrorCatcher
@@ -69,7 +69,7 @@ class GraphCheckerHandler(ValidatorHandler):
         self.do_request_parsing()
         # retrieving a checked and ordered proposition
         proposition_ast = self._build_ieml_ast()
-        return {"valid" : True, "ieml" : str(proposition_ast)}
+        return {"valid": True, "ieml": str(proposition_ast)}
 
 
 class GraphSavingHandler(GraphCheckerHandler):
@@ -82,7 +82,7 @@ class GraphSavingHandler(GraphCheckerHandler):
         proposition_ast = self._build_ieml_ast()
         # saving it to the database
         self._save_closed_proposition(proposition_ast)
-        return {"valid" : True, "ieml" : str(proposition_ast)}
+        return {"valid": True, "ieml": str(proposition_ast)}
 
 
 class WordGraphCheckerHandler(ValidatorHandler):
@@ -135,47 +135,3 @@ class WordGraphSavingHandler(WordGraphCheckerHandler):
         word_ast = self._build_ieml_ast()
         self._save_closed_proposition(word_ast)
         return {"valid": True, "ieml": str(word_ast)}
-
-
-class PropositionPromoter(BaseHandler):
-    def __init__(self):
-        super().__init__()
-        self.reqparse.add_argument("ieml", required=True, type=str)
-        self.reqparse.add_argument("promotion_lvl", required=True, type=str)
-        self.reqparse.add_argument("term", required=True, type=int)
-
-        self.db_connector_proposition = PropositionsQueries()
-        self.db_connector_term = DictionaryQueries()
-        self.level_to_class = {
-            '0': Term,
-            '1': Word,
-            '2': Sentence,
-            '3': SuperSentence
-        }
-        self.parser = PropositionsParser()
-
-    @ErrorCatcher
-    def post(self):
-        self.do_request_parsing()
-
-        proposition = self.parser.parse(self.args['ieml'])
-
-        if self.args['term']:
-            proposition_entry = self.db_connector_term.exact_ieml_term_search(self.args['ieml'])
-        else:
-            proposition_entry = self.db_connector_proposition.exact_ieml_search(proposition)
-
-        level = self.args['promotion_lvl']
-        if level not in self.level_to_class:
-            raise PromotingToInvalidLevel()
-
-        try:
-            self.db_connector_proposition.save_promoted_proposition(
-                promote_to(proposition, self.level_to_class[level]),
-                proposition_entry['TAGS'],
-                proposition)
-        except PropositionAlreadyExists:
-            pass
-
-        return {'valid': True}
-

@@ -25,7 +25,9 @@ class DictionaryQueries(DBConnector):
             "TAGS": {
                 "FR": term.get("FR"),
                 "EN": term.get("EN")},
-            "TYPE" : "TERM"}
+            "TYPE": "TERM",
+            "CANONICAL": term["CANONICAL"],
+            "OBJECT_ID": term["_id"]}
 
     def search_for_terms(self, search_string):
         """Searching for terms containing the search_string, both in the IEML field and translated field"""
@@ -37,15 +39,14 @@ class DictionaryQueries(DBConnector):
                         {'IEML': {'$regex': regex}},
                         {'FR': {'$regex': regex}},
                         {'EN': {'$regex': regex}}]
-                    },
-                    {"IEML" : 1, "FR" : 1, "EN" : 1, "PARADIGM" : 1})]
+                    })]
         return result
 
     def exact_ieml_term_search(self, ieml_string):
         if ieml_string[0] == '[' and ieml_string[-1] == ']':
             ieml_string = ieml_string[1:-1]
 
-        return self.terms.find_one({"IEML": ieml_string})
+        return self._format_response(self.terms.find_one({"IEML": ieml_string}))
 
     def get_random_terms(self, count):
         """Used by the random proposition generator : ouputs n random terms from the dicitonary DB, n being count"""
@@ -69,6 +70,7 @@ class DictionaryQueries(DBConnector):
 
         return [self._format_response(term)
                 for term in self.terms.find(query)]
+
 
 class Tag:
     @staticmethod

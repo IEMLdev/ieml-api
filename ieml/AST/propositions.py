@@ -366,7 +366,7 @@ class Term(metaclass=AbstractPropositionMetaclass):
         from models.base_queries import DictionaryQueries
         result = DictionaryQueries().exact_ieml_term_search(self.ieml)
         try:
-            self.objectid = result["_id"]
+            self.objectid = result["OBJECT_ID"]
             self.canonical_forms = result["CANONICAL"]
         except TypeError:
             raise IEMLTermNotFoundInDictionnary(self.ieml)

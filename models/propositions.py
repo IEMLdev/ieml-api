@@ -22,7 +22,7 @@ class PropositionsQueries(DBConnector):
     def check_proposition_stored(self, proposition):
         """Retrieves the objectid of an IEML primitive"""
         if isinstance(proposition, ieml.AST.Term):
-            return self.terms.find_one({"_id": proposition.ieml}) is not None
+            return self.terms.find_one({"IEML": proposition.ieml}) is not None
         elif isinstance(proposition, (ieml.AST.Sentence, ieml.AST.Word, ieml.AST.SuperSentence)):
             return self._check_proposition_exist(str(proposition))
         else:
@@ -101,8 +101,6 @@ class PropositionsQueries(DBConnector):
 
     def search_propositions(self, search_string, languages=None, levels=None):
         query = {}
-        regex = {'$regex': re.compile(search_string)}
-        conditions = [{'_id': regex}]
 
         if levels:
             query['TYPE'] = {"$in": [level.__name__.upper() for level in levels]}
@@ -125,7 +123,7 @@ class PropositionsQueries(DBConnector):
 
     def exact_ieml_search(self, proposition):
         if isinstance(proposition, (ieml.AST.Sentence, ieml.AST.Word, ieml.AST.SuperSentence)):
-            return self.propositions.find_one({"_id": str(proposition)})
+            return self._format_response(self.propositions.find_one({"_id": str(proposition)}))
         else:
             raise ObjectTypeNotStoredinDB()
 

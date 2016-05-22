@@ -5,6 +5,7 @@ from ieml.AST import HyperText, Text
 import re
 from pymongo.errors import DuplicateKeyError
 
+
 class TextQueries(DBConnector):
     def __init__(self):
         super().__init__()

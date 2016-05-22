@@ -21,22 +21,25 @@ class TextValidatorHandler(BaseDataHandler):
     def post(self):
         self.do_request_parsing()
 
-        #create the list of proposition (sould we parse or retrieve from the db ?)
+        # create the list of propositions
         parser = PropositionsParser()
         proposition_list = [parser.parse(proposition) for proposition in self.json_data["text"]]
-
-        #create the text and check
-        text = Text(proposition_list)
-        text.check()
 
         # check all propositions are stored in database
         if not all(map(self.db_connector_proposition.check_proposition_stored, proposition_list)):
             raise InvalidIEMLReference()
 
-        #save the text to the db
+        # promoting term to word
+        proposition_list = [promote_to(e, Word) if isinstance(e, Term) else e for e in proposition_list]
+
+        # create the text and check
+        text = Text(proposition_list)
+        text.check()
+
+        # save the text to the db
         self.db_connector_text.save_text(text, self.json_data["tags"])
 
-        return {"valid" : True, "ieml" : str(text)}
+        return {"valid": True, "ieml": str(text)}
 
 
 class HyperTextValidatorHandler(BaseDataHandler):
@@ -54,23 +57,22 @@ class HyperTextValidatorHandler(BaseDataHandler):
         """
         self.do_request_parsing()
 
-        #get the list of text from the db
         hypertexts = {}
         for text in self.json_data["nodes"]:
             hypertexts[text["id"]] = self.parser.parse(text["ieml_string"])
 
-        #parse the graph and add hyperlink, check the cycle
+        # parse the graph and add hyperlink, check the cycle
         for hyperlink in self.json_data["graph"]:
             path = hypertexts[hyperlink['substance']].get_path_from_ieml(hyperlink['mode']['selection']['ieml'])
             hypertexts[hyperlink['substance']].add_hyperlink(path, hypertexts[hyperlink['attribut']])
 
-        #get the root hypertext, the one with the biggest strate
+        # get the root hypertext, the one with the biggest strate
         root = hypertexts[max(hypertexts, key=lambda key: hypertexts[key].strate)]
 
-        #verification of the usl
+        # verification of the usl
         root.check()
 
-        #save to db
+        # save to db
         self.db_connector_text.save_hypertext(root, self.json_data["tags"])
 
         return {'valid': True, "ieml": str(root)}
@@ -158,24 +160,4 @@ class TextDecompositionHandler(BaseHandler):
         ClosedPropositionMetadata.set_connector(self.db_connector_proposition)
         # for each proposition, we build the JSON tree data representation of itself and its child closed proposition
         return [self._ast_walker(PropositionPath([child])) for child in hypertext.childs[0].childs]
-
-
-class SearchTextHandler(BaseHandler):
-    def __init__(self):
-        super().__init__()
-
-        self.reqparse.add_argument("searchstring", required=True, type=str)
-        self.db_connector_text = TextQueries()
-
-    def post(self):
-        self.do_request_parsing()
-
-        result = self.db_connector_text.search_text(self.args['searchstring'])
-        return [
-            {
-                'IEML': text['_id'],
-                'ORIGINAL': 'TEXT',
-                'TAGS': text['TAGS'],
-                'ORIGINAL_IEML': 'TEXT'
-            } for text in result]
 

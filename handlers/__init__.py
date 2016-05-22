@@ -1,7 +1,6 @@
-from .db_search import SearchTermsHandler, SearchPropositionNoPromotionHandler, SearchPropositionsHandler,\
-    CheckTagExistHandler, BroadSearchHandler
-from .propositions import GraphCheckerHandler, WordGraphCheckerHandler,\
-    PropositionPromoter, GraphSavingHandler, WordGraphSavingHandler
+from .db_search import SearchTermsHandler, SearchPropositionsHandler,\
+    CheckTagExistHandler, BroadSearchHandler, SearchTextHandler
+from .propositions import GraphCheckerHandler, WordGraphCheckerHandler, GraphSavingHandler, WordGraphSavingHandler
 from handlers.commons import SearchTermsHandler
-from .usl import TextDecompositionHandler, TextValidatorHandler, HyperTextValidatorHandler, SearchTextHandler
+from .usl import TextDecompositionHandler, TextValidatorHandler, HyperTextValidatorHandler
 

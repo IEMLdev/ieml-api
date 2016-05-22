@@ -48,6 +48,7 @@ class ClosedPropositionMetadata(PropositionMetadata):
     def _retrieve_from_db(self):
         self.db_entry = self._db_connector.exact_ieml_search(self.element_ref)
 
+
 class NonClosedPropositionMetadata(PropositionMetadata):
     pass
 

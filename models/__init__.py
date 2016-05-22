@@ -3,3 +3,4 @@ from .propositions import PropositionsQueries
 from .usl import TextQueries, HyperTextQueries
 from .exceptions import PropositionAlreadyExists
 from .constants import *
+from .search_request import SearchRequest
