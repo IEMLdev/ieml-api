@@ -1,3 +1,4 @@
+from ieml.AST.tree_metadata import TextMetadata, HypertextMetadata
 from ieml.exceptions import InvalidPathException, EmptyTextException
 from ieml.AST.propositions import ClosedProposition, Word, Sentence, SuperSentence
 from ieml.AST.propositional_graph import HyperTextGraph
@@ -32,6 +33,9 @@ class Text(TreeStructure):
         for child in self.childs:
             if not isinstance(child, ClosedProposition):
                 raise InvalidPathException()
+
+    def _retrieve_metadata_instance(self):
+        return TextMetadata(self)
 
     def render(self, hyperlinks):
         return '{/' + '//'.join([p.render_hyperlinks(hyperlinks, PropositionPath()) for p in self.childs]) + '/}'
@@ -88,8 +92,11 @@ class HyperText(TreeStructure):
         self.transitions = None
         self._build_graph()
 
+    def _retrieve_metadata_instance(self):
+        return HypertextMetadata(self)
+
     def _build_hyperlink(self):
-        """Gather the hyper links from children texts"""
+        """Gather the hyper links from the child text of this hypertext"""
         self._hyperlinks = {}
         for path, hypertext in self.childs[0].get_hyperlinks():
             # check the hypertext, it will not be checked otherwise
@@ -102,6 +109,11 @@ class HyperText(TreeStructure):
         if path not in self._hyperlinks:
             self._hyperlinks[path] = []
         self._hyperlinks[path].append(hypertext)
+
+    def get_hyperlinks(self):
+        for path, hypertexts in self._hyperlinks.items():
+            for hypertext in hypertexts:
+                yield (path, hypertext)
 
     def add_hyperlink(self, path, hypertext):
         self._add_hyperlink(path, hypertext)
