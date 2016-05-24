@@ -42,9 +42,11 @@ class ElementDecompositionHandler(BaseHandler):
     """Decomposes any IEML string input into its sub elements"""
 
     def _gen_proposition_json(self, proposition):
-        return {"IEML" : str(proposition),
-                "TYPE" : proposition.level,
-                "TAGS:" : proposition.metadata["TAGS"]}
+        # if the proposition is promoted, we're getting its origin before building its JSON
+        rendered_proposition = proposition.get_promotion_origin() if proposition.is_promotion else proposition
+        return {"IEML" : str(rendered_proposition),
+                "TYPE" : rendered_proposition.level,
+                "TAGS:" : rendered_proposition.metadata["TAGS"]}
 
     def _childs_list_json(self, childs_list):
         return [self._gen_proposition_json(child) for child in childs_list]
