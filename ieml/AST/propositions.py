@@ -1,6 +1,6 @@
 from functools import total_ordering
 from helpers import LoggedInstantiator
-from ieml.AST.tree_metadata import ClosedPropositionMetadata, NonClosedPropositionMetadata
+from ieml.AST.tree_metadata import ClosedPropositionMetadata, NonClosedPropositionMetadata, TermMetadata
 from ieml.AST.constants import MAX_TERMS_IN_MORPHEME
 from ieml.exceptions import IndistintiveTermsExist, InvalidConstructorParameter, \
     InvalidClauseComparison, TermComparisonFailed, SentenceHasntBeenChecked, TooManyTermsInMorpheme,\
@@ -362,6 +362,7 @@ class Term(metaclass=AbstractPropositionMetaclass):
 
         self.objectid = None
         self.canonical_forms = None
+        self._metadata = None
 
     def __str__(self):
         return "[" + self.ieml + "]"
@@ -406,6 +407,21 @@ class Term(metaclass=AbstractPropositionMetaclass):
         """Returns the string level of an IEML object, such as TEXT, WORD, SENTENCE, ..."""
         return self.__class__.__name__.upper()
 
+    @property
+    def metadata(self):
+        if self._metadata is None:
+            self._metadata = self._retrieve_metadata_instance()
+            if self._metadata is not None:
+                return self._metadata
+            else:
+                # TODO : define exception for this (when it's not possible to find the metadata)
+                raise Exception("Cannot retrieve metadata for this element")
+        else:
+            return self._metadata
+
+    def _retrieve_metadata_instance(self):
+        return TermMetadata(self)
+
     def render_hyperlinks(self, hyperlinks, path):
         current_path = PropositionPath(path.path, self)
         result = self._do_render_hyperlinks(hyperlinks, current_path)
@@ -421,10 +437,10 @@ class Term(metaclass=AbstractPropositionMetaclass):
     def check(self):
         """Checks that the term exists in the database, and if found, stores the terms's objectid"""
         from models.base_queries import DictionaryQueries
-        result = DictionaryQueries().exact_ieml_term_search(self.ieml)
+        TermMetadata.set_connector(DictionaryQueries())
         try:
-            self.objectid = result["OBJECT_ID"]
-            self.canonical_forms = result["CANONICAL"]
+            self.objectid = self.metadata["OBJECT_ID"]
+            self.canonical_forms = self.metadata["CANONICAL"]
         except TypeError:
             raise IEMLTermNotFoundInDictionnary(self.ieml)
 

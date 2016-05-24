@@ -36,6 +36,11 @@ class TreeElementMetadata:
         cls._db_connector = connector_instance
 
 
+class TermMetadata(TreeElementMetadata):
+    @needs_db
+    def _retrieve_from_db(self):
+        self.db_entry = self._db_connector.exact_ieml_term_search(self.element_ref.ieml)
+
 class PropositionMetadata(TreeElementMetadata):
     """Class in charge of storing and retrieving metadata for an instance of an AbstractProposition"""
 
