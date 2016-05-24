@@ -27,7 +27,6 @@ class TreeElementMetadata:
     def __contains__(self, item):
         return item in self.db_entry
 
-
     def _retrieve_from_db(self):
         pass
 

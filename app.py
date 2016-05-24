@@ -32,8 +32,13 @@ api.add_resource(GraphSavingHandler, '/api/save_tree')
 # USL validation and saving endpoints
 api.add_resource(TextValidatorHandler, '/api/validate_text')
 api.add_resource(HyperTextValidatorHandler, '/api/validate_hypertext')
+
+# Text decomposition for hyperlinks
 api.add_resource(TextDecompositionHandler, '/api/decomposition_text')
+
 api.add_resource(CheckTagExistHandler, '/api/check_tag_exist')
+
+api.add_resource(ElementDecompositionHandler, '/api/element_decomposition')
 
 if __name__ == '__main__':
     app.run(debug=True, host="0.0.0.0") # served on the local network
