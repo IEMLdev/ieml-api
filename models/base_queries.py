@@ -46,7 +46,11 @@ class DictionaryQueries(DBConnector):
         if ieml_string[0] == '[' and ieml_string[-1] == ']':
             ieml_string = ieml_string[1:-1]
 
-        return self._format_response(self.terms.find_one({"IEML": ieml_string}))
+        term = self.terms.find_one({"IEML": ieml_string})
+        if term:
+            return self._format_response(term)
+        else:
+            return None
 
     def get_random_terms(self, count):
         """Used by the random proposition generator : ouputs n random terms from the dicitonary DB, n being count"""
