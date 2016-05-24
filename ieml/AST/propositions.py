@@ -233,7 +233,7 @@ class Word(AbstractMultiplicativeProposition, ClosedProposition):
     def _do_promotion_check(self):
         if self.mode is None and len(self.subst.childs) == 1:
             self._is_promotion = True
-            self._promoted_from = self.subst[0]
+            self._promoted_from = self.subst.childs[0]
         else:
             self._is_promotion = False
 
@@ -332,7 +332,7 @@ class AbstractSentence(AbstractAdditiveProposition, ClosedProposition):
             raise SentenceHasntBeenChecked(self)
 
     def _do_promotion_check(self):
-        if len(self.childs) == 1 and self.childs[0].mode.is_null and self.childs[0].is_null:
+        if len(self.childs) == 1 and self.childs[0].mode.is_null and self.childs[0].attr.is_null:
             self._is_promotion = True
             self._promoted_from = self.childs[0].subst
         else:
@@ -397,7 +397,9 @@ class Term(metaclass=AbstractPropositionMetaclass):
 
     @property
     def is_null(self):
-        return self == Term("E:")
+        null_term = Term("E:")
+        null_term.check()
+        return self == null_term
 
     def render_hyperlinks(self, hyperlinks, path):
         current_path = PropositionPath(path.path, self)
@@ -423,3 +425,6 @@ class Term(metaclass=AbstractPropositionMetaclass):
 
     def order(self):
         pass
+
+    def get_promotion_origin(self):
+        return self

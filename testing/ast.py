@@ -1,9 +1,11 @@
-from ieml.AST.tools import RandomPropositionGenerator
+import numpy as np
+
+from ieml.AST.tools import RandomPropositionGenerator, NULL_WORD, NULL_SENTENCE, NULL_SUPERSENTENCE, NULL_CLAUSE, \
+    NULL_MORPHEME, NULL_SUPERCLAUSE, promote_to
+from ieml.AST.usl import Text, HyperText
 from ieml.exceptions import SeveralRootNodeFound, NodeHasTooMuchParents, NoRootNodeFound
 from testing.helper import *
-from ieml.AST.usl import Text, HyperText
-from ieml.AST.utils import PropositionPath
-import numpy as np
+
 
 class TestMetaFeatures(unittest.TestCase):
     """Tests inter-class operations and metaclass related features"""
@@ -257,15 +259,47 @@ class TestSuperSentence(unittest.TestCase):
             # self.fail("Super sentence creation failed, error : %s" % str(err))
             raise err
 
-class TestHypertext(unittest.TestCase):
-    def test_addhyperlink(self):
-        """Test if adding an hyperlink trigger a valid recompute"""
 
-        proposition = RandomPropositionGenerator().get_random_proposition(Sentence)
-        hypertext = HyperText(Text([proposition]))
-        hyperlink = HyperText(Text([RandomPropositionGenerator().get_random_proposition(Word)]))
-        hypertext.check()
-        hyperlink.check()
-        str_first = hypertext._str
-        hypertext.add_hyperlink(PropositionPath(proposition=proposition), hyperlink)
-        self.assertNotEqual(str_first, hypertext._str)
+class TestIsNull(unittest.TestCase):
+
+    def setUp(self):
+        self.parser = PropositionsParser()
+
+    def test_null_closed_proposition(self):
+        NULL_WORD.check(), NULL_SUPERSENTENCE.check(), NULL_SENTENCE.check()
+        self.assertTrue(NULL_WORD.is_null)
+        self.assertTrue(NULL_SENTENCE.is_null)
+        self.assertTrue(NULL_SUPERSENTENCE.is_null)
+
+    def test_null_nonclosed_proposition(self):
+        NULL_CLAUSE.check(), NULL_MORPHEME.check(), NULL_SUPERCLAUSE.check()
+        self.assertTrue(NULL_CLAUSE.is_null)
+        self.assertTrue(NULL_MORPHEME.is_null)
+        self.assertTrue(NULL_SUPERCLAUSE.is_null)
+
+    def test_composed_proposition(self):
+        promoted_sentence = self.parser.parse("[([([wa.j.-])]*[([E:])]*[([E:])])]")
+        self.assertFalse(promoted_sentence.is_null)
+        self.assertTrue(promoted_sentence.childs[0].mode)
+
+class TestIsPromotion(unittest.TestCase):
+
+    def setUp(self):
+        self.parser = PropositionsParser()
+        self.rand_gen = RandomPropositionGenerator()
+
+    def test_term_to_sentence_promotion(self):
+        promoted_sentence = self.parser.parse("[([([wa.j.-])]*[([E:])]*[([E:])])]")
+        term_origin = Term("wa.j.-")
+        term_origin.check()
+        promotion_origin = promoted_sentence.get_promotion_origin()
+        self.assertTrue(promoted_sentence.is_promotion)
+        self.assertEqual(promotion_origin, term_origin)
+
+    def test_word_to_sentence_promotion(self):
+        rand_word = self.rand_gen.get_random_proposition(Word)
+        promoted_sentence = promote_to(rand_word, Sentence)
+        self.assertTrue(promoted_sentence.is_promotion)
+        self.assertEqual(promoted_sentence.get_promotion_origin(), rand_word)
+
+
