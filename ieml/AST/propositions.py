@@ -250,7 +250,7 @@ class AbstractClause(AbstractMultiplicativeProposition, NonClosedProposition):
             if self.attr != other.attr:
                 return self.attr > other.attr
             else:
-                raise InvalidClauseComparison()
+                raise InvalidClauseComparison(self, other)
 
     def gather_hyperlinks(self, current_path):
         return self._gather_child_links(current_path)

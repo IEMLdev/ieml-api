@@ -14,9 +14,19 @@ class TreeElementMetadata:
     def __init__(self, element_ref):
         self.element_ref = element_ref
         self.db_entry = None
+        self._retrieve_from_db()
 
     def __getitem__(self, item):
         pass
+
+    @needs_db
+    def __getitem__(self, item):
+        return self.db_entry[item]
+
+    @needs_db
+    def __contains__(self, item):
+        return item in self.db_entry
+
 
     def _retrieve_from_db(self):
         pass
@@ -32,18 +42,6 @@ class PropositionMetadata(TreeElementMetadata):
 
 class ClosedPropositionMetadata(PropositionMetadata):
 
-    def __init__(self, element_ref):
-        super().__init__(element_ref)
-        self._retrieve_from_db()
-
-    @needs_db
-    def __getitem__(self, item):
-        return self.db_entry[item]
-
-    @needs_db
-    def __contains__(self, item):
-        return item in self.db_entry
-
     @needs_db
     def _retrieve_from_db(self):
         self.db_entry = self._db_connector.exact_ieml_search(self.element_ref)
@@ -54,8 +52,12 @@ class NonClosedPropositionMetadata(PropositionMetadata):
 
 
 class TextMetadata(TreeElementMetadata):
-    pass
+    @needs_db
+    def _retrieve_from_db(self):
+        self.db_entry = self._db_connector.get_text_from_ieml(self.element_ref)
 
 
 class HypertextMetadata(TreeElementMetadata):
-    pass
+    @needs_db
+    def _retrieve_from_db(self):
+        self.db_entry = self._db_connector.get_hypertext_from_ieml(self.element_ref)

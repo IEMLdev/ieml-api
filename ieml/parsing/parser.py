@@ -4,6 +4,7 @@ import ply.yacc as yacc
 
 from helpers.metaclasses import Singleton
 from ieml.AST import Word, Morpheme, Clause, SuperClause, Sentence, SuperSentence, Term, Text, HyperText
+from ieml.exceptions import CannotParse
 from .lexer import get_lexer, tokens
 
 
@@ -29,8 +30,7 @@ class PropositionsParser(metaclass=Singleton):
             self.root.order()
             return self.root
         else:
-            # TODO : set an error for this exception
-            raise Exception()
+            raise CannotParse()
 
     # Parsing rules
     def p_ieml_proposition(self, p):

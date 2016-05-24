@@ -73,6 +73,9 @@ class HyperTextQueries(TextQueries):
 
         self._write_hypertext_to_db(hypertext, tag)
 
+    def get_hypertext_from_ieml(self, ieml_string):
+        self.hypertexts.find_one({"_id": ieml_string})
+
     def check_tag_exist(self, tag, language):
         return self.texts.find_one({'TAGS.' + language: tag}) is not None and super().check_tag_exist(tag, language)
 
