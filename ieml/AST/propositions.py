@@ -401,6 +401,11 @@ class Term(metaclass=AbstractPropositionMetaclass):
         null_term.check()
         return self == null_term
 
+    @property
+    def level(self):
+        """Returns the string level of an IEML object, such as TEXT, WORD, SENTENCE, ..."""
+        return self.__class__.__name__.upper()
+
     def render_hyperlinks(self, hyperlinks, path):
         current_path = PropositionPath(path.path, self)
         result = self._do_render_hyperlinks(hyperlinks, current_path)
