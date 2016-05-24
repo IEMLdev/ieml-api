@@ -31,7 +31,7 @@ class DictionaryQueries(DBConnector):
 
     def search_for_terms(self, search_string):
         """Searching for terms containing the search_string, both in the IEML field and translated field"""
-        regex = re.compile(search_string)
+        regex = re.compile(re.escape(search_string))
 
         result = [self._format_response(term)
                   for term in self.terms.find(
@@ -58,7 +58,7 @@ class DictionaryQueries(DBConnector):
         return [term["IEML"] for term in self.terms.find().limit(count).skip(randint(0, total_count - 1))]
 
     def search_terms(self, search_string, languages=None, category=None, type=None):
-        regex = {'$regex': re.compile(search_string)}
+        regex = {'$regex': re.compile(re.escape(search_string))}
 
         categories = []
         if languages:
