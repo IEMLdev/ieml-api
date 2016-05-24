@@ -70,9 +70,14 @@ class TreeStructure:
         """Since the IEML string for any proposition AST is supposed to be unique, it can be used as a hash"""
         return self.__str__().__hash__()
 
+    def __iter__(self):
+        """Enables the syntaxic sugar of iterating directly on an element without accessing "childs" """
+        # TODO : unittest that stuff
+        return self.childs.__iter__()
+
     @property
     def level(self):
-        """Returns the level of an IEML object, such as TEXT, WORD, SENTENCE, ..."""
+        """Returns the string level of an IEML object, such as TEXT, WORD, SENTENCE, ..."""
         return self.__class__.__name__.upper()
 
     @property
