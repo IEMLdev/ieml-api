@@ -21,18 +21,33 @@ class ClosedProposition:
     def __init__(self):
         super().__init__()
         self.hyperlink = []
+        self._is_promotion = None
+        self._promoted_from = None # reference to the promoted proposition/term
+
+    @property
+    def is_promotion(self):
+        if self._is_promotion is None:
+            self._do_promotion_check()
+
+        return self._is_promotion
+
+    def _do_promotion_check(self):
+        """This function checks if a closed proposition is a promotion of another,
+        by simply checking if its elements are empty"""
+        pass
+
+    def get_promotion_origin(self):
+        """Recursively goes down the AST to find the promotion's origin"""
+        if self.is_promotion:
+            return self._promoted_from.get_promotion_origin()
+        else:
+            return self
 
     def add_hyperlink_list(self, usl_list):
         self.hyperlink += usl_list
 
     def _str_hyperlink(self):
         return ''.join(map(str, self.hyperlink))
-
-    def get_closed_childs(self):
-        """Returns only the child closed propositions of a closed proposition,
-        e.g, words for a sentence, or sentences for a super-sentence"""
-        # TODO : might be optimized, since this set is basically already computed in the proposition graph
-        return set(subchild for child in self.childs for subchild in child.childs)
 
     def _retrieve_metadata_instance(self):
         return ClosedPropositionMetadata(self)
@@ -73,20 +88,6 @@ class AbstractProposition(TreeStructure, metaclass=AbstractPropositionMetaclass)
     def __init__(self):
         super().__init__()
 
-    def _gather_child_links(self, current_path):
-        path = current_path + [self]
-        return [couple for sublist in [child.gather_hyperlinks(path) for child in self.childs]
-                for couple in sublist]
-
-    def render_hyperlinks(self, hyperlinks, path):
-        current_path = PropositionPath(path.path, self)
-        result = self._do_render_hyperlinks(hyperlinks, current_path)
-
-        if current_path in hyperlinks:
-            result += ''.join(map(str, hyperlinks[current_path]))
-
-        return result
-
     def __contains__(self, proposition):
         """Tests if the input proposition is contained in the current one, or in one of its child"""
         if proposition == self:
@@ -103,6 +104,22 @@ class AbstractProposition(TreeStructure, metaclass=AbstractPropositionMetaclass)
                 # can't be contained if the level is higher
                 return False
 
+    def _gather_child_links(self, current_path):
+        path = current_path + [self]
+        return [couple for sublist in [child.gather_hyperlinks(path) for child in self.childs]
+                for couple in sublist]
+
+    def render_hyperlinks(self, hyperlinks, path):
+        current_path = PropositionPath(path.path, self)
+        result = self._do_render_hyperlinks(hyperlinks, current_path)
+
+        if current_path in hyperlinks:
+            result += ''.join(map(str, hyperlinks[current_path]))
+
+        return result
+
+
+
 
 class AbstractAdditiveProposition(AbstractProposition):
 
@@ -115,6 +132,13 @@ class AbstractAdditiveProposition(AbstractProposition):
             self.childs = [child_elements]
         else:
             raise InvalidConstructorParameter(self)
+
+    @property
+    def is_null(self):
+        if len(self.childs) == 1:
+            return self.childs[0].is_null
+        else:
+            return False
 
     def _do_precompute_str(self):
         self._str = self.RenderSymbols.left_bracket+ \
@@ -199,6 +223,20 @@ class Word(AbstractMultiplicativeProposition, ClosedProposition):
         else:
             self.childs = (self.subst, self.mode)
 
+    @property
+    def is_null(self):
+        if self.mode is None:
+            return self.subst.is_null
+        else:
+            return False
+
+    def _do_promotion_check(self):
+        if self.mode is None and len(self.subst.childs) == 1:
+            self._is_promotion = True
+            self._promoted_from = self.subst[0]
+        else:
+            self._is_promotion = False
+
     def _do_render_hyperlinks(self, hyperlinks, path):
         if self.mode is None:
             result = self.RenderSymbols.left_bracket + \
@@ -235,8 +273,6 @@ class Word(AbstractMultiplicativeProposition, ClosedProposition):
         # since morphemes cannot have hyperlinks, we don't gather links for the underlying childs
         return [(PropositionPath(current_path, self), usl_ref) for usl_ref in self.hyperlink]
 
-    def get_closed_childs(self):
-        pass
 
 
 @total_ordering
@@ -251,6 +287,9 @@ class AbstractClause(AbstractMultiplicativeProposition, NonClosedProposition):
                 return self.attr > other.attr
             else:
                 raise InvalidClauseComparison(self, other)
+    @property
+    def is_null(self):
+        return self.subst.is_null and self.attr.is_null and self.mode.is_null
 
     def gather_hyperlinks(self, current_path):
         return self._gather_child_links(current_path)
@@ -292,6 +331,13 @@ class AbstractSentence(AbstractAdditiveProposition, ClosedProposition):
         else:
             raise SentenceHasntBeenChecked(self)
 
+    def _do_promotion_check(self):
+        if len(self.childs) == 1 and self.childs[0].mode.is_null and self.childs[0].is_null:
+            self._is_promotion = True
+            self._promoted_from = self.childs[0].subst
+        else:
+            self._is_promotion = False
+
 
 class Sentence(AbstractSentence):
 
@@ -316,18 +362,6 @@ class Term(metaclass=AbstractPropositionMetaclass):
 
         self.objectid = None
         self.canonical_forms = None
-
-    def render_hyperlinks(self, hyperlinks, path):
-        current_path = PropositionPath(path.path, self)
-        result = self._do_render_hyperlinks(hyperlinks, current_path)
-
-        if current_path in hyperlinks:
-            result += ''.join(map(str, hyperlinks[current_path]))
-
-        return result
-
-    def _do_render_hyperlinks(self, hyperlinks, path):
-        return "[" + self.ieml + "]"
 
     def __str__(self):
         return "[" + self.ieml + "]"
@@ -360,6 +394,22 @@ class Term(metaclass=AbstractPropositionMetaclass):
                     return self.canonical_forms[i] > other.canonical_forms[i]
 
         raise TermComparisonFailed(self.ieml, other.ieml)
+
+    @property
+    def is_null(self):
+        return self == Term("E:")
+
+    def render_hyperlinks(self, hyperlinks, path):
+        current_path = PropositionPath(path.path, self)
+        result = self._do_render_hyperlinks(hyperlinks, current_path)
+
+        if current_path in hyperlinks:
+            result += ''.join(map(str, hyperlinks[current_path]))
+
+        return result
+
+    def _do_render_hyperlinks(self, hyperlinks, path):
+        return "[" + self.ieml + "]"
 
     def check(self):
         """Checks that the term exists in the database, and if found, stores the terms's objectid"""
