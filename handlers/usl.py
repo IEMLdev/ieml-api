@@ -133,7 +133,7 @@ class TextDecompositionHandler(BaseHandler):
         each node of that tree containing data for that proposition and its closed children"""
         current_node = path_to_node.path[-1] # current node is the last one in the path
 
-        if "PROMOTION" in current_node.metadata: # cannot use the "in" operator on metadata
+        if current_node.is_promotion: # cannot use the "in" operator on metadata
             # if the proposition/node is a promotion of a lower one, we the generation
             # to the _promoted_proposition_walker
             return self._promoted_proposition_chain(path_to_node)

@@ -41,20 +41,23 @@ class TagsUpdateHandler(BaseDataHandler):
 class ElementDecompositionHandler(BaseHandler):
     """Decomposes any IEML string input into its sub elements"""
 
+    def _gen_proposition_json(self, proposition):
+        return {"IEML" : str(proposition),
+                "TYPE" : proposition.level,
+                "TAGS:" : proposition.metadata["TAGS"]}
+
     def _childs_list_json(self, childs_list):
-        return [{"IEML" : str(child),
-                 "TYPE" : child.level,
-                 "TAGS:" : child.metadata["TAGS"]} for child in childs_list]
+        return [self._gen_proposition_json(child) for child in childs_list]
 
     def _decompose_word(self, word_ast):
-        return {"subst" : self._childs_list_json(word_ast.subst),
+        return {"substance" : self._childs_list_json(word_ast.subst),
                 "mode": self._childs_list_json(word_ast.mode)}
 
     def _decompose_sentence(self, sentence_ast):
         """Decomposes and builds the ieml object for a sentence/supersentence"""
-        return [{"subst" : self._childs_list_json(clause.subst),
-                 "attribute" : self._childs_list_json(clause.attr),
-                 "mode": self._childs_list_json(clause.mode)}
+        return [{"substance" : self._gen_proposition_json(clause.subst),
+                 "attribute" : self._gen_proposition_json(clause.attr),
+                 "mode": self._gen_proposition_json(clause.mode)}
                 for clause in sentence_ast.childs]
 
     def _decompose_text(self, text_ast):
@@ -73,7 +76,7 @@ class ElementDecompositionHandler(BaseHandler):
                                                    "path" : path.to_ieml_list()},
                                     "substance" : str(hypertext[0])})
 
-        return self._childs_list_json(hypertext_ast.childs)
+        return output_list
 
     def post(self):
         self.reqparse.add_argument("ieml_string", required=True, type=str)
