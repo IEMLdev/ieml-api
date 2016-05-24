@@ -46,7 +46,7 @@ class ElementDecompositionHandler(BaseHandler):
         rendered_proposition = proposition.get_promotion_origin() if proposition.is_promotion else proposition
         return {"IEML" : str(rendered_proposition),
                 "TYPE" : rendered_proposition.level,
-                "TAGS:" : rendered_proposition.metadata["TAGS"]}
+                "TAGS" : rendered_proposition.metadata["TAGS"]}
 
     def _childs_list_json(self, childs_list):
         return [self._gen_proposition_json(child) for child in childs_list]
