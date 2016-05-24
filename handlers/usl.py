@@ -117,9 +117,10 @@ class TextDecompositionHandler(BaseHandler):
     def _promoted_proposition_chain(self, path_to_node):
         """Prepares the call for the recursive _promoted_proposition_walker, which is itself recursive"""
         current_node = path_to_node.path[-1]
-        original_proposition_ast = self.proposition_parser.parse(current_node.metadata["PROMOTION"]["IEML"])
+        original_proposition_ast = current_node.get_promotion_origin()
+        original_proposition_ast.check()
 
-        if current_node.metadata["PROMOTION"]["TYPE"] == "TERM":
+        if isinstance(original_proposition_ast, Term):
             # if the original proposition is a term, then we can't go down that far, let's raise end_node to word
             end_node_ast = promote_to(original_proposition_ast, Word)
         else: # else it's probably a word or a sentence
