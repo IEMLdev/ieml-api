@@ -302,4 +302,14 @@ class TestIsPromotion(unittest.TestCase):
         self.assertTrue(promoted_sentence.is_promotion)
         self.assertEqual(promoted_sentence.get_promotion_origin(), rand_word)
 
+    def test_word_to_supersentence_promotion(self):
+        rand_word = self.rand_gen.get_random_proposition(Word)
+        promoted_supersentence = promote_to(rand_word, SuperSentence)
+        self.assertTrue(promoted_supersentence.is_promotion)
+        self.assertEqual(promoted_supersentence.get_promotion_origin(), rand_word)
+
+    def test_not_a_promotion(self):
+        word = self.parser.parse("[([wa.i.-]+[o.]+[O:A:.])*([wa.A:.-])]")
+        self.assertFalse(word.is_promotion)
+
 

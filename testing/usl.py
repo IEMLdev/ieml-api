@@ -9,9 +9,6 @@ class TestTexts(unittest.TestCase):
     def test_text_to_str(self):
         pass
 
-class TestHyperText(unittest.TestCase):
-    pass
-
 
 class TestHypertext(unittest.TestCase):
     def test_addhyperlink(self):
