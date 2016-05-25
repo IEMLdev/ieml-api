@@ -1,6 +1,6 @@
-from testing.helper import *
-from ieml.parsing import USLParser
 from ieml.AST.tools import RandomPropositionGenerator
+from ieml.parsing import USLParser
+from testing.helper import *
 
 
 class TestPropositionParser(unittest.TestCase):

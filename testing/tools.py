@@ -1,7 +1,8 @@
-from ieml.AST.tools import RandomPropositionGenerator
-from .helper import *
-from ieml.AST import promote_to
+from ieml.AST import promote_to, Term
+from ieml.AST.tools import RandomPropositionGenerator, demote_once
 from ieml.exceptions import CannotPromoteToLowerLevel
+from .helper import *
+
 
 class TestPromotion(unittest.TestCase):
 
@@ -25,8 +26,17 @@ class TestPromotion(unittest.TestCase):
 
 
 class TestDemotion(unittest.TestCase):
-    pass
-    # TODO : Do the fuken demotions tests
+
+    def setUp(self):
+        self.rand_gen = RandomPropositionGenerator()
+
+    def test_single_demotion(self):
+        word = self.rand_gen.get_random_proposition(Word)
+        superclause = self.rand_gen.get_random_proposition(SuperClause)
+        self.assertIsInstance(demote_once(word), Morpheme)
+        self.assertIsInstance(demote_once(superclause), Sentence)
+
+    # TODO : Do more of the demotions test
 
 
 class TestPathPathComputation(unittest.TestCase):
