@@ -1,4 +1,4 @@
-from .api import TestGraphValidator, TestSentenceGraphValidator, TestTextDecomposition
+from .api import TestGraphValidator, TestSentenceGraphValidator
 from .ast import TestTermsFeatures, TestMorphemesFeatures, TestWords, TestClauses, \
     TestSentences, TestMetaFeatures, TestPropositionsInclusion, TestSuperSentence, \
     TestIsNull, TestIsPromotion
