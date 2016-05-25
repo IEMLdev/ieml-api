@@ -123,7 +123,11 @@ class PropositionsQueries(DBConnector):
 
     def exact_ieml_search(self, proposition):
         if isinstance(proposition, (ieml.AST.Sentence, ieml.AST.Word, ieml.AST.SuperSentence)):
-            return self._format_response(self.propositions.find_one({"_id": str(proposition)}))
+            entry = self.propositions.find_one({"_id": str(proposition)})
+            if entry:
+                return self._format_response(entry)
+            else:
+                raise ObjectNotFound()
         else:
             raise ObjectTypeNotStoredinDB()
 
