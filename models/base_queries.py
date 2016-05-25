@@ -60,7 +60,7 @@ class DictionaryQueries(DBConnector):
     def search_terms(self, search_string, languages=None, category=None, type=None):
         regex = {'$regex': re.compile(re.escape(search_string))}
 
-        categories = []
+        categories = [{'IEML': regex}]
         if languages:
             for language in languages:
                 categories.append({language: regex})
