@@ -1,4 +1,19 @@
 from ieml.exceptions import CannotRenderElementWithoutOrdering, PathCannotBeEmpty, CannotRetrieveMetadata
+from functools import total_ordering
+
+@total_ordering
+class AbstractPropositionMetaclass(type):
+    """This metaclass enables the comparison of class times, such as (Sentence > Word) == True"""
+
+    def __gt__(self, other):
+        from ieml.AST import Term, Morpheme, Word, Clause, Sentence, SuperClause, SuperSentence
+        child_list = [Term, Morpheme, Word, Clause, Sentence, SuperClause, SuperSentence]
+        return child_list.index(self) > child_list.index(other)
+
+    def __lt__(self, other):
+        from ieml.AST import Term, Morpheme, Word, Clause, Sentence, SuperClause, SuperSentence
+        child_list = [Term, Morpheme, Word, Clause, Sentence, SuperClause, SuperSentence]
+        return child_list.index(self) < child_list.index(other)
 
 
 def requires_not_empty(method):

@@ -1,19 +1,12 @@
 from functools import total_ordering
 
-from helpers import LoggedInstantiator
-from ieml.AST import Term
-from ieml.AST.commons import PropositionPath, TreeStructure
-from ieml.AST.constants import MAX_TERMS_IN_MORPHEME
-from ieml.AST.propositional_graph import PropositionGraph
-from ieml.AST.tree_metadata import ClosedPropositionMetadata, NonClosedPropositionMetadata
+from .terms import Term
+from .commons import TreeStructure, AbstractPropositionMetaclass, PropositionPath
+from .constants import MAX_TERMS_IN_MORPHEME
+from .propositional_graph import PropositionGraph
+from .tree_metadata import ClosedPropositionMetadata, NonClosedPropositionMetadata
 from ieml.exceptions import IndistintiveTermsExist, InvalidConstructorParameter, \
     InvalidClauseComparison, SentenceHasntBeenChecked, TooManyTermsInMorpheme
-
-
-# class TermsQueries(DictionaryQueries, metaclass=Singleton):
-#     """A DB connector singleton class used by terms to prevent the number
-#     of DictionnaryQueries class instances from exploding"""
-#     pass
 
 
 class ClosedProposition:
@@ -59,19 +52,6 @@ class NonClosedProposition:
     """This class acts as an interface for propositions that *cannot* be closed"""
     def _retrieve_metadata_instance(self):
         return NonClosedPropositionMetadata(self)
-
-
-@total_ordering
-class AbstractPropositionMetaclass(LoggedInstantiator):
-    """This metaclass enables the comparison of class times, such as (Sentence > Word) == True"""
-
-    def __gt__(self, other):
-        child_list = [Term, Morpheme, Word, Clause, Sentence, SuperClause, SuperSentence]
-        return child_list.index(self) > child_list.index(other)
-
-    def __lt__(self, other):
-        child_list = [Term, Morpheme, Word, Clause, Sentence, SuperClause, SuperSentence]
-        return child_list.index(self) < child_list.index(other)
 
 
 class AbstractProposition(TreeStructure, metaclass=AbstractPropositionMetaclass):

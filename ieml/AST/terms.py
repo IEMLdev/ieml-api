@@ -1,8 +1,7 @@
 from functools import total_ordering
 
-from ieml.AST import PropositionPath
-from ieml.AST.propositions import AbstractPropositionMetaclass
-from ieml.AST.tree_metadata import TermMetadata
+from .commons import PropositionPath, AbstractPropositionMetaclass
+from .tree_metadata import TermMetadata
 from ieml.exceptions import TermComparisonFailed, CannotRetrieveMetadata, IEMLTermNotFoundInDictionnary
 
 
