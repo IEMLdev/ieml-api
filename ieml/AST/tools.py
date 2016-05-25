@@ -2,8 +2,9 @@ import random
 
 from ieml.AST.constants import MAX_TERMS_IN_MORPHEME, MAX_NODES_IN_SENTENCE
 from ieml.exceptions import CannotPromoteToLowerLevel, CannotDemoteProposition, PropositionNotIncluded
-from .propositions import Term, Word, Morpheme, Clause, Sentence, SuperSentence, SuperClause, \
+from .propositions import Word, Morpheme, Clause, Sentence, SuperSentence, SuperClause, \
     AbstractAdditiveProposition, AbstractClause, AbstractProposition
+from ieml.AST import Term
 from helpers import Singleton
 from models import DictionaryQueries
 
@@ -88,7 +89,7 @@ def demote_once(proposition):
 def demote_to(proposition, level_type):
     """Recursive function. Demotes a proposition to a given level"""
     if type(proposition) < level_type:
-        raise Exception("Cannot demote to higher level!") # TODO : make exception for this case
+        raise CannotDemoteProposition("Cannot demote to higher level!")
     elif isinstance(proposition, level_type):
         return proposition
     else:

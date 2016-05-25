@@ -1,4 +1,6 @@
 import re
+
+import ieml.AST.terms
 from models.exceptions import PropositionAlreadyExists, ObjectTypeNotStoredinDB, ObjectNotFound
 from .base_queries import DBConnector
 from .constants import PROPOSITION_COLLECTION, TAG_LANGUAGES
@@ -21,7 +23,7 @@ class PropositionsQueries(DBConnector):
 
     def check_proposition_stored(self, proposition):
         """Retrieves the objectid of an IEML primitive"""
-        if isinstance(proposition, ieml.AST.Term):
+        if isinstance(proposition, ieml.AST.terms.Term):
             return self.terms.find_one({"IEML": proposition.ieml}) is not None
         elif isinstance(proposition, (ieml.AST.Sentence, ieml.AST.Word, ieml.AST.SuperSentence)):
             return self._check_proposition_exist(str(proposition))

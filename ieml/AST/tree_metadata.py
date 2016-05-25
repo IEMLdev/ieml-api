@@ -1,7 +1,10 @@
+from ieml.exceptions import DBNotSet
+
+
 def needs_db(method):
     def wrapper(*args, **kwargs):
         if args[0]._db_connector is None:
-            raise Exception("DB not set but required for metadata retrieving") # DB not set error
+            raise DBNotSet("DB not set but required for metadata retrieving") # DB not set error
         else:
             return method(*args, **kwargs)
     return wrapper
@@ -39,6 +42,7 @@ class TermMetadata(TreeElementMetadata):
     @needs_db
     def _retrieve_from_db(self):
         self.db_entry = self._db_connector.exact_ieml_term_search(self.element_ref.ieml)
+
 
 class PropositionMetadata(TreeElementMetadata):
     """Class in charge of storing and retrieving metadata for an instance of an AbstractProposition"""

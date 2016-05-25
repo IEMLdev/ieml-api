@@ -1,12 +1,11 @@
-from ieml.exceptions import CannotRenderElementWithoutOrdering
+from ieml.exceptions import CannotRenderElementWithoutOrdering, PathCannotBeEmpty, CannotRetrieveMetadata
 
 
 def requires_not_empty(method):
     """Decorator used by propositions paths that checks if the path is not empty"""
     def wrapper(*args, **kwargs):
         if not args[0].path:
-            # TODO : make an exception for this error
-            raise Exception("This method cannot work on an empty path")
+            raise PathCannotBeEmpty("This method cannot work on an empty path")
         else:
             return method(*args, **kwargs)
     return wrapper
@@ -72,7 +71,6 @@ class TreeStructure:
 
     def __iter__(self):
         """Enables the syntaxic sugar of iterating directly on an element without accessing "children" """
-        # TODO : unittest that stuff
         return self.children.__iter__()
 
     @property
@@ -87,8 +85,7 @@ class TreeStructure:
             if self._metadata is not None:
                 return self._metadata
             else:
-                # TODO : define exception for this (when it's not possible to find the metadata)
-                raise Exception("Cannot retrieve metadata for this element")
+                raise CannotRetrieveMetadata("Cannot retrieve metadata for this element")
         else:
             return self._metadata
 

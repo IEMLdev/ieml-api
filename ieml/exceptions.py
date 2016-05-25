@@ -1,8 +1,23 @@
 
+### Exception Raised by the commons (treescruture and proposition path)
+
+class CommonsException(Exception):
+    pass
+
+
+class PropositionPathErrors(CommonsException):
+    pass
+
+
+class PathCannotBeEmpty(PropositionPathErrors):
+    pass
+
+
 ### These exeception are raised by the AST
 
 class ASTException(Exception):
     pass
+
 
 class TermException(ASTException):
 
@@ -10,10 +25,12 @@ class TermException(ASTException):
         super().__init__()
         self.terms_ieml = terms_ieml
 
+
 class IEMLTermNotFoundInDictionnary(TermException):
 
     def __str__(self):
         return "Cannot find term %s in the dictionnary" % self.terms_ieml
+
 
 class TermComparisonFailed(TermException):
     def __init__(self, terms_ieml, other_terms_ieml):
@@ -63,8 +80,10 @@ class TooManyTermsInMorpheme(ASTException):
 class InvalidPropositionGraph(ASTException):
     pass
 
+
 class TooManyNodesInGraph(InvalidPropositionGraph):
     message = "Nodes limit in the graph exceeded"
+
 
 class NoRootNodeFound(InvalidPropositionGraph):
     message = "Cannot find a root node for this graph"
@@ -96,10 +115,8 @@ class NodeHasNoParent(InvalidGraphNode):
     message = "Node %s has no parent"
 
 
-
 class InvalidNodeIEMLLevel(InvalidGraphNode):
     message = "Node %s doesn't have the right level to be used as a primitive for this level"
-
 
 
 class NodeHasTooMuchParents(InvalidGraphNode):
@@ -127,7 +144,22 @@ class CannotDemoteProposition(ToolsException):
 class PropositionNotIncluded(ToolsException):
     pass
 
-### USL errors ###
+### Metadata exceptions
+
+
+class MetadataException(Exception):
+    pass
+
+
+class CannotRetrieveMetadata(MetadataException):
+    pass
+
+
+class DBNotSet(MetadataException):
+    pass
+
+### USL exceptions ###
+
 
 class USLException(Exception):
     pass
