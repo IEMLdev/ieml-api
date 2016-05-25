@@ -48,22 +48,22 @@ class ElementDecompositionHandler(BaseHandler):
                 "TYPE" : rendered_proposition.level,
                 "TAGS" : rendered_proposition.metadata["TAGS"]}
 
-    def _childs_list_json(self, childs_list):
-        return [self._gen_proposition_json(child) for child in childs_list]
+    def _children_list_json(self, children_list):
+        return [self._gen_proposition_json(child) for child in children_list]
 
     def _decompose_word(self, word_ast):
-        return {"substance" : self._childs_list_json(word_ast.subst),
-                "mode": self._childs_list_json(word_ast.mode)}
+        return {"substance" : self._children_list_json(word_ast.subst),
+                "mode": self._children_list_json(word_ast.mode)}
 
     def _decompose_sentence(self, sentence_ast):
         """Decomposes and builds the ieml object for a sentence/supersentence"""
         return [{"substance" : self._gen_proposition_json(clause.subst),
                  "attribute" : self._gen_proposition_json(clause.attr),
                  "mode": self._gen_proposition_json(clause.mode)}
-                for clause in sentence_ast.childs]
+                for clause in sentence_ast.children]
 
     def _decompose_text(self, text_ast):
-        return self._childs_list_json(text_ast.childs)
+        return self._children_list_json(text_ast.children)
 
     def _decompose_hypertext(self, hypertext_ast):
         # this uses a very simple stack to to the hypertext's tree walk-through
@@ -71,7 +71,7 @@ class ElementDecompositionHandler(BaseHandler):
         output_list = []
         while hypertext_stack:
             current_ht = hypertext_stack.pop()
-            for path, hypertext in current_ht.childs[0].get_hyperlinks():
+            for path, hypertext in current_ht.children[0].get_hyperlinks():
                 hypertext_stack.append(hypertext)
                 output_list.append({"mode" : str(current_ht[0]),
                                     "attribute" : {"literal" : "",
@@ -91,7 +91,7 @@ class ElementDecompositionHandler(BaseHandler):
         try:
             ieml_hypertext = USLParser().parse(self.args["ieml_string"])
             if len(ieml_hypertext.strate) == 0:# it's a text
-                return self._decompose_text(ieml_hypertext.childs[0]) # decomposing the first element
+                return self._decompose_text(ieml_hypertext.children[0]) # decomposing the first element
             else: # it's an hypertext with more than one element
                 return self._decompose_hypertext(ieml_hypertext)
 

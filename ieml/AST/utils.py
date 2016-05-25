@@ -36,14 +36,14 @@ class PropositionPath:
         return [str(e) for e in self.path]
 
     @requires_not_empty
-    def get_childs_subpaths(self, depth=1): # depth indicate how make times the function should go down
+    def get_children_subpaths(self, depth=1): # depth indicate how make times the function should go down
         """Generates the subpaths to the child of a proposition"""
         if depth == 0:
             return [self]
         else:
             result = []
-            for child in self.path[-1].childs:
-                result += PropositionPath(self.path, child).get_childs_subpaths(depth - 1)
+            for child in self.path[-1].children:
+                result += PropositionPath(self.path, child).get_children_subpaths(depth - 1)
             return result
 
 
@@ -54,7 +54,7 @@ class TreeStructure:
         self._has_been_ordered = False
         self._str = None
         self._metadata = None
-        self.childs = None  # will be an iterable (list or tuple)
+        self.children = None  # will be an iterable (list or tuple)
 
     def __str__(self):
         if self._str is not None:
@@ -63,17 +63,17 @@ class TreeStructure:
             raise CannotRenderElementWithoutOrdering()
 
     def __eq__(self, other):
-        """Two propositions are equal if their childs'list or tuple are equal"""
-        return self.childs == other.childs
+        """Two propositions are equal if their children'list or tuple are equal"""
+        return self.children == other.children
 
     def __hash__(self):
         """Since the IEML string for any proposition AST is supposed to be unique, it can be used as a hash"""
         return self.__str__().__hash__()
 
     def __iter__(self):
-        """Enables the syntaxic sugar of iterating directly on an element without accessing "childs" """
+        """Enables the syntaxic sugar of iterating directly on an element without accessing "children" """
         # TODO : unittest that stuff
-        return self.childs.__iter__()
+        return self.children.__iter__()
 
     @property
     def level(self):
@@ -111,7 +111,7 @@ class TreeStructure:
 
     def check(self):
         """Checks the IEML validity of the IEML proposition"""
-        for child in self.childs:
+        for child in self.children:
             child.check()
             child.order()
 

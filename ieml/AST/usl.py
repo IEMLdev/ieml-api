@@ -18,19 +18,19 @@ class Text(TreeStructure):
         if len(propositions) == 0:
             raise EmptyTextException()
 
-        self.childs = propositions
+        self.children = propositions
 
     def _do_precompute_str(self):
-        self._str = '{/' + '//'.join(map(str, self.childs)) + '/}'
+        self._str = '{/' + '//'.join(map(str, self.children)) + '/}'
 
     def __hash__(self):
         return self.__str__().__hash__()
 
     def __eq__(self, other):
-        return self.childs == other.childs
+        return self.children == other.children
 
     def _do_checking(self):
-        for child in self.childs:
+        for child in self.children:
             if not isinstance(child, ClosedProposition):
                 raise InvalidPathException()
 
@@ -38,16 +38,16 @@ class Text(TreeStructure):
         return TextMetadata(self)
 
     def render(self, hyperlinks):
-        return '{/' + '//'.join([p.render_hyperlinks(hyperlinks, PropositionPath()) for p in self.childs]) + '/}'
+        return '{/' + '//'.join([p.render_hyperlinks(hyperlinks, PropositionPath()) for p in self.children]) + '/}'
 
     def get_hyperlinks(self):
-        return [hyperlink for proposition in self.childs for hyperlink in proposition.gather_hyperlinks([])]
+        return [hyperlink for proposition in self.children for hyperlink in proposition.gather_hyperlinks([])]
 
     def get_path_from_ieml(self, ieml_list):
         proposition_list = []
         current_proposition = self
         for ieml in ieml_list:
-            proposition = next(child for child in current_proposition.childs if str(child) == ieml)
+            proposition = next(child for child in current_proposition.children if str(child) == ieml)
             if proposition:
                 proposition_list.append(proposition)
                 current_proposition = proposition
@@ -59,16 +59,16 @@ class Text(TreeStructure):
     def _do_ordering(self):
         """Orders the propositions in a text. First the words, then the sentences, and the super-sentences"""
         # TODO : Test this ordering
-        childs_by_level = { Word : [], Sentence : [], SuperSentence : []}
-        for child in self.childs:
-            childs_by_level[type(child)].append(child)
+        children_by_level = { Word : [], Sentence : [], SuperSentence : []}
+        for child in self.children:
+            children_by_level[type(child)].append(child)
 
-        childs_by_level[Word].sort()
-        childs_by_level[Sentence].sort()
-        childs_by_level[SuperSentence].sort()
-        self.childs = childs_by_level[Word] + \
-                      childs_by_level[Sentence] + \
-                      childs_by_level[SuperSentence]
+        children_by_level[Word].sort()
+        children_by_level[Sentence].sort()
+        children_by_level[SuperSentence].sort()
+        self.children = children_by_level[Word] + \
+                      children_by_level[Sentence] + \
+                      children_by_level[SuperSentence]
 
 
 class HyperText(TreeStructure):
@@ -76,7 +76,7 @@ class HyperText(TreeStructure):
 
     def __init__(self, text):
         super().__init__()
-        self.childs = [text]
+        self.children = [text]
 
         # we need to ensure that the text is checked to be able to generate the hyperlinks
         text.check()
@@ -98,7 +98,7 @@ class HyperText(TreeStructure):
     def _build_hyperlink(self):
         """Gather the hyper links from the child text of this hypertext"""
         self._hyperlinks = {}
-        for path, hypertext in self.childs[0].get_hyperlinks():
+        for path, hypertext in self.children[0].get_hyperlinks():
             # check the hypertext, it will not be checked otherwise
             hypertext.check()
             self._add_hyperlink(path, hypertext)
@@ -123,7 +123,7 @@ class HyperText(TreeStructure):
         self._str = self.render()
 
     def render(self):
-        return self.childs[0].render(self._hyperlinks)
+        return self.children[0].render(self._hyperlinks)
 
     def _do_checking(self):
         # Check cycle and root node
@@ -132,10 +132,10 @@ class HyperText(TreeStructure):
             graph.check()
 
     def get_path_from_ieml(self, ieml_list):
-        return self.childs[0].get_path_from_ieml(ieml_list)
+        return self.children[0].get_path_from_ieml(ieml_list)
 
     def _build_graph(self):
-        self.texts = [self.childs[0]]
+        self.texts = [self.children[0]]
         self.strate = 0
         self.transitions = set()
         for path in self._hyperlinks:

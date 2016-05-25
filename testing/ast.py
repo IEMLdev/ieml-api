@@ -130,7 +130,7 @@ class TestMorphemesFeatures(unittest.TestCase):
         new_morpheme = Morpheme([Term("E:A:T:."), Term("E:S:.o.-"), Term("E:S:.wa.-")])
         new_morpheme.check()
         self.assertTrue(new_morpheme.is_ordered())
-        self.assertEqual(str(new_morpheme.childs[2]), '[E:S:.o.-]') # last term is right?
+        self.assertEqual(str(new_morpheme.children[2]), '[E:S:.o.-]') # last term is right?
 
     def test_morpheme_equality(self):
         """Tests if two morphemes That are declared the same way are said to be equal
@@ -242,7 +242,7 @@ class TestSentences(unittest.TestCase):
         sentence = Sentence([clause_a, clause_b, clause_c, clause_d])
         sentence.check()
         sentence.order()
-        self.assertEqual(sentence.childs,[clause_a, clause_b,clause_c, clause_d])
+        self.assertEqual(sentence.children,[clause_a, clause_b,clause_c, clause_d])
 
 
 class TestSuperSentence(unittest.TestCase):
@@ -280,7 +280,7 @@ class TestIsNull(unittest.TestCase):
     def test_composed_proposition(self):
         promoted_sentence = self.parser.parse("[([([wa.j.-])]*[([E:])]*[([E:])])]")
         self.assertFalse(promoted_sentence.is_null)
-        self.assertTrue(promoted_sentence.childs[0].mode)
+        self.assertTrue(promoted_sentence.children[0].mode)
 
 class TestIsPromotion(unittest.TestCase):
 

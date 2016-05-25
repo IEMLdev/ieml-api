@@ -80,7 +80,7 @@ def demote_once(proposition):
     """Lowers the level of a proposition of 1 level.
     Supposed to be used on promoted propositions and/or additive propositions with only 1 element."""
     if isinstance(proposition, AbstractProposition):
-        return proposition.childs[0]
+        return proposition.children[0]
     else:
         raise CannotDemoteProposition()
 

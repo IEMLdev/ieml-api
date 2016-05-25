@@ -16,7 +16,7 @@ class TextQueries(DBConnector):
             self.texts.insert_one({
                 "_id" : str(text),
                 "TAGS" : tags,
-                "PROPOSITIONS" : [str(e) for e in text.childs]
+                "PROPOSITIONS" : [str(e) for e in text.children]
             })
         except DuplicateKeyError:
             raise TextAlreadyExists()

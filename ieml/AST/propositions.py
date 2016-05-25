@@ -92,10 +92,10 @@ class AbstractProposition(TreeStructure, metaclass=AbstractPropositionMetaclass)
         """Tests if the input proposition is contained in the current one, or in one of its child"""
         if proposition == self:
             return True
-        else: # could be contained in the childs proposition
+        else: # could be contained in the children proposition
             if proposition.__class__ < self.__class__:
                 # testing if it's contained in one of the child
-                for child in self.childs:
+                for child in self.children:
                     if proposition in child:
                         return True
                 # contained nowhere!
@@ -106,7 +106,7 @@ class AbstractProposition(TreeStructure, metaclass=AbstractPropositionMetaclass)
 
     def _gather_child_links(self, current_path):
         path = current_path + [self]
-        return [couple for sublist in [child.gather_hyperlinks(path) for child in self.childs]
+        return [couple for sublist in [child.gather_hyperlinks(path) for child in self.children]
                 for couple in sublist]
 
     def render_hyperlinks(self, hyperlinks, path):
@@ -127,38 +127,38 @@ class AbstractAdditiveProposition(AbstractProposition):
         super().__init__()
         # for convenience, it's possible to input a single element which is automatically converted into a list
         if isinstance(child_elements, list):
-            self.childs = child_elements
+            self.children = child_elements
         elif isinstance(child_elements, AbstractProposition) or isinstance(child_elements, Term):
-            self.childs = [child_elements]
+            self.children = [child_elements]
         else:
             raise InvalidConstructorParameter(self)
 
     @property
     def is_null(self):
-        if len(self.childs) == 1:
-            return self.childs[0].is_null
+        if len(self.children) == 1:
+            return self.children[0].is_null
         else:
             return False
 
     def _do_precompute_str(self):
         self._str = self.RenderSymbols.left_bracket+ \
-               self.RenderSymbols.plus.join([str(element) for element in self.childs]) + \
+               self.RenderSymbols.plus.join([str(element) for element in self.children]) + \
                     self.RenderSymbols.right_bracket
 
     def __gt__(self, other):
-        max_length = max(len(self.childs), len(other.childs))
+        max_length = max(len(self.children), len(other.children))
         for i in range(max_length):
-            if len(self.childs) <= i: # this morpheme is a suffix of the other one, it's "smaller"
+            if len(self.children) <= i: # this morpheme is a suffix of the other one, it's "smaller"
                 return False
-            elif len(other.childs) <= i: # the morpheme is a suffix of the current one, so current one is "bigger"
+            elif len(other.children) <= i: # the morpheme is a suffix of the current one, so current one is "bigger"
                 return True
             else:
-                if self.childs[i] != other.childs[i]:
-                    return self.childs[i] > other.childs[i]
+                if self.children[i] != other.children[i]:
+                    return self.children[i] > other.children[i]
 
     def _do_render_hyperlinks(self, hyperlinks, path):
         return self.RenderSymbols.left_bracket + \
-               self.RenderSymbols.plus.join([element.render_hyperlinks(hyperlinks, path) for element in self.childs]) + \
+               self.RenderSymbols.plus.join([element.render_hyperlinks(hyperlinks, path) for element in self.children]) + \
                self.RenderSymbols.right_bracket
 
 
@@ -169,7 +169,7 @@ class AbstractMultiplicativeProposition(AbstractProposition):
         self.subst = child_subst
         self.attr = child_attr
         self.mode = child_mode
-        self.childs = (self.subst, self.attr, self.mode)
+        self.children = (self.subst, self.attr, self.mode)
 
     def _do_render_hyperlinks(self, hyperlinks, path):
         return self.RenderSymbols.left_parent + \
@@ -189,16 +189,16 @@ class Morpheme(AbstractAdditiveProposition, NonClosedProposition):
 
     def _do_precompute_str(self):
         self._str = self.RenderSymbols.left_parent + \
-                    self.RenderSymbols.plus.join([str(element) for element in self.childs]) + \
+                    self.RenderSymbols.plus.join([str(element) for element in self.children]) + \
                     self.RenderSymbols.right_parent
 
     def _do_checking(self):
         # then we check the terms for unicity by turning them into a set
-        if len(self.childs) != len(set(self.childs)):
+        if len(self.children) != len(set(self.children)):
             raise IndistintiveTermsExist("There are %i indistinct terms. "
-                                         % (len(self.childs) - len(set(self.childs))))
+                                         % (len(self.children) - len(set(self.children))))
 
-        if len(self.childs) > MAX_TERMS_IN_MORPHEME:
+        if len(self.children) > MAX_TERMS_IN_MORPHEME:
             raise TooManyTermsInMorpheme()
 
         # TODO : more checking
@@ -208,7 +208,7 @@ class Morpheme(AbstractAdditiveProposition, NonClosedProposition):
     def _do_ordering(self):
         """Orders the terms"""
         # terms have the TotalOrder decorator, as such, they can be automatically ordered
-        self.childs.sort()
+        self.children.sort()
 
 
 @total_ordering
@@ -219,9 +219,9 @@ class Word(AbstractMultiplicativeProposition, ClosedProposition):
         self.subst = child_subst
         self.mode = child_mode
         if self.mode is None:
-            self.childs = (self.subst,)
+            self.children = (self.subst,)
         else:
-            self.childs = (self.subst, self.mode)
+            self.children = (self.subst, self.mode)
 
     @property
     def is_null(self):
@@ -231,9 +231,9 @@ class Word(AbstractMultiplicativeProposition, ClosedProposition):
             return False
 
     def _do_promotion_check(self):
-        if self.mode is None and len(self.subst.childs) == 1:
+        if self.mode is None and len(self.subst.children) == 1:
             self._is_promotion = True
-            self._promoted_from = self.subst.childs[0]
+            self._promoted_from = self.subst.children[0]
         else:
             self._is_promotion = False
 
@@ -270,7 +270,7 @@ class Word(AbstractMultiplicativeProposition, ClosedProposition):
             return False
 
     def gather_hyperlinks(self, current_path):
-        # since morphemes cannot have hyperlinks, we don't gather links for the underlying childs
+        # since morphemes cannot have hyperlinks, we don't gather links for the underlying children
         return [(PropositionPath(current_path, self), usl_ref) for usl_ref in self.hyperlink]
 
 
@@ -318,23 +318,23 @@ class AbstractSentence(AbstractAdditiveProposition, ClosedProposition):
 
     def _do_checking(self):
         # if it's a single-clause list, no graph building
-        if len(self.childs) != 1:
+        if len(self.children) != 1:
             # then, we build the (super)sentence's graph using the (super)clause list
-            self.graph = PropositionGraph(self.childs)
+            self.graph = PropositionGraph(self.children)
             self.graph.check() #the graph does some checking
 
     def _do_ordering(self):
         """Orders the clauses/superclauses inside the sentence/supersentence, using the graph"""
         if self._has_been_checked:
-            if len(self.childs) != 1:
-                self.childs = self.graph.get_ordereded_clauses_list()
+            if len(self.children) != 1:
+                self.children = self.graph.get_ordereded_clauses_list()
         else:
             raise SentenceHasntBeenChecked(self)
 
     def _do_promotion_check(self):
-        if len(self.childs) == 1 and self.childs[0].mode.is_null and self.childs[0].attr.is_null:
+        if len(self.children) == 1 and self.children[0].mode.is_null and self.children[0].attr.is_null:
             self._is_promotion = True
-            self._promoted_from = self.childs[0].subst
+            self._promoted_from = self.children[0].subst
         else:
             self._is_promotion = False
 

@@ -103,7 +103,7 @@ class TextDecompositionHandler(BaseHandler):
             if isinstance(end_node, Word): # if endnode it's a word, let's stop, else, we go back to the regular walker
                 children_data = []
             else:
-                children_data = [self._ast_walker(subpath) for subpath in path_to_node.get_childs_subpaths(depth=2)]
+                children_data = [self._ast_walker(subpath) for subpath in path_to_node.get_children_subpaths(depth=2)]
         else:
             demoted_current_node = demote_once(current_node)
             new_path = PropositionPath(path_to_node.path + [demoted_current_node, demote_once(demoted_current_node)])
@@ -142,7 +142,7 @@ class TextDecompositionHandler(BaseHandler):
             proposition_data = self._build_data_field(path_to_node, current_node.metadata["TAGS"])
 
             if isinstance(current_node, (Sentence, SuperSentence)):
-                children_data = [self._ast_walker(subpath) for subpath in path_to_node.get_childs_subpaths(depth=2)]
+                children_data = [self._ast_walker(subpath) for subpath in path_to_node.get_children_subpaths(depth=2)]
             elif isinstance(current_node, Word):
                 children_data = []
 
@@ -160,5 +160,5 @@ class TextDecompositionHandler(BaseHandler):
 
         ClosedPropositionMetadata.set_connector(self.db_connector_proposition)
         # for each proposition, we build the JSON tree data representation of itself and its child closed proposition
-        return [self._ast_walker(PropositionPath([child])) for child in hypertext.childs[0].childs]
+        return [self._ast_walker(PropositionPath([child])) for child in hypertext.children[0].children]
 
