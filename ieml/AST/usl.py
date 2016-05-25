@@ -2,7 +2,7 @@ from ieml.AST.tree_metadata import TextMetadata, HypertextMetadata
 from ieml.exceptions import InvalidPathException, EmptyTextException
 from ieml.AST.propositions import ClosedProposition, Word, Sentence, SuperSentence
 from ieml.AST.propositional_graph import HyperTextGraph
-from ieml.AST.utils import PropositionPath, TreeStructure
+from ieml.AST.commons import PropositionPath, TreeStructure
 
 
 class Tag:
@@ -58,7 +58,6 @@ class Text(TreeStructure):
 
     def _do_ordering(self):
         """Orders the propositions in a text. First the words, then the sentences, and the super-sentences"""
-        # TODO : Test this ordering
         children_by_level = { Word : [], Sentence : [], SuperSentence : []}
         for child in self.children:
             children_by_level[type(child)].append(child)
