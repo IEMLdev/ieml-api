@@ -31,7 +31,7 @@ class TextQueries(DBConnector):
         self._write_text_to_db(text, tags)
 
     def search_text(self, search_string):
-        regex = re.compile(search_string)
+        regex = re.compile(re.escape(search_string))
         result = self.texts.find({'$or': [
                         {'_id': {'$regex': regex}},
                         {'TAGS.FR': {'$regex': regex}},
@@ -93,7 +93,7 @@ class HyperTextQueries(TextQueries):
 
     def search_request(self, search_string, languages, levels):
         query = {}
-        regex = {'$regex': re.compile(search_string)}
+        regex = {'$regex': re.compile(re.escape(search_string))}
 
         conditions = [{'_id': regex}]
         if languages:

@@ -105,7 +105,7 @@ class PropositionsQueries(DBConnector):
         if levels:
             query['TYPE'] = {"$in": [level.__name__.upper() for level in levels]}
 
-        regex = {'$regex': re.compile(search_string)}
+        regex = {'$regex': re.compile(re.escape(search_string))}
         conditions = [{'_id': regex}]
 
         if languages:
