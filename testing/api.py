@@ -24,7 +24,7 @@ class TestGraphValidator(unittest.TestCase):
         request_output = self.word_handler.post()
         word = get_test_word_instance()
         word.check()
-        self.assertEquals(request_output["ieml"], str(word))
+        self.assertEqual(request_output["ieml"], str(word))
 
 
 class TestSentenceGraphValidator(unittest.TestCase):
@@ -118,11 +118,13 @@ class TestSentenceGraphValidator(unittest.TestCase):
 
 
 class TestTextDecomposition(unittest.TestCase):
+    # TODO : Fix this unittest
     def setUp(self):
         self.text_handler = TextDecompositionHandler()
+        self.text_handler.do_request_parsing = MagicMock(name="do_request_parsing")
 
-        with open("data/example_supersentence.txt") as ss:
-            self.text_handler.json_data = {"data": "{/%s/}" % ss}
+        with open("../data/example_supersentence.txt") as ss:
+            self.text_handler.args = {"data": "{/%s/}" % ss}
 
         self.text_handler.db_connector_term = Mock()
         self.text_handler.db_connector_term = Mock()
