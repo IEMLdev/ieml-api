@@ -63,7 +63,7 @@ class ElementDecompositionHandler(BaseHandler):
                 for clause in sentence_ast.children]
 
     def _decompose_text(self, text_ast):
-        return self._children_list_json(text_ast.children)
+        return {'text': self._children_list_json(text_ast.children)}
 
     def _decompose_hypertext(self, hypertext_ast):
         # this uses a very simple stack to to the hypertext's tree walk-through
@@ -90,7 +90,7 @@ class ElementDecompositionHandler(BaseHandler):
 
         try:
             ieml_hypertext = USLParser().parse(self.args["ieml_string"])
-            if len(ieml_hypertext.strate) == 0:# it's a text
+            if ieml_hypertext.strate == 0:# it's a text
                 return self._decompose_text(ieml_hypertext.children[0]) # decomposing the first element
             else: # it's an hypertext with more than one element
                 return self._decompose_hypertext(ieml_hypertext)

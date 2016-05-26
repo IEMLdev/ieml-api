@@ -106,10 +106,10 @@ class HyperTextQueries(TextQueries):
         query['$or'] = conditions
 
         result = []
-        if levels and HyperText in levels:
+        if levels is None or HyperText in levels:
             result = [self._format_response(entry, False) for entry in self.hypertexts.find(query)]
 
-        if levels and Text in levels:
+        if levels is None or Text in levels:
             result.extend([self._format_response(entry, False) for entry in self.texts.find(query)])
 
         return result

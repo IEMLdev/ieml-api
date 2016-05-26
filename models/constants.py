@@ -2,6 +2,8 @@
 
 DB_ADDRESS = "mongodb://localhost:27017/"
 DB_NAME = "ieml_db"
+DB_NAME_TERM = "db3"
+
 TERMS_COLLECTION = "terms"
 PROPOSITION_COLLECTION = "propositions"
 TEXT_COLLECTION = "texts"
