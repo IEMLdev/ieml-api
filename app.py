@@ -2,7 +2,6 @@ from flask import Flask
 from flask_restful import Api
 
 from handlers import *
-from handlers import SearchTermsHandler
 
 app = Flask(__name__)
 api = Api(app)
@@ -11,13 +10,7 @@ api = Api(app)
 ### This is the api's routing table
 
 # Search endpoint
-# search for a proposition/term in the DB, returns a normalized list of propositions
-api.add_resource(SearchPropositionsHandler, '/api/search_propositions')
-
-# search for a text in the DB, return a list of text
-api.add_resource(SearchTextHandler, '/api/search_text')
-
-api.add_resource(BroadSearchHandler, '/api/search_broad')
+api.add_resource(SearchHandler, '/api/search')
 
 
 # Proposition validation and saving endpoints

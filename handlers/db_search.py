@@ -1,88 +1,7 @@
 from .base import BaseHandler, ErrorCatcher
-from models import DictionaryQueries, PropositionsQueries, HyperTextQueries, TextQueries, SearchRequest
+from models import PropositionsQueries, HyperTextQueries, SearchRequest
 from ieml.AST import Word, Sentence, SuperSentence, Term, HyperText, Text
 import json
-
-
-class SearchTermsHandler(BaseHandler):
-    """Handles the terms search"""
-
-    def post(self):
-        self.reqparse.add_argument("searchstring", required=True, type=str)
-        self.do_request_parsing()
-        return DictionaryQueries().search_for_terms(self.args["searchstring"])
-
-
-class SearchPropositionsHandler(BaseHandler):
-    level_to_type_table = {
-        1: [Term],
-        2: [Term, Word],
-        3: [Term, Word, Sentence],
-        4: [Term, Word, Sentence, SuperSentence]
-    }
-
-    def __init__(self):
-        super().__init__()
-        self.reqparse.add_argument("searchstring", required=True, type=str)
-
-        # the maximum type of the propositions returned
-        self.reqparse.add_argument("level", required=True, type=int)
-
-    @ErrorCatcher
-    def post(self):
-        self.do_request_parsing()
-
-        return SearchRequest.search_string(
-            self.args["searchstring"],
-            languages=None,
-            levels=self.level_to_type_table[self.args["level"]])
-
-#
-# class SearchPropositionsHandler(BaseHandler):
-#     """Search for primitives in the database, for all levels"""
-#
-#     @ErrorCatcher
-#     def post(self):
-#         self.reqparse.add_argument("searchstring", required=True, type=str)
-#         # 1 is to build a word, 2 a sentence, 3 a supersentence, 4 a USL
-#         self.reqparse.add_argument("level", required=True, type=int)
-#         self.do_request_parsing()
-#
-#         level_to_type_table = {
-#             1: Term,
-#             2: Word,
-#             3: Sentence,
-#             4: SuperSentence
-#         }
-#         max_primitive_level = level_to_type_table[self.args["level"]]
-#
-#         result = []
-#         for term in DictionaryQueries().search_for_terms(self.args["searchstring"]):
-#             result.append({
-#                 "IEML": str(promote_to(Term(term["IEML"]), max_primitive_level)),
-#                 "TYPE": "TERM",
-#                 "TAGS": {"FR": term["TAGS"]["FR"],
-#                          "EN": term["TAGS"]["EN"]},
-#                 "ORIGINAL_IEML": term["IEML"],
-#                 "PROMOTED_TO": max_primitive_level.__name__.upper()})
-#
-#         if max_primitive_level > Term:
-#             parser = PropositionsParser()
-#             for proposition in PropositionsQueries().search_for_propositions(self.args["searchstring"],
-#                                                                              max_primitive_level):
-#                 try:
-#                     proposition_ast = parser.parse(proposition["_id"])
-#                 except Exception:
-#                     continue
-#
-#                 result.append({"IEML": str(promote_to(proposition_ast, max_primitive_level)),
-#                                "TYPE": proposition["TYPE"],
-#                                "TAGS": proposition["TAGS"],
-#                                "ORIGINAL_IEML": str(proposition_ast),
-#                                "PROMOTED_TO": max_primitive_level.__name__.upper()})
-#
-#         return result
-
 
 class CheckTagExistHandler(BaseHandler):
     def __init__(self):
@@ -106,19 +25,15 @@ class CheckTagExistHandler(BaseHandler):
         return {'exist': result}
 
 
-class BroadSearchHandler(BaseHandler):
+class SearchHandler(BaseHandler):
     def __init__(self):
         super().__init__()
-        self.reqparse.add_argument("searchstring", required=True, type=str)
-        self.reqparse.add_argument("filters", required=True, type=str)
-
-        self.db_connector_term = DictionaryQueries()
-        self.db_connector = PropositionsQueries()
-        self.db_connector_hypertext = HyperTextQueries()
+        self.reqparse.add_argument("query", required=True, type=str)
+        self.filters = None
 
     def do_request_parsing(self):
         self.args = self.reqparse.parse_args()
-        self.filters = json.loads(self.args["filters"])
+        self.filters = json.loads(self.args["query"])
 
     @ErrorCatcher
     def post(self):
@@ -159,27 +74,14 @@ class BroadSearchHandler(BaseHandler):
             language = [language_to_tag[self.filters['language']]]
 
         if self.filters['level']:
-            level = [level_to_type_table[self.filters['level']]]
-            if (level == Term or level == Word) and self.filters['category']:
-                category = categories[self.filters['category']]
+            level = [level_to_type_table[lvl] for lvl in self.filters['level']]
 
-            if level == Term and self.filters['term_type']:
-                term_type = term_types[self.filters['term_type']]
+        if (Term in level or Word in level) and self.filters['category']:
+            category = categories[self.filters['category']]
 
-        search_string = self.args['searchstring']
+        if Term in level and self.filters['term_type']:
+            term_type = term_types[self.filters['term_type']]
+
+        search_string = self.filters['search_string']
 
         return SearchRequest.search_string(search_string, language, level, category, term_type)
-
-
-class SearchTextHandler(BaseHandler):
-    def __init__(self):
-        super().__init__()
-
-        self.reqparse.add_argument("searchstring", required=True, type=str)
-        self.db_connector_text = TextQueries()
-
-    def post(self):
-        self.do_request_parsing()
-
-        return SearchRequest.search_string(self.args['searchstring'], languages=None, levels=[Text])
-
