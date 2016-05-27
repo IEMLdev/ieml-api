@@ -1,8 +1,8 @@
-from .base_queries import DictionaryQueries
+from .base_queries import DictionaryQueries, Tag
 from .propositions import PropositionsQueries
 from .usl import HyperTextQueries
 from ieml.AST import Term, Text, HyperText, Word, Sentence, SuperSentence
-
+from .exceptions import InvalidTags, InvalidASTType
 
 class SearchRequest:
     db_terms = DictionaryQueries()
@@ -36,3 +36,34 @@ class SearchRequest:
                            for e in cls.db_hypertexts.search_request(search_string, languages, levels)])
 
         return result
+
+
+class IemlDb:
+    db_terms = DictionaryQueries()
+    db_propositions = PropositionsQueries()
+    db_hypertexts = HyperTextQueries()
+
+    @classmethod
+    def check_tag_available(cls, tags):
+        return Tag.check_tags(tags) and cls.db_propositions.check_tags_available(tags) \
+               and cls.db_terms.check_tags_available(tags) and cls.db_hypertexts.check_tag_available(tags)
+
+    @classmethod
+    def store_ast(cls, ast, tags):
+        if not cls.check_tag_available(tags):
+            raise InvalidTags()
+
+        if isinstance(ast, (Word, Sentence, SuperSentence)):
+            cls.db_propositions.save_closed_proposition(ast, tags)
+            return
+
+        if isinstance(ast, Text):
+            cls.db_hypertexts.save_text(ast, tags)
+            return
+
+        if isinstance(ast, HyperText):
+            cls.db_hypertexts.save_hypertext(ast, tags)
+            return
+
+        raise InvalidASTType()
+

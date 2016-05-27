@@ -24,3 +24,7 @@ class InvalidTags(DBException):
 
 class ObjectNotFound(DBException):
     pass
+
+
+class InvalidASTType(DBException):
+    pass

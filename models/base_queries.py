@@ -77,8 +77,17 @@ class DictionaryQueries(DBConnector):
         return [self._format_response(term)
                 for term in self.terms.find(query)]
 
+    def check_tags_available(self, tags):
+        for language in tags:
+            if self.check_tag_exist(tags[language], language):
+                return False
+        return True
+
+    def check_tag_exist(self, tag, language):
+        return self.terms.find_one({language: tag}) is not None
+
 
 class Tag:
     @staticmethod
     def check_tags(tags):
-        return all(lang in tags for lang in TAG_LANGUAGES)
+        return all(lang in tags for lang in TAG_LANGUAGES) and all(tag for tag in tags)

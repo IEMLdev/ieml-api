@@ -24,9 +24,12 @@ class TextQueries(DBConnector):
     def get_text_from_ieml(self, text_ieml):
         return self.texts.find_one({"_id" : text_ieml})
 
+    def exact_text_search(self, ieml):
+        return self.texts.find_one({"_id": str(ieml)})
+
     def save_text(self, text, tags):
-        if not Tag.check_tags(tags):
-            raise InvalidTags()
+        if self.exact_text_search(str(text)) is not None:
+            raise TextAlreadyExists()
 
         self._write_text_to_db(text, tags)
 
@@ -67,14 +70,23 @@ class HyperTextQueries(TextQueries):
         except DuplicateKeyError:
             raise HypertextAlreadyExists()
 
+    def exact_hypertext_search(self, ieml):
+        return self.hypertexts.find_one({"_id": str(ieml)})
+
     def save_hypertext(self, hypertext, tag):
-        if not Tag.check_tags(tag):
-            raise InvalidTags()
+        if self.exact_hypertext_search(str(hypertext)) is not None:
+            raise HypertextAlreadyExists()
 
         self._write_hypertext_to_db(hypertext, tag)
 
     def get_hypertext_from_ieml(self, ieml_string):
         self.hypertexts.find_one({"_id": ieml_string})
+
+    def check_tags_available(self, tags):
+        for language in tags:
+            if self.check_tag_exist(tags[language], language):
+                return False
+        return True
 
     def check_tag_exist(self, tag, language):
         return self.texts.find_one({'TAGS.' + language: tag}) is not None and super().check_tag_exist(tag, language)
@@ -90,6 +102,7 @@ class HyperTextQueries(TextQueries):
             "TAGS": response['TAGS'],
             "TYPE": "HYPERTEXT" if hypertext else "TEXT"
         }
+
 
     def search_request(self, search_string, languages, levels):
         query = {}

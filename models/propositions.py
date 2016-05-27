@@ -18,6 +18,12 @@ class PropositionsQueries(DBConnector):
         """Returns the DB name for a proposition"""
         return proposition.__class__.__name__.upper()
 
+    def check_tags_available(self, tags):
+        for language in tags:
+            if self.check_tag_exist(tags[language], language):
+                return False
+        return True
+
     def check_tag_exist(self, tag, language):
         return self.propositions.find_one({'TAGS.' + language: tag}) is not None
 
@@ -63,36 +69,6 @@ class PropositionsQueries(DBConnector):
         if self._check_proposition_exist(str(proposition_ast)):
             raise PropositionAlreadyExists()
         self._write_proposition_to_db(proposition_ast, proposition_tags)
-
-    def save_promoted_proposition(self, new_proposition_ast, proposition_tags, old_proposition_ast):
-        old_ieml = str(old_proposition_ast)
-        promotion = {"IEML": old_ieml,
-                     "TYPE": self._proposition_db_type(old_proposition_ast)}
-
-        if self._check_proposition_exist(str(new_proposition_ast)):
-            raise PropositionAlreadyExists()
-
-        if not self._check_proposition_exist(old_ieml) and self._proposition_db_type(old_proposition_ast) != "TERM":
-            raise ObjectNotFound()
-
-        self._write_proposition_to_db(new_proposition_ast, proposition_tags, promotion)
-
-    def search_for_propositions(self, search_string, max_level):
-        if max_level == ieml.AST.Sentence:
-            type_filter = {"$in": ["WORD", "SENTENCE"]}
-        elif max_level == ieml.AST.SuperSentence:
-            type_filter = {"$in": ["WORD", "SENTENCE", "SUPERSENTENCE"]}
-        else:
-            type_filter = "WORD"
-
-        regex = re.compile(search_string)
-        result = self.propositions.find({'$or': [
-                        {'_id': {'$regex': regex}},
-                        {'TAGS.FR': {'$regex': regex}},
-                        {'TAGS.EN': {'$regex': regex}}],
-                        "TYPE": type_filter})
-
-        return list(result)
 
     def _format_response(self, response):
         return {
