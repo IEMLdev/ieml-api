@@ -63,7 +63,7 @@ class HyperTextValidatorHandler(BaseDataHandler):
 
         # parse the graph and add hyperlink, check the cycle
         for hyperlink in self.json_data["graph"]:
-            path = hypertexts[hyperlink['substance']].get_path_from_ieml(hyperlink['mode']['selection']['ieml'])
+            path = hypertexts[hyperlink['substance']].get_path_from_ieml(hyperlink['mode']['selection'])
             hypertexts[hyperlink['substance']].add_hyperlink(path, hypertexts[hyperlink['attribute']])
 
         # get the root hypertext, the one with the biggest strate
@@ -127,7 +127,7 @@ class TextDecompositionHandler(BaseHandler):
             end_node_ast = original_proposition_ast
 
         return self._promoted_proposition_walker(path_to_node,
-                                                 end_node_ast, current_node.metadata["TAGS"])
+                                                 end_node_ast, original_proposition_ast.metadata["TAGS"])
 
     def _ast_walker(self, path_to_node):
         """Recursive function. Returns a JSON "tree" of the closed propositions for and IEML node,
