@@ -62,9 +62,14 @@ class HyperTextQueries(TextQueries):
                 "_id": str(hypertext),
                 "TEXTS": [str(t) for t in hypertext.texts],
                 "HYPERLINK": [
-                    {'substance': transition[0],
-                    'attribute': transition[1],
-                    'mode': transition[2].to_ieml_list()} for transition in hypertext.transitions
+                    {
+                        'substance': transition[0],
+                        'attribute': transition[1],
+                        'mode': {
+                            'PATH': transition[2].to_ieml_list(),
+                            'LITERAL': transition[3]
+                        }
+                    } for transition in hypertext.transitions
                 ]
             })
         except DuplicateKeyError:
@@ -102,7 +107,6 @@ class HyperTextQueries(TextQueries):
             "TAGS": response['TAGS'],
             "TYPE": "HYPERTEXT" if hypertext else "TEXT"
         }
-
 
     def search_request(self, search_string, languages, levels):
         query = {}

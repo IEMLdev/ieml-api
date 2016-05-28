@@ -32,5 +32,5 @@ class TestHypertext(unittest.TestCase):
         hypertext.check()
         hyperlink.check()
         str_first = hypertext._str
-        hypertext.add_hyperlink(PropositionPath(proposition=proposition), hyperlink)
+        hypertext.add_hyperlink(PropositionPath(proposition=proposition), "lol", hyperlink)
         self.assertNotEqual(str_first, hypertext._str)

@@ -80,13 +80,15 @@ class HyperText(TreeStructure):
         # we need to ensure that the text is checked to be able to generate the hyperlinks
         text.check()
 
+        # the hyperlinks, map (path) => (literal, hypertext)[]
         self._hyperlinks = None
         self._build_hyperlink()
 
         # all the text contained in the hypertext
         # the text can be duplicate, because we can put the same hypertext at different path
         self.texts = None
-        # all the transition contained in the hypertext (tuple (starting text index, endind text index, path))
+
+        # all the transition contained in the hypertext (tuple (starting text index, endind text index, path, literal))
         # the index are from the texts attribute
         self.transitions = None
         self._build_graph()
@@ -97,25 +99,25 @@ class HyperText(TreeStructure):
     def _build_hyperlink(self):
         """Gather the hyper links from the child text of this hypertext"""
         self._hyperlinks = {}
-        for path, hypertext in self.children[0].get_hyperlinks():
+        for path, (literal, hypertext) in self.children[0].get_hyperlinks():
             # check the hypertext, it will not be checked otherwise
             hypertext.check()
-            self._add_hyperlink(path, hypertext)
+            self._add_hyperlink(path, literal, hypertext)
 
-    def _add_hyperlink(self, path, hypertext):
+    def _add_hyperlink(self, path, literal, hypertext):
         """Adds the hyperlink to the hypertext's hyperlink table,
         with the path as a key and the hypertext as one of the values in the list"""
         if path not in self._hyperlinks:
             self._hyperlinks[path] = []
-        self._hyperlinks[path].append(hypertext)
+        self._hyperlinks[path].append((literal, hypertext))
 
     def get_hyperlinks(self):
-        for path, hypertexts in self._hyperlinks.items():
-            for hypertext in hypertexts:
-                yield (path, hypertext)
+        for path, values in self._hyperlinks.items():
+            for literal, hypertext in values:
+                yield (path, literal, hypertext)
 
-    def add_hyperlink(self, path, hypertext):
-        self._add_hyperlink(path, hypertext)
+    def add_hyperlink(self, path, literal, hypertext):
+        self._add_hyperlink(path, literal, hypertext)
         self._build_graph()
 
     def _do_precompute_str(self):
@@ -139,18 +141,21 @@ class HyperText(TreeStructure):
         self.transitions = set()
         for path in self._hyperlinks:
             for child in self._hyperlinks[path]:
+                literal, hypertext = child
+
                 offset = len(self.texts)
+
                 # append the text list of the child at the end of the text list, the child text is at offset position
                 # the parent (this text) is still at index 0
-                self.texts += child.texts
+                self.texts += hypertext.texts
 
                 # We had the transitions from the child to ours, with the offset to match the index of ours text list
-                self.transitions.update(map(lambda t: (t[0] + offset, t[1] + offset, t[2]), child.transitions))
+                self.transitions.update(map(lambda t: (t[0] + offset, t[1] + offset, t[2], t[3]), hypertext.transitions))
 
                 # We had this transition to the child hypertext
-                self.transitions.add((0, offset, path))
+                self.transitions.add((0, offset, path, literal))
 
-                self.strate = max((child.strate + 1, self.strate))
+                self.strate = max((hypertext.strate + 1, self.strate))
 
                 # need to recompute the ieml string and redo the checking
                 self._do_checking()

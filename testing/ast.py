@@ -312,4 +312,3 @@ class TestIsPromotion(unittest.TestCase):
         word = self.parser.parse("[([wa.i.-]+[o.]+[O:A:.])*([wa.A:.-])]")
         self.assertFalse(word.is_promotion)
 
-

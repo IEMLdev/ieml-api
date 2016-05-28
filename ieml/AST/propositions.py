@@ -39,10 +39,14 @@ class ClosedProposition:
             return self
 
     def add_hyperlink_list(self, usl_list):
-        self.hyperlink += usl_list
+        # check that all literals are not None
+        if any(map(lambda h: h[0] is not None, usl_list)):
+            raise InvalidConstructorParameter()
 
-    def _str_hyperlink(self):
-        return ''.join(map(str, self.hyperlink))
+        self.hyperlink += usl_list
+    #
+    # def _str_hyperlink(self):
+    #     return ''.join(map(str, self.hyperlink))
 
     def _retrieve_metadata_instance(self):
         return ClosedPropositionMetadata(self)
@@ -96,11 +100,9 @@ class AbstractProposition(TreeStructure, metaclass=AbstractPropositionMetaclass)
         result = self._do_render_hyperlinks(hyperlinks, current_path)
 
         if current_path in hyperlinks:
-            result += ''.join(map(str, hyperlinks[current_path]))
+            result += ''.join(map(lambda t: "<" + str(t[0]) + ">" + str(t[1]), hyperlinks[current_path]))
 
         return result
-
-
 
 
 class AbstractAdditiveProposition(AbstractProposition):
@@ -123,8 +125,8 @@ class AbstractAdditiveProposition(AbstractProposition):
             return False
 
     def _do_precompute_str(self):
-        self._str = self.RenderSymbols.left_bracket+ \
-               self.RenderSymbols.plus.join([str(element) for element in self.children]) + \
+        self._str = self.RenderSymbols.left_bracket + \
+                    self.RenderSymbols.plus.join([str(element) for element in self.children]) + \
                     self.RenderSymbols.right_bracket
 
     def __gt__(self, other):
@@ -140,7 +142,7 @@ class AbstractAdditiveProposition(AbstractProposition):
 
     def _do_render_hyperlinks(self, hyperlinks, path):
         return self.RenderSymbols.left_bracket + \
-               self.RenderSymbols.plus.join([element.render_hyperlinks(hyperlinks, path) for element in self.children]) + \
+               self.RenderSymbols.plus.join([element.render_hyperlinks(hyperlinks, path) for element in self.children])+\
                self.RenderSymbols.right_bracket
 
 
@@ -173,6 +175,12 @@ class Morpheme(AbstractAdditiveProposition, NonClosedProposition):
         self._str = self.RenderSymbols.left_parent + \
                     self.RenderSymbols.plus.join([str(element) for element in self.children]) + \
                     self.RenderSymbols.right_parent
+
+    def _do_render_hyperlinks(self, hyperlinks, path):
+        return self.RenderSymbols.left_parent + \
+               self.RenderSymbols.plus.join(
+                   [element.render_hyperlinks(hyperlinks, path) for element in self.children]) + \
+               self.RenderSymbols.right_parent
 
     def _do_checking(self):
         # then we check the terms for unicity by turning them into a set
@@ -222,8 +230,7 @@ class Word(AbstractMultiplicativeProposition, ClosedProposition):
     def _do_render_hyperlinks(self, hyperlinks, path):
         if self.mode is None:
             result = self.RenderSymbols.left_bracket + \
-                     self.subst.render_hyperlinks(hyperlinks, path) + \
-                     self.RenderSymbols.right_bracket
+                     self.subst.render_hyperlinks(hyperlinks, path) + self.RenderSymbols.right_bracket
         else:
             result = self.RenderSymbols.left_bracket + \
                      self.subst.render_hyperlinks(hyperlinks, path) + self.RenderSymbols.times + \

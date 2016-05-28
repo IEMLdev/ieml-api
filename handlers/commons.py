@@ -66,17 +66,14 @@ class ElementDecompositionHandler(BaseHandler):
         return {'text': self._children_list_json(text_ast.children)}
 
     def _decompose_hypertext(self, hypertext_ast):
-        # this uses a very simple stack to to the hypertext's tree walk-through
-        hypertext_stack = []
         output_list = []
-        while hypertext_stack:
-            current_ht = hypertext_stack.pop()
-            for path, hypertext in current_ht.children[0].get_hyperlinks():
-                hypertext_stack.append(hypertext)
-                output_list.append({"mode" : str(current_ht[0]),
-                                    "attribute" : {"literal" : "",
-                                                   "path" : path.to_ieml_list()},
-                                    "substance" : str(hypertext[0])})
+
+        for (starting, ending, path, literal) in hypertext_ast.transitions:
+            output_list.append({
+                "substance": str(hypertext_ast.texts[starting]),
+                "mode": {"literal": literal, "path": path.to_ieml_list()},
+                "attribute": str(hypertext_ast.texts[ending]),
+            })
 
         return output_list
 

@@ -106,7 +106,11 @@ class USLParser(PropositionsParser):
 
     def p_hypertext(self, p):
         """hypertext : usl"""
-        self.root = p[1]
+        literal, hypertext = p[1]
+        if literal is not None:
+            raise CannotParse()
+
+        self.root = hypertext
 
     def p_word(self, p):
         """word : LBRACKET morpheme RBRACKET
@@ -160,5 +164,10 @@ class USLParser(PropositionsParser):
             p[0] = [p[1]]
 
     def p_usl(self, p):
-        """usl : L_CURLY_BRACKET closed_proposition_list R_CURLY_BRACKET"""
-        p[0] = HyperText(Text(p[2]))
+        """usl : LITERAL L_CURLY_BRACKET closed_proposition_list R_CURLY_BRACKET
+                | L_CURLY_BRACKET closed_proposition_list R_CURLY_BRACKET"""
+        if len(p) == 5:
+            literal = p[1][1:-1] # scrap out the <>
+            p[0] = (literal, HyperText(Text(p[3])))
+        else:
+            p[0] = (None, HyperText(Text(p[2])))

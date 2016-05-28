@@ -85,7 +85,7 @@ class Term(metaclass=AbstractPropositionMetaclass):
         result = self._do_render_hyperlinks(hyperlinks, current_path)
 
         if current_path in hyperlinks:
-            result += ''.join(map(str, hyperlinks[current_path]))
+            result += ''.join(map(lambda e: "<" + str(e[0]) + ">" + str(e[1]), hyperlinks[current_path]))
 
         return result
 
