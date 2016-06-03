@@ -1,2 +1,3 @@
-from .parsing import PropositionsParser, USLParser
+from .parsing import PropositionsParser, USLParser, ScriptParser
 from .AST import *
+from .script import *

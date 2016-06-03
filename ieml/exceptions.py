@@ -12,6 +12,9 @@ class PropositionPathErrors(CommonsException):
 class PathCannotBeEmpty(PropositionPathErrors):
     pass
 
+### Exception raise by the Script
+
+
 
 ### These exeception are raised by the AST
 
