@@ -29,6 +29,7 @@ class BaseDataHandler(BaseHandler):
         """The constructor for this abstract class just creates a request_parser"""
         super().__init__()
         self.reqparse.add_argument("data", required=True, type=str)
+        self.json_data = None
 
     def do_request_parsing(self):
         super().do_request_parsing()

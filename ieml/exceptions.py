@@ -15,6 +15,9 @@ class PathCannotBeEmpty(PropositionPathErrors):
 ### Exception raise by the Script
 
 
+class InvalidScriptForTableCreation(Exception):
+    pass
+
 
 ### These exeception are raised by the AST
 

@@ -1,6 +1,59 @@
 from ieml.AST.commons import TreeStructure
 from .constants import LAYER_MARKS, PRIMITVES, remarkable_multiplication_lookup_table, REMARKABLE_ADDITION, character_value
+import numpy as np
 import itertools
+from ieml.exceptions import InvalidScriptForTableCreation
+#
+#
+# class Tables:
+#     def __init__(self, script):
+#         super().__init__()
+#
+#         self.tables_children = []
+#
+#         self.script = script
+#
+#         self.headers = None
+#
+#         # Couples of (s [Script], n [number]) where s.layer == self.script.layer - 1
+#         # and n in [0;2] (the declined seme of the multiplication)
+#         self._dim = None
+#
+#         self._build_tables()
+#
+#     def _build_tables(self):
+#         # A table must always be a multiplicative script
+#         if not isinstance(self.script, MultiplicativeScript) or not self.script.paradigm:
+#             raise InvalidScriptForTableCreation()
+#
+#         # Case : if multiple paradigmatic product, a dimension for each seme equivalent of a set of singular sequence
+#         # if only one, one column
+#         self._dim = []
+#         for index, e in enumerate(self.script.children):
+#             if e.paradigm:
+#                 self._dim.append((e, index))
+#
+#         if len(self._dim) == 1:
+#             # Can't be with a 0 length, implies not a paradigm
+#             pass
+#         else:
+#             # Multi seme with paradigm, each seme is a dimension
+#             self.headers = ()
+#             for e, index in self._dim:
+#                 before = self.script.children[:index]
+#                 after = self.script.children[index+1:]
+#
+#                 l = [MultiplicativeScript(children=t) for singular_sequence in e.singular_sequence
+#                      for t in before + (singular_sequence,) + after]
+#                 for elem in l:
+#                     elem.check()
+#
+#                 # optional ? the singular sequence will be already sorted
+#                 l.sort()
+#
+#                 self.headers += (l,)
+
+
 
 
 
@@ -35,6 +88,11 @@ class Script(TreeStructure):
 
         # The singular sequences
         self.singular_sequences = None
+
+        # The contained paradigms (tables)
+        self._tables = []
+
+
 
     def __gt__(self, other):
         return self != other and not self.__lt__(other)
@@ -93,6 +151,15 @@ class Script(TreeStructure):
 
                     return self_char_value < other_char_value
 
+    @property
+    def tables(self):
+        if self.paradigm and len(self._tables) == 0:
+            # compute the tables
+            pass
+        return self._tables
+
+
+
 class AdditiveScript(Script):
     """ Represent an addition of same layer scripts."""
     def __init__(self, children=None, character=None):
@@ -130,17 +197,18 @@ class AdditiveScript(Script):
 
 class MultiplicativeScript(Script):
     """ Represent a multiplication of three scripts of the same layer."""
-    def __init__(self, substance=None, attribute=None, mode=None, character=None):
-        if substance is not None:
-            if attribute is not None:
-                if mode is not None:
-                    children = (substance, attribute, mode)
+    def __init__(self, substance=None, attribute=None, mode=None, children=None, character=None):
+        if children is None:
+            if substance is not None:
+                if attribute is not None:
+                    if mode is not None:
+                        children = (substance, attribute, mode)
+                    else:
+                        children = (substance, attribute)
                 else:
-                    children = (substance, attribute)
+                    children = (substance,)
             else:
-                children = (substance,)
-        else:
-            children = None
+                children = None
 
         super().__init__(children=children, character=character)
 
