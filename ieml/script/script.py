@@ -236,6 +236,12 @@ class MultiplicativeScript(Script):
         else:
             layer = _children[0].layer
 
+        for i, c in enumerate(_children):
+            elem = c
+            if isinstance(c, AdditiveScript) and len(c.children) == 1:
+                elem = c.children[0]
+            _children[i] = elem
+
         # Replace the empty values
         for i, c in enumerate(_children):
             if c.empty:

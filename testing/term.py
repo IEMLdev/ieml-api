@@ -70,3 +70,15 @@ class TestTermParser(unittest.TestCase):
         self.assertListEqual([str(t) for t in terms_ast], list(map(lambda s: s.replace(' ',''), terms)))
 
         terms_ast.sort()
+
+    def test_reduction_single_add(self):
+        script = self.parser.parse("M:.-',M:.-',S:.-'B:.-'n.-S:.U:.-',_")
+        self.assertIsInstance(script, MultiplicativeScript)
+        script = MultiplicativeScript(substance=AdditiveScript(children=[script]))
+        script.check()
+        self.assertIsInstance(script.children[0], MultiplicativeScript)
+
+# Lot of test to do :
+# - testing invalid script construction
+# - testing redondant element in script addition
+# -
