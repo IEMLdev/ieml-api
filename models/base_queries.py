@@ -18,6 +18,7 @@ class DBConnector(object, metaclass=Singleton):
 
         self.terms = self.db_term[TERMS_COLLECTION]
 
+
 class DictionaryQueries(DBConnector):
     """Class mainly used for anything related to the terms collection, i.e., the dictionnary"""
 

@@ -28,3 +28,27 @@ class ObjectNotFound(DBException):
 
 class InvalidASTType(DBException):
     pass
+
+
+class InvalidScript(DBException):
+    pass
+
+
+class NotAParadigm(DBException):
+    pass
+
+
+class InvalidDbState(DBException):
+    pass
+
+
+class RootParadigmIntersection(DBException):
+    pass
+
+
+class ParadigmAlreadyExist(DBException):
+    pass
+
+
+class RootParadigmMissing(DBException):
+    pass

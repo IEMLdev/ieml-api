@@ -19,7 +19,15 @@ class InvalidScriptForTableCreation(Exception):
     pass
 
 
+class InvalidScriptCharacter(Exception):
+    pass
+
+
+class InvalidScript(Exception):
+    pass
+
 ### These exeception are raised by the AST
+
 
 class ASTException(Exception):
     pass
