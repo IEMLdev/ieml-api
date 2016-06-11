@@ -26,6 +26,9 @@ class InvalidScriptCharacter(Exception):
 class InvalidScript(Exception):
     pass
 
+
+class NoRemarkableSiblingForAdditiveScript(Exception):
+    pass
 ### These exeception are raised by the AST
 
 
