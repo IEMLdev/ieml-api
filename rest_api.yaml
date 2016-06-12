@@ -1,0 +1,473 @@
+# Example YAML to get you started quickly.
+# Be aware that YAML has indentation based scoping.
+# Code completion support is available so start typing for available options.
+swagger: '2.0'
+
+# This is your document metadata
+info:
+  version: "0.1.0"
+  title: IEML Library API
+  description : API for the IEML library, used to create, edit and find propositions or USLs
+
+basePath : /api
+produces : 
+  - application/json
+paths:
+  /search:
+    post:
+      description: Search for propositions or  USLs in the library's database
+      parameters:
+        - name: query
+          in: body
+          description: Search filters
+          required: true
+          schema:
+            $ref: '#/definitions/search_filters'
+      responses:
+        200:
+          description: Successful response
+          schema:
+            title: ArrayOfIEMLELements
+            type: array
+            items:
+              $ref: '#/definitions/ieml_element'
+              
+  /check_tag_exist:
+    post:
+      description: Checks if a tag already exists for a proposition or an hypertext
+      parameters:
+        - name: tag
+          in: header
+          description: Value of tested tag
+          required: true
+          type: string
+        - name: language
+          in: header
+          description: Language of tag
+          required: true
+          type: string
+      responses:
+        200:
+          description: Successful response
+          schema:
+            $ref: '#/definitions/tag_exists'
+            
+  /validate_word:
+    post:
+      description: Checks if a created word is good or not
+      parameters:
+        - name: body
+          in: body
+          description: Search filters
+          required: true
+          schema:
+            $ref: '#/definitions/word_data'
+      responses:
+        200:
+          description: Successful response
+          schema:
+            $ref: '#/definitions/validate_response'
+          
+  /save_word:
+    post:
+      description: Checks if a created word is good or not, and if good, saves it to the DB
+      parameters:
+        - name: body
+          in: body
+          description: Search filters
+          required: true
+          schema:
+            $ref: '#/definitions/word_data'
+      responses:
+        200:
+          description: Successful response
+          schema:
+            $ref: '#/definitions/validate_response'
+  
+  /validate_tree:
+    post:
+      description: Checks if a created sentence/super sentence graph is good or not, and if good, saves it to the DB
+      parameters:
+        - name: body
+          in: body
+          description: Search filters
+          required: true
+          schema:
+            $ref: '#/definitions/proposition_graph'
+      responses:
+        200:
+          description: Successful response
+          schema:
+            $ref: '#/definitions/validate_response'
+  
+  /save_tree:
+    post:
+      description: Checks if a created sentence/super sentence graph is good or not, and if good, saves it to the DB
+      parameters:
+        - name: body
+          in: body
+          description: Search filters
+          required: true
+          schema:
+            $ref: '#/definitions/proposition_graph'
+      responses:
+        200:
+          description: Successful response
+          schema:
+            $ref: '#/definitions/validate_response'
+            
+  /validate_text:
+    post:
+      description: Checks if a text is good or not,  and if good, saves it to the DB.
+      parameters:
+        - name: body
+          in: body
+          description: Text JSON data
+          required: true
+          schema:
+            $ref: '#/definitions/text_data'
+      responses:
+        200:
+          description: Successful response
+          schema:
+            $ref: '#/definitions/validate_response'
+  
+  /validate_hypertext:
+    post:
+      description: Checks if an hypertext graph is good or not, and if good saves it to the DB
+      parameters:
+        - name: body
+          in: body
+          description: Hypertext's graph json data
+          required: true
+          schema:
+            $ref: '#/definitions/hypertext_graph'
+      responses:
+        200:
+          description: Successful response
+          schema:
+            $ref: '#/definitions/validate_response'
+            
+  /decomposition_text:
+    post:
+      description: |
+        Decomposes a text into a list of proposition tree, which details all the closed propositions contained in a proposition, along with their tags and the path need to reach them.
+      parameters:
+        - name: ieml_string
+          in: header
+          description: An IEML text's string value
+          required: true
+          type : string
+      responses:
+        200:
+          description: Successful response
+          schema:
+            type : array
+            items:
+              $ref: '#/definitions/proposition_tree'
+              
+  /element_decomposition:
+    post:
+      description: Decomposes any IEML element to its children element (eg, a text into propositions, a sentence into a tree of words, or a word into two lists of terms)
+      parameters:
+        - name: ieml_string
+          in: header
+          description: An IEML element's string value
+          required: true
+          type : string
+      responses:
+        200:
+          description: Successful response
+          schema:
+            type : array
+            items:
+              $ref: '#/definitions/decomposed_ieml_element'
+definitions:
+  search_filters:
+    type: object
+    required :
+      - search_string
+    properties:
+      search_string:
+        type : string
+      language:
+        type : string
+      level:
+        type: string
+      category:
+        type: string
+      term_type:
+        type : string
+    
+  ieml_element:
+    type: object
+    required:
+      - IEML
+      - TAGS
+      - TYPE
+    properties:
+      IEML: 
+        type : string
+      TAGS:
+        type : string
+      TYPE:
+        type : string
+        
+  tag_exists:
+    type: object
+    properties:
+      exist: 
+        type: boolean
+    
+  tags:
+    type : object
+    required:
+      - FR
+      - EN
+    properties:
+      FR:
+        type : string
+      EN:
+        type : string
+  
+  word_data:
+    type: object
+    required:
+      - substance
+      - mode
+      - tags
+    properties:
+      substance:
+        type : array
+        items :
+          type: string
+      mode:
+        type : array
+        items :
+          type: string
+      tags:
+        $ref: "#/definitions/tags"
+      
+  node:
+    type: object
+    required:
+      - ieml_string
+      - id
+    properties:
+      ieml_string:
+        type : string
+      id :
+        type : string
+  
+  proposition_graph:
+    type : object
+    required:
+      - nodes
+      - graph
+      - tags
+    properties:
+      nodes:
+        type : array
+        items:
+          $ref: "#/definitions/node"
+      graph:
+        type: array
+        items:
+          type: object
+          required:
+            - substance
+            - attribut
+            - mode
+          properties:
+            substance :
+              type : string
+            attribut :
+              type : string
+            mode :
+              type : string
+      tags:
+        $ref: "#/definitions/tags"
+      validation_type:
+        type : integer
+    
+  text_data:
+    type: object
+    required:
+      - text
+      - tags
+    properties:
+      text:
+        type : array
+        items :
+          type: string
+      tags:
+        $ref: "#/definitions/tags"
+  
+  hyperlink_data:
+    type: object
+    required:
+      - literal
+      - selection
+    properties:
+      literal:
+        type: string
+      selection:
+        type : array
+        items:
+          type : string
+  
+  hypertext_graph:
+    type : object
+    required:
+      - nodes
+      - graph
+      - tags
+    properties:
+      nodes:
+        type : array
+        items:
+          $ref: "#/definitions/node"
+      graph:
+        type: array
+        items:
+          type: object
+          required:
+            - substance
+            - attribut
+            - mode
+          properties:
+            substance :
+              type : string
+            attribut :
+              type : string
+            mode :
+              $ref: "#/definitions/hyperlink_data"
+              
+      tags:
+        $ref: "#/definitions/tags"
+      validation_type:
+        type : integer
+  
+  validate_response :
+    type : object
+    required:
+      - valid
+      - ieml
+    properties:
+      valid :
+        type : boolean
+      ieml:
+        type : string
+  
+  proposition_tree:
+    type: object
+    required :
+      - id
+      - name
+      - data
+      - children
+    properties:
+      id :
+        type: string
+      name:
+        type: string
+      data :
+        type: object
+        required : 
+          - PATH
+          - TAGS
+          - TYPE
+        properties:
+          PATH:
+            type: array
+            items:
+              type : string
+          TAGS:
+            $ref: "#/definitions/tags"
+          TYPE : 
+            type: string
+      children:
+        type : array
+        items:
+          $ref: "#/definitions/proposition_tree"
+  
+  proposition_data:
+    type : object
+    required:
+      - IEML
+      - TAGS
+      - TYPE
+    properties:
+          IEML:
+            type: string
+          TAGS:
+            $ref: "#/definitions/tags"
+          TYPE : 
+            type: string
+  
+  decomposed_ieml_element:
+    type: object
+    properties:
+    
+      word_data: 
+        type: object
+        required :
+          - substance
+          - mode
+        properties:
+          substance:
+            type: array
+            items:
+              $ref: "#/definitions/proposition_data"
+          mode:
+            type: array
+            items:
+              $ref: "#/definitions/proposition_data"
+      
+      sentence_data:
+        type : array
+        items:
+          type : object
+          required :
+            - substance
+            - attribute
+            - mode
+          properties:
+            substance:
+              $ref: "#/definitions/proposition_data"
+            attribute:
+              $ref: "#/definitions/proposition_data"
+            mode:
+              $ref: "#/definitions/proposition_data"
+      
+      text_data:
+        type: array
+        items :
+          $ref: "#/definitions/proposition_data"
+      
+      hypertext_data:
+        type: array
+        items:
+          type: object
+          required:
+            - substance
+            - attribute
+            - mode
+          properties:
+            substance: 
+              type: string
+            attribute : 
+              type: string
+            mode :
+              type: object
+              required:
+                - literal
+                - path
+              properties:
+                literal:
+                  type: string
+                path:
+                  type: array
+                  items:
+                    type : string
+        
