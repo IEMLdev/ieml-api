@@ -52,7 +52,7 @@ paths:
           schema:
             $ref: '#/definitions/tag_exists'
             
-  /validate_word:
+  /word/validate:
     post:
       description: Checks if a created word is good or not
       parameters:
@@ -68,7 +68,7 @@ paths:
           schema:
             $ref: '#/definitions/validate_response'
           
-  /save_word:
+  /word/save:
     post:
       description: Checks if a created word is good or not, and if good, saves it to the DB
       parameters:
@@ -84,7 +84,7 @@ paths:
           schema:
             $ref: '#/definitions/validate_response'
   
-  /validate_tree:
+  /tree/validate:
     post:
       description: Checks if a created sentence/super sentence graph is good or not, and if good, saves it to the DB
       parameters:
@@ -100,7 +100,7 @@ paths:
           schema:
             $ref: '#/definitions/validate_response'
   
-  /save_tree:
+  /tree/save:
     post:
       description: Checks if a created sentence/super sentence graph is good or not, and if good, saves it to the DB
       parameters:
@@ -116,7 +116,7 @@ paths:
           schema:
             $ref: '#/definitions/validate_response'
             
-  /validate_text:
+  /text/validate:
     post:
       description: Checks if a text is good or not,  and if good, saves it to the DB.
       parameters:
@@ -132,7 +132,7 @@ paths:
           schema:
             $ref: '#/definitions/validate_response'
   
-  /validate_hypertext:
+  /hypertext/validate:
     post:
       description: Checks if an hypertext graph is good or not, and if good saves it to the DB
       parameters:
@@ -148,7 +148,7 @@ paths:
           schema:
             $ref: '#/definitions/validate_response'
             
-  /decomposition_text:
+  /text/decompose:
     post:
       description: |
         Decomposes a text into a list of proposition tree, which details all the closed propositions contained in a proposition, along with their tags and the path need to reach them.
@@ -166,7 +166,7 @@ paths:
             items:
               $ref: '#/definitions/proposition_tree'
               
-  /element_decomposition:
+  /element/decompose:
     post:
       description: Decomposes any IEML element to its children element (eg, a text into propositions, a sentence into a tree of words, or a word into two lists of terms)
       parameters:
