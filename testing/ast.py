@@ -282,6 +282,7 @@ class TestIsNull(unittest.TestCase):
         self.assertFalse(promoted_sentence.is_null)
         self.assertTrue(promoted_sentence.children[0].mode)
 
+
 class TestIsPromotion(unittest.TestCase):
 
     def setUp(self):

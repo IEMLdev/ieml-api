@@ -5,7 +5,7 @@ import ply.yacc as yacc
 from helpers.metaclasses import Singleton
 from ieml.exceptions import CannotParse
 from .lexer import get_script_lexer, tokens
-from ieml.script import AdditiveScript, MultiplicativeScript, null_element
+from ieml.script import AdditiveScript, MultiplicativeScript
 
 
 class ScriptParser(metaclass=Singleton):

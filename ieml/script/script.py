@@ -1,60 +1,9 @@
 from ieml.AST.commons import TreeStructure
-from .constants import LAYER_MARKS, PRIMITVES, remarkable_multiplication_lookup_table, REMARKABLE_ADDITION, character_value
+from .constants import LAYER_MARKS, PRIMITVES, remarkable_multiplication_lookup_table, REMARKABLE_ADDITION, \
+    character_value
 import numpy as np
 import itertools
-from ieml.exceptions import InvalidScriptForTableCreation
-#
-#
-# class Tables:
-#     def __init__(self, script):
-#         super().__init__()
-#
-#         self.tables_children = []
-#
-#         self.script = script
-#
-#         self.headers = None
-#
-#         # Couples of (s [Script], n [number]) where s.layer == self.script.layer - 1
-#         # and n in [0;2] (the declined seme of the multiplication)
-#         self._dim = None
-#
-#         self._build_tables()
-#
-#     def _build_tables(self):
-#         # A table must always be a multiplicative script
-#         if not isinstance(self.script, MultiplicativeScript) or not self.script.paradigm:
-#             raise InvalidScriptForTableCreation()
-#
-#         # Case : if multiple paradigmatic product, a dimension for each seme equivalent of a set of singular sequence
-#         # if only one, one column
-#         self._dim = []
-#         for index, e in enumerate(self.script.children):
-#             if e.paradigm:
-#                 self._dim.append((e, index))
-#
-#         if len(self._dim) == 1:
-#             # Can't be with a 0 length, implies not a paradigm
-#             pass
-#         else:
-#             # Multi seme with paradigm, each seme is a dimension
-#             self.headers = ()
-#             for e, index in self._dim:
-#                 before = self.script.children[:index]
-#                 after = self.script.children[index+1:]
-#
-#                 l = [MultiplicativeScript(children=t) for singular_sequence in e.singular_sequence
-#                      for t in before + (singular_sequence,) + after]
-#                 for elem in l:
-#                     elem.check()
-#
-#                 # optional ? the singular sequence will be already sorted
-#                 l.sort()
-#
-#                 self.headers += (l,)
-
-
-
+from ieml.exceptions import InvalidScriptForTableCreation, InvalidScriptCharacter, InvalidScript
 
 
 class Script(TreeStructure):
@@ -92,10 +41,17 @@ class Script(TreeStructure):
         # The contained paradigms (tables)
         self._tables = []
 
+    # def __gt__(self, other):
+    #     return self != other and not self.__lt__(other)
 
+    def __eq__(self, other):
+        if self._str is None or other._str is None:
+            raise NotImplemented()
+        return self._str == other._str
 
-    def __gt__(self, other):
-        return self != other and not self.__lt__(other)
+    def __hash__(self):
+        """Since the IEML string for any proposition AST is supposed to be unique, it can be used as a hash"""
+        return self.__str__().__hash__()
 
     def __lt__(self, other):
         if not isinstance(self, Script) or not isinstance(other, Script):
@@ -108,6 +64,13 @@ class Script(TreeStructure):
             # order by layer
             return self.layer < other.layer
         else:
+            # Cardinal of 1 the minimum, null_script is minimum
+            if isinstance(self, NullScript):
+                return True
+
+            if isinstance(other, NullScript):
+                return False
+
             if self.cardinal != other.cardinal:
                 # then by number of singular sequence
                 return self.cardinal < other.cardinal
@@ -120,7 +83,7 @@ class Script(TreeStructure):
                         iterator = iter(other.children)
                         for s in self.children:
                             try:
-                                o = iterator.next()
+                                o = iterator.__next__()
                                 if o != s:
                                     return s < o
                             except StopIteration:
@@ -135,14 +98,12 @@ class Script(TreeStructure):
                 else:
                     # Layer 0
                     # Compare the value of the character or the sum
-                    self_char_value = None
                     if isinstance(self, AdditiveScript):
                         # The character value is the sum of all character of the addition
                         self_char_value = sum((character_value[c.character] for c in self.children))
                     else:
                         self_char_value = character_value[self.character]
 
-                    other_char_value = None
                     if isinstance(other, AdditiveScript):
                         # The character value is the sum of all character of the addition
                         other_char_value = sum((character_value[c.character] for c in other.children))
@@ -155,33 +116,89 @@ class Script(TreeStructure):
     def tables(self):
         if self.paradigm and len(self._tables) == 0:
             # compute the tables
-            pass
+            self._tables = self._compute_tables()
         return self._tables
 
+    def _compute_tables(self):
+        if isinstance(self, AdditiveScript):
+            return [e for child in self.children for e in child._compute_tables()]
+
+        dim = []
+        for child in self.children:
+            if child.paradigm:
+                dim.append(child)
+
+        # if len(dim) == 1:
+        # else:
+        #     self._tables = Table(headers=dim)
 
 
 class AdditiveScript(Script):
     """ Represent an addition of same layer scripts."""
     def __init__(self, children=None, character=None):
-        super().__init__(children=children, character=character)
+        _character = None
+        _children = []
 
-    def _do_checking(self):
-        if self.character: #  remarkable addition
+        if children:
+            _children = children
+
+        if character in REMARKABLE_ADDITION:
+            _character = character
+            _children = REMARKABLE_ADDITION_SCRIPT[_character]
+        else:
+            if len(_children) == 0:
+                raise InvalidScript()
+
+        # check all children are the same layer
+        l = _children[0].layer
+        for c in _children:
+            if c.layer != l:
+                raise InvalidScript()
+
+        if _children:
+            for c in _children:
+                c.check()
+
+            to_remove = []
+            to_add = []
+            # remove the sub addition
+            for c in _children:
+                if isinstance(c, AdditiveScript):
+                    to_remove.append(c)
+                    to_add.extend(c.children)
+
+            _children.extend(to_add)
+            # Remove duplicate children
+            _children = list(set(c for c in _children if c not in to_remove))
+
+        # make a character with the children if possible
+        if l == 0:
+            _char_set = set(map(lambda c : str(c)[0], _children))
+            for key, value in REMARKABLE_ADDITION.items():
+                if _char_set == value:
+                    _character = key
+                    break
+
+        super().__init__(children=_children, character=_character)
+
+        if self.character:  # remarkable addition
             self.layer = 0
             self.empty = False
             self.paradigm = True
             self.cardinal = len(REMARKABLE_ADDITION[self.character])
-            # extends the character
-            self.children = REMARKABLE_ADDITION_SCRIPT[self.character]
         else:
             self.layer = self.children[0].layer
             self.empty = all((e.empty for e in self.children))
             self.paradigm = len(self.children) > 1 or any(child.paradigm for child in self.children)
             self.cardinal = sum((e.cardinal for e in self.children))
 
+    def _do_checking(self):
+        pass
+
     def _do_precompute_str(self):
-        self._str = (self.character + LAYER_MARKS[0]) if self.character is not None \
-            else '+'.join(map(str, self.children))
+        self._str = \
+            (self.character + LAYER_MARKS[0]) if self.character is not None \
+            else '+'.join([str(child) for child in self.children])
 
     def _do_ordering(self):
         # Ordering of the children
@@ -193,39 +210,75 @@ class AdditiveScript(Script):
         else:
             # additive proposition has always children set
             self.singular_sequences = [sequence for child in self.children for sequence in child.singular_sequences]
+            self.singular_sequences.sort()
 
 
 class MultiplicativeScript(Script):
     """ Represent a multiplication of three scripts of the same layer."""
     def __init__(self, substance=None, attribute=None, mode=None, children=None, character=None):
+        if not (substance or attribute or mode or children or character):
+            raise InvalidScript()
+
+        # Build children
         if children is None:
+            _children = []
             if substance is not None:
+                _children.append(substance)
                 if attribute is not None:
+                    _children.append(attribute)
                     if mode is not None:
-                        children = (substance, attribute, mode)
-                    else:
-                        children = (substance, attribute)
-                else:
-                    children = (substance,)
+                        _children.append(mode)
+        else:
+            _children = list(children)
+
+        # Replace all the corresponding children to character
+        _character = None
+        if character is not None:
+            _character = character
+            if _character in PRIMITVES:
+                _children = []
+                layer = 0
+            elif _character in REMARKABLE_MULTIPLICATION_SCRIPT:
+                _children = REMARKABLE_MULTIPLICATION_SCRIPT[_character]
+                layer = 1
             else:
-                children = None
+                raise InvalidScriptCharacter()
+        else:
+            layer = _children[0].layer
 
-        super().__init__(children=children, character=character)
+        for i, c in enumerate(_children):
+            elem = c
+            if isinstance(c, AdditiveScript) and len(c.children) == 1:
+                elem = c.children[0]
+            _children[i] = elem
 
-    def _do_precompute_str(self):
-        self._str = (self.character if self.character is not None
-            else ''.join(map(str, self.children))) + LAYER_MARKS[self.layer]
+        # Replace the empty values
+        for i, c in enumerate(_children):
+            if c.empty:
+                _children[i] = NullScript(layer=c.layer)
 
+        # Fill the children to get a size of 3
+        if _character not in PRIMITVES:
+            for i in range(len(_children), 3):
+                _children.append(NullScript(layer=layer))
 
-    def _do_checking(self):
-        # Computation of layer, paradigm and emptiness
+        for c in _children:
+            c.check()
+        # Add the character to children corresponding to specific combinaison
+        _str_children = self._render_children(_children, _character)
+        if _str_children in remarkable_multiplication_lookup_table:
+            _character = remarkable_multiplication_lookup_table[_str_children]
+
+        super().__init__(children=_children, character=_character)
+
+        # Compute the attributes of this script
         if self.character:
             self.layer = 0 if self.character in PRIMITVES else 1
-            self.empty = self.character == 'E'
             self.paradigm = False
             self.cardinal = 1
+            self.empty = self.character == 'E'
         else:
-            self.layer = self.children[0].layer + 1
+            self.layer = _children[0].layer + 1
             self.empty = all((e.empty for e in self.children))
             self.paradigm = any((e.paradigm for e in self.children))
 
@@ -233,31 +286,36 @@ class MultiplicativeScript(Script):
             for e in self.children:
                 self.cardinal = self.cardinal * e.cardinal
 
-        # Use of remarkable mutliplication
-        if self.children and self.layer == 1:
-            children_str = ''.join(map(str, self.children))
-            if children_str in remarkable_multiplication_lookup_table:
-                self.character = remarkable_multiplication_lookup_table[children_str]
+    def _render_children(self, children=None, character=None):
+        if character:
+            return character
+        else:
+            empty = True
+            result = ''
+            for i, c in enumerate(reversed(children)):
+                if not c.empty:
+                    empty = False
 
-        # expends the character of layer 1
-        if self.layer == 1 and self.character is not None:
-            self.children = REMARKABLE_MULTIPLICATION_SCRIPT[self.character]
+                if not empty or not c.empty or i == 2:
+                    result = str(c) + result
+            return result
 
-        # Reduction of empty
-        if self.children:
-            if len(self.children) == 3 and self.children[2].empty:
-                if self.children[1].empty:
-                    self.children = (self.children[0],)
-                else:
-                    self.children = (self.children[0], self.children[1])
+    def _do_precompute_str(self):
+        self._str = self._render_children(self.children, self.character) + LAYER_MARKS[self.layer]
 
-            if len(self.children) == 2 and self.children[1].empty:
-                self.children = (self.children[0],)
+    def _do_checking(self):
+        if self.layer != 0:
+            # check number of children
+            if not len(self.children) == 3:
+                raise InvalidScript()
 
-            # TODO : delete stages of single element addition
-            # for i in range(0, len(self.children)):
-            #     if isinstance(self.children[i], AdditiveScript) and len(self.children[i].children) == 1:
-            #         self.children[i] = self.children[i].children[0]
+            # check every child of the same layer
+            if not self.children[0].layer == self.children[1].layer == self.children[2].layer:
+                raise InvalidScript()
+
+            # check layer
+            if not self.layer == self.children[0].layer + 1:
+                raise InvalidScript()
 
     def _do_ordering(self):
         # Generate the singular sequence
@@ -265,9 +323,9 @@ class MultiplicativeScript(Script):
             self.singular_sequences = [self]
         else:
             children_sequences = (self.children[0].singular_sequences,)
-            if len(self.children) > 1:
+            if not self.children[1].empty:
                 children_sequences += (self.children[1].singular_sequences,)
-                if len(self.children) > 2:
+                if not self.children[2].empty:
                     children_sequences += (self.children[2].singular_sequences,)
 
             self.singular_sequences = []
@@ -282,38 +340,70 @@ class MultiplicativeScript(Script):
                 sequence.check()
                 self.singular_sequences.append(sequence)
 
+            self.singular_sequences.sort()
+
+
+class NullScript(Script):
+    def __init__(self, layer):
+        super().__init__(children=[])
+        self.layer = layer
+        self.paradigm = False
+        self.empty = True
+        self.cardinal = 1
+        self.singular_sequences = [self]
+        self.character = 'E'
+
+        # No need to check
+        self._has_been_checked = True
+        self._has_been_ordered = True
+
+        self._do_precompute_str()
+
+    def _do_precompute_str(self):
+        result = self.character
+        for l in range(0, self.layer + 1):
+            result = result + LAYER_MARKS[l]
+
+        self._str = result
+
+    def _do_checking(self):
+        pass
+
+    def _do_ordering(self):
+        pass
+
 
 # Building the remarkable multiplication to script
 REMARKABLE_MULTIPLICATION_SCRIPT = {
-    "wo": (MultiplicativeScript(character='U'), MultiplicativeScript(character='U')),
-    "wa": (MultiplicativeScript(character='U'), MultiplicativeScript(character='A')),
-    "y": (MultiplicativeScript(character='U'), MultiplicativeScript(character='S')),
-    "o": (MultiplicativeScript(character='U'), MultiplicativeScript(character='B')),
-    "e": (MultiplicativeScript(character='U'), MultiplicativeScript(character='T')),
+    "wo":[MultiplicativeScript(character='U'), MultiplicativeScript(character='U'), NullScript(layer=0)],
+    "wa":[MultiplicativeScript(character='U'), MultiplicativeScript(character='A'), NullScript(layer=0)],
+    "y": [MultiplicativeScript(character='U'), MultiplicativeScript(character='S'), NullScript(layer=0)],
+    "o": [MultiplicativeScript(character='U'), MultiplicativeScript(character='B'), NullScript(layer=0)],
+    "e": [MultiplicativeScript(character='U'), MultiplicativeScript(character='T'), NullScript(layer=0)],
 
-    "wu": (MultiplicativeScript(character='A'), MultiplicativeScript(character='U')),
-    "we": (MultiplicativeScript(character='A'), MultiplicativeScript(character='A')),
-    "u": (MultiplicativeScript(character='A'), MultiplicativeScript(character='S')),
-    "a": (MultiplicativeScript(character='A'), MultiplicativeScript(character='B')),
-    "i": (MultiplicativeScript(character='A'), MultiplicativeScript(character='T')),
+    "wu":[MultiplicativeScript(character='A'), MultiplicativeScript(character='U'), NullScript(layer=0)],
+    "we":[MultiplicativeScript(character='A'), MultiplicativeScript(character='A'), NullScript(layer=0)],
+    "u": [MultiplicativeScript(character='A'), MultiplicativeScript(character='S'), NullScript(layer=0)],
+    "a": [MultiplicativeScript(character='A'), MultiplicativeScript(character='B'), NullScript(layer=0)],
+    "i": [MultiplicativeScript(character='A'), MultiplicativeScript(character='T'), NullScript(layer=0)],
 
-    "j": (MultiplicativeScript(character='S'), MultiplicativeScript(character='U')),
-    "g": (MultiplicativeScript(character='S'), MultiplicativeScript(character='A')),
-    "s": (MultiplicativeScript(character='S'), MultiplicativeScript(character='S')),
-    "b": (MultiplicativeScript(character='S'), MultiplicativeScript(character='B')),
-    "t": (MultiplicativeScript(character='S'), MultiplicativeScript(character='T')),
+    "j": [MultiplicativeScript(character='S'), MultiplicativeScript(character='U'), NullScript(layer=0)],
+    "g": [MultiplicativeScript(character='S'), MultiplicativeScript(character='A'), NullScript(layer=0)],
+    "s": [MultiplicativeScript(character='S'), MultiplicativeScript(character='S'), NullScript(layer=0)],
+    "b": [MultiplicativeScript(character='S'), MultiplicativeScript(character='B'), NullScript(layer=0)],
+    "t": [MultiplicativeScript(character='S'), MultiplicativeScript(character='T'), NullScript(layer=0)],
 
-    "h": (MultiplicativeScript(character='B'), MultiplicativeScript(character='U')),
-    "c": (MultiplicativeScript(character='B'), MultiplicativeScript(character='A')),
-    "k": (MultiplicativeScript(character='B'), MultiplicativeScript(character='S')),
-    "m": (MultiplicativeScript(character='B'), MultiplicativeScript(character='B')),
-    "n": (MultiplicativeScript(character='B'), MultiplicativeScript(character='T')),
+    "h": [MultiplicativeScript(character='B'), MultiplicativeScript(character='U'), NullScript(layer=0)],
+    "c": [MultiplicativeScript(character='B'), MultiplicativeScript(character='A'), NullScript(layer=0)],
+    "k": [MultiplicativeScript(character='B'), MultiplicativeScript(character='S'), NullScript(layer=0)],
+    "m": [MultiplicativeScript(character='B'), MultiplicativeScript(character='B'), NullScript(layer=0)],
+    "n": [MultiplicativeScript(character='B'), MultiplicativeScript(character='T'), NullScript(layer=0)],
 
-    "p": (MultiplicativeScript(character='T'), MultiplicativeScript(character='U')),
-    "x": (MultiplicativeScript(character='T'), MultiplicativeScript(character='A')),
-    "d": (MultiplicativeScript(character='T'), MultiplicativeScript(character='S')),
-    "f": (MultiplicativeScript(character='T'), MultiplicativeScript(character='B')),
-    "l": (MultiplicativeScript(character='T'), MultiplicativeScript(character='T'))
+    "p": [MultiplicativeScript(character='T'), MultiplicativeScript(character='U'), NullScript(layer=0)],
+    "x": [MultiplicativeScript(character='T'), MultiplicativeScript(character='A'), NullScript(layer=0)],
+    "d": [MultiplicativeScript(character='T'), MultiplicativeScript(character='S'), NullScript(layer=0)],
+    "f": [MultiplicativeScript(character='T'), MultiplicativeScript(character='B'), NullScript(layer=0)],
+    "l": [MultiplicativeScript(character='T'), MultiplicativeScript(character='T'), NullScript(layer=0)]
 }
 
 for key in REMARKABLE_MULTIPLICATION_SCRIPT:
