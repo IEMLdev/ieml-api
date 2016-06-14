@@ -3,8 +3,8 @@ import re
 from pymongo import MongoClient
 
 from helpers.metaclasses import Singleton
-from models.constants import TERMS_COLLECTION, TAG_LANGUAGES, DB_NAME_TERM
-from .constants import DB_ADDRESS, DB_NAME
+from models.constants import TERMS_COLLECTION, TAG_LANGUAGES
+from .constants import DB_ADDRESS, DB_NAME, OLD_DB_NAME, OLD_TERMS_COLLECTION
 
 
 class DBConnector(object, metaclass=Singleton):
@@ -14,9 +14,10 @@ class DBConnector(object, metaclass=Singleton):
         self.client = MongoClient(DB_ADDRESS)  # connecting to the db
 
         self.db = self.client[DB_NAME] # opening a DB
-        self.db_term = self.client[DB_NAME_TERM]
+        self.old_db = self.client[OLD_DB_NAME]
 
-        self.terms = self.db_term[TERMS_COLLECTION]
+        # TODO : once the old DB has a migration script, this should be in the self.db
+        self.terms = self.old_db[OLD_TERMS_COLLECTION]
 
 
 class DictionaryQueries(DBConnector):
@@ -55,6 +56,10 @@ class DictionaryQueries(DBConnector):
         else:
             return None
 
+    def get_all_terms(self):
+        """Returns an interator for all the terms"""
+        return self.terms.find()
+
     def get_random_terms(self, count):
         """Used by the random proposition generator : ouputs n random terms from the dicitonary DB, n being count"""
         total_count = self.terms.count()
@@ -86,6 +91,7 @@ class DictionaryQueries(DBConnector):
 
     def check_tag_exist(self, tag, language):
         return self.terms.find_one({language: tag}) is not None
+
 
 
 class Tag:
