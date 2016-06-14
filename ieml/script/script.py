@@ -322,21 +322,18 @@ class MultiplicativeScript(Script):
         if not self.paradigm:
             self.singular_sequences = [self]
         else:
-            children_sequences = (self.children[0].singular_sequences,)
-            if not self.children[1].empty:
-                children_sequences += (self.children[1].singular_sequences,)
-                if not self.children[2].empty:
-                    children_sequences += (self.children[2].singular_sequences,)
+            children_sequences = []
+            for i in range(0, 3):
+                if not self.children[i].empty:
+                    children_sequences.append([(i, c) for c in self.children[i].singular_sequences])
 
             self.singular_sequences = []
             for triplet in itertools.product(*children_sequences):
-                if len(triplet) == 3:
-                    sequence = MultiplicativeScript(substance=triplet[0], attribute=triplet[1], mode=triplet[2])
-                elif len(triplet) == 2:
-                    sequence = MultiplicativeScript(substance=triplet[0], attribute=triplet[1])
-                else:
-                    sequence = MultiplicativeScript(substance=triplet[0])
+                children = self.children[:]
+                for tpl in triplet:
+                    children[tpl[0]] = tpl[1]
 
+                sequence = MultiplicativeScript(children=children)
                 sequence.check()
                 self.singular_sequences.append(sequence)
 
