@@ -3,10 +3,13 @@ import bidict
 
 
 DB_ADDRESS = "mongodb://localhost:27017/"
+OLD_DB_NAME = "old_db"
 DB_NAME = "ieml_db"
-DB_NAME_TERM = "db3"
 
-SCRIPTS_COLLECTION = "scripts"
+OLD_TERMS_COLLECTION = "terms"
+OLD_RELATIONSHIPS_COLLECTION = "relationships"
+
+SCRIPTS_COLLECTION = "relations"
 TERMS_COLLECTION = "terms"
 PROPOSITION_COLLECTION = "propositions"
 TEXT_COLLECTION = "texts"
