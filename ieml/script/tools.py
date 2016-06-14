@@ -1,10 +1,60 @@
 from .script import AdditiveScript, MultiplicativeScript, REMARKABLE_MULTIPLICATION_SCRIPT
-from .constants import LAYER_MARKS, REMARKABLE_ADDITION, PRIMITVES
+from .constants import LAYER_MARKS, REMARKABLE_ADDITION, PRIMITVES, OPPOSED_SIBLING_RELATION, \
+    ASSOCIATED_SIBLING_RELATION, CROSSED_SIBLING_RELATION, TWIN_SIBLING_RELATION
 from ieml.exceptions import NoRemarkableSiblingForAdditiveScript
 import re
 
 
-class RelationsQueries:
+class RemarkableSibling:
+
+    @classmethod
+    def compute_remarkable_siblings_relations(cls, script_ast_list):
+        """
+        Compute the list of relation for remarkable siblings.
+        For the relation associated, opposed and crossed, the list take the form of the tuple: (script_src, script_dest).
+        For a tuple (a, b) the symetric (b, a) for a relation is always present in the relation's list.
+        For the relation twin, the list is all the script that are in relation together.
+        :param script_ast_list: the list of script. must all be in the same layer (paradigm)
+        :return:
+        """
+        relations = {
+            # lists of couple (a, b) if a in relation with b
+            OPPOSED_SIBLING_RELATION: [],
+            ASSOCIATED_SIBLING_RELATION: [],
+            CROSSED_SIBLING_RELATION: [],
+            # list of all script that are in relation
+            TWIN_SIBLING_RELATION: []
+        }
+        if len(script_ast_list) == 0:
+            return relations
+
+        for i, s_src in enumerate(script_ast_list):
+            opposed = cls.opposed_sibling(s_src)
+            associated = cls.associated_sibling(s_src)
+            cross = cls.cross_sibling(s_src)
+
+            for s_trg in script_ast_list[i:]:
+                if opposed.match(str(s_trg)):
+                    relations[OPPOSED_SIBLING_RELATION].append((s_src, s_trg))
+                    # symetrical
+                    relations[OPPOSED_SIBLING_RELATION].append((s_trg, s_src))
+
+                if associated.match(str(s_trg)):
+                    relations[ASSOCIATED_SIBLING_RELATION].append((s_src, s_trg))
+                    # symetrical
+                    relations[ASSOCIATED_SIBLING_RELATION].append((s_trg, s_src))
+
+                if cross.match(str(s_trg)):
+                    relations[CROSSED_SIBLING_RELATION].append((s_src, s_trg))
+                    # symetrical
+                    relations[CROSSED_SIBLING_RELATION].append((s_trg, s_src))
+
+        twin = cls.twin_siblings(script_ast_list[0].layer)
+        for s in script_ast_list:
+            if twin.match(s):
+                relations[TWIN_SIBLING_RELATION].append(s)
+
+        return relations
 
     @classmethod
     def opposed_sibling(cls, script_ast):
@@ -91,3 +141,4 @@ class RelationsQueries:
 
         return '(?:[' + re.escape(''.join(primitives)) + ']+' + re.escape(LAYER_MARKS[layer]) + ')' + \
                ('*' if optional else '')
+

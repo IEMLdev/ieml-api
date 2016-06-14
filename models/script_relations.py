@@ -1,7 +1,7 @@
 from models.base_queries import DBConnector
 from models.constants import SCRIPTS_COLLECTION, ROOT_PARADIGM_TYPE, SINGULAR_SEQUENCE_TYPE, PARADIGM_TYPE
 from models.exceptions import InvalidScript, NotAParadigm, InvalidDbState, RootParadigmIntersection, \
-    ParadigmAlreadyExist, RootParadigmMissing
+    ParadigmAlreadyExist, RootParadigmMissing, NotARootParadigm
 from pymongo.errors import DuplicateKeyError
 from ieml.script import Script
 from ieml.parsing.script import ScriptParser
@@ -30,6 +30,19 @@ class ScriptConnector(DBConnector):
             return result[0]['RESULT']
         else:
             return []
+
+    def get_relations(self, script, relation=None):
+        if isinstance(script, str):
+            script_str = script
+        elif isinstance(script, Script):
+            script_str = str(script)
+        else:
+            raise InvalidScript()
+
+        if relation:
+            return self._get_script(script_str)['RELATIONS'][relation]
+        else:
+            return self._get_script(script_str)['RELATIONS']
 
     def save_paradigm(self, script, root=False):
         """
@@ -78,6 +91,7 @@ class ScriptConnector(DBConnector):
             '_id': str(script_ast),
             'TYPE': ROOT_PARADIGM_TYPE,
             'ROOT': str(script_ast),
+            'RELATIONS': {},
             'SINGULAR_SEQUENCES': [str(seq) for seq in script_ast.singular_sequences]
         }
         self.scripts.insert(insertion)
@@ -95,6 +109,7 @@ class ScriptConnector(DBConnector):
             '_id': str(script_ast),
             'TYPE': PARADIGM_TYPE,
             'ROOT': self._compute_root(script_ast),
+            'RELATIONS': {},
             'SINGULAR_SEQUENCES': [str(seq) for seq in script_ast.singular_sequences]
         }
         self.scripts.insert(insertion)
