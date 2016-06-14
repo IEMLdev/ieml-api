@@ -1,7 +1,8 @@
 from models.base_queries import DBConnector
 from models.constants import SCRIPTS_COLLECTION, ROOT_PARADIGM_TYPE, SINGULAR_SEQUENCE_TYPE, PARADIGM_TYPE
 from models.exceptions import InvalidScript, NotAParadigm, InvalidDbState, RootParadigmIntersection, \
-    ParadigmAlreadyExist, RootParadigmMissing, NotARootParadigm
+    ParadigmAlreadyExist, RootParadigmMissing, NotARootParadigm, SingularSequenceAlreadyExist, NotASingularSequence, \
+    DBException
 from pymongo.errors import DuplicateKeyError
 from ieml.script import Script
 from ieml.parsing.script import ScriptParser
@@ -44,6 +45,19 @@ class ScriptConnector(DBConnector):
         else:
             return self._get_script(script_str)['RELATIONS']
 
+    def save_script(self, script, root=False):
+        if isinstance(script, Script):
+            script_ast = script
+        elif isinstance(script, str):
+            script_ast = self.script_parser.parse(script)
+        else:
+            raise InvalidScript()
+
+        if script_ast.paradigm:
+            self.save_paradigm(script_ast, root=root)
+        else:
+            self._save_singular_sequence(script_ast)
+
     def save_paradigm(self, script, root=False):
         """
         Save a paradigm to the database.
@@ -66,6 +80,34 @@ class ScriptConnector(DBConnector):
             self._save_root_paradigm(script_ast)
         else:
             self._save_paradigm(script_ast)
+
+    def _save_singular_sequence(self, script_ast):
+        """
+
+        :param script_ast:
+        :return:
+        """
+        # check if a singular sequence
+        if script_ast.cardinal != 1:
+            raise NotASingularSequence()
+
+        # check if already exist
+        if self._get_script(str(script_ast)):
+            raise SingularSequenceAlreadyExist()
+
+        # get all the singular sequence of the db to see if the singular sequence can be created
+        if str(script_ast) not in self.db_singular_sequences():
+            raise RootParadigmMissing()
+
+        # save the singular sequence
+        insertion = {
+            '_id': str(script_ast),
+            'TYPE': SINGULAR_SEQUENCE_TYPE,
+            'ROOT': self._compute_root(script_ast),
+            'RELATIONS': {},
+            'SINGULAR_SEQUENCES': [str(script_ast)]
+        }
+        self.scripts.insert(insertion)
 
     def _save_root_paradigm(self, script_ast):
         """
@@ -125,19 +167,46 @@ class ScriptConnector(DBConnector):
         return result['_id']
 
     def load_old_db(self):
+        # Empty the db
+        self.scripts.remove({})
+
         old_connector = self.db_term['terms']
         roots = old_connector.find({'PARADIGM': "1"})
-        for root in roots:
-            db.save_paradigm(root['IEML'], root=True)
+        count = roots.count()
+        step = count / 20.0
+        inc = 0
+        nb_star = 0
+
+        print("\tLoad the root paradigms, %d entries." % count)
+        for i, root in enumerate(roots):
+            if i - inc > step:
+                print('*', end='', flush=True)
+                inc = i
+                nb_star += 1
+            try:
+                db.save_script(root['IEML'], root=True)
+            except DBException as e:
+                print('\nException ' + e.__class__.__name__ + ' for script ' + root['IEML'])
+                print('*' * nb_star, end='', flush=True)
+        print('\n Done. \n')
 
         paradigms = old_connector.find({'PARADIGM': "0"})
-        for paradigm in paradigms:
-            p = self.script_parser.parse(paradigm['IEML'])
-            if p.paradigm:
-                try:
-                    db.save_paradigm(p)
-                except RootParadigmMissing:
-                    print(str(p))
+        count = paradigms.count()
+        step = count / 20.0
+        inc = 0
+        nb_star = 0
+        print("\tLoad the paradigms and singular sequence, %d entries." % count)
+
+        for i, paradigm in enumerate(paradigms):
+            if i - inc > step:
+                print('*', end='', flush=True)
+                inc = i
+                nb_star += 1
+            try:
+                self.save_script(paradigm['IEML'])
+            except DBException as e:
+                print('\nException ' + e.__class__.__name__ + ' for script ' + paradigm['IEML'])
+                print('*'*nb_star, end='', flush=True)
 
 if __name__ == '__main__':
     db = ScriptConnector()

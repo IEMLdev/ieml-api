@@ -22,9 +22,9 @@ class RelationsQueries:
         scripts = cls.contained(paradigm)
         scripts_ast = [parser.parse(s) for s in scripts]
 
-        for s in (str(s) for s in scripts_ast):
-            cls._save_relation(s, CONTAINS_RELATION, cls.contains(s))
-            cls._save_relation(s, CONTAINED_RELATION, cls.contained(s))
+        for s in scripts_ast:
+            cls._save_relation(str(s), CONTAINS_RELATION, cls.contains(s))
+            cls._save_relation(str(s), CONTAINED_RELATION, cls.contained(s))
 
         # save the remarkable siblings
         remakable_siblings = RemarkableSibling.compute_remarkable_siblings_relations(scripts_ast)
@@ -41,9 +41,11 @@ class RelationsQueries:
                                     for src, trg in list_tuple if src == s])
 
         # compute and save the fathers
+        for s in scripts_ast:
+            cls._save_relation(s, FATHER_RELATION, cls.fathers(s))
 
+        # compute and save the children, they need the father to get calculated
 
-        # compute and save the children
 
     @classmethod
     def fathers(cls, script_ast, max_depth=-1, _first=True):
@@ -108,6 +110,19 @@ class RelationsQueries:
                 _merge(relations[MODE], cls.fathers(sub_s.children[2], max_depth - 1, _first=False))
 
         return relations
+
+    @classmethod
+    def children(cls, script_ast, max_depth=-1):
+        script_entry = cls.script_db._get_script(str(script_ast))
+        # script that are in children relation with another script s, the script s is in father relation with him
+        # cls.script_db.scripts.aggregate([
+        #     {'$match' : {'ROOT' : script_entry['ROOT']}},
+        #     {'$unwind' : '$RELATION.' + FATHER_RELATION + '.SUBSTANCE.ELEMENT'},
+        #     {'$unwind': '$RELATION.' + FATHER_RELATION + '.ATTRIBUTE.ELEMENT'},
+        #     {'$unwind': '$RELATION.' + FATHER_RELATION + '.MODE.ELEMENT'},
+        #     {'$goup': {'_id': }}
+        # ])
+
 
     @classmethod
     def _save_relation(cls, script, relation_title, relations):
