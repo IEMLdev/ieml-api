@@ -50,5 +50,10 @@ class ParadigmAlreadyExist(DBException):
     pass
 
 
+class NotARootParadigm(DBException):
+    pass
+
+
+
 class RootParadigmMissing(DBException):
     pass

@@ -78,6 +78,26 @@ class TestTermParser(unittest.TestCase):
         script.check()
         self.assertIsInstance(script.children[0], MultiplicativeScript)
 
+    def test_duplicate_addition(self):
+        script = AdditiveScript(children=[
+            AdditiveScript(children=[
+                MultiplicativeScript(character='wa'),
+                MultiplicativeScript(character='wo')]),
+            AdditiveScript(children=[
+                MultiplicativeScript(character='j'),
+                AdditiveScript(children=[
+                    MultiplicativeScript(character='i'),
+                    MultiplicativeScript(
+                        attribute=AdditiveScript(character='M'),
+                        substance=AdditiveScript(character='O'),
+                        mode=MultiplicativeScript(character='U')
+                    )
+                ])
+            ])])
+        script.check()
+
+        self.assertTrue(all(isinstance(s, MultiplicativeScript) for s in script.children))
+
 # Lot of test to do :
 # - testing invalid script construction
 # - testing redondant element in script addition

@@ -158,8 +158,18 @@ class AdditiveScript(Script):
         if _children:
             for c in _children:
                 c.check()
+
+            to_remove = []
+            to_add = []
+            # remove the sub addition
+            for c in _children:
+                if isinstance(c, AdditiveScript):
+                    to_remove.append(c)
+                    to_add.extend(c.children)
+
+            _children.extend(to_add)
             # Remove duplicate children
-            _children = list(set(_children))
+            _children = list(set(c for c in _children if c not in to_remove))
 
         # make a character with the children if possible
         if l == 0:
@@ -248,8 +258,9 @@ class MultiplicativeScript(Script):
                 _children[i] = NullScript(layer=c.layer)
 
         # Fill the children to get a size of 3
-        for i in range(len(_children), 3):
-            _children.append(NullScript(layer=layer))
+        if _character not in PRIMITVES:
+            for i in range(len(_children), 3):
+                _children.append(NullScript(layer=layer))
 
         for c in _children:
             c.check()
