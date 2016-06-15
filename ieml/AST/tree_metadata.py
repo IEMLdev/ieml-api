@@ -41,7 +41,7 @@ class TreeElementMetadata:
 class TermMetadata(TreeElementMetadata):
     @needs_db
     def _retrieve_from_db(self):
-        self.db_entry = self._db_connector.exact_ieml_term_search_noformat(self.element_ref.ieml)
+        self.db_entry = self._db_connector.exact_ieml_term_search(self.element_ref.ieml)
 
 
 class PropositionMetadata(TreeElementMetadata):
