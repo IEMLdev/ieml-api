@@ -192,6 +192,8 @@ class AdditiveScript(Script):
             self.paradigm = len(self.children) > 1 or any(child.paradigm for child in self.children)
             self.cardinal = sum((e.cardinal for e in self.children))
 
+        self.check()
+
     def _do_checking(self):
         pass
 
@@ -285,6 +287,8 @@ class MultiplicativeScript(Script):
             self.cardinal = 1
             for e in self.children:
                 self.cardinal = self.cardinal * e.cardinal
+
+        self.check()
 
     def _render_children(self, children=None, character=None):
         if character:

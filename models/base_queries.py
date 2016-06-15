@@ -56,6 +56,12 @@ class DictionaryQueries(DBConnector):
         else:
             return None
 
+    def exact_ieml_term_search_noformat(self, ieml_string):
+        if ieml_string[0] == '[' and ieml_string[-1] == ']':
+            ieml_string = ieml_string[1:-1]
+
+        return self.terms.find_one({"IEML": ieml_string})
+
     def get_all_terms(self):
         """Returns an interator for all the terms"""
         return self.terms.find()
