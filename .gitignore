@@ -6,6 +6,12 @@ __pycache__/
 # C extensions
 *.so
 
+# PyVenv
+.python-version
+bin/
+lib64
+pyvenv.cfg
+
 # Distribution / packaging
 .Python
 env/
@@ -42,5 +48,4 @@ target/
 
 #idea folder
 .idea/
-
 *.iml
