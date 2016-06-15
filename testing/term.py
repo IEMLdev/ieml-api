@@ -24,8 +24,10 @@ class TestTermParser(unittest.TestCase):
         self.assertTrue(script.layer == 6)
         self.assertEqual(str(script), "t.i.-s.i.-'u.T:.-U:.-'O:O:.-',B:.-',_M:.-',_;")
         for i in range(0,5):
-            script = script.children[0].children[0]
-            self.assertTrue(script.layer == (5 - i))
+            if isinstance(script, AdditiveScript):
+                script = script.children[0]
+            self.assertTrue(script.layer == (6 - i))
+            script = script.children[0]
 
     def test_script(self):
         list_scripts = ["S:.-',S:.-',S:.-'B:.-'n.-S:.U:.-',_",
@@ -97,6 +99,13 @@ class TestTermParser(unittest.TestCase):
         script.check()
 
         self.assertTrue(all(isinstance(s, MultiplicativeScript) for s in script.children))
+
+    def test_singular_sequences_special(self):
+        script = self.parser.parse('E:E:F:.')
+        self.assertTrue(script.paradigm)
+        self.assertEqual(script.cardinal, 5)
+        self.assertListEqual(list(map(str, script.singular_sequences)),
+                             ['E:E:U:.', 'E:E:A:.', 'E:E:S:.', 'E:E:B:.', 'E:E:T:.'])
 
 # Lot of test to do :
 # - testing invalid script construction

@@ -64,10 +64,11 @@ class HyperTextValidatorHandler(BaseDataHandler):
         # parse the graph and add hyperlink, check the cycle
         for hyperlink in self.json_data["graph"]:
             path = hypertexts[hyperlink['substance']].get_path_from_ieml(hyperlink['mode']['selection'])
-            hypertexts[hyperlink['substance']]\
-                .add_hyperlink(path, hyperlink['mode']['literal'], hypertexts[hyperlink['attribute']])
+            hypertexts[hyperlink['substance']].add_hyperlink(path,
+                                                             hyperlink['mode']['literal'],
+                                                             hypertexts[hyperlink['attribute']])
 
-        # get the root hypertext, the one with the biggest strate
+        # get the root hypertext, the one with the highest strate
         root = hypertexts[max(hypertexts, key=lambda key: hypertexts[key].strate)]
 
         # verification of the usl

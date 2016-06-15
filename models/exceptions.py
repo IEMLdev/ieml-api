@@ -54,6 +54,13 @@ class NotARootParadigm(DBException):
     pass
 
 
-
 class RootParadigmMissing(DBException):
+    pass
+
+
+class SingularSequenceAlreadyExist(DBException):
+    pass
+
+
+class NotASingularSequence(DBException):
     pass
