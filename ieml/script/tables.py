@@ -53,20 +53,20 @@ def build_2d_table(s, plural_vars):
         row_headers = [MultiplicativeScript(substance=s.children[0], attribute=s.children[1], mode=child)
                        for child in plural_vars[0].script.children]
 
-        # Construct the column headers
-        if plural_vars[1].address == 0:  # Second plural variable is a substance
-            col_headers = [MultiplicativeScript(substance=child, attribute=s.children[1], mode=s.children[2])
-                           for child in plural_vars[1].script.children]
-        elif plural_vars[1].address == 1:  # Second plural variable is an attribute
-            col_headers = [MultiplicativeScript(substance=s.children[0], attribute=child, mode=s.children[2])
-                           for child in plural_vars[1].script.children]
-        elif plural_vars[1].address == 2:  # Second plural variable is a mode
-            col_headers = [MultiplicativeScript(substance=s.children[0], attribute=s.children[1], mode=child)
-                           for child in plural_vars[1].script.children]
+    # Construct the column headers
+    if plural_vars[1].address == 0:  # Second plural variable is a substance
+        col_headers = [MultiplicativeScript(substance=child, attribute=s.children[1], mode=s.children[2])
+                       for child in plural_vars[1].script.children]
+    elif plural_vars[1].address == 1:  # Second plural variable is an attribute
+        col_headers = [MultiplicativeScript(substance=s.children[0], attribute=child, mode=s.children[2])
+                       for child in plural_vars[1].script.children]
+    elif plural_vars[1].address == 2:  # Second plural variable is a mode
+        col_headers = [MultiplicativeScript(substance=s.children[0], attribute=s.children[1], mode=child)
+                       for child in plural_vars[1].script.children]
 
     cells = np.empty((plural_vars[0].script.cardinal, plural_vars[1].script.cardinal), dtype=object)
 
-    return Table(row_headers, col_headers, cells)
+    return Table(row_headers=row_headers, col_headers=col_headers, cell_matrix=cells)
 
 
 def build_3d_table(s):
