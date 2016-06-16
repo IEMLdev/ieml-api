@@ -42,32 +42,40 @@ def build_2d_table(s, plural_vars, parents):
     if plural_vars[0].address == 0:  # First plural variable is a substance
         row_headers = [MultiplicativeScript(substance=child, attribute=s.children[1], mode=s.children[2])
                        for child in plural_vars[0].script.children]
-        row_headers = [s.check() for s in row_headers]
     elif plural_vars[0].address == 1:  # First plural variable is an attribute
         row_headers = [MultiplicativeScript(substance=s.children[0], attribute=child, mode=s.children[2])
                        for child in plural_vars[0].script.children]
-        row_headers = [s.check() for s in row_headers]
     elif plural_vars[0].address == 2:  # First plural variable is a mode
         row_headers = [MultiplicativeScript(substance=s.children[0], attribute=s.children[1], mode=child)
                        for child in plural_vars[0].script.children]
-        row_headers = [s.check() for s in row_headers]
 
     # Construct the column headers
     if plural_vars[1].address == 0:  # Second plural variable is a substance
         col_headers = [MultiplicativeScript(substance=child, attribute=s.children[1], mode=s.children[2])
                        for child in plural_vars[1].script.children]
-        col_headers = [s.check() for s in col_headers]
     elif plural_vars[1].address == 1:  # Second plural variable is an attribute
         col_headers = [MultiplicativeScript(substance=s.children[0], attribute=child, mode=s.children[2])
                        for child in plural_vars[1].script.children]
-        col_headers = [s.check() for s in col_headers]
     elif plural_vars[1].address == 2:  # Second plural variable is a mode
         col_headers = [MultiplicativeScript(substance=s.children[0], attribute=s.children[1], mode=child)
                        for child in plural_vars[1].script.children]
-        col_headers = [s.check() for s in col_headers]
+
+    for s in row_headers:
+        s.check()
+    for s in col_headers:
+        s.check()
+
+    print(row_headers)
+    print(col_headers)
 
     return Table(headers=[row_headers, col_headers], cells=cells)
 
 
 def build_3d_table(s, plural_vars, parents):
+    pass
+
+
+def print_table(t):
+    """For debugging purposes"""
+    
     pass
