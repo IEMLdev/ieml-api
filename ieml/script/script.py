@@ -41,9 +41,6 @@ class Script(TreeStructure):
         # The contained paradigms (tables)
         self._tables = []
 
-    # def __gt__(self, other):
-    #     return self != other and not self.__lt__(other)
-
     def __eq__(self, other):
         if self._str is None or other._str is None:
             raise NotImplemented()
