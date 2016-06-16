@@ -29,36 +29,45 @@ class RemarkableSibling:
             return relations
 
         for i, s_src in enumerate(script_ast_list):
-            opposed = cls.opposed_sibling(s_src)
-            associated = cls.associated_sibling(s_src)
-            cross = cls.cross_sibling(s_src)
+            try:
+                opposed = cls.opposed_sibling(s_src)
+            except NoRemarkableSiblingForAdditiveScript:
+                opposed = None
+            try:
+                associated = cls.associated_sibling(s_src)
+            except NoRemarkableSiblingForAdditiveScript:
+                associated = None
+            try:
+                cross = cls.cross_sibling(s_src)
+            except NoRemarkableSiblingForAdditiveScript:
+                cross = None
 
             for s_trg in script_ast_list[i:]:
-                if opposed.match(str(s_trg)):
+                if opposed and opposed.match(str(s_trg)):
                     relations[OPPOSED_SIBLING_RELATION].append((s_src, s_trg))
                     # symetrical
                     relations[OPPOSED_SIBLING_RELATION].append((s_trg, s_src))
 
-                if associated.match(str(s_trg)):
+                if associated and associated.match(str(s_trg)):
                     relations[ASSOCIATED_SIBLING_RELATION].append((s_src, s_trg))
                     # symetrical
                     relations[ASSOCIATED_SIBLING_RELATION].append((s_trg, s_src))
 
-                if cross.match(str(s_trg)):
+                if cross and cross.match(str(s_trg)):
                     relations[CROSSED_SIBLING_RELATION].append((s_src, s_trg))
                     # symetrical
                     relations[CROSSED_SIBLING_RELATION].append((s_trg, s_src))
 
         twin = cls.twin_siblings(script_ast_list[0].layer)
         for s in script_ast_list:
-            if twin.match(s):
+            if twin.match(str(s)):
                 relations[TWIN_SIBLING_RELATION].append(s)
 
         return relations
 
     @classmethod
     def opposed_sibling(cls, script_ast):
-        if isinstance(script_ast, MultiplicativeScript):
+        if isinstance(script_ast, MultiplicativeScript) and script_ast.layer > 0:
             return re.compile(''.join([
                 '^',
                 cls._opposed_sibling_string(script_ast),
@@ -69,7 +78,7 @@ class RemarkableSibling:
 
     @classmethod
     def _opposed_sibling_string(cls, script_ast):
-        if isinstance(script_ast, MultiplicativeScript):
+        if isinstance(script_ast, MultiplicativeScript) and script_ast.layer > 0:
             substance = script_ast.children[0]
             attribute = script_ast.children[1]
 
@@ -82,7 +91,7 @@ class RemarkableSibling:
 
     @classmethod
     def associated_sibling(cls, script_ast):
-        if isinstance(script_ast, MultiplicativeScript):
+        if isinstance(script_ast, MultiplicativeScript) and script_ast.layer > 0:
             substance = script_ast.children[0]
             attribute = script_ast.children[1]
             mode = script_ast.children[2]
@@ -103,7 +112,6 @@ class RemarkableSibling:
 
     @classmethod
     def twin_siblings(cls, layer):
-
         return re.compile(''.join([
             '^(?P<substance>', # substance
             cls._regex_layer(layer - 1),
@@ -115,7 +123,8 @@ class RemarkableSibling:
 
     @classmethod
     def cross_sibling(cls, script_ast):
-        if isinstance(script_ast, MultiplicativeScript) and isinstance(script_ast.children[0], MultiplicativeScript) \
+        if isinstance(script_ast, MultiplicativeScript) and script_ast.layer > 1 and \
+                isinstance(script_ast.children[0], MultiplicativeScript) \
            and isinstance(script_ast.children[1], MultiplicativeScript):
 
             substance = script_ast.children[0]
@@ -129,7 +138,6 @@ class RemarkableSibling:
                 re.escape(LAYER_MARKS[script_ast.layer]),
                 '$'
             ]))
-
 
     @classmethod
     def _regex_layer(cls, layer, optional=False):

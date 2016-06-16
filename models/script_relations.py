@@ -1,21 +1,18 @@
 from models.base_queries import DBConnector
 from models.constants import SCRIPTS_COLLECTION, ROOT_PARADIGM_TYPE, SINGULAR_SEQUENCE_TYPE, PARADIGM_TYPE
-from models.exceptions import InvalidScript, NotAParadigm, InvalidDbState, RootParadigmIntersection, \
-    ParadigmAlreadyExist, RootParadigmMissing, NotARootParadigm, SingularSequenceAlreadyExist, NotASingularSequence, \
-    DBException
-from pymongo.errors import DuplicateKeyError
+from models.exceptions import InvalidScript, NotAParadigm, RootParadigmIntersection, \
+    ParadigmAlreadyExist, RootParadigmMissing, SingularSequenceAlreadyExist, NotASingularSequence
 from ieml.script import Script
 from ieml.parsing.script import ScriptParser
-
 
 class ScriptConnector(DBConnector):
     def __init__(self):
         super().__init__()
-        self.scripts = self.db_term[SCRIPTS_COLLECTION]
+        self.scripts = self.db[SCRIPTS_COLLECTION]
         self.script_parser = ScriptParser()
 
     def _get_script(self, ieml):
-        return self.scripts.find_one({"_id": ieml})
+        return self.scripts.find_one({"_id": ieml if isinstance(ieml, str) else str(ieml)})
 
     def db_singular_sequences(self, paradigm=None):
         if paradigm:
@@ -166,50 +163,9 @@ class ScriptConnector(DBConnector):
 
         return result['_id']
 
-    def load_old_db(self):
-        # Empty the db
-        self.scripts.remove({})
 
-        old_connector = self.db_term['terms']
-        roots = old_connector.find({'PARADIGM': "1"})
-        count = roots.count()
-        step = count / 20.0
-        inc = 0
-        nb_star = 0
-
-        print("\tLoad the root paradigms, %d entries." % count)
-        for i, root in enumerate(roots):
-            if i - inc > step:
-                print('*', end='', flush=True)
-                inc = i
-                nb_star += 1
-            try:
-                db.save_script(root['IEML'], root=True)
-            except DBException as e:
-                print('\nException ' + e.__class__.__name__ + ' for script ' + root['IEML'])
-                print('*' * nb_star, end='', flush=True)
-        print('\n Done. \n')
-
-        paradigms = old_connector.find({'PARADIGM': "0"})
-        count = paradigms.count()
-        step = count / 20.0
-        inc = 0
-        nb_star = 0
-        print("\tLoad the paradigms and singular sequence, %d entries." % count)
-
-        for i, paradigm in enumerate(paradigms):
-            if i - inc > step:
-                print('*', end='', flush=True)
-                inc = i
-                nb_star += 1
-            try:
-                self.save_script(paradigm['IEML'])
-            except DBException as e:
-                print('\nException ' + e.__class__.__name__ + ' for script ' + paradigm['IEML'])
-                print('*'*nb_star, end='', flush=True)
 
 if __name__ == '__main__':
     db = ScriptConnector()
-    db.load_old_db()
     # db.save_paradigm("M:.-',M:.-',S:.-'B:.-'n.-S:.U:.-',_", root=True)
     # db.save_paradigm("B:.-',M:.-',S:.-'B:.-'n.-S:.U:.-',_")
