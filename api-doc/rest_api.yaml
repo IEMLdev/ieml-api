@@ -7,12 +7,223 @@ swagger: '2.0'
 info:
   version: "0.1.0"
   title: IEML Library API
-  description : API for the IEML library, used to create, edit and find propositions or USLs
+  description : API for both the IEML dictionary and the IEML librairy
 
 basePath : /api
 produces : 
   - application/json
 paths:
+
+  ##############################
+  ## FOR THE DICTIONARY'S API ##
+  ##############################
+
+  /allieml:
+    get:
+      tags:
+        - IEML
+      description: |
+        Returns a list of all the `IEML term` objects.
+      responses:
+        '200':
+          description: Successful response
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/ieml_term'
+
+  /client/authenticate:
+    post:
+      description: |
+        Not yet implemented
+      responses:
+        '200':
+          description: Successful response
+
+  /scriptparser/parse:
+    post:
+      tags:
+        - Parsing
+      description: |
+        Checks the validity of `IEML term`
+      parameters:
+        - name: iemltext
+          in: query
+          description: The `IEML term` for which we want to get the computed tree.
+          type: string
+          required: true
+      responses:
+        '200':
+          description: Successful response
+
+  /scriptparser/tables:
+    post:
+      tags:
+        - Parsing
+      description: |
+        Compute the tables for an `IEML paradigm`
+      parameters:
+        - name: iemltext
+          in: query
+          description: The `IEML paradigm` for which we want to get the computed table.
+          type: string
+          required: true
+      responses:
+        '200':
+          description: Successful response
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+              tree:
+                type: object
+                properties:
+                  Tables:
+                    type: array
+                    items:
+                      type: object
+                  input:
+                    type: string
+
+  /scriptparser/tree:
+    post:
+      tags:
+        - Parsing
+      description: |
+        Computes the tree of a given `IEML term`
+      parameters:
+        - name: iemltext
+          in: query
+          description: The `IEML term` for which we want to get the computed tree.
+          type: string
+          required: true
+      responses:
+        '200':
+          description: Successful response
+
+  /getRelVisibility:
+    post:
+      description: |
+        TODO
+      responses:
+        '200':
+          description: Successful response
+
+  /addRelVisibility:
+    post:
+      description: |
+        TODO
+      responses:
+        '200':
+          description: Successful response
+  /remRelVisibility:
+    post:
+      description: |
+        TODO
+      responses:
+        '200':
+          description: Successful response
+  /toggleRelVisibility:
+    post:
+      description: |
+        TODO
+      responses:
+        '200':
+          description: Successful response
+  /rels:
+    post:
+      tags:
+        - Relations
+      description: >
+        Returns a list of all the relations associated with the `IEML term`
+        given in the payload
+      parameters:
+        - name: term
+          in: body
+          description: >
+            The `IEML term` for which we want to get its associated
+            relationships.
+          required: true
+          schema:
+            type: object
+            properties:
+              IEML:
+                type: string
+      responses:
+        '200':
+          description: Successful response
+          schema:
+            type: array
+            items:
+              type: object
+              properties:
+                rellist:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      _id:
+                        type: string
+                      exists:
+                        type: boolean
+                      ieml:
+                        type: string
+                      start:
+                        type: string
+                      visible:
+                        type: boolean
+                reltype:
+                  type: string
+                visible:
+                  type: boolean
+  /newieml:
+    post:
+      description: |
+        Add a new `IEML` term to the dictionary
+      responses:
+        '200':
+          description: Successful response
+  /updateieml:
+    post:
+      description: |
+        Modify an `IEML` term from the dictionary
+      responses:
+        '200':
+          description: Successful response
+  /remieml/<term_id>:
+    post:
+      description: |
+        Delete an `IEML` term from the dictionary
+      responses:
+        '200':
+          description: Successful response
+  /exists/ieml/<term_ieml>:
+    post:
+      description: |
+        Check if `<term_ieml>` exists in the dictionary
+      responses:
+        '200':
+          description: Successful response
+  /exists/FR/<term_fr>:
+    post:
+      description: |
+        Check if `<term_ieml>` exists in the **French** dictionary
+      responses:
+        '200':
+          description: Successful response
+  /exists/EN/<term_en>:
+    post:
+      description: |
+        Check if `<term_ieml>` exists in the **English** dictionary
+      responses:
+        '200':
+          description: Successful response
+
+  #################################
+  ## FOR THE USL/PROPOSITION API ##
+  #################################
+
   /search:
     post:
       description: Search for propositions or  USLs in the library's database
@@ -54,6 +265,8 @@ paths:
             
   /word/validate:
     post:
+      tags:
+        - Propositions
       description: Checks if a created word is good or not
       parameters:
         - name: body
@@ -70,6 +283,8 @@ paths:
           
   /word/save:
     post:
+      tags:
+        - Propositions
       description: Checks if a created word is good or not, and if good, saves it to the DB
       parameters:
         - name: body
@@ -86,6 +301,8 @@ paths:
   
   /tree/validate:
     post:
+      tags:
+        - Propositions
       description: Checks if a created sentence/super sentence graph is good or not, and if good, saves it to the DB
       parameters:
         - name: body
@@ -102,6 +319,8 @@ paths:
   
   /tree/save:
     post:
+      tags:
+        - Propositions
       description: Checks if a created sentence/super sentence graph is good or not, and if good, saves it to the DB
       parameters:
         - name: body
@@ -118,6 +337,8 @@ paths:
             
   /text/validate:
     post:
+      tags:
+        - USL
       description: Checks if a text is good or not,  and if good, saves it to the DB.
       parameters:
         - name: body
@@ -134,6 +355,8 @@ paths:
   
   /hypertext/validate:
     post:
+      tags:
+        - USL
       description: Checks if an hypertext graph is good or not, and if good saves it to the DB
       parameters:
         - name: body
@@ -150,6 +373,8 @@ paths:
             
   /text/decompose:
     post:
+      tags:
+        - USL
       description: |
         Decomposes a text into a list of proposition tree, which details all the closed propositions contained in a proposition, along with their tags and the path need to reach them.
       parameters:
@@ -182,7 +407,40 @@ paths:
             type : array
             items:
               $ref: '#/definitions/decomposed_ieml_element'
+
+
 definitions:
+  ##############################
+  ## FOR THE DICTIONARY'S API ##
+  ##############################
+
+  ieml_term:
+    properties:
+      CANONICAL:
+        type: array
+        items:
+          type: string
+      CLASS:
+        type: number
+      EN:
+        type: string
+      FR:
+        type: string
+      IEML:
+        type: string
+      LAYER:
+        type: number
+      PARADIGM:
+        type: number
+      TAILLE:
+        type: number
+      _id:
+        type: string
+
+
+  #################################
+  ## FOR THE USL/PROPOSITION API ##
+  #################################
   search_filters:
     type: object
     required :
