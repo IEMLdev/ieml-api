@@ -77,5 +77,5 @@ def build_3d_table(s, plural_vars, parents):
 
 def print_table(t):
     """For debugging purposes"""
-    
+
     pass
