@@ -41,6 +41,9 @@ class Script(TreeStructure):
         # The contained paradigms (tables)
         self._tables = []
 
+        # The canonical string to compare same layer and cardinal script (__lt__)
+        self.canonical = None
+
     # def __gt__(self, other):
     #     return self != other and not self.__lt__(other)
 
@@ -75,7 +78,10 @@ class Script(TreeStructure):
                 # then by number of singular sequence
                 return self.cardinal < other.cardinal
             else:
-                if self.layer != 0:
+                # Compare the canonical form
+                if self.canonical != other.canonical:
+                    return self.canonical < other.canonical
+                elif self.layer != 0:
                     # layer != 0 => children is set, no children are for layer 0 (MultiplicativeScript)
                     if isinstance(self, other.__class__):
                         # if they are the same class
@@ -199,6 +205,14 @@ class AdditiveScript(Script):
             self.paradigm = len(self.children) > 1 or any(child.paradigm for child in self.children)
             self.cardinal = sum((e.cardinal for e in self.children))
 
+        if self.layer == 0:
+            value = 0b0
+            for child in self:
+                value |= character_value[child.character]
+            self.canonical = bytes([value])
+        else:
+            self.canonical = b''.join([child.canonical for child in self])
+
     def _do_checking(self):
         pass
 
@@ -220,6 +234,7 @@ class AdditiveScript(Script):
             s = [sequence for child in self.children for sequence in child.singular_sequences]
             s.sort()
             return s
+
 
 class MultiplicativeScript(Script):
     """ Represent a multiplication of three scripts of the same layer."""
@@ -294,6 +309,11 @@ class MultiplicativeScript(Script):
             for e in self.children:
                 self.cardinal = self.cardinal * e.cardinal
 
+        if self.layer == 0:
+            self.canonical = bytes([character_value[self.character]])
+        else:
+            self.canonical = b''.join([child.canonical for child in self])
+
     def _render_children(self, children=None, character=None):
         if character:
             return character
@@ -351,6 +371,7 @@ class MultiplicativeScript(Script):
             s.sort()
             return s
 
+
 class NullScript(Script):
     def __init__(self, layer):
         super().__init__(children=[])
@@ -365,6 +386,7 @@ class NullScript(Script):
         self._has_been_ordered = True
 
         self._do_precompute_str()
+        self.canonical = bytes(character_value[self.character] * pow(3, self.layer))
 
     def _do_precompute_str(self):
         result = self.character
