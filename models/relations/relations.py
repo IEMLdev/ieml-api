@@ -3,15 +3,15 @@ from models.constants import SCRIPTS_COLLECTION, ROOT_PARADIGM_TYPE, SINGULAR_SE
 from models.exceptions import InvalidScript, NotAParadigm, RootParadigmIntersection, \
     ParadigmAlreadyExist, RootParadigmMissing, SingularSequenceAlreadyExist, NotASingularSequence
 from ieml.script import Script
-from ieml.parsing.script import ScriptParser
+import logging
 
-class ScriptConnector(DBConnector):
+
+class RelationsConnector(DBConnector):
     def __init__(self):
         super().__init__()
         self.scripts = self.db[SCRIPTS_COLLECTION]
-        self.script_parser = ScriptParser()
 
-    def _get_script(self, ieml):
+    def get_script(self, ieml):
         return self.scripts.find_one({"_id": ieml if isinstance(ieml, str) else str(ieml)})
 
     def db_singular_sequences(self, paradigm=None):
@@ -29,47 +29,20 @@ class ScriptConnector(DBConnector):
         else:
             return []
 
-    def get_relations(self, script, relation=None):
-        if isinstance(script, str):
-            script_str = script
-        elif isinstance(script, Script):
-            script_str = str(script)
-        else:
-            raise InvalidScript()
-
-        if relation:
-            return self._get_script(script_str)['RELATIONS'][relation]
-        else:
-            return self._get_script(script_str)['RELATIONS']
-
-    def save_script(self, script, root=False):
-        if isinstance(script, Script):
-            script_ast = script
-        elif isinstance(script, str):
-            script_ast = self.script_parser.parse(script)
-        else:
-            raise InvalidScript()
-
+    def save_script(self, script_ast, root=False):
         if script_ast.paradigm:
             self.save_paradigm(script_ast, root=root)
         else:
             self._save_singular_sequence(script_ast)
 
-    def save_paradigm(self, script, root=False):
+    def save_paradigm(self, script_ast, root=False):
         """
         Save a paradigm to the database.
 
-        :param script: the string of the script or an Script object.
+        :param script_ast: the string of the script or an Script object.
         :param root: true if the paradigm is a root paradigm
         :return: None
         """
-        if isinstance(script, Script):
-            script_ast = script
-        elif isinstance(script, str):
-            script_ast = self.script_parser.parse(script)
-        else:
-            raise InvalidScript()
-
         if not script_ast.paradigm:
             raise NotAParadigm()
 
@@ -77,6 +50,11 @@ class ScriptConnector(DBConnector):
             self._save_root_paradigm(script_ast)
         else:
             self._save_paradigm(script_ast)
+
+    def root_paradigms(self):
+        return list(self.scripts.aggregate([
+            {'$group': {'_id': '$ROOT'}}
+        ])['_id'])
 
     def _save_singular_sequence(self, script_ast):
         """
@@ -89,7 +67,7 @@ class ScriptConnector(DBConnector):
             raise NotASingularSequence()
 
         # check if already exist
-        if self._get_script(str(script_ast)):
+        if self.get_script(str(script_ast)):
             raise SingularSequenceAlreadyExist()
 
         # get all the singular sequence of the db to see if the singular sequence can be created
@@ -118,7 +96,7 @@ class ScriptConnector(DBConnector):
         # defensive check
 
         # check if paradigm already saved
-        if self._get_script(str(script_ast)):
+        if self.get_script(str(script_ast)):
             raise ParadigmAlreadyExist()
 
         # get all the singular sequence of the db to avoid intersection
@@ -137,7 +115,7 @@ class ScriptConnector(DBConnector):
 
     def _save_paradigm(self, script_ast):
         # defensive check
-        if self._get_script(str(script_ast)):
+        if self.get_script(str(script_ast)):
             raise ParadigmAlreadyExist()
 
         # get all the singular sequence of the db to check if we can create the paradigm
@@ -163,9 +141,14 @@ class ScriptConnector(DBConnector):
 
         return result['_id']
 
+    def remove_script(self, script_ast):
+        """
+        Remove a script from the relations collection
+        :param script_ast: the script to remove
+        :return: None
+        """
+        if self.get_script(script_ast) is None:
+            logging.warning("Deletion of a non existent script %s from the collection relation." % str(script_ast))
+            return
 
-
-if __name__ == '__main__':
-    db = ScriptConnector()
-    # db.save_paradigm("M:.-',M:.-',S:.-'B:.-'n.-S:.U:.-',_", root=True)
-    # db.save_paradigm("B:.-',M:.-',S:.-'B:.-'n.-S:.U:.-',_")
+        self.scripts.remove({'_id': str(script_ast)})

@@ -1,49 +1,144 @@
-from models.script_relations import ScriptConnector
-from models.constants import ROOT_PARADIGM_TYPE, SINGULAR_SEQUENCE_TYPE
 from ieml.parsing.script import ScriptParser
-from models.exceptions import NotARootParadigm
 from ieml.script import CONTAINED_RELATION, CONTAINS_RELATION, RemarkableSibling, TWIN_SIBLING_RELATION, \
     ASSOCIATED_SIBLING_RELATION, CROSSED_SIBLING_RELATION, OPPOSED_SIBLING_RELATION, ATTRIBUTE, SUBSTANCE, MODE, \
-    ELEMENTS, FATHER_RELATION, CHILD_RELATION, AdditiveScript, MultiplicativeScript, NullScript, MAX_LAYER
-
+    ELEMENTS, FATHER_RELATION, CHILD_RELATION, AdditiveScript, NullScript, Script
+from models.constants import SINGULAR_SEQUENCE_TYPE
+from models.exceptions import NotARootParadigm, InvalidScript, CantRemoveNonEmptyRootParadigm
+from models.relations.relations import RelationsConnector
+import progressbar
 
 class RelationsQueries:
-    script_db = ScriptConnector()
+    script_db = RelationsConnector()
+    script_parser = ScriptParser()
+
+    @staticmethod
+    def _to_ast(script):
+        if isinstance(script, Script):
+            return script
+        elif isinstance(script, str):
+            return RelationsQueries.script_parser.parse(script)
+        else:
+            raise InvalidScript()
 
     @classmethod
-    def compute_relations(cls, paradigm_ast):
-        paradigm_entry = cls.script_db._get_script(str(paradigm_ast))
+    def update_term(cls, script, inhibits=None, root=None):
+        script_ast = cls._to_ast(script)
+
+        if root:
+            cls.remove_script(script, inhibits=inhibits)
+            cls.save_script(script, inhibits=inhibits, root=bool(root))
+        elif inhibits:
+            cls.compute_relations(script,  inhibits=inhibits)
+
+    @classmethod
+    def save_script(cls, script, inhibits=None, root=False):
+        script_ast = cls._to_ast(script)
+        cls.script_db.save_script(script_ast, root=root)
+
+        paradigm_ast = cls._to_ast(cls.script_db.get_script(str(script_ast))['ROOT'])
+        cls.compute_relations(paradigm_ast, inhibits=inhibits)
+
+    @classmethod
+    def save_multiple_script(cls, list_script):
+        scripts = ({
+                       'AST': s['AST'],
+                   } for s in list_script if not s['ROOT'])
+
+        paradigms = [{
+            'AST': s['AST'],
+            'INHIBITS': s['INHIBITS']
+        } for s in list_script if s['ROOT']]
+
+        bar_p = progressbar.ProgressBar()
+        for s in bar_p(paradigms):
+            cls.script_db.save_script(s['AST'], root=True)
+
+        bar = progressbar.ProgressBar()
+        for s in bar(scripts):
+            cls.script_db.save_script(s['AST'], root=False)
+
+        bar_pp = progressbar.ProgressBar(max_value=len(paradigms))
+        for i, p in enumerate(paradigms):
+            cls.compute_relations(p['AST'], inhibits=p['INHIBITS'])
+            bar_pp.update(i + 1)
+
+    @classmethod
+    def check_removable(cls, script):
+        script_ast = cls._to_ast(script)
+
+        script_entry = cls.script_db.get_script(script_ast)
+        if script_entry['ROOT'] == str(script_ast) and len(cls.paradigm(script)) != 1:
+            return False
+        return True
+
+    @classmethod
+    def remove_script(cls, script, inhibits=None):
+        script_ast = cls._to_ast(script)
+
+        if not cls.check_removable(script_ast):
+            raise CantRemoveNonEmptyRootParadigm()
+
+        script_entry = cls.script_db.get_script(script_ast)
+        cls.script_db.remove_script(script_ast)
+
+        if script_entry['ROOT'] != str(script_ast):
+            cls.compute_relations(cls._to_ast(script_entry['ROOT']), inhibits=inhibits)
+
+    @classmethod
+    def paradigm(cls, script):
+        """
+        Get all the script in the paradigm argument plus the script argument.
+        :param script: the paradigm to get.
+        :return: list of entries
+        """
+        script_ast = cls._to_ast(script)
+        return list(cls.script_db.scripts.find(
+            {'SINGULAR_SEQUENCES': {'$in': [str(seq) for seq in script_ast.singular_sequences]}}))
+
+    @classmethod
+    def compute_relations(cls, paradigm_ast, inhibits=None):
+        """
+        Compute the relations for a given root paradigm and all the contained scripts.
+        :param paradigm_ast: the root paradigm
+        :param inhibits: a list of the relation to inhibit
+        :return:
+        """
+
+        paradigm_entry = cls.script_db.get_script(str(paradigm_ast))
         if paradigm_entry is None or paradigm_entry['ROOT'] != str(paradigm_ast):
             raise NotARootParadigm()
 
-        parser = ScriptParser()
+        # Compute the list of script in the paradigm
+        scripts_ast = [cls.script_parser.parse(s['_id']) for s in cls.paradigm(paradigm_ast)]
 
-        #Compute the list of script in the paradigm
-        cls._compute_contains(paradigm_ast)
+        # erase the RELATIONS field
+        cls.script_db.scripts.update(
+            {'_id': {'$in': [str(s) for s in scripts_ast]}},
+            {'$set': {'RELATIONS': {}}},
+            multi=True
+        )
 
-        scripts = cls.relation(str(paradigm_ast), CONTAINS_RELATION)
-        scripts_ast = [parser.parse(s) for s in scripts]
-        scripts_ast.extend(paradigm_ast.singular_sequences)
-        scripts_ast.append(paradigm_ast)
-
+        # Compute and save contains and contained (can't be inhibited)
         for s in scripts_ast:
             cls._compute_contained(s)
             cls._compute_contains(s)
 
-        # save the remarkable siblings
-        remakable_siblings = RemarkableSibling.compute_remarkable_siblings_relations(scripts_ast)
-        # for the twins siblings, just tag the elements in the paradigm
-        for s in remakable_siblings[TWIN_SIBLING_RELATION]:
-            cls._save_relation(s, TWIN_SIBLING_RELATION, [str(twin) for twin in remakable_siblings[TWIN_SIBLING_RELATION] if s != twin])
+        # Compute and save the remarkable siblings
+        remarkable_siblings = RemarkableSibling.compute_remarkable_siblings_relations(scripts_ast)
+
+        # Save the twins siblings
+        for s in remarkable_siblings[TWIN_SIBLING_RELATION]:
+            cls._save_relation(s, TWIN_SIBLING_RELATION,
+                               [str(twin) for twin in remarkable_siblings[TWIN_SIBLING_RELATION] if s != twin])
 
         # Add the other remarkable siblings relations
         for relation_type in (ASSOCIATED_SIBLING_RELATION, CROSSED_SIBLING_RELATION, OPPOSED_SIBLING_RELATION):
             for s in scripts_ast:
                 # take all the target where there is a tuple that have s in src.
                 cls._save_relation(s, relation_type,
-                                   [str(trg) for src, trg in remakable_siblings[relation_type] if src == s])
+                                   [str(trg) for src, trg in remarkable_siblings[relation_type] if src == s])
 
-        # compute and save the fathers
+        # compute and save the fathers relations
         for s in scripts_ast:
             cls._save_relation(s, FATHER_RELATION, cls._compute_fathers(s))
 
@@ -51,8 +146,25 @@ class RelationsQueries:
         for s in scripts_ast:
             cls._compute_children(str(s))
 
+        for s in scripts_ast:
+            cls._inhibit_relations(s, inhibits)
+
     @classmethod
-    def relation(cls, script, relation_title=None):
+    def _inhibit_relations(cls, script_ast, inhibits=None):
+        if not inhibits:
+            return
+
+        unset = {}
+        for relation in inhibits:
+            unset[relation] = 1
+
+        cls.script_db.scripts.update(
+            {'_id': str(script_ast)},
+            {'$unset': unset}
+        )
+
+    @classmethod
+    def relations(cls, script, relation_title=None):
         relations = cls.script_db.scripts.find_one(
             {'_id': script if isinstance(script, str) else str(script)}
         )['RELATIONS']
@@ -80,13 +192,14 @@ class RelationsQueries:
             RelationsQueries._merge(dic1[MODE], dic2[MODE])
 
     @classmethod
-    def _compute_fathers(cls, script_ast, max_depth=-1, _first=True):
+    def _compute_fathers(cls, script_ast, max_depth=-1, _first=True, inhibits=None):
         """
         Compute the father relationship. For a given script, it is all the sub element attribute, mode, substance for a
         given depth.
         :param script_ast:
         :param max_depth:
         :param _first:
+        :param inhibits:
         :return:
         {
             SUBSTANCE: {
@@ -127,8 +240,8 @@ class RelationsQueries:
         return relations
 
     @classmethod
-    def _compute_children(cls, script_str, max_depth=-1):
-        script_entry = cls.script_db._get_script(script_str)
+    def _compute_children(cls, script_str):
+        script_entry = cls.script_db.get_script(script_str)
         if CHILD_RELATION in script_entry['RELATIONS']:
             # already computed
             return
@@ -148,7 +261,7 @@ class RelationsQueries:
                     cls._compute_children(r)
 
                 # get all the children entries of the children
-                list_children = [cls.script_db._get_script(r)['RELATIONS'][CHILD_RELATION] for r in children]
+                list_children = [cls.script_db.get_script(r)['RELATIONS'][CHILD_RELATION] for r in children]
 
                 # merge all child dictionary
                 for d in list_children:
@@ -169,7 +282,7 @@ class RelationsQueries:
     @classmethod
     def _compute_contained(cls, script_ast):
         """Get all the contains relations for this script"""
-        entry = cls.script_db._get_script(str(script_ast))
+        entry = cls.script_db.get_script(str(script_ast))
 
         result = cls.script_db.scripts.aggregate([
             # select the paradigm
@@ -191,15 +304,13 @@ class RelationsQueries:
     @classmethod
     def _compute_contains(cls, script_ast):
         """Get all the contained relations for this script"""
-        entry = cls.script_db._get_script(str(script_ast))
+        entry = cls.script_db.get_script(str(script_ast))
 
         result = cls.script_db.scripts.aggregate([
             # select the paradigm
             {'$match': {'$and': [
                 {'ROOT': entry['ROOT']},
-                {'SINGULAR_SEQUENCES':
-                    {'$in': [str(seq) for seq in script_ast.singular_sequences]}
-                },
+                {'SINGULAR_SEQUENCES': {'$in': [str(seq) for seq in script_ast.singular_sequences]}},
                 {'TYPE': {'$ne': SINGULAR_SEQUENCE_TYPE}},
                 {'_id': {'$ne': str(script_ast)}},
             ]}},
@@ -214,37 +325,3 @@ class RelationsQueries:
         contains.sort()
 
         cls._save_relation(script_ast, CONTAINS_RELATION, [str(c) for c in contains])
-
-    @classmethod
-    def _invalid_relations_paradigm(cls, paradigm_ieml):
-        paradigm = cls.script_db._get_script(paradigm_ieml)
-
-        # check if root paradigm
-        if paradigm['ROOT'] != paradigm_ieml:
-            raise NotARootParadigm()
-
-        contained = cls.contained(paradigm_ieml)
-        cls.script_db.scripts.update(
-            {'_id': {'$in': contained}},
-            {'$set': {'RELATIONS': {}}}
-        )
-
-if __name__ == '__main__':
-    # _parser = ScriptParser()
-    # RelationsQueries.script_db.scripts.update({}, {'$unset': {'RELATIONS.CHILD_RELATION': 1}},
-    #                                           {'multi': True, 'upsert': False})
-
-    terms = [t['IEML'] for t in RelationsQueries.script_db.terms.find({})]
-    for t in terms:
-        # RelationsQueries.script_db.terms.update(
-        #     {'IEML': t},
-        #     {'$set': {'IEML': str(_parser.parse(t))}}
-        # )
-        RelationsQueries._compute_children(t)
-    #
-    # _parser = ScriptParser()
-    # script = _parser.parse("t.M:O:.+wa.-")
-    # # print(RelationsQueries.contains(script))
-    # # print(RelationsQueries.contained(script))
-    #
-    # print(RelationsQueries.fathers(script))

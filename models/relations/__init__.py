@@ -1,1 +1,1 @@
-from .script_query import RelationsQueries
+from .relations_queries import RelationsQueries
