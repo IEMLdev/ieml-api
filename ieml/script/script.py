@@ -36,7 +36,7 @@ class Script(TreeStructure):
         self.cardinal = None
 
         # The singular sequences
-        self.singular_sequences = None
+        self._singular_sequences = None
 
         # The contained paradigms (tables)
         self._tables = []
@@ -128,9 +128,16 @@ class Script(TreeStructure):
             if child.paradigm:
                 dim.append(child)
 
-        # if len(dim) == 1:
-        # else:
-        #     self._tables = Table(headers=dim)
+    def _compute_singular_sequences(self):
+        pass
+
+    @property
+    def singular_sequences(self):
+        if self._singular_sequences:
+            return self._singular_sequences
+
+        self._singular_sequences = self._compute_singular_sequences()
+        return self._singular_sequences
 
 
 class AdditiveScript(Script):
@@ -204,14 +211,15 @@ class AdditiveScript(Script):
         # Ordering of the children
         self.children.sort()
 
+    def _compute_singular_sequences(self):
         # Generating the singular sequence
         if not self.paradigm:
-            self.singular_sequences = [self]
+            return [self]
         else:
             # additive proposition has always children set
-            self.singular_sequences = [sequence for child in self.children for sequence in child.singular_sequences]
-            self.singular_sequences.sort()
-
+            s = [sequence for child in self.children for sequence in child.singular_sequences]
+            s.sort()
+            return s
 
 class MultiplicativeScript(Script):
     """ Represent a multiplication of three scripts of the same layer."""
@@ -318,16 +326,19 @@ class MultiplicativeScript(Script):
                 raise InvalidScript()
 
     def _do_ordering(self):
+        pass
+
+    def _compute_singular_sequences(self):
         # Generate the singular sequence
         if not self.paradigm:
-            self.singular_sequences = [self]
+            return [self]
         else:
             children_sequences = []
             for i in range(0, 3):
                 if not self.children[i].empty:
                     children_sequences.append([(i, c) for c in self.children[i].singular_sequences])
 
-            self.singular_sequences = []
+            s = []
             for triplet in itertools.product(*children_sequences):
                 children = self.children[:]
                 for tpl in triplet:
@@ -335,10 +346,10 @@ class MultiplicativeScript(Script):
 
                 sequence = MultiplicativeScript(children=children)
                 sequence.check()
-                self.singular_sequences.append(sequence)
+                s.append(sequence)
 
-            self.singular_sequences.sort()
-
+            s.sort()
+            return s
 
 class NullScript(Script):
     def __init__(self, layer):
@@ -347,7 +358,6 @@ class NullScript(Script):
         self.paradigm = False
         self.empty = True
         self.cardinal = 1
-        self.singular_sequences = [self]
         self.character = 'E'
 
         # No need to check
@@ -368,6 +378,9 @@ class NullScript(Script):
 
     def _do_ordering(self):
         pass
+
+    def _compute_singular_sequences(self):
+        return [self]
 
 
 # Building the remarkable multiplication to script
