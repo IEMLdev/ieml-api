@@ -6,6 +6,7 @@ from helpers.metaclasses import Singleton
 from ieml.exceptions import CannotParse
 from .lexer import get_script_lexer, tokens
 from ieml.script import AdditiveScript, MultiplicativeScript
+from functools import lru_cache
 
 
 class ScriptParser(metaclass=Singleton):
@@ -17,7 +18,10 @@ class ScriptParser(metaclass=Singleton):
         self.lexer = get_script_lexer()
         self.parser = yacc.yacc(module=self, errorlog=logging, start='term', debug=False)
 
-    def parse(self, s):
+        self.parse = self.t_parse
+
+    @lru_cache()
+    def t_parse(self, s):
         self.root = None
         self.parser.parse(s)
 
