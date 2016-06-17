@@ -30,7 +30,7 @@ class PropositionsQueries(DBConnector):
     def check_proposition_stored(self, proposition):
         """Retrieves the objectid of an IEML primitive"""
         if isinstance(proposition, ieml.AST.terms.Term):
-            return self.terms.find_one({"IEML": proposition.ieml}) is not None
+            return self.old_terms.find_one({"IEML": proposition.ieml}) is not None
         elif isinstance(proposition, (ieml.AST.Sentence, ieml.AST.Word, ieml.AST.SuperSentence)):
             return self._check_proposition_exist(str(proposition))
         else:

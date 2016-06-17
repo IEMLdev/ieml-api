@@ -2,6 +2,10 @@ class DBException(Exception):
     pass
 
 
+class TermAlreadyExists(DBException):
+    pass
+
+
 class PropositionAlreadyExists(DBException):
     pass
 
@@ -63,4 +67,16 @@ class SingularSequenceAlreadyExist(DBException):
 
 
 class NotASingularSequence(DBException):
+    pass
+
+
+class InvalidInhibitArgument(DBException):
+    pass
+
+
+class InvalidMetadata(DBException):
+    pass
+
+
+class CantRemoveNonEmptyRootParadigm(DBException):
     pass
