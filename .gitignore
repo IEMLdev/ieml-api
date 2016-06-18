@@ -47,6 +47,4 @@ target/
 
 #idea folder
 .idea/
-
-#data dump expanded folder
-data/dump
+*.iml
