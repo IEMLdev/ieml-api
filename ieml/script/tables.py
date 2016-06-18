@@ -88,59 +88,36 @@ def process_tables(tables, address, parent_script):
     return new_tables
 
 
-def build_table(dimension, s, plural_vars):
-
+def build_table(dimension, multi_script, plural_vars):
     row_headers = []
     col_headers = []
     tab_headers = []
 
     cells = np.empty(plural_vars[0].script.cardinal, dtype=object)
+    row_headers = make_headers(*multi_script.children, plural_variable=plural_vars[0])
 
-    # Construct the row headers
-    if plural_vars[0].address == 0:  # First plural variable is a substance
-        row_headers = [MultiplicativeScript(substance=child, attribute=s.children[1], mode=s.children[2])
-                       for child in plural_vars[0].script.children]
-    elif plural_vars[0].address == 1:  # First plural variable is an attribute
-        row_headers = [MultiplicativeScript(substance=s.children[0], attribute=child, mode=s.children[2])
-                       for child in plural_vars[0].script.children]
-    elif plural_vars[0].address == 2:  # First plural variable is a mode
-        row_headers = [MultiplicativeScript(substance=s.children[0], attribute=s.children[1], mode=child)
-                       for child in plural_vars[0].script.children]
-
-    if dimension >= 2:
+    if dimension >= 2:  # Construct the column headers
         cells = np.empty((plural_vars[0].script.cardinal, plural_vars[1].script.cardinal), dtype=object)
-        # Construct the column headers
-        if plural_vars[1].address == 0:  # Second plural variable is a substance
-            col_headers = [MultiplicativeScript(substance=child, attribute=s.children[1], mode=s.children[2])
-                           for child in plural_vars[1].script.children]
-        elif plural_vars[1].address == 1:  # Second plural variable is an attribute
-            col_headers = [MultiplicativeScript(substance=s.children[0], attribute=child, mode=s.children[2])
-                           for child in plural_vars[1].script.children]
-        elif plural_vars[1].address == 2:  # Second plural variable is a mode
-            col_headers = [MultiplicativeScript(substance=s.children[0], attribute=s.children[1], mode=child)
-                           for child in plural_vars[1].script.children]
+        col_headers = make_headers(*multi_script.children, plural_variable=plural_vars[1])
 
     if dimension == 3:
         cells = np.empty((plural_vars[0].script.cardinal, plural_vars[1].script.cardinal, plural_vars[2].script.cardinal), dtype=object)
-        # Construct the tab headers
-        if plural_vars[1].address == 0:  # Second plural variable is a substance
-            tab_headers = [MultiplicativeScript(substance=child, attribute=s.children[1], mode=s.children[2])
-                           for child in plural_vars[2].script.children]
-        elif plural_vars[1].address == 1:  # Second plural variable is an attribute
-            tab_headers = [MultiplicativeScript(substance=s.children[0], attribute=child, mode=s.children[2])
-                           for child in plural_vars[2].script.children]
-        elif plural_vars[1].address == 2:  # Second plural variable is a mode
-            tab_headers = [MultiplicativeScript(substance=s.children[0], attribute=s.children[1], mode=child)
-                           for child in plural_vars[2].script.children]
-
-    for s in row_headers:
-        s.check()
-    for s in col_headers:
-        s.check()
-    for s in tab_headers:
-        s.check()
+        tab_headers = make_headers(*multi_script.children, plural_variable=plural_vars[2])
 
     return Table(headers=[row_headers, col_headers, tab_headers], cells=cells, dimension=dimension)
+
+
+def make_headers(substance, attribute, mode, plural_variable=None):
+
+    arg_list = [substance, attribute, mode]
+    headers = []
+
+    for child in plural_variable.script.children:
+        arg_list[plural_variable.address] = child
+        script = MultiplicativeScript(*arg_list)
+        script.check()
+        headers.append(script)
+    return headers
 
 
 def print_table(t):
