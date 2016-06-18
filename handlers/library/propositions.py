@@ -135,3 +135,24 @@ class WordGraphSavingHandler(WordGraphCheckerHandler):
         word_ast = self._build_ieml_ast()
         self._save_closed_proposition(word_ast)
         return {"valid": True, "ieml": str(word_ast)}
+
+
+def validate_word(body):
+    pass
+
+
+def save_word(body):
+    pass
+
+
+def validate_tree(body):
+    pass
+
+
+def save_tree(body):
+    pass
+
+
+def save_word(message):
+    print(message)
+    return "WESH"

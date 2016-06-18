@@ -1,11 +1,12 @@
-from handlers.exceptions import MissingField
+from handlers.library.exceptions import MissingField
+from ieml import USLParser
 from ieml.AST.propositions import Word, Sentence, SuperSentence
 from ieml.AST.tree_metadata import HypertextMetadata, PropositionMetadata, TextMetadata
 from ieml.exceptions import CannotParse
 from ieml.parsing.parser import PropositionsParser
-from .base import BaseDataHandler, BaseHandler
 from models import PropositionsQueries, TextQueries, HyperTextQueries, DictionaryQueries
-from ieml import USLParser
+from .base import BaseDataHandler, BaseHandler
+
 
 class SearchTermsHandler(BaseHandler):
     """Handles the terms search"""
@@ -98,4 +99,12 @@ class ElementDecompositionHandler(BaseHandler):
                 return self._decompose_word(ieml_proposition)
             elif isinstance(ieml_proposition, (Sentence, SuperSentence)):
                 return self._decompose_sentence(ieml_proposition)
+
+
+def search(query):
+    pass
+
+
+def check_library_tag_exists(tag, language):
+    pass
 

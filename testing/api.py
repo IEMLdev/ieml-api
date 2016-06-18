@@ -1,6 +1,7 @@
+from unittest.mock import MagicMock
+
 from handlers import WordGraphCheckerHandler, GraphCheckerHandler, TextDecompositionHandler
 from .helper import *
-from unittest.mock import MagicMock
 
 
 class TestGraphValidator(unittest.TestCase):

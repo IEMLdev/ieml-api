@@ -164,3 +164,5 @@ class TextDecompositionHandler(BaseHandler):
         # for each proposition, we build the JSON tree data representation of itself and its child closed proposition
         return [self._ast_walker(PropositionPath([child])) for child in hypertext.children[0].children]
 
+
+def validate_
