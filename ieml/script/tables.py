@@ -7,13 +7,13 @@ Variable = namedtuple('Variable', ['address', 'script'])
 Table = namedtuple('Table', ['headers', 'cells', 'dimension'])
 
 
-def generate_tables(s, parents=[]):
+def generate_tables(s):
     """Generates a paradigm table from a given Script.
        The table is implemented using a named tuple"""
 
     if isinstance(s, AdditiveScript):
         for child in s.children:
-            return generate_tables(child, parents)
+            return generate_tables(child)
     elif isinstance(s, MultiplicativeScript):
         plural_vars = [Variable(i, child) for (i, child) in enumerate(s.children) if child.cardinal > 1]
         if len(plural_vars) == 3:  # We build a 3D table
@@ -24,7 +24,7 @@ def generate_tables(s, parents=[]):
             if plural_vars[0].script.layer == 0:
                 return _tables.append(build_table(1, s, plural_vars))
             else:
-                return process_tables(generate_tables(plural_vars[0].script, parents), plural_vars[0].address, s)
+                return process_tables(generate_tables(plural_vars[0].script), plural_vars[0].address, s)
 
 
 def process_tables(tables, address, parent_script):
@@ -89,37 +89,66 @@ def process_tables(tables, address, parent_script):
 
 
 def build_table(dimension, multi_script, plural_vars):
+    """Constructs the paradigm table and returns it"""
     row_headers = []
     col_headers = []
     tab_headers = []
 
-    cells = np.empty(plural_vars[0].script.cardinal, dtype=object)
-    row_headers = make_headers(*multi_script.children, plural_variable=plural_vars[0])
-
-    if dimension >= 2:  # Construct the column headers
+    if dimension == 1:  # In this case
+        cells = np.empty(plural_vars[0].script.cardinal, dtype=object)
+        row_headers.append(multi_script)
+    if dimension >= 2:
         cells = np.empty((plural_vars[0].script.cardinal, plural_vars[1].script.cardinal), dtype=object)
-        col_headers = make_headers(*multi_script.children, plural_variable=plural_vars[1])
-
+        row_headers = make_headers(plural_vars[0], *multi_script.children)
+        col_headers = make_headers(plural_vars[1], *multi_script.children)
     if dimension == 3:
         cells = np.empty((plural_vars[0].script.cardinal, plural_vars[1].script.cardinal, plural_vars[2].script.cardinal), dtype=object)
-        tab_headers = make_headers(*multi_script.children, plural_variable=plural_vars[2])
+        tab_headers = make_headers(plural_vars[2], *multi_script.children)
 
+    fill_cells(cells, plural_vars, row_headers, col_headers, tab_headers)
     return Table(headers=[row_headers, col_headers, tab_headers], cells=cells, dimension=dimension)
 
 
-def make_headers(substance, attribute, mode, plural_variable=None):
+def fill_cells(cells, plural_vars, row_header, col_header, tab_header):
+    """Fills in the cells of the paradigm table by multiplying it's headers"""
+    if cells.ndim == 1:
+        operands = [row_header[0], row_header[1], row_header[2]]
+        for i, child in enumerate(row_header.children):
+            operands[plural_vars[0].address] = child
+            cells[i] = MultiplicativeScript(*operands)
+    elif cells.ndim == 2:
+        for i, r_header in enumerate(row_header):
+            for j, c_header in enumerate(col_header):
+                if plural_vars[0].address == 0 and plural_vars[1].address == 1:
+                    cells[i][j] = MultiplicativeScript(substance=r_header[0], attribute=c_header[1], mode=r_header[2])
+                    cells[i][j].check()
+                elif plural_vars[0].address == 1 and plural_vars[1].address == 2:
+                    cells[i][j] = MultiplicativeScript(substance=r_header[0], attribute=r_header[1], mode=c_header[2])
+                    cells[i][j].check()
+                elif plural_vars[0].address == 0 and plural_vars[1].address == 2:
+                    cells[i][j] = MultiplicativeScript(substance=r_header[0], attribute=r_header[1], mode=c_header[2])
+                    cells[i][j].check()
+    elif cells.ndim == 3:
+        for i, r_header in enumerate(row_header):
+            for j, c_header in enumerate(col_header):
+                for k, t_header in enumerate(tab_header):
+                    cells[i][j][k] = MultiplicativeScript(substance=r_header[0], attribute=c_header[1], mode=t_header[2])
+                    cells.check()
 
-    arg_list = [substance, attribute, mode]
+
+def make_headers(plural_variable, substance, attribute, mode):
+    """Builds the headers for a 2D or 3D paradigm table"""
+    operands = [substance, attribute, mode]
     headers = []
 
     for child in plural_variable.script.children:
-        arg_list[plural_variable.address] = child
-        script = MultiplicativeScript(*arg_list)
+        operands[plural_variable.address] = child
+        script = MultiplicativeScript(*operands)
         script.check()
         headers.append(script)
     return headers
 
 
 def print_table(t):
-    """For debugging purposes"""
+    """Prints out the table for debugging purposes"""
     pass
