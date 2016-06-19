@@ -7,46 +7,111 @@ Variable = namedtuple('Variable', ['address', 'script'])
 Table = namedtuple('Table', ['headers', 'cells', 'dimension'])
 
 
-def generate_tables(s):
+def generate_tables(parent_script):
     """Generates a paradigm table from a given Script.
        The table is implemented using a named tuple"""
+    global _tables  # TODO: Find a way to not use a global variable
 
-    if isinstance(s, AdditiveScript):
-        for child in s.children:
-            return generate_tables(child)
-    elif isinstance(s, MultiplicativeScript):
+    if isinstance(parent_script, AdditiveScript):
+        for child in parent_script.children:
+            generate_tables(child)
+        return _tables
+    elif isinstance(parent_script, MultiplicativeScript):
         # Holds the plural vars of the multiplicative script and their position in the script
         # 0: substance, 1: attribute, 2: mode
-        plural_vars = [Variable(i, child) for (i, child) in enumerate(s.children) if child.cardinal > 1]
+        plural_vars = [Variable(i, child) for (i, child) in enumerate(parent_script.children) if child.cardinal > 1]
         if len(plural_vars) == 3:  # We build a 3D table
-            return _tables.append(_build_table(3, s, plural_vars))
+            _tables.append(_build_table(3, parent_script, plural_vars))
+            return _tables
         elif len(plural_vars) == 2:  # We build a 2D table
-            return _tables.append(_build_table(2, s, plural_vars))
+            _tables.append(_build_table(2, parent_script, plural_vars))
+            return _tables
         elif len(plural_vars) == 1:  # we build a 1D table
             if plural_vars[0].script.layer == 0:
-                return _tables.append(_build_table(1, s, plural_vars))
+                _tables.append(_build_table(1, parent_script, plural_vars))
+                return _tables
             else:
                 # In this case we need to distribute the from the left or right or both the siblings after we return
                 # We do this because we are branching out within a multiplication
-                return _process_tables(generate_tables(plural_vars[0].script), plural_vars[0].address, s)
+                return _process_tables(generate_tables(plural_vars[0].script), plural_vars[0].address, parent_script)
 
 
-def _process_tables(tables, address, parent_script):
+def _process_tables(tables_list, address, parent_script):
     """Distributes the sibling multiplications on tables headers and cells"""
-
     new_tables = []
 
-    # TODO: Implementation
     if address == 0:  # We need to distribute the multiplication of the attribute and mode of the parent Script
-        for table in tables:
-            pass
+
+        operands = {"attribute": parent_script[1], "mode": parent_script[2]}
+        for table in tables_list:
+            headers = _distribute_over_headers(table.headers, operands)
+            v_dist = np.vectorize(_distribute_over_cells)
+            new_tables.append(Table(headers, v_dist(table.cells, operands)))
+
     elif address == 1:  # We need to distribute the multiplication of the substance from the right and mode from the left
-        for table in tables:
-            pass
+
+        operands = {"substance": parent_script[0], "mode": parent_script[2]}
+        for table in tables_list:
+            headers = _distribute_over_headers(table.headers, operands)
+            v_dist = np.vectorize(_distribute_over_cells)
+            new_tables.append(Table(headers, v_dist(table.cells, operands)))
+
     elif address == 2:  # We need to distribute the multiplication of the substance and the attribute from the right
-        for table in tables:
-            pass
+
+        operands = {"substance": parent_script[0], "attribute": parent_script[1]}
+        for table in tables_list:
+            headers = _distribute_over_headers(table.headers, operands)
+            v_dist = np.vectorize(_distribute_over_cells)
+            new_tables.append(Table(headers, v_dist(table.cells, operands)))
+
     return new_tables
+
+
+def _distribute_over_headers(headers, operands):
+
+    new_headers = []
+
+    for dimension in headers:
+        dim = []
+        for header in dimension:
+            if "substance" not in operands:
+                operands["substance"] = header
+                script = MultiplicativeScript(**operands)
+                script.check()
+                dim.append(script)
+            elif "attribute" not in operands:
+                operands["attribute"] = header
+                script = MultiplicativeScript(**operands)
+                script.check()
+                dim.append(script)
+            elif "mode" not in operands:
+                operands["mode"] = header
+                script = MultiplicativeScript(**operands)
+                script.check()
+                dim.append(script)
+        new_headers.append(dim)
+
+    return new_headers
+
+
+def _distribute_over_cells(cell, operands):
+
+    new_cell = None
+
+    if "substance" not in operands:
+        operands["substance"] = cell
+        new_cell = MultiplicativeScript(**operands)
+        new_cell.check()
+    elif "attribute" not in operands:
+        operands["attribute"] = cell
+        new_cell = MultiplicativeScript(**operands)
+        new_cell.check()
+    elif "mode" not in operands:
+        operands["mode"] = cell
+        new_cell = MultiplicativeScript(**operands)
+        new_cell.check()
+
+    return new_cell
 
 
 def _build_table(dimension, multi_script, plural_vars):
@@ -96,7 +161,7 @@ def _fill_cells(cells, plural_vars, row_header, col_header, tab_header):
             for j, c_header in enumerate(col_header):
                 for k, t_header in enumerate(tab_header):
                     cells[i][j][k] = MultiplicativeScript(substance=r_header[0], attribute=c_header[1], mode=t_header[2])
-                    cells.check()
+                    cells[i][j][k].check()
 
 
 def _make_headers(plural_variable, substance, attribute, mode):
@@ -104,14 +169,19 @@ def _make_headers(plural_variable, substance, attribute, mode):
     operands = [substance, attribute, mode]
     headers = []
 
-    for child in plural_variable.script.children:
-        operands[plural_variable.address] = child
+    for seq in plural_variable.script.singular_sequences:
+        operands[plural_variable.address] = seq
         script = MultiplicativeScript(*operands)
         script.check()
         headers.append(script)
     return headers
 
 
-def print_table(t):
-    """Prints out the table for debugging purposes"""
-    pass
+if __name__ == "__main__":
+
+    from ieml.parsing.script import ScriptParser
+
+    sp = ScriptParser()
+    s = sp.parse("M:.O:.-O:.O:.-B:.T:.n.-'")
+    tables = generate_tables(s)
+    print(len(tables))
