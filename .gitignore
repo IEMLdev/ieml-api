@@ -10,6 +10,7 @@ __pycache__/
 .python-version
 bin/
 lib64
+lib/
 pyvenv.cfg
 pip-selfcheck.json
 
@@ -23,7 +24,6 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
 lib64/
 parts/
 sdist/
@@ -58,3 +58,4 @@ data/dump
 # ply
 parsetab.py
 ieml/parsing/parser.out
+*.iml
