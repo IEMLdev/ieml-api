@@ -101,10 +101,14 @@ class ElementDecompositionHandler(BaseHandler):
                 return self._decompose_sentence(ieml_proposition)
 
 
-def search(query):
+def search_library(query):
     pass
 
 
 def check_library_tag_exists(tag, language):
+    pass
+
+
+def decompose_ieml_element(ieml_string):
     pass
 

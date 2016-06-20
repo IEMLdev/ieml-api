@@ -122,16 +122,16 @@ paths:
         '200':
           description: Successful response
   /remRelVisibility:
-    operationId: app.handlers.remove_relation_visibility
     post:
+      operationId: app.handlers.remove_relation_visibility
       description: |
         TODO
       responses:
         '200':
           description: Successful response
   /toggleRelVisibility:
-    operationId: app.handlers.toggle_relation_visibility
     post:
+      operationId: app.handlers.toggle_relation_visibility
       description: |
         TODO
       responses:
@@ -220,33 +220,33 @@ paths:
         Check if `<term_ieml>` exists in the dictionary
       parameters:
         - in: path
-          name: term_ieml
+          name: ieml_term
           required: true
           type: string
       responses:
         '200':
           description: Successful response
-  '/exists/FR/{term_ieml}':
+  '/exists/FR/{tag_fr}':
     post:
       operationId: app.handlers.fr_tag_exists
       description: |
         Check if `<term_ieml>` exists in the **French** dictionary
       parameters:
         - in: path
-          name: term_ieml
+          name: tag_fr
           required: true
           type: string
       responses:
         '200':
           description: Successful response
-  /exists/EN/<term_en>:
+  '/exists/EN/{tag_en}':
     post:
       operationId: app.handlers.en_tag_exists
       description: |
         Check if `<term_ieml>` exists in the **English** dictionary
       parameters:
         - in: path
-          name: term_ieml
+          name: tag_en
           required: true
           type: string
       responses:
@@ -356,8 +356,8 @@ paths:
             $ref: '#/definitions/validate_response'
   
   /tree/save:
-    operationId: app.handlers.save_tree
     post:
+      operationId: app.handlers.save_tree
       tags:
         - Propositions
       description: Checks if a created sentence/super sentence graph is good or not, and if good, saves it to the DB
@@ -394,8 +394,8 @@ paths:
             $ref: '#/definitions/validate_response'
   
   /hypertext/validate:
-    operationId: app.handlers.validate_hypertext
     post:
+      operationId: app.handlers.validate_hypertext
       tags:
         - USL
       description: Checks if an hypertext graph is good or not, and if good saves it to the DB

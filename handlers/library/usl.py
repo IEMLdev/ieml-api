@@ -165,4 +165,13 @@ class TextDecompositionHandler(BaseHandler):
         return [self._ast_walker(PropositionPath([child])) for child in hypertext.children[0].children]
 
 
-def validate_
+def validate_text(body):
+    pass
+
+
+def validate_hypertext(body):
+    pass
+
+
+def decompose_text(ieml_string):
+    pass

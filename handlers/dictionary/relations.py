@@ -16,5 +16,5 @@ def toggle_relation_visibility():
     pass
 
 
-def get_relations():
+def get_relations(term):
     pass
