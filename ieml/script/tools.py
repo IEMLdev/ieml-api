@@ -83,10 +83,14 @@ class RemarkableSibling:
             attribute = script_ast.children[1]
 
             return ''.join([
+                '(?:',
+                _remarkable_multiplications_opposed_siblings[str(script_ast)] + '|'
+                    if script_ast.layer == 1 and script_ast.character else '',
                 re.escape(str(attribute)), # substance
                 re.escape(str(substance)), # attribute
                 cls._regex_layer(attribute.layer, optional=True), # mode
-                re.escape(LAYER_MARKS[script_ast.layer])
+                re.escape(LAYER_MARKS[script_ast.layer]),
+                ')'
             ])
 
     @classmethod
@@ -98,8 +102,8 @@ class RemarkableSibling:
 
             return re.compile(''.join([
                 '^',
-                re.escape(str(attribute)),
                 re.escape(str(substance)),
+                re.escape(str(attribute)),
                 '(?!',
                 re.escape(str(mode) + LAYER_MARKS[script_ast.layer]),
                 '$)',
@@ -112,14 +116,19 @@ class RemarkableSibling:
 
     @classmethod
     def twin_siblings(cls, layer):
-        return re.compile(''.join([
-            '^(?P<substance>', # substance
+
+        regex = ''.join([
+            '^',
+            '$|^'.join(_remarkable_multiplications_twin_siblings) + '$|^'
+                if layer == 1 else '',
+            '(?P<substance>', # substance
             cls._regex_layer(layer - 1),
             ')(?P=substance)', # attribute == substance
             cls._regex_layer(layer - 1, optional=True),      # mode
             re.escape(LAYER_MARKS[layer]),
-            '$'
-        ]))
+            '$'])
+
+        return re.compile(regex)
 
     @classmethod
     def cross_sibling(cls, script_ast):
@@ -149,4 +158,12 @@ class RemarkableSibling:
 
         return '(?:[' + re.escape(''.join(primitives)) + ']+' + re.escape(LAYER_MARKS[layer]) + ')' + \
                ('*' if optional else '')
+
+_remarkable_multiplications_twin_siblings = [re.escape(t) for t in ['wo.', 'we.', 's.', 'm.', 'l.']]
+_remarkable_multiplications_opposed_siblings = \
+    {'j.': 'y\\.', 'n.': 'f\\.', 't.': 'd\\.', 'o.': 'h\\.', 'u.': 'g\\.',
+     'm.': 'm\\.', 'i.': 'x\\.', 'wo.': 'wo\\.', 'k.': 'b\\.', 'l.': 'l\\.',
+     'x.': 'i\\.', 'a.': 'c\\.', 'd.': 't\\.', 'wa.': 'wu\\.', 'we.': 'we\\.',
+     'b.': 'k\\.', 'p.': 'e\\.', 'e.': 'p\\.', 'f.': 'n\\.', 'wu.': 'wa\\.',
+     'y.': 'j\\.', 'h.': 'o\\.', 's.': 's\\.', 'g.': 'u\\.', 'c.': 'a\\.'}
 
