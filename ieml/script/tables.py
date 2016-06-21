@@ -4,145 +4,216 @@ import numpy as np
 
 _tables = []
 Variable = namedtuple('Variable', ['address', 'script'])
-Table = namedtuple('Table', ['headers', 'cells', 'dimension'])
+Table = namedtuple('Table', ['headers', 'cells'])
 
 
-def generate_tables(s, parents=[]):
+def generate_tables(parent_script):
     """Generates a paradigm table from a given Script.
        The table is implemented using a named tuple"""
+    table_list = []
 
-    if isinstance(s, AdditiveScript):
-        for child in s.children:
-            return generate_tables(child, parents)
-    elif isinstance(s, MultiplicativeScript):
-        plural_vars = [Variable(i, child) for (i, child) in enumerate(s.children) if child.cardinal > 1]
+    if isinstance(parent_script, AdditiveScript):
+        for child in parent_script.children:
+            table_list.extend(generate_tables(child))
+        return table_list
+    elif isinstance(parent_script, MultiplicativeScript):
+        # Holds the plural vars of the multiplicative script and their position in the script
+        # 0: substance, 1: attribute, 2: mode
+        plural_vars = [Variable(i, child) for (i, child) in enumerate(parent_script.children) if child.cardinal > 1]
         if len(plural_vars) == 3:  # We build a 3D table
-            return _tables.append(build_table(3, s, plural_vars))
+            table_list.append(_build_table(3, parent_script, plural_vars))
+            return table_list
         elif len(plural_vars) == 2:  # We build a 2D table
-            return _tables.append(build_table(2, s, plural_vars))
+            table_list.append(_build_table(2, parent_script, plural_vars))
+            return table_list
         elif len(plural_vars) == 1:  # we build a 1D table
             if plural_vars[0].script.layer == 0:
-                return _tables.append(build_table(1, s, plural_vars))
+                table_list.append(_build_table(1, parent_script, plural_vars))
+                return table_list
             else:
-                return process_tables(generate_tables(plural_vars[0].script, parents), plural_vars[0].address, s)
+                # In this case we need to distribute the from the left or right or both the siblings after we return
+                # We do this because we are branching out within a multiplication
+                table_list.extend(_process_tables(generate_tables(plural_vars[0].script), plural_vars[0].address, parent_script))
+                return table_list
 
 
-def process_tables(tables, address, parent_script):
+def _process_tables(table_list, address, parent_script):
     """Distributes the sibling multiplications on tables headers and cells"""
-
     new_tables = []
 
-    # TODO: There's gotta be a better  cleaner way godayum
     if address == 0:  # We need to distribute the multiplication of the attribute and mode of the parent Script
-        for table in tables:
-            headers = [[MultiplicativeScript(script, parent_script.children[1], parent_script.children[2])
-                        for script in dimension] for dimension in table.headers]
-            if table.cells.ndim == 1:
-                cells = np.fromiter(
-                    [MultiplicativeScript(script, parent_script.children[1], parent_script.children[2]) for script in
-                     table.cells])
-            elif table.cells.ndim == 2:
-                cells = np.fromiter(
-                    [[MultiplicativeScript(script, parent_script.children[1], parent_script.children[2]) for script in
-                      row] for row in table.cells])
-            elif table.cells.ndim == 3:
-                cells = np.fromiter(
-                    [[[MultiplicativeScript(script, parent_script.children[1], parent_script.children[2])
-                       for script in k] for k in row] for row in table.cells])
-            new_tables.append(Table(headers, cells))
+
+        operands = {"attribute": parent_script[1], "mode": parent_script[2]}
+        for table in table_list:
+            headers = _distribute_over_headers(table.headers, operands)
+            v_dist = np.vectorize(_distribute_over_cells)
+            new_tables.append(Table(headers, v_dist(table.cells, operands)))
+
     elif address == 1:  # We need to distribute the multiplication of the substance from the right and mode from the left
-        for table in tables:
-            headers = [[MultiplicativeScript(parent_script.children[0], script, parent_script.children[2])
-                        for script in dimension] for dimension in table.headers]
-            if table.cells.ndim == 1:
-                cells = np.fromiter(
-                    [MultiplicativeScript(parent_script.children[0], script, parent_script.children[2]) for script in
-                     table.cells])
-            elif table.cells.ndim == 2:
-                cells = np.fromiter(
-                    [[MultiplicativeScript(parent_script.children[0], script, parent_script.children[2]) for script in
-                      row] for row in table.cells])
-            elif table.cells.ndim == 3:
-                cells = np.fromiter(
-                    [[[MultiplicativeScript(parent_script.children[0], script, parent_script.children[2])
-                       for script in k] for k in row] for row in table.cells])
-            new_tables.append(Table(headers, cells))
+
+        operands = {"substance": parent_script[0], "mode": parent_script[2]}
+        for table in table_list:
+            headers = _distribute_over_headers(table.headers, operands)
+            v_dist = np.vectorize(_distribute_over_cells)
+            new_tables.append(Table(headers, v_dist(table.cells, operands)))
+
     elif address == 2:  # We need to distribute the multiplication of the substance and the attribute from the right
-        for table in tables:
-            headers = [[MultiplicativeScript(parent_script.children[0], parent_script.children[1], script)
-                        for script in dimension] for dimension in table.headers]
-            if table.cells.ndim == 1:
-                cells = np.fromiter(
-                    [MultiplicativeScript(parent_script.children[0], parent_script.children[1], script) for script in
-                     table.cells])
-            elif table.cells.ndim == 2:
-                cells = np.fromiter(
-                    [[MultiplicativeScript(parent_script.children[0], parent_script.children[1], script) for script in
-                      row] for row in table.cells])
-            elif table.cells.ndim == 3:
-                cells = np.fromiter(
-                    [[[MultiplicativeScript(parent_script.children[0], parent_script.children[1], script)
-                       for script in k] for k in row] for row in table.cells])
-            new_tables.append(Table(headers, cells))
+
+        operands = {"substance": parent_script[0], "attribute": parent_script[1]}
+        for table in table_list:
+            headers = _distribute_over_headers(table.headers, operands)
+            v_dist = np.vectorize(_distribute_over_cells)
+            new_tables.append(Table(headers, v_dist(table.cells, operands)))
 
     return new_tables
 
 
-def build_table(dimension, s, plural_vars):
+def _distribute_over_headers(headers, operands):
 
+    new_headers = []
+
+    for dimension in headers:
+        dim = []
+        for header in dimension:
+            if "substance" not in operands:
+                operands["substance"] = header
+                script = MultiplicativeScript(**operands)
+                script.check()
+                dim.append(script)
+                del operands["substance"]
+            elif "attribute" not in operands:
+                operands["attribute"] = header
+                script = MultiplicativeScript(**operands)
+                script.check()
+                dim.append(script)
+                del operands["attribute"]
+            elif "mode" not in operands:
+                operands["mode"] = header
+                script = MultiplicativeScript(**operands)
+                script.check()
+                dim.append(script)
+                del operands["mode"]
+        new_headers.append(dim)
+
+    return new_headers
+
+
+def _distribute_over_cells(cell, operands):
+
+    new_cell = None
+
+    if "substance" not in operands:
+        operands["substance"] = cell
+        new_cell = MultiplicativeScript(**operands)
+        new_cell.check()
+        del operands["substance"]
+    elif "attribute" not in operands:
+        operands["attribute"] = cell
+        new_cell = MultiplicativeScript(**operands)
+        new_cell.check()
+        del operands["attribute"]
+    elif "mode" not in operands:
+        operands["mode"] = cell
+        new_cell = MultiplicativeScript(**operands)
+        new_cell.check()
+        del operands["mode"]
+
+    return new_cell
+
+
+def _build_table(dimension, multi_script, plural_vars):
+    """Constructs the paradigm table and returns it"""
     row_headers = []
     col_headers = []
     tab_headers = []
 
-    cells = np.empty(plural_vars[0].script.cardinal, dtype=object)
-
-    # Construct the row headers
-    if plural_vars[0].address == 0:  # First plural variable is a substance
-        row_headers = [MultiplicativeScript(substance=child, attribute=s.children[1], mode=s.children[2])
-                       for child in plural_vars[0].script.children]
-    elif plural_vars[0].address == 1:  # First plural variable is an attribute
-        row_headers = [MultiplicativeScript(substance=s.children[0], attribute=child, mode=s.children[2])
-                       for child in plural_vars[0].script.children]
-    elif plural_vars[0].address == 2:  # First plural variable is a mode
-        row_headers = [MultiplicativeScript(substance=s.children[0], attribute=s.children[1], mode=child)
-                       for child in plural_vars[0].script.children]
-
+    if dimension == 1:
+        # In this case we only have one header, which is the multiplicative Script given to us
+        # that we will expand in the cells array
+        cells = np.empty(plural_vars[0].script.cardinal, dtype=object)
+        row_headers.append(multi_script)
     if dimension >= 2:
         cells = np.empty((plural_vars[0].script.cardinal, plural_vars[1].script.cardinal), dtype=object)
-        # Construct the column headers
-        if plural_vars[1].address == 0:  # Second plural variable is a substance
-            col_headers = [MultiplicativeScript(substance=child, attribute=s.children[1], mode=s.children[2])
-                           for child in plural_vars[1].script.children]
-        elif plural_vars[1].address == 1:  # Second plural variable is an attribute
-            col_headers = [MultiplicativeScript(substance=s.children[0], attribute=child, mode=s.children[2])
-                           for child in plural_vars[1].script.children]
-        elif plural_vars[1].address == 2:  # Second plural variable is a mode
-            col_headers = [MultiplicativeScript(substance=s.children[0], attribute=s.children[1], mode=child)
-                           for child in plural_vars[1].script.children]
-
+        row_headers = _make_headers(plural_vars[0], *multi_script.children)
+        col_headers = _make_headers(plural_vars[1], *multi_script.children)
     if dimension == 3:
         cells = np.empty((plural_vars[0].script.cardinal, plural_vars[1].script.cardinal, plural_vars[2].script.cardinal), dtype=object)
-        # Construct the tab headers
-        if plural_vars[1].address == 0:  # Second plural variable is a substance
-            tab_headers = [MultiplicativeScript(substance=child, attribute=s.children[1], mode=s.children[2])
-                           for child in plural_vars[2].script.children]
-        elif plural_vars[1].address == 1:  # Second plural variable is an attribute
-            tab_headers = [MultiplicativeScript(substance=s.children[0], attribute=child, mode=s.children[2])
-                           for child in plural_vars[2].script.children]
-        elif plural_vars[1].address == 2:  # Second plural variable is a mode
-            tab_headers = [MultiplicativeScript(substance=s.children[0], attribute=s.children[1], mode=child)
-                           for child in plural_vars[2].script.children]
+        tab_headers = _make_headers(plural_vars[2], *multi_script.children)
 
-    for s in row_headers:
-        s.check()
-    for s in col_headers:
-        s.check()
-    for s in tab_headers:
-        s.check()
-
-    return Table(headers=[row_headers, col_headers, tab_headers], cells=cells, dimension=dimension)
+    _fill_cells(cells, plural_vars, row_headers, col_headers, tab_headers)
+    return Table(headers=[row_headers, col_headers, tab_headers], cells=cells)
 
 
-def print_table(t):
-    """For debugging purposes"""
-    pass
+def _fill_cells(cells, plural_vars, row_headers, col_headers, tab_header):
+    """Fills in the cells of the paradigm table by multiplying it's headers"""
+    if cells.ndim == 1:
+        # We only have one rwo header in this case and it's row_headers[0]
+        operands = [row_headers[0][0], row_headers[0][1], row_headers[0][2]]
+        for i, child in enumerate(plural_vars[0].script.children):
+            # Since it's one dimensional, we only need to check the first (and only) plural variable and expand it.
+            operands[plural_vars[0].address] = child
+            cells[i] = MultiplicativeScript(*operands)
+            cells[i].check()
+    elif cells.ndim == 2:
+        for i, r_header in enumerate(row_headers):
+            for j, c_header in enumerate(col_headers):
+                if plural_vars[0].address == 0 and plural_vars[1].address == 1:
+                    cells[i][j] = MultiplicativeScript(substance=r_header[0], attribute=c_header[1], mode=r_header[2])
+                    cells[i][j].check()
+                elif plural_vars[0].address == 1 and plural_vars[1].address == 2:
+                    cells[i][j] = MultiplicativeScript(substance=r_header[0], attribute=r_header[1], mode=c_header[2])
+                    cells[i][j].check()
+                elif plural_vars[0].address == 0 and plural_vars[1].address == 2:
+                    cells[i][j] = MultiplicativeScript(substance=r_header[0], attribute=r_header[1], mode=c_header[2])
+                    cells[i][j].check()
+    elif cells.ndim == 3:
+        for i, r_header in enumerate(row_headers):
+            for j, c_header in enumerate(col_headers):
+                for k, t_header in enumerate(tab_header):
+                    cells[i][j][k] = MultiplicativeScript(substance=r_header[0], attribute=c_header[1], mode=t_header[2])
+                    cells[i][j][k].check()
+
+
+def _make_headers(plural_variable, substance, attribute, mode):
+    """Builds the headers for a 2D or 3D paradigm table"""
+    operands = [substance, attribute, mode]
+    headers = []
+
+    for seq in plural_variable.script.singular_sequences:
+        operands[plural_variable.address] = seq
+        script = MultiplicativeScript(*operands)
+        script.check()
+        headers.append(script)
+    return headers
+
+
+def print_headers(headers):
+    """Print headers for debugging purposes"""
+    dimensions = ['rows: ', 'columns: ', 'tabs: ']
+
+    for title, dim in zip(dimensions, headers):
+        print(title, end=" ")
+        for elem in dim:
+            print(str(elem), end=", ")
+        print('\n')
+
+
+def print_cells(cells):
+    """Print table cells for debugging purposes"""
+
+    if cells.ndim == 1:
+        pass
+    elif cells.ndim == 2:
+        pass
+    elif cells.ndim == 3:
+        pass
+
+
+if __name__ == "__main__":
+
+    from ieml.parsing.script import ScriptParser
+
+    sp = ScriptParser()
+    s = sp.parse("O:B:.+M:S:A:+S:.")
+    tables = generate_tables(s)
+    print(len(tables))

@@ -118,6 +118,9 @@ class Script(TreeStructure):
 
                     return self_char_value < other_char_value
 
+    def __getitem__(self, index):
+        return self.children[index]
+
     @property
     def tables(self):
         if self.paradigm and len(self._tables) == 0:

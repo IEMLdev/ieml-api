@@ -2,6 +2,7 @@
 __pycache__/
 *.py[cod]
 *$py.class
+testing/.cache/
 
 # C extensions
 *.so
@@ -57,3 +58,4 @@ data/dump
 
 # ply
 parsetab.py
+ieml/parsing/parser.out
