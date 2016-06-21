@@ -44,7 +44,7 @@ class TableGenerationTest(unittest.TestCase):
         col_headers = [self.parser.parse("M:U:M:."), self.parser.parse("M:A:M:.")]
         tab_headers = [self.parser.parse("M:O:S:."), self.parser.parse("M:O:B:."), self.parser.parse("M:O:T:.")]
         # TODO: manually build the 3D table cells
-        cells = np.empty((3,2,3), dtype="object")
+        cells = np.empty((3, 2, 3), dtype="object")
 
     def test_2d_multiplicative_script(self):
         script = self.parser.parse("M:O:.")
@@ -54,7 +54,7 @@ class TableGenerationTest(unittest.TestCase):
         cells = np.fromiter()
 
     def test_1d_multiplicative_script(self):
-        script = self.parser.parse("O:M:A:.")
+        script = self.parser.parse("O:+A:S:A:.")
         tables = generate_tables(script)
         row_headers = []
         cells = np.fromiter()
