@@ -144,16 +144,19 @@ def _build_table(dimension, multi_script, plural_vars):
     return Table(headers=[row_headers, col_headers, tab_headers], cells=cells)
 
 
-def _fill_cells(cells, plural_vars, row_header, col_header, tab_header):
+def _fill_cells(cells, plural_vars, row_headers, col_headers, tab_header):
     """Fills in the cells of the paradigm table by multiplying it's headers"""
     if cells.ndim == 1:
-        operands = [row_header[0], row_header[1], row_header[2]]
-        for i, child in enumerate(row_header.children):
+        # We only have one rwo header in this case and it's row_headers[0]
+        operands = [row_headers[0][0], row_headers[0][1], row_headers[0][2]]
+        for i, child in enumerate(plural_vars[0].script.children):
+            # Since it's one dimensional, we only need to check the first (and only) plural variable and expand it.
             operands[plural_vars[0].address] = child
             cells[i] = MultiplicativeScript(*operands)
+            cells[i].check()
     elif cells.ndim == 2:
-        for i, r_header in enumerate(row_header):
-            for j, c_header in enumerate(col_header):
+        for i, r_header in enumerate(row_headers):
+            for j, c_header in enumerate(col_headers):
                 if plural_vars[0].address == 0 and plural_vars[1].address == 1:
                     cells[i][j] = MultiplicativeScript(substance=r_header[0], attribute=c_header[1], mode=r_header[2])
                     cells[i][j].check()
@@ -164,8 +167,8 @@ def _fill_cells(cells, plural_vars, row_header, col_header, tab_header):
                     cells[i][j] = MultiplicativeScript(substance=r_header[0], attribute=r_header[1], mode=c_header[2])
                     cells[i][j].check()
     elif cells.ndim == 3:
-        for i, r_header in enumerate(row_header):
-            for j, c_header in enumerate(col_header):
+        for i, r_header in enumerate(row_headers):
+            for j, c_header in enumerate(col_headers):
                 for k, t_header in enumerate(tab_header):
                     cells[i][j][k] = MultiplicativeScript(substance=r_header[0], attribute=c_header[1], mode=t_header[2])
                     cells[i][j][k].check()
@@ -211,6 +214,6 @@ if __name__ == "__main__":
     from ieml.parsing.script import ScriptParser
 
     sp = ScriptParser()
-    s = sp.parse("t.o.-M:M:.o.-'")
+    s = sp.parse("O:B:.+M:S:A:+S:.")
     tables = generate_tables(s)
     print(len(tables))
