@@ -21,7 +21,6 @@ dist/
 downloads/
 eggs/
 .eggs/
-api-doc/lib/
 lib64/
 parts/
 sdist/
@@ -48,6 +47,4 @@ target/
 
 #idea folder
 .idea/
-
-#data dump expanded folder
-data/dump
+*.iml
