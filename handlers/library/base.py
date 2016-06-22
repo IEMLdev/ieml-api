@@ -1,10 +1,16 @@
 import json
 
 from flask_restful import Resource, reqparse
+
+from ieml.AST.usl import HyperText
 from ieml.exceptions import IEMLTermNotFoundInDictionnary, ToolsException, InvalidGraphNode, NoRootNodeFound, \
     SeveralRootNodeFound
+from models.base_queries import DictionaryQueries
 from models.exceptions import DBException
 import traceback
+
+from models.propositions import PropositionsQueries
+from models.usl import HyperTextQueries, TextQueries
 
 
 class BaseHandler(Resource):
@@ -23,6 +29,10 @@ class BaseHandler(Resource):
     def get(self):
         return {"status": "Correc'"}
 
+terms_db = DictionaryQueries()
+propositions_db = PropositionsQueries()
+texts_db = TextQueries()
+hypertexts_db = HyperTextQueries()
 
 class BaseDataHandler(BaseHandler):
     def __init__(self):

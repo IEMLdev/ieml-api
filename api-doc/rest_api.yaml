@@ -281,14 +281,16 @@ paths:
     post:
       description: Checks if a tag already exists for a proposition or an hypertext
       operationId: app.handlers.check_library_tag_exists
+      consumes:
+        - application/x-www-form-urlencoded
       parameters:
         - name: tag
-          in: header
+          in: query
           description: Value of tested tag
           required: true
           type: string
         - name: language
-          in: header
+          in: query
           description: Language of tag
           required: true
           type: string
@@ -421,10 +423,10 @@ paths:
         Decomposes a text into a list of proposition tree, which details all the closed propositions contained in a proposition, along with their tags and the path need to reach them.
       parameters:
         - name: ieml_string
-          in: header
+          in: query
           description: An IEML text's string value
           required: true
-          type : string
+          type: string
       responses:
         200:
           description: Successful response
@@ -439,7 +441,7 @@ paths:
       description: Decomposes any IEML element to its children element (eg, a text into propositions, a sentence into a tree of words, or a word into two lists of terms)
       parameters:
         - name: ieml_string
-          in: header
+          in: query
           description: An IEML element's string value
           required: true
           type : string
@@ -494,7 +496,9 @@ definitions:
       language:
         type : string
       level:
-        type: string
+        type: array
+        items:
+          type: string
       category:
         type: string
       term_type:
