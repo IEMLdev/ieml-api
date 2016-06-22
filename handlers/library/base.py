@@ -1,49 +1,14 @@
-import json
-
-from flask_restful import Resource, reqparse
-
-from ieml.AST.usl import HyperText
-from ieml.exceptions import IEMLTermNotFoundInDictionnary, ToolsException, InvalidGraphNode, NoRootNodeFound, \
-    SeveralRootNodeFound
-from models.base_queries import DictionaryQueries
-from models.exceptions import DBException
 import traceback
 
-from models.propositions import PropositionsQueries
-from models.usl import HyperTextQueries, TextQueries
-
-
-class BaseHandler(Resource):
-    """This is the base abstract handler, instantiates a request parser,
-    and simplifies a couple of operations"""
-
-    def __init__(self):
-        """The constructor for this abstract class just creates a request_parser"""
-        super().__init__()
-        self.reqparse = reqparse.RequestParser()
-        self.args = None
-
-    def do_request_parsing(self):
-        self.args = self.reqparse.parse_args()
-
-    def get(self):
-        return {"status": "Correc'"}
+from ieml.exceptions import IEMLTermNotFoundInDictionnary, ToolsException, InvalidGraphNode, NoRootNodeFound, \
+    SeveralRootNodeFound
+from models import DictionaryQueries, PropositionsQueries, HyperTextQueries, TextQueries
+from models.exceptions import DBException
 
 terms_db = DictionaryQueries()
 propositions_db = PropositionsQueries()
 texts_db = TextQueries()
 hypertexts_db = HyperTextQueries()
-
-class BaseDataHandler(BaseHandler):
-    def __init__(self):
-        """The constructor for this abstract class just creates a request_parser"""
-        super().__init__()
-        self.reqparse.add_argument("data", required=True, type=str)
-        self.json_data = None
-
-    def do_request_parsing(self):
-        super().do_request_parsing()
-        self.json_data = json.loads(self.args["data"])
 
 
 class ErrorCatcher:

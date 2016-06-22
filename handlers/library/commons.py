@@ -1,35 +1,23 @@
-from ieml.AST import Term, Text, HyperText, Word, Sentence, SuperSentence
-from models.interface import SearchRequest
-from .base import propositions_db, hypertexts_db
+from handlers.library.base import texts_db
 from handlers.library.exceptions import MissingField
 from ieml import USLParser
+from ieml.AST import Term, Text, HyperText, Word, Sentence, SuperSentence
 from ieml.AST.tree_metadata import HypertextMetadata, PropositionMetadata, TextMetadata
 from ieml.exceptions import CannotParse
 from ieml.parsing.parser import PropositionsParser
-from models import PropositionsQueries, TextQueries, HyperTextQueries, DictionaryQueries
-from .base import BaseDataHandler, BaseHandler
+from models import PropositionsQueries, TextQueries, HyperTextQueries
+from models.interface import SearchRequest
+from .base import propositions_db, hypertexts_db
 
 
-class TagsUpdateHandler(BaseDataHandler):
+def update_tag(body):
     """Updates the value of the tag attached to an IEMl object"""
+    proposition_type_to_db = {"HYPERTEXT": hypertexts_db,
+                              "TEXT": texts_db,
+                              "PROPOSITION": propositions_db}
 
-    def do_request_parsing(self):
-        super().do_request_parsing()
-        for field in ["ieml", "type", "tags"]:
-            if field not in self.json_data:
-                raise MissingField(field)
-
-    def post(self):
-        self.do_request_parsing()
-
-        proposition_type_to_db = {"HYPERTEXT": HyperTextQueries,
-                                  "TEXT" : TextQueries,
-                                  "PROPOSITION" : PropositionsQueries}
-
-        db_connector = proposition_type_to_db[self.args["type"]]()
-        db_connector.update_tags(self.args["IEML"], self.args["TAGS"])
-
-        return {}
+    db_connector = proposition_type_to_db[body["type"]]
+    db_connector.update_tags(body["IEML"], body["TAGS"])
 
 
 def search_library(query):
