@@ -124,7 +124,7 @@ class RelationsQueries:
             cls._compute_contains(s)
 
         # Compute and save the remarkable siblings
-        remarkable_siblings = RemarkableSibling.compute_remarkable_siblings_relations(scripts_ast)
+        remarkable_siblings = RemarkableSibling.compute_remarkable_siblings_relations(scripts_ast, regex=False)
 
         # Save the twins siblings
         for s in remarkable_siblings[TWIN_SIBLING_RELATION]:

@@ -42,8 +42,8 @@ def load_old_db():
                 'INHIBITS': inhibits[t['IEML']] if t['IEML'] in inhibits else [],
                 'METADATA': {}
              } for t in scripts.old_terms.find({})]
-
-    terms.save_multiple_terms(terms_list)
+    if len(terms_list) != 0:
+        terms.save_multiple_terms(terms_list)
     print('\n\nDone.', flush=True)
 
 
@@ -58,3 +58,5 @@ def recompute_relations():
 
 if __name__ == '__main__':
     load_old_db()
+    # recompute_relations()
+
