@@ -220,6 +220,6 @@ if __name__ == "__main__":
     from ieml.parsing.script import ScriptParser
 
     sp = ScriptParser()
-    s = sp.parse("O:B:.+M:S:A:+S:.")
+    s = sp.parse("m.-M:O:.-'m.-M:O:.-',E:A:S:.-',+E:A:T:.-',E:.-',+E:A:T:.-',+s.o.-m.o.-',_")
     tables = generate_tables(s)
     print(len(tables))

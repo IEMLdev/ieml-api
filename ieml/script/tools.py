@@ -167,3 +167,75 @@ _remarkable_multiplications_opposed_siblings = \
      'b.': 'k\\.', 'p.': 'e\\.', 'e.': 'p\\.', 'f.': 'n\\.', 'wu.': 'wa\\.',
      'y.': 'j\\.', 'h.': 'o\\.', 's.': 's\\.', 'g.': 'u\\.', 'c.': 'a\\.'}
 
+# TODO: Give variables meaningful names
+
+def factorize(script):
+    """Method to factorize a given script.
+    We want to minimize the number of multiplications in a IEML term"""
+    term_set = set(script.children)
+    k = set()
+
+    k = _script_compressor(term_set, k)
+
+    return k  # TODO: sort k before returning
+
+def _script_compressor(term_set, k):
+
+    # Set of sets of ieml terms
+    c = set()
+    q = set()
+
+    c = _seme_matcher(term_set)
+    q = _script_solver(c, term_set, set(), set())
+
+    if not q - term_set:
+        k.add(term_set)
+        return k
+
+    for elem in q:
+        _script_compressor(elem, k)
+
+    return k
+
+
+def _seme_matcher(term_set):
+    a = [x for x in range(3)]
+    b = [x for x in range(3)]
+    D = [set(), set(), set()]
+    c = set()
+
+    for term in term_set:
+        for i in range(3):
+            D[i].add(term)
+            a[i] = term[i]
+
+        for term_y in (term_set - term):
+
+            for i in range(3):
+                b[i] = term[i]
+
+            if a[1] == b[1]:
+                if a[2] == b[2]:
+                    D[3].add(term_y)
+                if a[3] == b[3]:
+                    D[2].add(term_y)
+            if a[2] == b[2]:
+                if a[3] == b[3]:
+                    D[1].add(term_y)
+        for d in D:
+            if len(d) >= 2 and d not in c:
+                c.add(d)
+    return c
+
+
+
+def _script_solver():
+    pass
+
+
+def _script_solver():
+    pass
+
+
+def _ieml_replace(s):
+    pass
