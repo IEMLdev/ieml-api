@@ -169,6 +169,7 @@ _remarkable_multiplications_opposed_siblings = \
 
 # TODO: Give variables meaningful names
 
+
 def factorize(script):
     """Method to factorize a given script.
     We want to minimize the number of multiplications in a IEML term"""
@@ -178,6 +179,7 @@ def factorize(script):
     k = _script_compressor(term_set, k)
 
     return k  # TODO: sort k before returning
+
 
 def _script_compressor(term_set, k):
 
@@ -228,14 +230,42 @@ def _seme_matcher(term_set):
     return c
 
 
+def _script_solver(C, term_set, R, Q):
+    term_set_bar, C,bar, R_bar = {}, {}, {}
 
-def _script_solver():
-    pass
+    if _pairwise_disjoint(C):  # Must include C = empty set
+        for set in C:
+            R.add(frozenset(set))
+            term_set = term_set - set
+        for term in term_set:
+            R.add({term})
+        if all([r in Q for r in R]) and Q != R:  # Check if R is a proper subset of Q
+            Q.add(frozenset(R))
+        return Q
+    else:
+        for set in C:
+            if _pairwise_disjoint(C - frozenset(set)):
+                term_set = term_set - set
+                C = C - frozenset(set)
+                R.add(frozenset(set))
+        for set in C:
+            S_bar = S - set
+            C_bar = C - frozenset(set)
+
+            for set_bar in C_bar:
+                if not set_bar.intersection(set):
+                    C_bar = C_bar - frozenset(set_bar)
+            R_bar = R.union(frozenset(set))
+
+        return _script_solver(C_bar, S_bar, R_bar, Q)
 
 
-def _script_solver():
-    pass
+def _pairwise_disjoint(sets):
+    all_elems = {}
 
+    for s in sets:
+        for x in s:
+            if x in all_elems: return False
+            all_elems.add(x)
 
-def _ieml_replace(s):
-    pass
+    return True
