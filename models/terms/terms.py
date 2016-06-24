@@ -17,6 +17,9 @@ class TermsConnector(DBConnector):
     def get_term(self, script):
         return self.terms.find_one({'_id': script if isinstance(script, str) else str(script)})
 
+    def get_all_terms(self):
+        return self.terms.find()
+
     def add_term(self, script_ast, tags, inhibits, root=False, metadata=None):
         self._save_term(script_ast, tags, inhibits, root, metadata)
 
