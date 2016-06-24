@@ -83,10 +83,14 @@ class RemarkableSibling:
             attribute = script_ast.children[1]
 
             return ''.join([
+                '(?:',
+                _remarkable_multiplications_opposed_siblings[str(script_ast)] + '|'
+                    if script_ast.layer == 1 and script_ast.character else '',
                 re.escape(str(attribute)), # substance
                 re.escape(str(substance)), # attribute
                 cls._regex_layer(attribute.layer, optional=True), # mode
-                re.escape(LAYER_MARKS[script_ast.layer])
+                re.escape(LAYER_MARKS[script_ast.layer]),
+                ')'
             ])
 
     @classmethod
@@ -98,8 +102,8 @@ class RemarkableSibling:
 
             return re.compile(''.join([
                 '^',
-                re.escape(str(attribute)),
                 re.escape(str(substance)),
+                re.escape(str(attribute)),
                 '(?!',
                 re.escape(str(mode) + LAYER_MARKS[script_ast.layer]),
                 '$)',
@@ -112,14 +116,19 @@ class RemarkableSibling:
 
     @classmethod
     def twin_siblings(cls, layer):
-        return re.compile(''.join([
-            '^(?P<substance>', # substance
+
+        regex = ''.join([
+            '^',
+            '$|^'.join(_remarkable_multiplications_twin_siblings) + '$|^'
+                if layer == 1 else '',
+            '(?P<substance>', # substance
             cls._regex_layer(layer - 1),
             ')(?P=substance)', # attribute == substance
             cls._regex_layer(layer - 1, optional=True),      # mode
             re.escape(LAYER_MARKS[layer]),
-            '$'
-        ]))
+            '$'])
+
+        return re.compile(regex)
 
     @classmethod
     def cross_sibling(cls, script_ast):
@@ -150,3 +159,113 @@ class RemarkableSibling:
         return '(?:[' + re.escape(''.join(primitives)) + ']+' + re.escape(LAYER_MARKS[layer]) + ')' + \
                ('*' if optional else '')
 
+_remarkable_multiplications_twin_siblings = [re.escape(t) for t in ['wo.', 'we.', 's.', 'm.', 'l.']]
+_remarkable_multiplications_opposed_siblings = \
+    {'j.': 'y\\.', 'n.': 'f\\.', 't.': 'd\\.', 'o.': 'h\\.', 'u.': 'g\\.',
+     'm.': 'm\\.', 'i.': 'x\\.', 'wo.': 'wo\\.', 'k.': 'b\\.', 'l.': 'l\\.',
+     'x.': 'i\\.', 'a.': 'c\\.', 'd.': 't\\.', 'wa.': 'wu\\.', 'we.': 'we\\.',
+     'b.': 'k\\.', 'p.': 'e\\.', 'e.': 'p\\.', 'f.': 'n\\.', 'wu.': 'wa\\.',
+     'y.': 'j\\.', 'h.': 'o\\.', 's.': 's\\.', 'g.': 'u\\.', 'c.': 'a\\.'}
+
+# TODO: Give variables meaningful names
+
+
+def factorize(script):
+    """Method to factorize a given script.
+    We want to minimize the number of multiplications in a IEML term"""
+    term_set = set(script.children)
+    k = set()
+
+    k = _script_compressor(term_set, k)
+
+    return k  # TODO: sort k before returning
+
+
+def _script_compressor(term_set, k):
+
+    # Set of sets of ieml terms
+    c = set()
+    q = set()
+
+    c = _seme_matcher(term_set)
+    q = _script_solver(c, term_set, set(), set())
+
+    if not q - term_set:
+        k.add(term_set)
+        return k
+
+    for elem in q:
+        _script_compressor(elem, k)
+
+    return k
+
+
+def _seme_matcher(term_set):
+    a = [x for x in range(3)]
+    b = [x for x in range(3)]
+    D = [set(), set(), set()]
+    c = set()
+
+    for term in term_set:
+        for i in range(3):
+            D[i].add(term)
+            a[i] = term[i]
+
+        for term_y in (term_set - term):
+
+            for i in range(3):
+                b[i] = term[i]
+
+            if a[1] == b[1]:
+                if a[2] == b[2]:
+                    D[3].add(term_y)
+                if a[3] == b[3]:
+                    D[2].add(term_y)
+            if a[2] == b[2]:
+                if a[3] == b[3]:
+                    D[1].add(term_y)
+        for d in D:
+            if len(d) >= 2 and d not in c:
+                c.add(d)
+    return c
+
+
+def _script_solver(C, term_set, R, Q):
+    term_set_bar, C,bar, R_bar = {}, {}, {}
+
+    if _pairwise_disjoint(C):  # Must include C = empty set
+        for set in C:
+            R.add(frozenset(set))
+            term_set = term_set - set
+        for term in term_set:
+            R.add({term})
+        if all([r in Q for r in R]) and Q != R:  # Check if R is a proper subset of Q
+            Q.add(frozenset(R))
+        return Q
+    else:
+        for set in C:
+            if _pairwise_disjoint(C - frozenset(set)):
+                term_set = term_set - set
+                C = C - frozenset(set)
+                R.add(frozenset(set))
+        for set in C:
+            S_bar = S - set
+            C_bar = C - frozenset(set)
+
+            for set_bar in C_bar:
+                if not set_bar.intersection(set):
+                    C_bar = C_bar - frozenset(set_bar)
+            R_bar = R.union(frozenset(set))
+
+        return _script_solver(C_bar, S_bar, R_bar, Q)
+
+
+def _pairwise_disjoint(sets):
+    all_elems = {}
+
+    for s in sets:
+        for x in s:
+            if x in all_elems: return False
+            all_elems.add(x)
+
+    return True
