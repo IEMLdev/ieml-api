@@ -1,10 +1,12 @@
 # TODO: Give variables meaningful names
 
-def regroup(*headers):
-    """Takes in multiple table headers added together and regroups them"""
-
-
 def factorize(script):
+    """Takes in an additive script and factorizes it to minimize the number of multiplications"""
+
+    pass
+
+
+def factorize_algebra(script):
     """Method to factorize a given script.
     We want to minimize the number of multiplications in a IEML term"""
     term_set = set(script.singular_sequences)
@@ -99,6 +101,6 @@ if __name__ == '__main__':
     from ieml.parsing.script import ScriptParser
 
     sp = ScriptParser()
-    s = sp.parse("O:M:.")
-    K = factorize(s)
-    print(str(K))
+    s = sp.parse("A:U:B:.+S:+T:U:E:.+A:+S:+T:B:E:.")
+    c = _seme_matcher(set(s.singular_sequences))
+    print(str(c))
