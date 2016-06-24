@@ -4,8 +4,6 @@ from ieml.exceptions import NoRemarkableSiblingForAdditiveScript
 from .constants import LAYER_MARKS, REMARKABLE_ADDITION, PRIMITVES, OPPOSED_SIBLING_RELATION, \
     ASSOCIATED_SIBLING_RELATION, CROSSED_SIBLING_RELATION, TWIN_SIBLING_RELATION, MAX_LAYER, character_value
 from .script import MultiplicativeScript, REMARKABLE_MULTIPLICATION_SCRIPT
-from string import ascii_lowercase
-from itertools import product
 
 class RemarkableSibling:
 
@@ -233,6 +231,15 @@ class RemarkableSibling:
 
         return cls.opposed_siblings(script1.children[0], script2.children[1]) and \
             cls.opposed_siblings(script1.children[1], script2.children[0])
+
+_remarkable_multiplications_twin_siblings = [re.escape(t) for t in ['wo.', 'we.', 's.', 'm.', 'l.']]
+_remarkable_multiplications_opposed_siblings = \
+    {'j.': 'y\\.', 'n.': 'f\\.', 't.': 'd\\.', 'o.': 'h\\.', 'u.': 'g\\.',
+     'm.': 'm\\.', 'i.': 'x\\.', 'wo.': 'wo\\.', 'k.': 'b\\.', 'l.': 'l\\.',
+     'x.': 'i\\.', 'a.': 'c\\.', 'd.': 't\\.', 'wa.': 'wu\\.', 'we.': 'we\\.',
+     'b.': 'k\\.', 'p.': 'e\\.', 'e.': 'p\\.', 'f.': 'n\\.', 'wu.': 'wa\\.',
+     'y.': 'j\\.', 'h.': 'o\\.', 's.': 's\\.', 'g.': 'u\\.', 'c.': 'a\\.'}
+
 
 # map_byte_to_old_canonical = {}
 # list_value = []
