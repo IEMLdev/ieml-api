@@ -2,7 +2,7 @@ from testing.helper import *
 from ieml import ScriptParser
 from ieml.script import *
 from models.constants import DB_ADDRESS, TERMS_COLLECTION
-
+from ieml.script.tools import old_canonical
 from pymongo import MongoClient
 
 
@@ -107,6 +107,12 @@ class TestTermParser(unittest.TestCase):
         self.assertListEqual(list(map(str, script.singular_sequences)),
                              ['E:E:U:.', 'E:E:A:.', 'E:E:S:.', 'E:E:B:.', 'E:E:T:.'])
 
+    def test_compare(self):
+        s1 = self.parser.parse("U:S:+T:S:. + S:S:S:+B:. + U:+S:T:B:.")
+        s2 = self.parser.parse("U:T:S:+B:. + S:S:+T:B:. + U:+S:S:S:.")
+        # print(old_canonical(s1))
+        # print(old_canonical(s2))
+        self.assertTrue(s1 < s2)
 # Lot of test to do :
 # - testing invalid script construction
 # - testing redondant element in script addition
