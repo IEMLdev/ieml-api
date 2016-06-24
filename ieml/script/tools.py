@@ -1,9 +1,11 @@
-from .script import AdditiveScript, MultiplicativeScript, REMARKABLE_MULTIPLICATION_SCRIPT, Script
-from .constants import LAYER_MARKS, REMARKABLE_ADDITION, PRIMITVES, OPPOSED_SIBLING_RELATION, \
-    ASSOCIATED_SIBLING_RELATION, CROSSED_SIBLING_RELATION, TWIN_SIBLING_RELATION, MAX_LAYER
-from ieml.exceptions import NoRemarkableSiblingForAdditiveScript
 import re
 
+from ieml.exceptions import NoRemarkableSiblingForAdditiveScript
+from .constants import LAYER_MARKS, REMARKABLE_ADDITION, PRIMITVES, OPPOSED_SIBLING_RELATION, \
+    ASSOCIATED_SIBLING_RELATION, CROSSED_SIBLING_RELATION, TWIN_SIBLING_RELATION, MAX_LAYER, character_value
+from .script import MultiplicativeScript, REMARKABLE_MULTIPLICATION_SCRIPT
+from string import ascii_lowercase
+from itertools import product
 
 class RemarkableSibling:
 
@@ -188,14 +190,6 @@ class RemarkableSibling:
         return '(?:[' + re.escape(''.join(primitives)) + ']+' + re.escape(LAYER_MARKS[layer]) + ')' + \
                ('*' if optional else '')
 
-_remarkable_multiplications_twin_siblings = [re.escape(t) for t in ['wo.', 'we.', 's.', 'm.', 'l.']]
-_remarkable_multiplications_opposed_siblings = \
-    {'j.': 'y\\.', 'n.': 'f\\.', 't.': 'd\\.', 'o.': 'h\\.', 'u.': 'g\\.',
-     'm.': 'm\\.', 'i.': 'x\\.', 'wo.': 'wo\\.', 'k.': 'b\\.', 'l.': 'l\\.',
-     'x.': 'i\\.', 'a.': 'c\\.', 'd.': 't\\.', 'wa.': 'wu\\.', 'we.': 'we\\.',
-     'b.': 'k\\.', 'p.': 'e\\.', 'e.': 'p\\.', 'f.': 'n\\.', 'wu.': 'wa\\.',
-     'y.': 'j\\.', 'h.': 'o\\.', 's.': 's\\.', 'g.': 'u\\.', 'c.': 'a\\.'}
-
     @classmethod
     def opposed_siblings(cls, script1, script2):
         if not isinstance(script1, MultiplicativeScript) or not isinstance(script2, MultiplicativeScript):
@@ -239,6 +233,35 @@ _remarkable_multiplications_opposed_siblings = \
 
         return cls.opposed_siblings(script1.children[0], script2.children[1]) and \
             cls.opposed_siblings(script1.children[1], script2.children[0])
+
+# map_byte_to_old_canonical = {}
+# list_value = []
+# for c in product((True, False), repeat=len(PRIMITVES)):
+#     if not any(c):
+#         # no empty addition
+#         continue
+#     e = 0
+#     for b, k in zip(c, PRIMITVES):
+#         if not b:
+#             continue
+#         e |= character_value[k]
+#     list_value.append(e)
+# list_value.sort()
+#
+# for v, l in zip(list_value, ascii_lowercase):
+#     map_byte_to_old_canonical[v] = l
+#
+# # map_byte_to_old_canonical = {16: 'f', 1: 'a', 2: 'b', 4: 'c', 56: 'h', 6: 'd', 32: 'g', 8: 'e', 62: 'i', 63: 'j'}
+#
+
+
+def old_canonical(script_ast):
+    result = ''
+    for byte in script_ast.canonical:
+        result += chr(byte + ord('a') - 1)
+    return result
+
+
 # TODO: Give variables meaningful names
 
 
@@ -341,3 +364,12 @@ def _pairwise_disjoint(sets):
             all_elems.add(x)
 
     return True
+
+
+_remarkable_multiplications_twin_siblings = [re.escape(t) for t in ['wo.', 'we.', 's.', 'm.', 'l.']]
+_remarkable_multiplications_opposed_siblings = \
+    {'j.': 'y\\.', 'n.': 'f\\.', 't.': 'd\\.', 'o.': 'h\\.', 'u.': 'g\\.',
+     'm.': 'm\\.', 'i.': 'x\\.', 'wo.': 'wo\\.', 'k.': 'b\\.', 'l.': 'l\\.',
+     'x.': 'i\\.', 'a.': 'c\\.', 'd.': 't\\.', 'wa.': 'wu\\.', 'we.': 'we\\.',
+     'b.': 'k\\.', 'p.': 'e\\.', 'e.': 'p\\.', 'f.': 'n\\.', 'wu.': 'wa\\.',
+     'y.': 'j\\.', 'h.': 'o\\.', 's.': 's\\.', 'g.': 'u\\.', 'c.': 'a\\.'}
