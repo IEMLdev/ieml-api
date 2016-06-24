@@ -1,7 +1,7 @@
 from testing.helper import *
 from ieml import ScriptParser
 from ieml.script import *
-from models.constants import DB_ADDRESS, DB_NAME_TERM, TERMS_COLLECTION
+from models.constants import DB_ADDRESS, TERMS_COLLECTION
 
 from pymongo import MongoClient
 
@@ -64,7 +64,7 @@ class TestTermParser(unittest.TestCase):
             self.assertEqual(s.cardinal, 1)
 
     def test_all_db_term(self):
-        terms_db = MongoClient(DB_ADDRESS)[DB_NAME_TERM][TERMS_COLLECTION]
+        terms_db = MongoClient(DB_ADDRESS)['old_db'][TERMS_COLLECTION]
         terms = [term['IEML'] for term in terms_db.find({})]
 
         parser = ScriptParser()

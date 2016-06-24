@@ -36,10 +36,16 @@ class Script(TreeStructure):
         self.cardinal = None
 
         # The singular sequences
-        self.singular_sequences = None
+        self._singular_sequences = None
 
         # The contained paradigms (tables)
         self._tables = []
+
+        # The canonical string to compare same layer and cardinal script (__lt__)
+        self.canonical = None
+
+    # def __gt__(self, other):
+    #     return self != other and not self.__lt__(other)
 
     def __eq__(self, other):
         if self._str is None or other._str is None:
@@ -72,7 +78,10 @@ class Script(TreeStructure):
                 # then by number of singular sequence
                 return self.cardinal < other.cardinal
             else:
-                if self.layer != 0:
+                # Compare the canonical form
+                if self.canonical != other.canonical:
+                    return self.canonical < other.canonical
+                elif self.layer != 0:
                     # layer != 0 => children is set, no children are for layer 0 (MultiplicativeScript)
                     if isinstance(self, other.__class__):
                         # if they are the same class
@@ -109,6 +118,9 @@ class Script(TreeStructure):
 
                     return self_char_value < other_char_value
 
+    def __getitem__(self, index):
+        return self.children[index]
+
     @property
     def tables(self):
         if self.paradigm and len(self._tables) == 0:
@@ -125,9 +137,16 @@ class Script(TreeStructure):
             if child.paradigm:
                 dim.append(child)
 
-        # if len(dim) == 1:
-        # else:
-        #     self._tables = Table(headers=dim)
+    def _compute_singular_sequences(self):
+        pass
+
+    @property
+    def singular_sequences(self):
+        if self._singular_sequences:
+            return self._singular_sequences
+
+        self._singular_sequences = self._compute_singular_sequences()
+        return self._singular_sequences
 
 
 class AdditiveScript(Script):
@@ -189,6 +208,14 @@ class AdditiveScript(Script):
             self.paradigm = len(self.children) > 1 or any(child.paradigm for child in self.children)
             self.cardinal = sum((e.cardinal for e in self.children))
 
+        if self.layer == 0:
+            value = 0b0
+            for child in self:
+                value |= character_value[child.character]
+            self.canonical = bytes([value])
+        else:
+            self.canonical = b''.join([child.canonical for child in self])
+
     def _do_checking(self):
         pass
 
@@ -201,13 +228,15 @@ class AdditiveScript(Script):
         # Ordering of the children
         self.children.sort()
 
+    def _compute_singular_sequences(self):
         # Generating the singular sequence
         if not self.paradigm:
-            self.singular_sequences = [self]
+            return [self]
         else:
             # additive proposition has always children set
-            self.singular_sequences = [sequence for child in self.children for sequence in child.singular_sequences]
-            self.singular_sequences.sort()
+            s = [sequence for child in self.children for sequence in child.singular_sequences]
+            s.sort()
+            return s
 
 
 class MultiplicativeScript(Script):
@@ -283,6 +312,11 @@ class MultiplicativeScript(Script):
             for e in self.children:
                 self.cardinal = self.cardinal * e.cardinal
 
+        if self.layer == 0:
+            self.canonical = bytes([character_value[self.character]])
+        else:
+            self.canonical = b''.join([child.canonical for child in self])
+
     def _render_children(self, children=None, character=None):
         if character:
             return character
@@ -315,16 +349,19 @@ class MultiplicativeScript(Script):
                 raise InvalidScript()
 
     def _do_ordering(self):
+        pass
+
+    def _compute_singular_sequences(self):
         # Generate the singular sequence
         if not self.paradigm:
-            self.singular_sequences = [self]
+            return [self]
         else:
             children_sequences = []
             for i in range(0, 3):
                 if not self.children[i].empty:
                     children_sequences.append([(i, c) for c in self.children[i].singular_sequences])
 
-            self.singular_sequences = []
+            s = []
             for triplet in itertools.product(*children_sequences):
                 children = self.children[:]
                 for tpl in triplet:
@@ -332,9 +369,10 @@ class MultiplicativeScript(Script):
 
                 sequence = MultiplicativeScript(children=children)
                 sequence.check()
-                self.singular_sequences.append(sequence)
+                s.append(sequence)
 
-            self.singular_sequences.sort()
+            s.sort()
+            return s
 
 
 class NullScript(Script):
@@ -344,7 +382,6 @@ class NullScript(Script):
         self.paradigm = False
         self.empty = True
         self.cardinal = 1
-        self.singular_sequences = [self]
         self.character = 'E'
 
         # No need to check
@@ -352,6 +389,7 @@ class NullScript(Script):
         self._has_been_ordered = True
 
         self._do_precompute_str()
+        self.canonical = bytes(character_value[self.character] * pow(3, self.layer))
 
     def _do_precompute_str(self):
         result = self.character
@@ -365,6 +403,9 @@ class NullScript(Script):
 
     def _do_ordering(self):
         pass
+
+    def _compute_singular_sequences(self):
+        return [self]
 
 
 # Building the remarkable multiplication to script

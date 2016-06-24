@@ -10,11 +10,14 @@ __pycache__/
 .python-version
 bin/
 lib64
+lib/
 pyvenv.cfg
+pip-selfcheck.json
 
 # Distribution / packaging
 .Python
 env/
+share/
 build/
 develop-eggs/
 dist/
@@ -47,4 +50,12 @@ target/
 
 #idea folder
 .idea/
+
+#data dump expanded folder
+
+data/dump
+
+# ply
+parsetab.py
+ieml/parsing/parser.out
 *.iml

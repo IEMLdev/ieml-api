@@ -37,23 +37,18 @@ class Term(metaclass=AbstractPropositionMetaclass):
         return proposition == self
 
     def __gt__(self, other):
-        # first comparing using the layer and then number of singular sequences
-        if self.metadata["LAYER"] != other.metadata["LAYER"]:
-            return int(self.metadata["LAYER"]) > int(other.metadata["LAYER"])
-        elif self.metadata["TAILLE"] != other.metadata["TAILLE"]:
-            return int(self.metadata["TAILLE"]) > int(other.metadata["TAILLE"])
-        else:
-            # if the term has MORE canonical sequences, it's "BIGGER", so GT is TRUE
-            if len(self.canonical_forms) != len(other.canonical_forms):
-                return len(self.canonical_forms) > len(other.canonical_forms)
+        # we use the DB's canonical forms
+        # if the term has MORE canonical sequences, it's "BIGGER", so GT is TRUE
+        if len(self.canonical_forms) != len(other.canonical_forms):
+            return len(self.canonical_forms) > len(other.canonical_forms)
 
-            else: # else, we have to compare sequences using the regular aphabetical order
-                for i, seq in enumerate(self.canonical_forms):
-                    # for each sequence, if the sequences are different, we can return the comparison
-                    if self.canonical_forms[i] != other.canonical_forms[i]:
-                        return self.canonical_forms[i] > other.canonical_forms[i]
+        else: # else, we have to compare sequences using the regular aphabetical order
+            for i, seq in enumerate(self.canonical_forms):
+                # for each sequence, if the sequences are different, we can return the comparison
+                if self.canonical_forms[i] != other.canonical_forms[i]:
+                    return self.canonical_forms[i] > other.canonical_forms[i]
 
-            raise TermComparisonFailed(self.ieml, other.ieml)
+        raise TermComparisonFailed(self.ieml, other.ieml)
 
     @property
     def is_null(self):
@@ -102,7 +97,7 @@ class Term(metaclass=AbstractPropositionMetaclass):
         from models.base_queries import DictionaryQueries
         TermMetadata.set_connector(DictionaryQueries())
         try:
-            self.objectid = self.metadata["_id"]
+            self.objectid = self.metadata["OBJECT_ID"]
             self.canonical_forms = self.metadata["CANONICAL"]
         except TypeError:
             raise IEMLTermNotFoundInDictionnary(self.ieml)

@@ -17,7 +17,7 @@ class DBConnector(object, metaclass=Singleton):
         self.old_db = self.client[OLD_DB_NAME]
 
         # TODO : once the old DB has a migration script, this should be in the self.db
-        self.terms = self.old_db[OLD_TERMS_COLLECTION]
+        self.old_terms = self.old_db[OLD_TERMS_COLLECTION]
 
 
 class DictionaryQueries(DBConnector):
@@ -38,7 +38,7 @@ class DictionaryQueries(DBConnector):
         regex = re.compile(re.escape(search_string))
 
         result = [self._format_response(term)
-                  for term in self.terms.find(
+                  for term in self.old_terms.find(
                     {'$or': [
                         {'IEML': {'$regex': regex}},
                         {'FR': {'$regex': regex}},
@@ -50,26 +50,20 @@ class DictionaryQueries(DBConnector):
         if ieml_string[0] == '[' and ieml_string[-1] == ']':
             ieml_string = ieml_string[1:-1]
 
-        term = self.terms.find_one({"IEML": ieml_string})
+        term = self.old_terms.find_one({"IEML": ieml_string})
         if term:
             return self._format_response(term)
         else:
             return None
 
-    def exact_ieml_term_search_noformat(self, ieml_string):
-        if ieml_string[0] == '[' and ieml_string[-1] == ']':
-            ieml_string = ieml_string[1:-1]
-
-        return self.terms.find_one({"IEML": ieml_string})
-
     def get_all_terms(self):
         """Returns an interator for all the terms"""
-        return self.terms.find()
+        return self.old_terms.find()
 
     def get_random_terms(self, count):
         """Used by the random proposition generator : ouputs n random terms from the dicitonary DB, n being count"""
-        total_count = self.terms.count()
-        return [term["IEML"] for term in self.terms.find().limit(count).skip(randint(0, total_count - 1))]
+        total_count = self.old_terms.count()
+        return [term["IEML"] for term in self.old_terms.find().limit(count).skip(randint(0, total_count - 1))]
 
     def search_terms(self, search_string, languages=None, category=None, type=None):
         regex = {'$regex': re.compile(re.escape(search_string))}
@@ -87,7 +81,7 @@ class DictionaryQueries(DBConnector):
         #query['PARADIGM'] with type
 
         return [self._format_response(term)
-                for term in self.terms.find(query)]
+                for term in self.old_terms.find(query)]
 
     def check_tags_available(self, tags):
         for language in tags:
@@ -96,11 +90,12 @@ class DictionaryQueries(DBConnector):
         return True
 
     def check_tag_exist(self, tag, language):
-        return self.terms.find_one({language: tag}) is not None
+        return self.old_terms.find_one({language: tag}) is not None
 
 
 
 class Tag:
     @staticmethod
     def check_tags(tags):
-        return all(lang in tags for lang in TAG_LANGUAGES) and all(tag for tag in tags)
+        return isinstance(tags, dict) and all(lang in tags for lang in TAG_LANGUAGES) \
+               and all((tag in TAG_LANGUAGES and tag) for tag in tags)
