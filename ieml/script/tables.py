@@ -2,7 +2,6 @@ from ieml.script import AdditiveScript, MultiplicativeScript
 from collections import namedtuple
 import numpy as np
 
-_tables = []
 Variable = namedtuple('Variable', ['address', 'script'])
 Table = namedtuple('Table', ['headers', 'cells'])
 
@@ -189,24 +188,31 @@ def _make_headers(plural_variable, substance, attribute, mode):
 
 def print_headers(headers):
     """Print headers for debugging purposes"""
-    dimensions = ['rows: ', 'columns: ', 'tabs: ']
+    dimensions = ['row_headers', 'col_headers', 'tab_headers']
 
     for title, dim in zip(dimensions, headers):
-        print(title, end=" ")
+        print(title + " = [", end=" ")
         for elem in dim:
-            print(str(elem), end=", ")
-        print('\n')
+            print("self.parser.parse(\"" + str(elem) + "\"),", end=" ")
+        print(']')
 
 
 def print_cells(cells):
     """Print table cells for debugging purposes"""
 
     if cells.ndim == 1:
-        pass
+        for i, cell in enumerate(cells):
+            print("cells[" + str(i) + "] = " + "self.parser.parse(\"" + str(cell) + "\")")
     elif cells.ndim == 2:
-        pass
+        for i, row in enumerate(cells):
+            for j, cell in enumerate(row):
+                print("cells[" + str(i) + "][" + str(j) + "] = " + "self.parser.parse(\"" + str(cell) + "\")")
     elif cells.ndim == 3:
-        pass
+        for k in range(cells.shape[2]):
+            for i, row in enumerate(cells):
+                for j, col in enumerate(row):
+                    print("cells[" + str(i) + "][" + str(j) + "][" + str(k) + "] = " + "self.parser.parse(\"" + str(cells[i][j][k]) + "\")")
+            print('\n')
 
 
 if __name__ == "__main__":
@@ -214,6 +220,6 @@ if __name__ == "__main__":
     from ieml.parsing.script import ScriptParser
 
     sp = ScriptParser()
-    s = sp.parse("O:B:.+M:S:A:+S:.")
+    s = sp.parse("m.-M:O:.-'m.-M:O:.-',E:A:S:.-',+E:A:T:.-',E:.-',+E:A:T:.-',+s.o.-m.o.-',_")
     tables = generate_tables(s)
     print(len(tables))
