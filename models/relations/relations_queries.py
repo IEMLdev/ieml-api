@@ -175,12 +175,10 @@ class RelationsQueries:
         )
 
         # Compute and save contains and contained (can't be inhibited)
-        for s in scripts_ast:
-            cls._compute_contained(s)
-            cls._compute_contains(s)
+        cls._compute_containing_relations(scripts_ast)
 
         # Compute and save the remarkable siblings
-        remarkable_siblings = RemarkableSibling.compute_remarkable_siblings_relations(scripts_ast)
+        remarkable_siblings = RemarkableSibling.compute_remarkable_siblings_relations(scripts_ast, regex=False)
 
         # Save the twins siblings
         for s in remarkable_siblings[TWIN_SIBLING_RELATION]:
@@ -230,19 +228,31 @@ class RelationsQueries:
             cls._inhibit_relations(s, i)
 
     @staticmethod
-    def _format_relations(relations):
+    def _format_relations(relations, pack_ancestor=False):
         result = {}
 
         def _accumulation(current_path, dic):
-            if ELEMENTS in dic:
-                result[current_path] = dic[ELEMENTS]
-                for i in (MODE, ATTRIBUTE, SUBSTANCE):
-                    _accumulation(current_path + '.' + i, dic[i])
+            for key in dic:
+                if pack_ancestor:
+                    if key == ELEMENTS:
+                        if current_path not in result:
+                            result[current_path] = []
+                        result[current_path].extend(dic[ELEMENTS])
+                    else:
+                        _accumulation(current_path, dic[key])
+                else:
+                    if key == ELEMENTS:
+                        result[current_path] = dic[ELEMENTS]
+                    else:
+                        _accumulation(current_path + '.' + key, dic[key])
 
         for r in relations:
             if r in [FATHER_RELATION, CHILD_RELATION]:
                 for i in (MODE, ATTRIBUTE, SUBSTANCE):
-                    _accumulation(r + '.' + i, relations[r][i])
+                    if i not in relations[r]:
+                        relations[r][i] = []
+                    else:
+                        _accumulation(r + '.' + i, relations[r][i])
             else:
                 # list type
                 result[r] = relations[r]
@@ -250,7 +260,7 @@ class RelationsQueries:
         return result
 
     @classmethod
-    def relations(cls, script, relation_title=None):
+    def relations(cls, script, relation_title=None, pack_ancestor=False):
         """
         Relation getter, get the relations for the argument script. If relation_title is specified, return the relation
         with the given name. For the relation_title that can be specified, see the list in constant of ieml.
@@ -264,34 +274,44 @@ class RelationsQueries:
         if relation_title:
             return relations[relation_title]
         else:
-            return cls._format_relations(relations)
+            return cls._format_relations(relations, pack_ancestor)
 
     @staticmethod
-    def _merge(dic1, dic2):
+    def _merge(dic1, dic2, inverse_key=None):
         """
         Merge two dict in the model of father children relationship
         :param dic1: the dict to merge in.
         :param dic2: the dict to add in dic1.
+        :param inverse_key: the key to put at the end of the first dic
         :return: None
         """
-        if ELEMENTS in dic2:
-            if ELEMENTS not in dic1:
-                dic1[ELEMENTS] = []
+        # first merge the current level of dict
+        # ELEMENTS present implies that the dict has another level of recursion
+        for key in dic2:
+            if key == ELEMENTS:
+                # data copy
+                if inverse_key:
+                    if inverse_key not in dic1:
+                        dic1[inverse_key] = {}
 
-            dic1[ELEMENTS].extend(dic2[ELEMENTS])
+                    if ELEMENTS not in dic1[inverse_key]:
+                        dic1[inverse_key][ELEMENTS] = dic2[ELEMENTS]
+                    else:
+                        dic1[inverse_key][ELEMENTS] = list(set(dic1[inverse_key][ELEMENTS]).union(dic2[ELEMENTS]))
+                else:
+                    if ELEMENTS not in dic1:
+                        dic1[ELEMENTS] = dic2[ELEMENTS]
+                    else:
+                        dic1[ELEMENTS] = list(set(dic1[ELEMENTS]).union(dic2[ELEMENTS]))
+            else:
+                # dict recursion
+                if key not in dic1:
+                    dic1[key] = {}
 
-        if SUBSTANCE in dic2:
-            if SUBSTANCE not in dic1:
-                dic1[SUBSTANCE] = {}
-                dic1[ATTRIBUTE] = {}
-                dic1[MODE] = {}
-
-            RelationsQueries._merge(dic1[SUBSTANCE], dic2[SUBSTANCE])
-            RelationsQueries._merge(dic1[ATTRIBUTE], dic2[ATTRIBUTE])
-            RelationsQueries._merge(dic1[MODE], dic2[MODE])
+                RelationsQueries._merge(dic1[key], dic2[key], inverse_key=inverse_key)
 
     @classmethod
-    def _compute_fathers(cls, script_ast, max_depth=-1, _first=True):
+    def _compute_fathers(cls, script_ast):
         """
         Compute the father relationship. For a given script, it is all the sub element attribute, mode, substance for a
         given depth.
@@ -311,29 +331,38 @@ class RelationsQueries:
             MODE: {} if no element (MODE.ELEMENTS = []) otherwise same as the model of substance.
         }
         """
-
-        if max_depth == 0 and not _first:
-            return {ELEMENTS: [str(script_ast)]}
+        #
+        # if not _first:
+        #     return {ELEMENTS: [str(script_ast)]}
 
         if isinstance(script_ast, NullScript):
             return {}
 
-        relations = {
-            SUBSTANCE: {},
-            ATTRIBUTE: {},
-            MODE: {}
-        }
+        relations = {}
 
-        if not _first:
-            relations[ELEMENTS] = [str(script_ast)]
-
-        # iteration over the script children (if addition), if Multiplication, just the element
         for sub_s in script_ast if isinstance(script_ast, AdditiveScript) else [script_ast]:
-            if len(sub_s.children) != 0:
-                # sub_s is a Multiplicative script
-                cls._merge(relations[SUBSTANCE], cls._compute_fathers(sub_s.children[0], max_depth - 1, _first=False))
-                cls._merge(relations[ATTRIBUTE], cls._compute_fathers(sub_s.children[1], max_depth - 1, _first=False))
-                cls._merge(relations[MODE], cls._compute_fathers(sub_s.children[2], max_depth - 1, _first=False))
+            if len(sub_s.children) == 0 or isinstance(sub_s, NullScript):
+                continue
+
+            for i, e in enumerate((SUBSTANCE, ATTRIBUTE, MODE)):
+                if isinstance(sub_s.children[i], NullScript):
+                    continue
+
+                if e not in relations:
+                    relations[e] = {}
+
+                if cls.relations_db.get_script(sub_s.children[i]) is not None:
+                    if ELEMENTS not in relations[e]:
+                        relations[e][ELEMENTS] = []
+
+                    r = set(relations[e][ELEMENTS])
+                    r.add(str(sub_s.children[i]))
+                    relations[e][ELEMENTS] = list(r)
+
+                cls._merge(relations[e], cls._compute_fathers(sub_s.children[i]))
+
+                if not relations[e]:
+                    del relations[e]
 
         return relations
 
@@ -350,11 +379,7 @@ class RelationsQueries:
             # already computed
             return
 
-        result = {
-            SUBSTANCE: {},
-            ATTRIBUTE: {},
-            MODE: {}
-        }
+        result = {}
 
         # we check in all the father relations to get the childrens
         for rel in (SUBSTANCE, ATTRIBUTE, MODE):
@@ -371,9 +396,12 @@ class RelationsQueries:
 
                 # merge all child dictionary
                 for d in list_children:
-                    cls._merge(result[rel], d)
+                    cls._merge(result, d, inverse_key=rel)
 
                 # save the child elements
+                if rel not in result:
+                    result[rel] = {}
+
                 result[rel][ELEMENTS] = children
 
         cls._save_relation(script_str, CHILD_RELATION, result)
@@ -396,58 +424,41 @@ class RelationsQueries:
         )
 
     @classmethod
-    def _compute_contained(cls, script_ast):
+    def _compute_containing_relations(cls, scripts_ast):
         """
         Compute all the contained relations for this script and save the resulting relations.
         :param script_ast: the script ast to compute contained relations.
         :return: None
         """
-        entry = cls.relations_db.get_script(str(script_ast))
+        contains = {}
 
-        result = cls.relations_db.relations.aggregate([
-            # select the paradigm
-            {'$match': {'$and': [
-                {'ROOT': entry['ROOT']},
-                {'SINGULAR_SEQUENCES': {
-                    '$all': [str(seq) for seq in script_ast.singular_sequences]
-                }},
-                {'_id': {'$ne': str(script_ast)}},
-            ]}},
-            {'$project': {'_id': 1}}
-        ])
+        for s in scripts_ast:
+            entry = cls.relations_db.get_script(str(s))
 
-        contained = [cls.script_parser.parse(e['_id']) for e in result]
-        contained.sort()
+            result = cls.relations_db.relations.aggregate([
+                # select the paradigm
+                {'$match': {'$and': [
+                    {'ROOT': entry['ROOT']},
+                    {'SINGULAR_SEQUENCES': {
+                        '$all': [str(seq) for seq in s.singular_sequences]
+                    }},
+                    {'_id': {'$ne': str(s)}},
+                ]}},
+                {'$project': {'_id': 1}}
+            ])
 
-        cls._save_relation(script_ast, CONTAINED_RELATION, [str(c) for c in contained])
+            contained = [cls.script_parser.parse(e['_id']) for e in result]
+            contained.sort()
 
-    @classmethod
-    def _compute_contains(cls, script_ast):
-        """
-        Compute all the contains relations for this script and save the resulting relations.
-        :param script_ast: the script ast to compute contains relations.
-        :return: None
-        """
-        entry = cls.relations_db.get_script(str(script_ast))
+            cls._save_relation(s, CONTAINED_RELATION, [str(c) for c in contained])
+            s_str = str(s)
+            for c in contained:
+                if c not in contains:
+                    contains[c] = []
+                contains[c].append(s_str)
 
-        result = cls.relations_db.relations.aggregate([
-            # select the paradigm
-            {'$match': {'$and': [
-                {'ROOT': entry['ROOT']},
-                {'SINGULAR_SEQUENCES': {'$in': [str(seq) for seq in script_ast.singular_sequences]}},
-                {'TYPE': {'$ne': SINGULAR_SEQUENCE_TYPE}},
-                {'_id': {'$ne': str(script_ast)}},
-            ]}},
-            {'$unwind': '$SINGULAR_SEQUENCES'},
-            {'$group': {'_id': '$_id', 'SEQUENCE_COUNT': {'$sum': 1}}},
-            {'$match': {'SEQUENCE_COUNT': {'$lt': len(script_ast.singular_sequences)}}},
-            {'$project': {'_id': 1}}
-        ])
-
-        contains = [cls.script_parser.parse(e['_id']) for e in result]
-        contains.sort()
-
-        cls._save_relation(script_ast, CONTAINS_RELATION, [str(c) for c in contains])
+        for src in contains:
+            cls._save_relation(src, CONTAINS_RELATION, contains[src])
 
     @staticmethod
     def _to_ast(script):
