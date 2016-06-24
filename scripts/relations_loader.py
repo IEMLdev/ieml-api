@@ -142,8 +142,8 @@ def check_old_relations():
         pprint.pprint(errors, f)
 
 if __name__ == '__main__':
-    # load_old_db()
+    load_old_db()
     # RelationsQueries.compute_global_relations()
     # RelationsQueries.do_inhibition(TermsConnector().get_inhibitions())
-    recompute_relations()
+    # recompute_relations()
     check_old_relations()
