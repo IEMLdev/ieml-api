@@ -54,8 +54,8 @@ def load_old_db():
                 'INHIBITS': inhibits[t['IEML']] if t['IEML'] in inhibits else [],
                 'METADATA': {}
              } for t in scripts.old_terms.find({})]
-
-    terms.save_multiple_terms(terms_list)
+    if len(terms_list) != 0:
+        terms.save_multiple_terms(terms_list)
     print('\n\nDone.', flush=True)
 
 
@@ -91,7 +91,7 @@ def check_old_relations():
         # if src['_id'] not in errors[r['type']]:
         #     errors[r['type']][src['_id']] = []
 
-        errors[r['type']]['<' if more else '>' + src['_id']] = dest
+        errors[r['type']][('<' if more else '>') + src['_id']] = dest
 
     def walk_dict(d, k):
         for e in k.split('.'):
@@ -119,14 +119,17 @@ def check_old_relations():
             print('error on %s'%str(src['_id']))
             continue
 
-        script_relations = RelationsQueries.relations(script['_id'])
+        script_relations = RelationsQueries.relations(script['_id'], pack_ancestor=True)
         for r in src['relations']:
             if r['type'] == 'Belongs to Paradigm':
                 if r['ends'][0] != script['ROOT']:
-                    error(src, r, r['ends'][0])
+                    error(src, r, r['ends'][0], more=True)
                 continue
 
             type = inhibits_map_to_relation[r['type']]
+            if type not in script_relations:
+                error(src, r, r['ends'], more=True)
+                continue
 
             more = set(r['ends']).difference(script_relations[type])
             if more:
@@ -135,11 +138,12 @@ def check_old_relations():
             if less:
                 error(src, r, less, more=False)
 
-    pprint.pprint(errors)
+    with open('diff.txt', 'w') as f:
+        pprint.pprint(errors, f)
 
 if __name__ == '__main__':
     # load_old_db()
     # RelationsQueries.compute_global_relations()
     # RelationsQueries.do_inhibition(TermsConnector().get_inhibitions())
-    # recompute_relations()
+    recompute_relations()
     check_old_relations()
