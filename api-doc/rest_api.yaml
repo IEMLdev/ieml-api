@@ -55,6 +55,24 @@ paths:
       responses:
         '200':
           description: Successful response
+          schema:
+            title: Parsed term
+            type: object
+            required:
+              - success
+            properties:
+              level:
+                type : integer
+              taille:
+                type : integer
+              class:
+                type: integer
+              success  :
+                type: boolean
+              canonical:
+                type: array
+                items:
+                  type : string
 
   /scriptparser/tables:
     post:
@@ -189,6 +207,12 @@ paths:
       operationId: app.handlers.new_ieml_script
       description: |
         Add a new `IEML` term to the dictionary
+      parameters:
+        - in : body
+          name : body
+          required : true
+          schema :
+            $ref: '#/definitions/ieml_term'
       responses:
         '200':
           description: Successful response

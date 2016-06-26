@@ -23,6 +23,10 @@ class TermsConnector(DBConnector):
         return self.terms.find_one({'_id': script if isinstance(script, str) else str(script)})
 
     def get_all_terms(self):
+        """
+        Returns all the terms contained in the term database
+        :return: a list of dictionaries corresponding to the documents
+        """
         return self.terms.find()
 
     def add_term(self, script_ast, tags, inhibits, root=False, metadata=None):
@@ -171,3 +175,13 @@ class TermsConnector(DBConnector):
     def get_inhibitions(self):
         paradigms = self.terms.find({'ROOT': True, 'INHIBITS': {'$ne': []}})
         return [(p['_id'], p['INHIBITS']) for p in paradigms]
+
+    def search_by_tag(self, tag, language):
+        """
+        returns a list of terms with a matching tag for a
+        :param tag: value of the tested tag
+        :param language: language of the tag
+        :return: list of
+        """
+        #TODO : IMPROVE THIS
+        return self.terms.find({ "TAGS.%s" % language : tag })

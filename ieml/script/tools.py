@@ -266,5 +266,5 @@ def old_canonical(script_ast):
     result = ''
     for byte in script_ast.canonical:
         result += chr(byte + ord('a') - 1)
-    return result
+    return [result]
 
