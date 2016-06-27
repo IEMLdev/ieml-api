@@ -64,8 +64,22 @@ def remove_ieml_script(term_id):
         pass  # TODO ; maybe define an error for this case
 
 
-def update_ieml_script():
-    pass
+def update_ieml_script(body):
+    """Updates an IEML Term's properties (mainly the tags, and the paradigm). If the IEML is changed,
+    a new term is created"""
+    try:
+        script_ast = script_parser.parse(body["ID"])
+        if body["IEML"] == body["ID"]:
+            terms_db.update_term(script_ast,
+                                 tags={ "FR" : body["FR"], "EN" : body["EN"]},
+                                 root= body["PARADIGM"] == "1")
+        else:
+            terms_db.remove_term(script_ast)
+            terms_db.add_term(script_ast,  # the ieml script's ast
+                              {"FR": body["FR"], "EN": body["EN"]},  # the
+                              root=body["PARADIGM"] == "1")
+    except CannotParse:
+        pass  # TODO ; maybe define an error for this case
 
 
 def ieml_term_exists(ieml_term):

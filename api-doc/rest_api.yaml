@@ -221,6 +221,25 @@ paths:
       operationId: app.handlers.update_ieml_script
       description: |
         Modify an `IEML` term from the dictionary
+      parameters:
+        - name : body
+          in: body
+          required : true
+          schema:
+            type : object
+            required:
+              - ID
+            properties:
+              ID :
+                type : string
+              PARADIGM :
+                type : string
+              IEML :
+                type : string
+              FR :
+                type : string
+              EN :
+                type : string
       responses:
         '200':
           description: Successful response
