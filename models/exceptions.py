@@ -80,3 +80,12 @@ class InvalidMetadata(DBException):
 
 class CantRemoveNonEmptyRootParadigm(DBException):
     pass
+
+
+class InvalidRelationTitle(DBException):
+    pass
+
+
+class TermNotFound(ObjectNotFound):
+    pass
+

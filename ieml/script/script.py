@@ -208,14 +208,6 @@ class AdditiveScript(Script):
             self.paradigm = len(self.children) > 1 or any(child.paradigm for child in self.children)
             self.cardinal = sum((e.cardinal for e in self.children))
 
-        if self.layer == 0:
-            value = 0b0
-            for child in self:
-                value |= character_value[child.character]
-            self.canonical = bytes([value])
-        else:
-            self.canonical = b''.join([child.canonical for child in self])
-
     def _do_checking(self):
         pass
 
@@ -227,6 +219,14 @@ class AdditiveScript(Script):
     def _do_ordering(self):
         # Ordering of the children
         self.children.sort()
+
+        if self.layer == 0:
+            value = 0b0
+            for child in self:
+                value |= character_value[child.character]
+            self.canonical = bytes([value])
+        else:
+            self.canonical = b''.join([child.canonical for child in self])
 
     def _compute_singular_sequences(self):
         # Generating the singular sequence
@@ -312,11 +312,6 @@ class MultiplicativeScript(Script):
             for e in self.children:
                 self.cardinal = self.cardinal * e.cardinal
 
-        if self.layer == 0:
-            self.canonical = bytes([character_value[self.character]])
-        else:
-            self.canonical = b''.join([child.canonical for child in self])
-
     def _render_children(self, children=None, character=None):
         if character:
             return character
@@ -349,7 +344,10 @@ class MultiplicativeScript(Script):
                 raise InvalidScript()
 
     def _do_ordering(self):
-        pass
+        if self.layer == 0:
+            self.canonical = bytes([character_value[self.character]])
+        else:
+            self.canonical = b''.join([child.canonical for child in self])
 
     def _compute_singular_sequences(self):
         # Generate the singular sequence
@@ -389,7 +387,7 @@ class NullScript(Script):
         self._has_been_ordered = True
 
         self._do_precompute_str()
-        self.canonical = bytes(character_value[self.character] * pow(3, self.layer))
+        self.canonical = bytes([character_value[self.character]] * pow(3, self.layer))
 
     def _do_precompute_str(self):
         result = self.character

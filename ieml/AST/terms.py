@@ -15,7 +15,7 @@ class Term(metaclass=AbstractPropositionMetaclass):
             self.ieml = ieml_string
 
         self.objectid = None
-        self.canonical_forms = None
+        self.canonical = None
         self._metadata = None
 
     def __str__(self):
@@ -39,14 +39,14 @@ class Term(metaclass=AbstractPropositionMetaclass):
     def __gt__(self, other):
         # we use the DB's canonical forms
         # if the term has MORE canonical sequences, it's "BIGGER", so GT is TRUE
-        if len(self.canonical_forms) != len(other.canonical_forms):
-            return len(self.canonical_forms) > len(other.canonical_forms)
+        if len(self.canonical) != len(other.canonical):
+            return len(self.canonical) > len(other.canonical)
 
         else: # else, we have to compare sequences using the regular aphabetical order
-            for i, seq in enumerate(self.canonical_forms):
+            for i, seq in enumerate(self.canonical):
                 # for each sequence, if the sequences are different, we can return the comparison
-                if self.canonical_forms[i] != other.canonical_forms[i]:
-                    return self.canonical_forms[i] > other.canonical_forms[i]
+                if self.canonical[i] != other.canonical[i]:
+                    return self.canonical[i] > other.canonical[i]
 
         raise TermComparisonFailed(self.ieml, other.ieml)
 
@@ -98,7 +98,7 @@ class Term(metaclass=AbstractPropositionMetaclass):
         TermMetadata.set_connector(DictionaryQueries())
         try:
             self.objectid = self.metadata["OBJECT_ID"]
-            self.canonical_forms = self.metadata["CANONICAL"]
+            self.canonical = self.metadata["CANONICAL"]
         except TypeError:
             raise IEMLTermNotFoundInDictionnary(self.ieml)
 
