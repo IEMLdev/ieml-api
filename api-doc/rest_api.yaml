@@ -127,6 +127,15 @@ paths:
       operationId: app.handlers.get_relation_visibility
       description: |
         TODO
+      parameters:
+        - name: body
+          in: body
+          required: True
+          schema:
+            type: object
+            properties:
+              ieml:
+                type: string
       responses:
         '200':
           description: Successful response
@@ -173,7 +182,7 @@ paths:
           schema:
             type: object
             properties:
-              IEML:
+              ieml:
                 type: string
       responses:
         '200':

@@ -1,9 +1,6 @@
 from ieml.exceptions import CannotParse
-from ieml.parsing.script.parser import ScriptParser
 from ieml.script.tools import old_canonical
-from .commons import terms_db
-
-script_parser = ScriptParser()
+from .commons import terms_db, script_parser
 
 
 def all_ieml():
@@ -51,7 +48,7 @@ def new_ieml_script(body):
         script_ast = script_parser.parse(body["IEML"])
         terms_db.add_term(script_ast,  # the ieml script's ast
                           {"FR": body["FR"], "EN": body["EN"]},  # the
-                          root=body["PARADIGM"] == "1", )
+                          root=body["PARADIGM"] == "1")
     except CannotParse:
         pass # TODO ; maybe define an error for this case
 
