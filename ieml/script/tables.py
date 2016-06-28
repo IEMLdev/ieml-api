@@ -32,7 +32,8 @@ def generate_tables(parent_script):
             else:
                 # In this case we need to distribute the from the left or right or both the siblings after we return
                 # We do this because we are branching out within a multiplication
-                table_list.extend(_process_tables(generate_tables(plural_vars[0].script), plural_vars[0].address, parent_script))
+                table_list.extend(_process_tables(generate_tables(plural_vars[0].script), plural_vars[0].address,
+                                                  parent_script))
                 return table_list
 
 
@@ -46,7 +47,9 @@ def _process_tables(table_list, address, parent_script):
         for table in table_list:
             headers = _distribute_over_headers(table.headers, operands)
             v_dist = np.vectorize(_distribute_over_cells)
-            new_tables.append(Table(headers, v_dist(table.cells, operands), parent_script))
+            new_paradigm = MultiplicativeScript(substance=table.paradigm, **operands)
+            new_paradigm.check()
+            new_tables.append(Table(headers, v_dist(table.cells, operands), new_paradigm))
 
     elif address == 1:  # We need to distribute the multiplication of the substance from the right and mode from the left
 
@@ -54,7 +57,9 @@ def _process_tables(table_list, address, parent_script):
         for table in table_list:
             headers = _distribute_over_headers(table.headers, operands)
             v_dist = np.vectorize(_distribute_over_cells)
-            new_tables.append(Table(headers, v_dist(table.cells, operands), parent_script))
+            new_paradigm = MultiplicativeScript(attribute=table.paradigm, **operands)
+            new_paradigm.check()
+            new_tables.append(Table(headers, v_dist(table.cells, operands), new_paradigm))
 
     elif address == 2:  # We need to distribute the multiplication of the substance and the attribute from the right
 
@@ -62,7 +67,9 @@ def _process_tables(table_list, address, parent_script):
         for table in table_list:
             headers = _distribute_over_headers(table.headers, operands)
             v_dist = np.vectorize(_distribute_over_cells)
-            new_tables.append(Table(headers, v_dist(table.cells, operands), parent_script))
+            new_paradigm = MultiplicativeScript(mode=table.paradigm, **operands)
+            new_paradigm.check()
+            new_tables.append(Table(headers, v_dist(table.cells, operands), new_paradigm))
 
     return new_tables
 
