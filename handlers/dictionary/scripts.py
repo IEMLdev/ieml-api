@@ -1,4 +1,5 @@
 from ieml.exceptions import CannotParse
+from ieml.script.script import MultiplicativeScript, NullScript
 from ieml.script.tools import old_canonical
 from .commons import terms_db, script_parser
 
@@ -40,7 +41,42 @@ def script_table(iemltext):
 
 
 def script_tree(iemltext):
-    pass
+    def _tree_entry(script):
+        if script.layer == 0:
+            return {
+                'op': 'none',
+                'name': str(script),
+                'children': []
+            }
+
+        if isinstance(script, NullScript):
+            n = NullScript(script.layer - 1)
+            return {
+                'op': '*',
+                'name': str(script),
+                'children': [
+                    _tree_entry(n) for i in range(3)
+                ]
+            }
+        return {
+            'op': '*' if isinstance(script, MultiplicativeScript) else '+',
+            'name': str(script),
+            'children': [
+                _tree_entry(s) for s in script
+            ]
+        }
+
+    try:
+        script = script_parser.parse(iemltext)
+        return {
+            'level': script.layer,
+            'tree': _tree_entry(script),
+            'taille': script.cardinal,
+            'success': True,
+            'canonical': old_canonical(script)
+        }
+    except CannotParse:
+        pass
 
 
 def new_ieml_script(body):
