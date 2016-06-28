@@ -46,8 +46,7 @@ def _process_tables(table_list, address, parent_script):
         for table in table_list:
             headers = _distribute_over_headers(table.headers, operands)
             v_dist = np.vectorize(_distribute_over_cells)
-            new_tables.append(Table(headers, v_dist(table.cells, operands),
-                                    MultiplicativeScript(substance=parent_script, **operands)))
+            new_tables.append(Table(headers, v_dist(table.cells, operands), parent_script))
 
     elif address == 1:  # We need to distribute the multiplication of the substance from the right and mode from the left
 
@@ -55,8 +54,7 @@ def _process_tables(table_list, address, parent_script):
         for table in table_list:
             headers = _distribute_over_headers(table.headers, operands)
             v_dist = np.vectorize(_distribute_over_cells)
-            new_tables.append(Table(headers, v_dist(table.cells, operands),
-                                    MultiplicativeScript(attribute=parent_script, **operands)))
+            new_tables.append(Table(headers, v_dist(table.cells, operands), parent_script))
 
     elif address == 2:  # We need to distribute the multiplication of the substance and the attribute from the right
 
@@ -64,8 +62,7 @@ def _process_tables(table_list, address, parent_script):
         for table in table_list:
             headers = _distribute_over_headers(table.headers, operands)
             v_dist = np.vectorize(_distribute_over_cells)
-            new_tables.append(Table(headers, v_dist(table.cells, operands),
-                                    MultiplicativeScript(mode=parent_script, **operands)))
+            new_tables.append(Table(headers, v_dist(table.cells, operands), parent_script))
 
     return new_tables
 
