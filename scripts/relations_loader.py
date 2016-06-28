@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import progressbar
 import pprint
 from ieml.parsing import ScriptParser

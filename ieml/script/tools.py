@@ -1,9 +1,12 @@
 import re
 
-from ieml.exceptions import NoRemarkableSiblingForAdditiveScript
-from .constants import LAYER_MARKS, REMARKABLE_ADDITION, PRIMITVES, OPPOSED_SIBLING_RELATION, \
+from ieml.exceptions import NoRemarkableSiblingForAdditiveScript, InvalidScript
+from ieml.script.constants import LAYER_MARKS, REMARKABLE_ADDITION, PRIMITVES, OPPOSED_SIBLING_RELATION, \
     ASSOCIATED_SIBLING_RELATION, CROSSED_SIBLING_RELATION, TWIN_SIBLING_RELATION, MAX_LAYER, character_value
-from .script import MultiplicativeScript, REMARKABLE_MULTIPLICATION_SCRIPT
+from ieml.script.script import MultiplicativeScript, REMARKABLE_MULTIPLICATION_SCRIPT, Script, NullScript, AdditiveScript, remarkable_multiplication_lookup_table
+import itertools as it
+import math
+import collections
 
 class RemarkableSibling:
 
@@ -266,5 +269,242 @@ def old_canonical(script_ast):
     result = ''
     for byte in script_ast.canonical:
         result += chr(byte + ord('a') - 1)
-    return result
+    return [result]
 
+
+def factorize(seqs):
+    if not seqs:
+        return None, 0
+
+    if next(iter(seqs)).layer == 0:
+        return seqs, 0
+
+    factorize_set = {}
+    for s in seqs:
+        if isinstance(s, NullScript):
+            continue
+        for i in range(3):
+            key = tuple([s.children[j] if i != j else None for j in range(3)])
+            if key not in factorize_set:
+                factorize_set[key] = set()
+            factorize_set[key].add(s.children[i])
+            # now factorize_set = {(script|None,script|None,script|None) -> [script, ...]}
+
+    # create a list ordered by the biggest factorisation to the smallest
+    fa_list = [(key, factorize_set[key]) for key in factorize_set if len(factorize_set[key]) > 1 ]
+    fa_list.sort(key=lambda k: len(k[1]), reverse=True)
+
+    def _script(key, script):
+        return tuple((i if i is not None else script for i in key))
+
+    def solutions(factors_sets, max_score=math.inf):
+        if not factors_sets:
+            raise StopIteration
+
+        f = factors_sets[0]
+        elem = (f[0], *factorize(f[1]))
+
+        script_elem = [_script(elem[0], e) for e in elem[1]]
+        # pprint.pprint(script_elem)
+        # script_elem = {_script(elem[0], e) for e in elem[1]}
+        remaining = ((key, {e for e in x if _script(key, e) not in script_elem}) for key, x in factors_sets if key != elem[0])
+        # remove empty factorisation
+        remaining = [e for e in remaining if e[1]]
+        # sorting
+        remaining.sort(key=lambda e: len(e[1]), reverse=True)
+
+        for sol, score in solutions(remaining):
+            current = score + 1 + elem[2]
+            if current < max_score:
+                max_score = current
+            if current == max_score:
+                yield sol + [elem], current
+
+        yield from solutions(factors_sets[1:], max_score=max_score)
+        # for sol, score in solutions(factors_sets[1:], max_score=max_score):
+            # current = score
+            # if current < max_score:
+            #     max_score = current
+            # if current == max_score:
+            #     yield sol, score
+
+
+
+    _max_score = math.inf
+    solutions_list = []
+    for _sol, _score in solutions(fa_list):
+        pprint.pprint(_sol)
+        if _score < _max_score:
+            _max_score = _score
+            solutions_list = []
+        if _score == _max_score:
+            solutions_list.append(_sol)
+
+    return list(solutions_list[0]), _max_score
+
+
+def unpack(result):
+    script_elem = []
+    for e in result:
+        if isinstance(e, Script):
+            script_elem.append(e)
+        else:
+            script_elem.append(MultiplicativeScript(children=tuple((i if i is not None else unpack(e[1]) for i in e[0]))))
+    if len(script_elem) == 1:
+        return script_elem[0]
+    return AdditiveScript(children=script_elem)
+
+
+
+def factorize3(seqs):
+    if next(iter(seqs)).layer == 0:
+        return seqs, 0
+
+    triplets = [((tuple((k,) for k in s.children), (s,))) for s in seqs]
+
+    def _factor(factor, seq):
+        count = 0
+        result = []
+        for f, s in zip(factor[0], seq[0]):
+            if set(f) == set(s):
+                count += 1
+                result.append(s)
+            elif s in f or f in s:
+                count += 1
+                result.append(s)
+            else:
+                result.append(f + s)
+
+        if count == 2:
+            return tuple(result)
+        return None
+
+    map_seq_to_factors = {}
+    factors = []
+    for s in triplets:
+        stack = [s]
+        i = 0
+        while len(stack) > i:
+            for f in factors:
+                if set(f[1]).intersection(set(stack[i][1])):
+                    continue
+
+                list_seqs = list(f[1] + stack[i][1])
+                list_seqs.sort()
+                list_seqs = tuple(list_seqs)
+                if list_seqs in map_seq_to_factors:
+                    continue
+
+                new_factor = _factor(f, stack[i])
+                if new_factor is not None:
+                    new_factor = (new_factor, list_seqs)
+                    map_seq_to_factors[list_seqs] = new_factor
+                    stack.append(new_factor)
+            i += 1
+        factors.extend(stack)
+
+    def _score(s):
+        return pow(3, s.layer) * 0.5 - 0.5
+
+    def _sol(factorization):
+        result = []
+        score = 1
+        for operand in factorization[0]:
+            if len(operand) == 1:
+                score += _score(operand[0])
+                result.append(operand)
+            else:
+                f, s = factorize3(operand)
+                score += s
+                result.append(tuple(f))
+
+        return tuple(result), score
+
+    def unpack(solution):
+        script_elem = []
+        for t in solution:
+            if isinstance(t, Script):
+                script_elem.append(t)
+            else:
+                # otherwise it is a tuple
+                script_elem.append(
+                    MultiplicativeScript(children=tuple(unpack(t[i]) for i in range(3))))
+
+        if len(script_elem) == 1:
+            return script_elem[0]
+        return AdditiveScript(children=script_elem)
+
+    def _sub_factorization(factorization, all_factorization):
+        seq_set = set(factorization[1])
+        sub_factorization = [f for f in all_factorization if not set(f[1]).intersection(seq_set)]
+        sub_factorization.sort(key=lambda e: len(e[1]), reverse=True)
+        return sub_factorization
+
+    def solutions(factors_list, max_score=math.inf):
+        if not factors_list:
+            raise StopIteration
+
+        # f is the factorisation we gonna use
+        f = factors_list[0]
+
+        solution, sol_score = _sol(f)
+
+        sub_factors = _sub_factorization(f, factors_list)
+
+        if not sub_factors:
+            yield [solution], sol_score
+
+        for sol, score in solutions(sub_factors):
+            current = score + sol_score
+            if current < max_score:
+                max_score = current
+            if current == max_score:
+                yield sol + [solution], current
+
+        yield from solutions(factors_list[1:], max_score=max_score)
+
+    # factors are all possible factorisation available.
+    # we iterate over them to build a complete factorization.
+    factors.sort(key=lambda e: len(e[1]), reverse=True)
+    max_score = math.inf
+    solutions_list = []
+    for s, score in solutions(factors):
+        if score < max_score:
+            max_score = score
+            solutions_list = []
+        if score == max_score:
+            solution = unpack(s)
+            solution.check()
+            print('%s - %d'%(str(solution), score))
+            solutions_list.append(solution)
+
+    return solutions_list[0], max_score
+
+
+if __name__ == '__main__':
+    from ieml.parsing.script import ScriptParser
+    import pprint
+    script = ScriptParser().parse("M:M:.U:M:.-")
+    l = ['S:A:A:.','B:A:A:.','T:A:A:.', 'S:A:B:.', 'B:A:B:.', 'T:A:B:.']
+    _fail = ['S:A:A:.', 'T:A:B:.', 'B:A:B:.', 'S:A:B:.', 'T:A:A:.', 'B:A:A:.']
+#list({'B:A:B:.', 'S:A:A:.', 'B:A:A:.', 'T:A:A:.', 'T:A:B:.', 'S:A:B:.'})
+    l2 = map(lambda e: e + '.', remarkable_multiplication_lookup_table.values())
+    seq_ences = [ScriptParser().parse(d) for d in l2]
+    r = factorize3(seq_ences)
+    #result = unpack(r)
+    #result.check()
+    from random import shuffle
+    # best = max(r, key=lambda e: len(e[1]))
+    # diff = set()
+    # for i in range(100):
+    #     shuffle(seq_ences)
+    #     if max(factorize3(seq_ences), key=lambda e: len(e[1])) != max:
+    #         diff.add(tuple(seq_ences))
+
+    # pprint.pprint([[str(e) for e in lit] for lit in diff])
+    # pprint.pprint(_fail)
+    # pprint.pprint(len(diff))
+    # pprint.pprint([str(b) for b in best[1]])
+    # pprint.pprint({'s' : [str(b) for b in best[0][0]],
+    #                'a' : [str(b) for b in best[0][1]],
+    #                'm' : [str(b) for b in best[0][2]]})

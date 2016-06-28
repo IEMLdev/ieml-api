@@ -1,9 +1,8 @@
 from ieml.AST.commons import TreeStructure
 from .constants import LAYER_MARKS, PRIMITVES, remarkable_multiplication_lookup_table, REMARKABLE_ADDITION, \
     character_value
-import numpy as np
 import itertools
-from ieml.exceptions import InvalidScriptForTableCreation, InvalidScriptCharacter, InvalidScript
+from ieml.exceptions import InvalidScriptCharacter, InvalidScript
 
 
 class Script(TreeStructure):
@@ -44,10 +43,16 @@ class Script(TreeStructure):
         # The canonical string to compare same layer and cardinal script (__lt__)
         self.canonical = None
 
+        # class of the script, one of the following : VERB (1), AUXILIARY (0), and NOUN (2)
+        self.script_class = None
+
     # def __gt__(self, other):
     #     return self != other and not self.__lt__(other)
 
     def __eq__(self, other):
+        if not isinstance(other, Script):
+            return False
+
         if self._str is None or other._str is None:
             raise NotImplemented()
         return self._str == other._str
@@ -208,6 +213,8 @@ class AdditiveScript(Script):
             self.paradigm = len(self.children) > 1 or any(child.paradigm for child in self.children)
             self.cardinal = sum((e.cardinal for e in self.children))
 
+        self.script_class = max(c.script_class for c in self)
+
     def _do_checking(self):
         pass
 
@@ -227,6 +234,7 @@ class AdditiveScript(Script):
             self.canonical = bytes([value])
         else:
             self.canonical = b''.join([child.canonical for child in self])
+
 
     def _compute_singular_sequences(self):
         # Generating the singular sequence
@@ -312,6 +320,11 @@ class MultiplicativeScript(Script):
             for e in self.children:
                 self.cardinal = self.cardinal * e.cardinal
 
+        if self.layer == 0:
+            self.script_class = 1 if self.character in REMARKABLE_ADDITION['O'] else 2
+        else:
+            self.script_class = self.children[0].script_class
+
     def _render_children(self, children=None, character=None):
         if character:
             return character
@@ -388,6 +401,7 @@ class NullScript(Script):
 
         self._do_precompute_str()
         self.canonical = bytes([character_value[self.character]] * pow(3, self.layer))
+        self.script_class = 0
 
     def _do_precompute_str(self):
         result = self.character

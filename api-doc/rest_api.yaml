@@ -1,6 +1,3 @@
-# Example YAML to get you started quickly.
-# Be aware that YAML has indentation based scoping.
-# Code completion support is available so start typing for available options.
 swagger: '2.0'
 
 # This is your document metadata
@@ -20,6 +17,7 @@ paths:
 
   /allieml:
     get:
+      operationId: app.handlers.all_ieml
       tags:
         - IEML
       description: |
@@ -34,6 +32,7 @@ paths:
 
   /client/authenticate:
     post:
+      operationId: app.handlers.authenticate
       description: |
         Not yet implemented
       responses:
@@ -42,6 +41,7 @@ paths:
 
   /scriptparser/parse:
     post:
+      operationId: app.handlers.parse_ieml
       tags:
         - Parsing
       description: |
@@ -55,9 +55,28 @@ paths:
       responses:
         '200':
           description: Successful response
+          schema:
+            title: Parsed term
+            type: object
+            required:
+              - success
+            properties:
+              level:
+                type : integer
+              taille:
+                type : integer
+              class:
+                type: integer
+              success  :
+                type: boolean
+              canonical:
+                type: array
+                items:
+                  type : string
 
   /scriptparser/tables:
     post:
+      operationId: app.handlers.script_table
       tags:
         - Parsing
       description: |
@@ -88,6 +107,7 @@ paths:
 
   /scriptparser/tree:
     post:
+      operationId: app.handlers.script_tree
       tags:
         - Parsing
       description: |
@@ -104,14 +124,25 @@ paths:
 
   /getRelVisibility:
     post:
+      operationId: app.handlers.get_relation_visibility
       description: |
         TODO
+      parameters:
+        - name: body
+          in: body
+          required: True
+          schema:
+            type: object
+            properties:
+              ieml:
+                type: string
       responses:
         '200':
           description: Successful response
 
   /addRelVisibility:
     post:
+      operationId: app.handlers.add_relation_visiblity
       description: |
         TODO
       responses:
@@ -119,6 +150,7 @@ paths:
           description: Successful response
   /remRelVisibility:
     post:
+      operationId: app.handlers.remove_relation_visibility
       description: |
         TODO
       responses:
@@ -126,6 +158,7 @@ paths:
           description: Successful response
   /toggleRelVisibility:
     post:
+      operationId: app.handlers.toggle_relation_visibility
       description: |
         TODO
       responses:
@@ -133,6 +166,7 @@ paths:
           description: Successful response
   /rels:
     post:
+      operationId: app.handlers.get_relations
       tags:
         - Relations
       description: >
@@ -148,7 +182,7 @@ paths:
           schema:
             type: object
             properties:
-              IEML:
+              ieml:
                 type: string
       responses:
         '200':
@@ -179,43 +213,94 @@ paths:
                   type: boolean
   /newieml:
     post:
+      operationId: app.handlers.new_ieml_script
       description: |
         Add a new `IEML` term to the dictionary
+      parameters:
+        - in : body
+          name : body
+          required : true
+          schema :
+            $ref: '#/definitions/ieml_term'
       responses:
         '200':
           description: Successful response
   /updateieml:
     post:
+      operationId: app.handlers.update_ieml_script
       description: |
         Modify an `IEML` term from the dictionary
+      parameters:
+        - name : body
+          in: body
+          required : true
+          schema:
+            type : object
+            required:
+              - ID
+            properties:
+              ID :
+                type : string
+              PARADIGM :
+                type : string
+              IEML :
+                type : string
+              FR :
+                type : string
+              EN :
+                type : string
       responses:
         '200':
           description: Successful response
-  /remieml/<term_id>:
+  '/remieml/{term_id}':
     post:
+      operationId: app.handlers.remove_ieml_script
       description: |
         Delete an `IEML` term from the dictionary
+      parameters:
+        - in: path
+          name: term_id
+          required: true
+          type: string
       responses:
         '200':
           description: Successful response
-  /exists/ieml/<term_ieml>:
+  '/exists/ieml/{ieml_term}':
     post:
+      operationId: app.handlers.ieml_term_exists
       description: |
         Check if `<term_ieml>` exists in the dictionary
+      parameters:
+        - in: path
+          name: ieml_term
+          required: true
+          type: string
       responses:
         '200':
           description: Successful response
-  /exists/FR/<term_fr>:
+  '/exists/FR/{tag_fr}':
     post:
+      operationId: app.handlers.fr_tag_exists
       description: |
         Check if `<term_ieml>` exists in the **French** dictionary
+      parameters:
+        - in: path
+          name: tag_fr
+          required: true
+          type: string
       responses:
         '200':
           description: Successful response
-  /exists/EN/<term_en>:
+  '/exists/EN/{tag_en}':
     post:
+      operationId: app.handlers.en_tag_exists
       description: |
         Check if `<term_ieml>` exists in the **English** dictionary
+      parameters:
+        - in: path
+          name: tag_en
+          required: true
+          type: string
       responses:
         '200':
           description: Successful response
@@ -227,6 +312,7 @@ paths:
   /search:
     post:
       description: Search for propositions or  USLs in the library's database
+      operationId: app.handlers.search_library
       parameters:
         - name: query
           in: body
@@ -246,14 +332,17 @@ paths:
   /tags/check_exists:
     post:
       description: Checks if a tag already exists for a proposition or an hypertext
+      operationId: app.handlers.check_library_tag_exists
+      consumes:
+        - application/x-www-form-urlencoded
       parameters:
         - name: tag
-          in: header
+          in: query
           description: Value of tested tag
           required: true
           type: string
         - name: language
-          in: header
+          in: query
           description: Language of tag
           required: true
           type: string
@@ -265,6 +354,7 @@ paths:
             
   /word/validate:
     post:
+      operationId: app.handlers.validate_word
       tags:
         - Propositions
       description: Checks if a created word is good or not
@@ -283,6 +373,7 @@ paths:
           
   /word/save:
     post:
+      operationId: app.handlers.save_word
       tags:
         - Propositions
       description: Checks if a created word is good or not, and if good, saves it to the DB
@@ -301,6 +392,7 @@ paths:
   
   /tree/validate:
     post:
+      operationId: app.handlers.validate_tree
       tags:
         - Propositions
       description: Checks if a created sentence/super sentence graph is good or not, and if good, saves it to the DB
@@ -319,6 +411,7 @@ paths:
   
   /tree/save:
     post:
+      operationId: app.handlers.save_tree
       tags:
         - Propositions
       description: Checks if a created sentence/super sentence graph is good or not, and if good, saves it to the DB
@@ -337,6 +430,7 @@ paths:
             
   /text/validate:
     post:
+      operationId: app.handlers.validate_text
       tags:
         - USL
       description: Checks if a text is good or not,  and if good, saves it to the DB.
@@ -355,6 +449,7 @@ paths:
   
   /hypertext/validate:
     post:
+      operationId: app.handlers.validate_hypertext
       tags:
         - USL
       description: Checks if an hypertext graph is good or not, and if good saves it to the DB
@@ -373,16 +468,17 @@ paths:
             
   /text/decompose:
     post:
+      operationId: app.handlers.decompose_text
       tags:
         - USL
       description: |
         Decomposes a text into a list of proposition tree, which details all the closed propositions contained in a proposition, along with their tags and the path need to reach them.
       parameters:
         - name: ieml_string
-          in: header
+          in: query
           description: An IEML text's string value
           required: true
-          type : string
+          type: string
       responses:
         200:
           description: Successful response
@@ -393,10 +489,11 @@ paths:
               
   /element/decompose:
     post:
+      operationId: app.handlers.decompose_ieml_element
       description: Decomposes any IEML element to its children element (eg, a text into propositions, a sentence into a tree of words, or a word into two lists of terms)
       parameters:
         - name: ieml_string
-          in: header
+          in: query
           description: An IEML element's string value
           required: true
           type : string
@@ -451,7 +548,9 @@ definitions:
       language:
         type : string
       level:
-        type: string
+        type: array
+        items:
+          type: string
       category:
         type: string
       term_type:
