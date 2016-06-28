@@ -4,12 +4,38 @@ swagger: '2.0'
 info:
   version: "0.1.0"
   title: IEML Library API
-  description : API for both the IEML dictionary and the IEML librairy
+  description : API for both the IEML dictionary and the IEML library
 
 basePath : /api
 produces : 
   - application/json
 paths:
+
+  ##############################
+  ##          INTLEKT         ##
+  ##############################
+
+  /twitter/token:
+    get:
+      operationId: app.handlers.twitter_token
+      tags:
+        - Intlekt
+      description: |
+        Initiate the oauth dance
+      responses:
+        '302':
+          description: redirect the user's browser to Twitter's authorization page
+
+  /twitter/swapToken:
+    get:
+      operationId: app.handlers.twitter_swapToken
+      tags:
+        - Intlekt
+      description: |
+        Initiate the oauth dance
+      responses:
+        '302':
+          description: redirect the user's browser to Twitter's authorization page
 
   ##############################
   ## FOR THE DICTIONARY'S API ##
