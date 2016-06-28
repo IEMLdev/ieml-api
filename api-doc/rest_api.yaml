@@ -24,18 +24,31 @@ paths:
         Initiate the oauth dance
       responses:
         '302':
-          description: redirect the user's browser to Twitter's authorization page
+          description: |
+            redirect the user's browser to Twitter's authorization page
 
-  /twitter/swapToken:
+  /twitter/upgradeToken:
     get:
-      operationId: app.handlers.twitter_swapToken
+      operationId: app.handlers.twitter_upgradeToken
       tags:
         - Intlekt
       description: |
-        Initiate the oauth dance
+        retrieve the token
       responses:
         '302':
-          description: redirect the user's browser to Twitter's authorization page
+          description: redirect the our home screen
+
+  /twitter/home_timeline:
+    get:
+      operationId: app.handlers.twitter_home_timeline
+      tags:
+        - Intlekt
+      description: |
+        Generate a visualization for the user's home timeline
+      responses:
+        '200':
+          description: |
+            a series of coordinates adequate for a specific type of visualization
 
   ##############################
   ## FOR THE DICTIONARY'S API ##
