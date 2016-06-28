@@ -1,6 +1,6 @@
 from ieml.AST.commons import TreeStructure
 from .constants import LAYER_MARKS, PRIMITVES, remarkable_multiplication_lookup_table, REMARKABLE_ADDITION, \
-    character_value
+    character_value, AUXILIARY_CLASS, VERB_CLASS, NOUN_CLASS
 import itertools
 from ieml.exceptions import InvalidScriptCharacter, InvalidScript
 
@@ -321,7 +321,7 @@ class MultiplicativeScript(Script):
                 self.cardinal = self.cardinal * e.cardinal
 
         if self.layer == 0:
-            self.script_class = 1 if self.character in REMARKABLE_ADDITION['O'] else 2
+            self.script_class = VERB_CLASS if self.character in REMARKABLE_ADDITION['O'] else NOUN_CLASS
         else:
             self.script_class = self.children[0].script_class
 
@@ -401,7 +401,7 @@ class NullScript(Script):
 
         self._do_precompute_str()
         self.canonical = bytes([character_value[self.character]] * pow(3, self.layer))
-        self.script_class = 0
+        self.script_class = AUXILIARY_CLASS
 
     def _do_precompute_str(self):
         result = self.character
