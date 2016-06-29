@@ -5,6 +5,7 @@ from handlers.dictionary.commons import terms_db, script_parser
 from ieml.script.tables import generate_tables
 from ieml.script.constants import AUXILIARY_CLASS, VERB_CLASS, NOUN_CLASS
 
+
 def all_ieml():
     """Returns a dump of all the terms contained in the DB, formatted for the JS client"""
     def _build_old_model_from_term_entry(term_db_entry):
@@ -39,7 +40,7 @@ def parse_ieml(iemltext):
 
 def script_table(iemltext):
     class_to_color = {
-        AUXILIARY_CLASS: 'blue',
+        AUXILIARY_CLASS: 'red',
         VERB_CLASS: 'pink',
         NOUN_CLASS: 'yellow'
     }
@@ -78,20 +79,31 @@ def script_table(iemltext):
             }
         }
 
-    def _slice_array(table, dim=None):
-        col_size = len(table.headers[1])
+    def _slice_array(table, col=False, dim=None):
+        if col:
+            result = [
+                _table_entry(1, ieml=table.headers[0][0], header=True, meta=True)
+            ]
+            result.extend([_table_entry(ieml=e) for e in table.cells])
 
-        result = [
-            _table_entry(col_size + 1, ieml='king size', header=True, meta=True),
-            _table_entry(meta=True) # grey square
-        ]
-        for col in table.headers[1]:
-            result.append(_table_entry(ieml=col, header=True))
+        else:
+            col_size = len(table.headers[1])
 
-        for i, line in enumerate(table.cells):
-            result.append(_table_entry(ieml=table.headers[0][i], header=True))
-            for cell in line:
-                result.append(_table_entry(ieml=cell[dim]))
+            result = [
+                _table_entry(col_size + 1, ieml='king size', header=True, meta=True),
+                _table_entry(meta=True)  # grey square
+            ]
+
+            for col in table.headers[1]:
+                result.append(_table_entry(ieml=col, header=True))
+
+            for i, line in enumerate(table.cells):
+                result.append(_table_entry(ieml=table.headers[0][i], header=True))
+                for cell in line:
+                    if dim is not None:
+                        cell = cell[dim]
+
+                    result.append(_table_entry(ieml=cell))
 
         return result
 
@@ -102,7 +114,7 @@ def script_table(iemltext):
             if len(table.headers[2]) == 0:
                 tabs = [{
                     'tabTitle': '',
-                    'slice': _slice_array(table)
+                    'slice': _slice_array(table, col=len(table.headers[1]) == 0)
                 }]
             else:
                 for i, tab in enumerate(table.headers[2]):
@@ -121,6 +133,13 @@ def script_table(iemltext):
     try:
         script = script_parser.parse(iemltext)
         tables = generate_tables(script)
+
+        if tables is None:
+            return {
+                'exception': 'not enough variables to generate table',
+                'at': 7,
+                'success': False
+            }
 
         return {
             'tree': {
