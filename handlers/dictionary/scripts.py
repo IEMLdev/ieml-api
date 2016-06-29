@@ -11,7 +11,7 @@ def all_ieml():
         terms_ast = script_parser.parse(term_db_entry["_id"])
         return {"_id" : term_db_entry["_id"],
                 "IEML" : term_db_entry["_id"],
-                "CLASS" : "1", # TODO : cannot compute that yet
+                "CLASS" : terms_ast.script_class, # TODO : cannot compute that yet
                 "EN" : term_db_entry["TAGS"]["EN"],
                 "FR" : term_db_entry["TAGS"]["FR"],
                 "PARADIGM" : "1" if term_db_entry["ROOT"] else "0",
@@ -30,7 +30,7 @@ def parse_ieml(iemltext):
             "success" : True,
             "level" : script_ast.layer,
             "taille" : script_ast.cardinal,
-            "class" : 1, # TODO : change it to the actual value
+            "class" : script_ast.script_class, # TODO : change it to the actual value
             "canonical" : old_canonical(script_ast)
         }
     except CannotParse:
