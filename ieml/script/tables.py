@@ -1,6 +1,7 @@
 from ieml.script import AdditiveScript, MultiplicativeScript
 from collections import namedtuple
 import numpy as np
+import models
 
 Variable = namedtuple('Variable', ['address', 'script'])
 Table = namedtuple('Table', ['headers', 'cells', 'paradigm'])
@@ -222,9 +223,20 @@ def print_cells(cells):
             print('\n')
 
 
-def _regroup_headers():
-    """Takes in a list of table headers and 'collapses them'"""
+def _compute_rank(term):
     pass
+
+
+def _regroup_headers(*headers):
+    """Takes in a list of table headers and 'collapses' them"""
+    pass
+
+
+def _get_common_factors(*terms):
+    """Takes in a list of terms and returns the address of the common factors if they exist"""
+
+    pass
+
 
 if __name__ == "__main__":
 
