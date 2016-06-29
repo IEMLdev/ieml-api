@@ -1,4 +1,4 @@
-TWITTER_CONSUMER_KE = 'xxx'
+TWITTER_CONSUMER_KEY = 'xxx'
 TWITTER_CONSUMER_SECRET = 'xxx'
 BASE_HOSTNAME = 'http://localhost/'
 

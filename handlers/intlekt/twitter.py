@@ -10,7 +10,7 @@ import urllib.parse
 def twitter_token():
     auth = tweepy.OAuthHandler(config.TWITTER_CONSUMER_KEY,
                                config.TWITTER_CONSUMER_SECRET,
-                               "/twitter/swapToken")
+                               config.BASE_HOSTNAME + "/api/twitter/upgradeToken")
     redirect_url = ''
     try:
         redirect_url = auth.get_authorization_url()
@@ -29,7 +29,8 @@ def twitter_upgradeToken():
     verifier = request.args["oauth_verifier"]
     print(verifier)
     auth = tweepy.OAuthHandler(config.TWITTER_CONSUMER_KEY,
-                               config.TWITTER_CONSUMER_SECRET)
+                               config.TWITTER_CONSUMER_SECRET,
+                               config.BASE_HOSTNAME + "/api/twitter/upgradeToken")
     token = session.get('request_token')
     auth.request_token = token
 
