@@ -1,6 +1,9 @@
 # Dictionary REST API test design
 
-The purpose of this document is to give design ideas for the test suite that will be implemented to test the API endpoints. Tests that verify the correctness of the underlying algorithms have already been implemented.
+The purpose of this document is to give design ideas for the test suit that will be implemented to test the API.
+Tests that verify the correctness of the underlying algorithms have already been implemented.
+
+The main goal here is to test the functionality of the public API endpoints.
 
 The main goal here is to test the functionality of the public API endpoints.
 
