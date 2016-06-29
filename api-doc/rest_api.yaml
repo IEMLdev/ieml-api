@@ -40,7 +40,7 @@ paths:
           description: Successful response
 
   /scriptparser/parse:
-    post:
+    get:
       operationId: app.handlers.parse_ieml
       tags:
         - Parsing
@@ -75,7 +75,7 @@ paths:
                   type : string
 
   /scriptparser/tables:
-    post:
+    get:
       operationId: app.handlers.script_table
       tags:
         - Parsing
@@ -106,7 +106,7 @@ paths:
                     type: string
 
   /scriptparser/tree:
-    post:
+    get:
       operationId: app.handlers.script_tree
       tags:
         - Parsing
@@ -253,7 +253,7 @@ paths:
         '200':
           description: Successful response
   '/remieml/{term_id}':
-    post:
+    get:
       operationId: app.handlers.remove_ieml_script
       description: |
         Delete an `IEML` term from the dictionary
@@ -266,7 +266,7 @@ paths:
         '200':
           description: Successful response
   '/exists/ieml/{ieml_term}':
-    post:
+    get:
       operationId: app.handlers.ieml_term_exists
       description: |
         Check if `<term_ieml>` exists in the dictionary
@@ -279,7 +279,7 @@ paths:
         '200':
           description: Successful response
   '/exists/FR/{tag_fr}':
-    post:
+    get:
       operationId: app.handlers.fr_tag_exists
       description: |
         Check if `<term_ieml>` exists in the **French** dictionary
@@ -292,7 +292,7 @@ paths:
         '200':
           description: Successful response
   '/exists/EN/{tag_en}':
-    post:
+    get:
       operationId: app.handlers.en_tag_exists
       description: |
         Check if `<term_ieml>` exists in the **English** dictionary
