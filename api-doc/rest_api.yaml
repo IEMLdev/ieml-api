@@ -34,7 +34,18 @@ paths:
     post:
       operationId: app.handlers.authenticate
       description: |
-        Not yet implemented
+        Login handler for the dictionary user
+      consumes:
+        - application/x-www-form-urlencoded
+      parameters:
+        - name: name
+          in: formData
+          type: string
+          required: true
+        - name: password
+          in: formData
+          type: string
+          required: true
       responses:
         '200':
           description: Successful response
@@ -221,7 +232,16 @@ paths:
           name : body
           required : true
           schema :
-            $ref: '#/definitions/ieml_term'
+            type: object
+            required:
+              - IEML
+              - PARADIGM
+            properties:
+              IEML:
+                type : string
+              PARADIGM:
+                type : string
+
       responses:
         '200':
           description: Successful response

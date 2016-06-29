@@ -35,7 +35,9 @@ def parse_ieml(iemltext):
             "canonical" : old_canonical(script_ast)
         }
     except CannotParse:
-        return {"success" : False}
+        return {"success" : False,
+                "exception" : "Invalid script"}
+
 
 
 def script_table(iemltext):
@@ -196,6 +198,7 @@ def new_ieml_script(body):
         script_ast = script_parser.parse(body["IEML"])
         terms_db.add_term(script_ast,  # the ieml script's ast
                           {"FR": body["FR"], "EN": body["EN"]},  # the
+                          [],
                           root=body["PARADIGM"] == "1")
     except CannotParse:
         pass # TODO ; maybe define an error for this case
@@ -229,7 +232,8 @@ def update_ieml_script(body):
 
 def ieml_term_exists(ieml_term):
     """Tries to dig a term from the database"""
-    return terms_db.get_term(ieml_term)
+    found_term = terms_db.get_term(ieml_term)
+    return [found_term] if found_term is not None else []
 
 
 def en_tag_exists(tag_en):
