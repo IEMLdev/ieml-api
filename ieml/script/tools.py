@@ -302,7 +302,7 @@ def factorize(seqs):
             raise StopIteration
 
         f = factors_sets[0]
-        elem = (f[0], *factorize(f[1]))
+#        elem = (f[0], *factorize(f[1]))
 
         script_elem = [_script(elem[0], e) for e in elem[1]]
         # pprint.pprint(script_elem)
