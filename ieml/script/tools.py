@@ -357,7 +357,8 @@ def unpack(result):
 
 
 def factorize3(seqs):
-    if next(iter(seqs)).layer == 0:
+    layer = next(iter(seqs)).layer
+    if layer == 0:
         return seqs, 0
 
     triplets = [((tuple((k,) for k in s.children), (s,))) for s in seqs]
@@ -403,15 +404,15 @@ def factorize3(seqs):
             i += 1
         factors.extend(stack)
 
-    def _score(s):
-        return pow(3, s.layer) * 0.5 - 0.5
+    def _score(layer):
+        return pow(3, layer) * 0.5 - 0.5
 
     def _sol(factorization):
         result = []
         score = 1
         for operand in factorization[0]:
             if len(operand) == 1:
-                score += _score(operand[0])
+                score += _score(operand[0].layer)
                 result.append(operand)
             else:
                 f, s = factorize3(operand)
@@ -475,8 +476,13 @@ def factorize3(seqs):
         if score == max_score:
             solution = unpack(s)
             solution.check()
+            # the unpak dont ue the prevouivsly calculated script !
+            # it misuse the multiplicative tuple as an additive one
             print('%s - %d'%(str(solution), score))
             solutions_list.append(solution)
+        elif max_score == _score(layer):
+            # solution optimal
+            break
 
     return solutions_list[0], max_score
 
@@ -490,7 +496,9 @@ if __name__ == '__main__':
 #list({'B:A:B:.', 'S:A:A:.', 'B:A:A:.', 'T:A:A:.', 'T:A:B:.', 'S:A:B:.'})
     l2 = map(lambda e: e + '.', remarkable_multiplication_lookup_table.values())
     seq_ences = [ScriptParser().parse(d) for d in l2]
-    r = factorize3(seq_ences)
+    r = factorize3(script.singular_sequences)
+
+
     #result = unpack(r)
     #result.check()
     from random import shuffle
