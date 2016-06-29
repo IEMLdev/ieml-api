@@ -222,6 +222,10 @@ def print_cells(cells):
             print('\n')
 
 
+def _regroup_headers():
+    """Takes in a list of table headers and 'collapses them'"""
+    pass
+
 if __name__ == "__main__":
 
     from ieml.parsing.script import ScriptParser
