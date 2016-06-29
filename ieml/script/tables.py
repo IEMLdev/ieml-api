@@ -3,7 +3,7 @@ from collections import namedtuple
 import numpy as np
 
 Variable = namedtuple('Variable', ['address', 'script'])
-Table = namedtuple('Table', ['headers', 'cells'])
+Table = namedtuple('Table', ['headers', 'cells', 'paradigm'])
 
 
 def generate_tables(parent_script):
@@ -32,7 +32,8 @@ def generate_tables(parent_script):
             else:
                 # In this case we need to distribute the from the left or right or both the siblings after we return
                 # We do this because we are branching out within a multiplication
-                table_list.extend(_process_tables(generate_tables(plural_vars[0].script), plural_vars[0].address, parent_script))
+                table_list.extend(_process_tables(generate_tables(plural_vars[0].script), plural_vars[0].address,
+                                                  parent_script))
                 return table_list
 
 
@@ -46,7 +47,9 @@ def _process_tables(table_list, address, parent_script):
         for table in table_list:
             headers = _distribute_over_headers(table.headers, operands)
             v_dist = np.vectorize(_distribute_over_cells)
-            new_tables.append(Table(headers, v_dist(table.cells, operands)))
+            new_paradigm = MultiplicativeScript(substance=table.paradigm, **operands)
+            new_paradigm.check()
+            new_tables.append(Table(headers, v_dist(table.cells, operands), new_paradigm))
 
     elif address == 1:  # We need to distribute the multiplication of the substance from the right and mode from the left
 
@@ -54,7 +57,9 @@ def _process_tables(table_list, address, parent_script):
         for table in table_list:
             headers = _distribute_over_headers(table.headers, operands)
             v_dist = np.vectorize(_distribute_over_cells)
-            new_tables.append(Table(headers, v_dist(table.cells, operands)))
+            new_paradigm = MultiplicativeScript(attribute=table.paradigm, **operands)
+            new_paradigm.check()
+            new_tables.append(Table(headers, v_dist(table.cells, operands), new_paradigm))
 
     elif address == 2:  # We need to distribute the multiplication of the substance and the attribute from the right
 
@@ -62,7 +67,9 @@ def _process_tables(table_list, address, parent_script):
         for table in table_list:
             headers = _distribute_over_headers(table.headers, operands)
             v_dist = np.vectorize(_distribute_over_cells)
-            new_tables.append(Table(headers, v_dist(table.cells, operands)))
+            new_paradigm = MultiplicativeScript(mode=table.paradigm, **operands)
+            new_paradigm.check()
+            new_tables.append(Table(headers, v_dist(table.cells, operands), new_paradigm))
 
     return new_tables
 
@@ -120,7 +127,7 @@ def _distribute_over_cells(cell, operands):
     return new_cell
 
 
-def _build_table(dimension, multi_script, plural_vars):
+def _build_table(dimension, parent_script, plural_vars):
     """Constructs the paradigm table and returns it"""
     row_headers = []
     col_headers = []
@@ -130,17 +137,17 @@ def _build_table(dimension, multi_script, plural_vars):
         # In this case we only have one header, which is the multiplicative Script given to us
         # that we will expand in the cells array
         cells = np.empty(plural_vars[0].script.cardinal, dtype=object)
-        row_headers.append(multi_script)
+        row_headers.append(parent_script)
     if dimension >= 2:
         cells = np.empty((plural_vars[0].script.cardinal, plural_vars[1].script.cardinal), dtype=object)
-        row_headers = _make_headers(plural_vars[0], *multi_script.children)
-        col_headers = _make_headers(plural_vars[1], *multi_script.children)
+        row_headers = _make_headers(plural_vars[0], *parent_script.children)
+        col_headers = _make_headers(plural_vars[1], *parent_script.children)
     if dimension == 3:
         cells = np.empty((plural_vars[0].script.cardinal, plural_vars[1].script.cardinal, plural_vars[2].script.cardinal), dtype=object)
-        tab_headers = _make_headers(plural_vars[2], *multi_script.children)
+        tab_headers = _make_headers(plural_vars[2], *parent_script.children)
 
     _fill_cells(cells, plural_vars, row_headers, col_headers, tab_headers)
-    return Table(headers=[row_headers, col_headers, tab_headers], cells=cells)
+    return Table(headers=[row_headers, col_headers, tab_headers], cells=cells, paradigm=parent_script)
 
 
 def _fill_cells(cells, plural_vars, row_headers, col_headers, tab_header):

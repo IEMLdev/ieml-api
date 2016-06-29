@@ -1,7 +1,9 @@
 from ieml.exceptions import CannotParse
+from ieml.script.script import MultiplicativeScript, NullScript
 from ieml.script.tools import old_canonical
-from .commons import terms_db, script_parser
-
+from handlers.dictionary.commons import terms_db, script_parser
+from ieml.script.tables import generate_tables
+from ieml.script.constants import AUXILIARY_CLASS, VERB_CLASS, NOUN_CLASS
 
 def all_ieml():
     """Returns a dump of all the terms contained in the DB, formatted for the JS client"""
@@ -36,11 +38,138 @@ def parse_ieml(iemltext):
 
 
 def script_table(iemltext):
-    pass
+    class_to_color = {
+        AUXILIARY_CLASS: 'blue',
+        VERB_CLASS: 'pink',
+        NOUN_CLASS: 'yellow'
+    }
+
+    def _table_entry(col_size=0, ieml=None, header=False, meta=False):
+        '''
+        header + ieml + !meta = colomn and line header
+        header + ieml + meta = top header
+        !ieml + meta = gray square -_-'
+        ieml + !header = cell
+
+        :param ieml:
+        :param auto_color:
+        :param header:
+        :param meta:
+        :return:
+        '''
+        if not ieml:
+            color = 'gray'
+        elif not header:
+            color = class_to_color[ieml.script_class]
+        elif meta:
+            color = 'green'
+        else:
+            color = 'blue'
+
+        return {
+            'background': color,
+            'value': str(ieml) if ieml else '',
+            'means': {'fr': '', 'en': ''},
+            'creatable': False,
+            'editable': bool(ieml),
+            'span': {
+                'col': col_size if header and meta and ieml else 1,
+                'row': 1
+            }
+        }
+
+    def _slice_array(table, dim=None):
+        col_size = len(table.headers[1])
+
+        result = [
+            _table_entry(col_size + 1, ieml='king size', header=True, meta=True),
+            _table_entry(meta=True) # grey square
+        ]
+        for col in table.headers[1]:
+            result.append(_table_entry(ieml=col, header=True))
+
+        for i, line in enumerate(table.cells):
+            result.append(_table_entry(ieml=table.headers[0][i], header=True))
+            for cell in line:
+                result.append(_table_entry(ieml=cell[dim]))
+
+        return result
+
+    def _build_tables(tables):
+        result = []
+        for table in tables:
+            tabs = []
+            if len(table.headers[2]) == 0:
+                tabs = [{
+                    'tabTitle': '',
+                    'slice': _slice_array(table)
+                }]
+            else:
+                for i, tab in enumerate(table.headers[2]):
+                    tabs.append({
+                        'tabTitle': str(tab),
+                        'slice': _slice_array(table, i)
+                    })
+
+            result.append({
+                'Col': len(table.headers[1]) + 1,
+                'table': tabs
+            })
+
+        return result
+
+    try:
+        script = script_parser.parse(iemltext)
+        tables = generate_tables(script)
+
+        return {
+            'tree': {
+                'input': str(script),
+                'Tables': _build_tables(tables)
+            },
+            'success': True
+        }
+    except CannotParse:
+        pass
 
 
 def script_tree(iemltext):
-    pass
+    def _tree_entry(script):
+        if script.layer == 0:
+            return {
+                'op': 'none',
+                'name': str(script),
+                'children': []
+            }
+
+        if isinstance(script, NullScript):
+            n = NullScript(script.layer - 1)
+            return {
+                'op': '*',
+                'name': str(script),
+                'children': [
+                    _tree_entry(n) for i in range(3)
+                ]
+            }
+        return {
+            'op': '*' if isinstance(script, MultiplicativeScript) else '+',
+            'name': str(script),
+            'children': [
+                _tree_entry(s) for s in script
+            ]
+        }
+
+    try:
+        script = script_parser.parse(iemltext)
+        return {
+            'level': script.layer,
+            'tree': _tree_entry(script),
+            'taille': script.cardinal,
+            'success': True,
+            'canonical': old_canonical(script)
+        }
+    except CannotParse:
+        pass
 
 
 def new_ieml_script(body):

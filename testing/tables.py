@@ -12,6 +12,9 @@ class TableGenerationTest(unittest.TestCase):
     def test_additive_script(self):
         script = self.parser.parse("O:B:.+M:S:A:+S:.")
         tables = generate_tables(script)
+
+        paradigm1 = self.parser.parse("O:B:.")
+        paradigm2 = self.parser.parse("M:S:A:+S:.")
         row_headers_table1 = [self.parser.parse("O:B:.")]
 
         row_headers_table2 = [self.parser.parse("S:S:A:+S:."), self.parser.parse("B:S:A:+S:."), self.parser.parse("T:S:A:+S:.")]
@@ -42,6 +45,8 @@ class TableGenerationTest(unittest.TestCase):
         self.assertEqual(tables[1].headers[1], col_headers_table2, "Column headers are generated correctly")
         self.assertTrue(len(tables[1].headers[2]) == 0, "Second table has no tab headers")
         self.assertTrue((tables[1].cells == table2_cells).all(), "Cells are generated correctly")
+        self.assertTrue(tables[0].paradigm == paradigm1, "First table has correct paradigm")
+        self.assertTrue(tables[1].paradigm == paradigm2, "Second table has correct paradigm")
 
     def test_3d_multiplicative_script(self):
         script = self.parser.parse("M:M:.-O:M:.-E:.-+s.y.-'")
@@ -177,6 +182,7 @@ class TableGenerationTest(unittest.TestCase):
         self.assertEqual(tables[0].headers[1], col_headers, "Column headers are generated correctly")
         self.assertEqual(tables[0].headers[2], tab_headers, "Tab headers are generated correctly")
         self.assertTrue((tables[0].cells == cells).all(), "Cells are generated correctly")
+        self.assertTrue(tables[0].paradigm == script, "Table has correct paradigm")
 
     def test_2d_multiplicative_script(self):
         script = self.parser.parse("M:.E:A:M:.-")
@@ -204,6 +210,7 @@ class TableGenerationTest(unittest.TestCase):
         self.assertEqual(tables[0].headers[1], col_headers, "Column headers are generated correctly")
         self.assertEqual(tables[0].headers[2], tab_headers, "Tab headers are generated correctly")
         self.assertTrue((tables[0].cells == cells).all(), "Cells are generated correctly")
+        self.assertTrue(tables[0].paradigm == script, "Table has correct paradigm")
 
     def test_1d_multiplicative_script(self):
         script = self.parser.parse("E:S:O:.")
@@ -223,6 +230,7 @@ class TableGenerationTest(unittest.TestCase):
         self.assertEqual(tables[0].headers[1], col_headers, "Column headers are generated correctly")
         self.assertEqual(tables[0].headers[2], tab_headers, "Tab headers are generated correctly")
         self.assertTrue((tables[0].cells == cells).all(), "Cells are generated correctly")
+        self.assertTrue(tables[0].paradigm == script, "Table has correct paradigm")
 
     def test_row_of_paradigm(self):
         script = self.parser.parse("t.i.-s.i.-'u.S:.-U:.-'O:O:.-',")
@@ -246,3 +254,4 @@ class TableGenerationTest(unittest.TestCase):
         self.assertEqual(tables[0].headers[1], col_headers, "Column headers are generated correctly")
         self.assertEqual(tables[0].headers[2], tab_headers, "Tab headers are generated correctly")
         self.assertTrue((tables[0].cells == cells).all(), "Cells are generated correctly")
+        self.assertTrue(tables[0].paradigm == script, "Table has correct paradigm")
