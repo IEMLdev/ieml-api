@@ -1,3 +1,5 @@
+import logging
+
 from ieml.parsing.script import ScriptParser
 from ieml.script import CONTAINED_RELATION, CONTAINS_RELATION, RemarkableSibling, TWIN_SIBLING_RELATION, \
     ASSOCIATED_SIBLING_RELATION, CROSSED_SIBLING_RELATION, OPPOSED_SIBLING_RELATION, ATTRIBUTE, SUBSTANCE, MODE, \
@@ -173,7 +175,7 @@ class RelationsQueries:
             {'$set': {'RELATIONS': {}}},
             multi=True
         )
-
+        logging.info('Computing local relations for paradigm %s...' % str(paradigm_ast))
         # Compute and save contains and contained (can't be inhibited)
         cls._compute_containing_relations(scripts_ast)
 
@@ -205,6 +207,7 @@ class RelationsQueries:
             {},
             {'$unset': {'RELATIONS' + '.' + CHILD_RELATION: 1, 'RELATIONS' + '.' + FATHER_RELATION: 1}})
 
+        logging.info('Computing global relations...')
         father_bar = progressbar.ProgressBar()
         # compute and save the fathers relations
         for s in father_bar(scripts):

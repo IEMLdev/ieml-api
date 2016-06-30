@@ -142,6 +142,7 @@ class TermsConnector(DBConnector):
         :param metadata: the metadata
         :return: None
         """
+
         # Argument check
         if not isinstance(script_ast, Script):
             raise InvalidScript()

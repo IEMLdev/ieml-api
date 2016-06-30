@@ -72,7 +72,6 @@ def recompute_relations():
     RelationsQueries.compute_global_relations()
     RelationsQueries.do_inhibition(TermsConnector().get_inhibitions())
 
-
 def check_old_relations():
     terms = TermsConnector()
     db_rel = RelationsConnector()
