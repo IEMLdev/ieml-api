@@ -17,7 +17,7 @@ paths:
 
   /allieml:
     get:
-      operationId: app.handlers.all_ieml
+      operationId: api.handlers.all_ieml
       tags:
         - IEML
       description: |
@@ -32,7 +32,7 @@ paths:
 
   /client/authenticate:
     post:
-      operationId: app.handlers.authenticate
+      operationId: api.handlers.authenticate
       description: |
         Login handler for the dictionary user
       consumes:
@@ -52,7 +52,7 @@ paths:
 
   /scriptparser/parse:
     get:
-      operationId: app.handlers.parse_ieml
+      operationId: api.handlers.parse_ieml
       tags:
         - Parsing
       description: |
@@ -87,7 +87,7 @@ paths:
 
   /scriptparser/tables:
     get:
-      operationId: app.handlers.script_table
+      operationId: api.handlers.script_table
       tags:
         - Parsing
       description: |
@@ -118,7 +118,7 @@ paths:
 
   /scriptparser/tree:
     get:
-      operationId: app.handlers.script_tree
+      operationId: api.handlers.script_tree
       tags:
         - Parsing
       description: |
@@ -135,7 +135,7 @@ paths:
 
   /getRelVisibility:
     post:
-      operationId: app.handlers.get_relation_visibility
+      operationId: api.handlers.get_relation_visibility
       description: |
         TODO
       parameters:
@@ -153,7 +153,7 @@ paths:
 
   /addRelVisibility:
     post:
-      operationId: app.handlers.add_relation_visiblity
+      operationId: api.handlers.add_relation_visiblity
       description: |
         TODO
       responses:
@@ -161,7 +161,7 @@ paths:
           description: Successful response
   /remRelVisibility:
     post:
-      operationId: app.handlers.remove_relation_visibility
+      operationId: api.handlers.remove_relation_visibility
       description: |
         TODO
       responses:
@@ -169,7 +169,7 @@ paths:
           description: Successful response
   /toggleRelVisibility:
     post:
-      operationId: app.handlers.toggle_relation_visibility
+      operationId: api.handlers.toggle_relation_visibility
       description: |
         TODO
       responses:
@@ -177,7 +177,7 @@ paths:
           description: Successful response
   /rels:
     post:
-      operationId: app.handlers.get_relations
+      operationId: api.handlers.get_relations
       tags:
         - Relations
       description: >
@@ -224,7 +224,7 @@ paths:
                   type: boolean
   /newieml:
     post:
-      operationId: app.handlers.new_ieml_script
+      operationId: api.handlers.new_ieml_script
       description: |
         Add a new `IEML` term to the dictionary
       parameters:
@@ -247,7 +247,7 @@ paths:
           description: Successful response
   /updateieml:
     post:
-      operationId: app.handlers.update_ieml_script
+      operationId: api.handlers.update_ieml_script
       description: |
         Modify an `IEML` term from the dictionary
       parameters:
@@ -274,7 +274,7 @@ paths:
           description: Successful response
   '/remieml/{term_id}':
     get:
-      operationId: app.handlers.remove_ieml_script
+      operationId: api.handlers.remove_ieml_script
       description: |
         Delete an `IEML` term from the dictionary
       parameters:
@@ -287,7 +287,7 @@ paths:
           description: Successful response
   '/exists/ieml/{ieml_term}':
     get:
-      operationId: app.handlers.ieml_term_exists
+      operationId: api.handlers.ieml_term_exists
       description: |
         Check if `<term_ieml>` exists in the dictionary
       parameters:
@@ -300,7 +300,7 @@ paths:
           description: Successful response
   '/exists/FR/{tag_fr}':
     get:
-      operationId: app.handlers.fr_tag_exists
+      operationId: api.handlers.fr_tag_exists
       description: |
         Check if `<term_ieml>` exists in the **French** dictionary
       parameters:
@@ -313,7 +313,7 @@ paths:
           description: Successful response
   '/exists/EN/{tag_en}':
     get:
-      operationId: app.handlers.en_tag_exists
+      operationId: api.handlers.en_tag_exists
       description: |
         Check if `<term_ieml>` exists in the **English** dictionary
       parameters:
@@ -332,7 +332,7 @@ paths:
   /search:
     post:
       description: Search for propositions or  USLs in the library's database
-      operationId: app.handlers.search_library
+      operationId: api.handlers.search_library
       parameters:
         - name: query
           in: body
@@ -348,11 +348,11 @@ paths:
             type: array
             items:
               $ref: '#/definitions/ieml_element'
-              
+
   /tags/check_exists:
     post:
       description: Checks if a tag already exists for a proposition or an hypertext
-      operationId: app.handlers.check_library_tag_exists
+      operationId: api.handlers.check_library_tag_exists
       consumes:
         - application/x-www-form-urlencoded
       parameters:
@@ -371,10 +371,10 @@ paths:
           description: Successful response
           schema:
             $ref: '#/definitions/tag_exists'
-            
+
   /word/validate:
     post:
-      operationId: app.handlers.validate_word
+      operationId: api.handlers.validate_word
       tags:
         - Propositions
       description: Checks if a created word is good or not
@@ -390,10 +390,10 @@ paths:
           description: Successful response
           schema:
             $ref: '#/definitions/validate_response'
-          
+
   /word/save:
     post:
-      operationId: app.handlers.save_word
+      operationId: api.handlers.save_word
       tags:
         - Propositions
       description: Checks if a created word is good or not, and if good, saves it to the DB
@@ -409,10 +409,10 @@ paths:
           description: Successful response
           schema:
             $ref: '#/definitions/validate_response'
-  
+
   /tree/validate:
     post:
-      operationId: app.handlers.validate_tree
+      operationId: api.handlers.validate_tree
       tags:
         - Propositions
       description: Checks if a created sentence/super sentence graph is good or not, and if good, saves it to the DB
@@ -428,10 +428,10 @@ paths:
           description: Successful response
           schema:
             $ref: '#/definitions/validate_response'
-  
+
   /tree/save:
     post:
-      operationId: app.handlers.save_tree
+      operationId: api.handlers.save_tree
       tags:
         - Propositions
       description: Checks if a created sentence/super sentence graph is good or not, and if good, saves it to the DB
@@ -447,10 +447,10 @@ paths:
           description: Successful response
           schema:
             $ref: '#/definitions/validate_response'
-            
+
   /text/validate:
     post:
-      operationId: app.handlers.validate_text
+      operationId: api.handlers.validate_text
       tags:
         - USL
       description: Checks if a text is good or not,  and if good, saves it to the DB.
@@ -466,10 +466,10 @@ paths:
           description: Successful response
           schema:
             $ref: '#/definitions/validate_response'
-  
+
   /hypertext/validate:
     post:
-      operationId: app.handlers.validate_hypertext
+      operationId: api.handlers.validate_hypertext
       tags:
         - USL
       description: Checks if an hypertext graph is good or not, and if good saves it to the DB
@@ -485,10 +485,10 @@ paths:
           description: Successful response
           schema:
             $ref: '#/definitions/validate_response'
-            
+
   /text/decompose:
     post:
-      operationId: app.handlers.decompose_text
+      operationId: api.handlers.decompose_text
       tags:
         - USL
       description: |
@@ -506,10 +506,10 @@ paths:
             type : array
             items:
               $ref: '#/definitions/proposition_tree'
-              
+
   /element/decompose:
     post:
-      operationId: app.handlers.decompose_ieml_element
+      operationId: api.handlers.decompose_ieml_element
       description: Decomposes any IEML element to its children element (eg, a text into propositions, a sentence into a tree of words, or a word into two lists of terms)
       parameters:
         - name: ieml_string
