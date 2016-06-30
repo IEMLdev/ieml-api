@@ -46,8 +46,12 @@ class Script(TreeStructure):
         # class of the script, one of the following : VERB (1), AUXILIARY (0), and NOUN (2)
         self.script_class = None
 
-    # def __gt__(self, other):
-    #     return self != other and not self.__lt__(other)
+    def __add__(self, other):
+        if not isinstance(other, Script):
+            raise InvalidScript()
+
+        return AdditiveScript(children=[self, other])
+
 
     def __eq__(self, other):
         if not isinstance(other, Script):
@@ -255,15 +259,14 @@ class MultiplicativeScript(Script):
 
         # Build children
         if children is None:
-            _children = []
-            if substance is not None:
-                _children.append(substance)
-                if attribute is not None:
-                    _children.append(attribute)
-                    if mode is not None:
-                        _children.append(mode)
-        else:
-            _children = list(children)
+            children = [substance, attribute, mode]
+
+        _children = []
+        for child in children:
+            if child is not None:
+                _children.append(child)
+            else:
+                break
 
         # Replace all the corresponding children to character
         _character = None
