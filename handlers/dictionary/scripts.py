@@ -200,6 +200,7 @@ def new_ieml_script(body):
                           {"FR": body["FR"], "EN": body["EN"]},  # the
                           [],
                           root=body["PARADIGM"] == "1")
+        return { "success" : True, "IEML" : str(script_ast)}
     except CannotParse:
         pass # TODO ; maybe define an error for this case
 
