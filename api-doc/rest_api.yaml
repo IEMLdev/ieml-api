@@ -154,8 +154,7 @@ paths:
   /addRelVisibility:
     post:
       operationId: app.handlers.add_relation_visiblity
-      description: |
-      Add initibitions
+      description: Inhibits relations of a paradigm
       parameters:
         - name: body
           in: body
@@ -188,14 +187,6 @@ paths:
               ieml:
                 type: string
 
-      responses:
-        '200':
-          description: Successful response
-  /toggleRelVisibility:
-    post:
-      operationId: app.handlers.toggle_relation_visibility
-      description: |
-        TODO
       responses:
         '200':
           description: Successful response
