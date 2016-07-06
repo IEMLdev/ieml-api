@@ -1,5 +1,4 @@
 import itertools as it
-import math
 import re
 
 import numpy as np
@@ -272,39 +271,29 @@ def factor(sequences):
     # hold the mapping coordinate -> script
     scripts = {tuple(primitives[i].inv[seme] for i, seme in enumerate(s)):s for s in sequences}
 
-    # primitives as index of the future topology array
-    sequences_index = scripts.keys()
-
-    relations = {}
-
-    # hold the primitive as coodinate described sequences_index
+    # hold the primitive as coodinate described in scripts keys
     shape = tuple(len(p) for p in primitives)
     topology = np.full(shape, False, dtype=bool)
-    for s in sequences_index:
+    for s in scripts:
         topology[s[0]][s[1]][s[2]] = True
-        relations[s] = []
 
-    # builds the factorisation cubes
-    for _index in reversed(range(topology.size)):
-        # _index = i + j * shape[0] + k * shape[0] * shape[1]
-        i = _index % topology.shape[0]
-        _temp = (_index - i) / topology.shape[0]
-        j = int(_temp % topology.shape[1])
-        k = int((_temp - j) / topology.shape[1])
-
-        if not topology[i][j][k]:
-            # no sequence at this index in the topology
+    # calculate the relations, ie for a seq, the others seq that can be factorized with it
+    relations = {}
+    _computed = set()
+    for seq in scripts:
+        if not topology[seq[0]][seq[1]][seq[2]]:
             continue
 
-        # build the axis of the commons factors
-        _ij = [_k for _k in range(k, topology.shape[2]) if topology[i][j][_k]]
-        _ik = [_j for _j in range(j, topology.shape[1]) if topology[i][_j][k]]
-        _jk = [_i for _i in range(i, topology.shape[0]) if topology[_i][j][k]]
+        cubes = {e for e in _computed if
+                 topology[e[0]][seq[1]][seq[2]] and
+                 topology[seq[0]][e[1]][seq[2]] and
+                 topology[seq[0]][seq[1]][e[2]]}
 
-        # calculate the couples of factorisation in relations
-        cubes = set((t for t in it.product(_jk, _ik, _ij) if topology[t[0]][t[1]][t[2]]))
         for c in cubes:
-            relations[c].extend(cubes - {c})
+            relations[c].add(seq)
+
+        relations[seq] = cubes
+        _computed.add(seq)
 
     def _neighbours(t1, t2):
         x1, y1, z1 = t1
@@ -333,11 +322,13 @@ def factor(sequences):
             else:
                 yield _facto
 
+        yield factorisation
+
     _candidate = [r for r in relations]
-    _candidate.sort(key=lambda e: len(relations[e]), reverse=True)
+    _candidate.sort(key=lambda e: len(relations[e]))
 
     e = _candidate.pop()
-    factorisations = next(iter(_factors(relations[e], [e])))
+    factorisations = next(iter(_factors(list(relations[e]), [e])))
 
     remaining = set(sequences) - set(scripts[f] for f in factorisations)
     factorisations = tuple(factor({primitives[i][seme] for seme in semes}) for i, semes in enumerate(zip(*factorisations)))
@@ -381,7 +372,6 @@ def factorize(script):
 
 if __name__ == '__main__':
     from ieml.parsing.script import ScriptParser
-    import pprint
     script = ScriptParser().parse("M:M:.U:M:.-+F:F:.-+F:O:.A:.T:.-")
 
     l = ['S:A:A:.','B:A:A:.','T:A:A:.', 'S:A:B:.', 'B:A:B:.', 'T:A:B:.']
@@ -392,5 +382,9 @@ if __name__ == '__main__':
     seqs = ['S:A:A:.', 'S:B:T:.', 'S:S:T:.', 'A:U:A:.', 'B:B:T:.']
     saa_ = ScriptParser().parse("t.i.-s.i.-'u.T:.-U:.-'O:O:.-',B:.-',_M:.-',_;")
     sqq_ = ScriptParser().parse("M:M:.o.-M:M:.o.-E:.-+s.u.-'")
+    sdd_ = ScriptParser().parse("M:M:.-O:M:.-E:.-+s.y.-'+M:M:.-M:O:.-E:.-+s.y.-'")
+    shh_ = ScriptParser().parse("i.B:.-+u.M:.-")
+    soo_ = ScriptParser().parse("M:O:.")
     ast_seqs = [script]
-    print(str(factorize(sqq_)))
+    print(str(soo_))
+    print(str(factorize(soo_)))
