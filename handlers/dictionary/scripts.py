@@ -95,7 +95,7 @@ def script_table(iemltext):
             col_size = len(table.headers[1])
 
             result = [
-                _table_entry(col_size + 1, ieml=str(script_ast), header=True, meta=True),
+                _table_entry(col_size + 1, ieml=table.paradigm, header=True, meta=True),
                 _table_entry(meta=True)  # grey square
             ]
 
@@ -125,7 +125,7 @@ def script_table(iemltext):
                 for i, tab in enumerate(table.headers[2]):
                     tabs.append({
                         'tabTitle': str(tab),
-                        'slice': _slice_array(table, i)
+                        'slice': _slice_array(table, dim=i)
                     })
 
             result.append({
