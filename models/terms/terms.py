@@ -1,4 +1,4 @@
-from ieml.script.factorization import factorize
+from ieml.script.tools import factorize
 from models.base_queries import DBConnector, Tag
 from models.constants import TERMS_COLLECTION
 from models.exceptions import InvalidInhibitArgument, InvalidScript, InvalidTags, TermAlreadyExists, InvalidMetadata,\
