@@ -40,6 +40,7 @@ class TermsConnector(DBConnector):
         :param metadata: a dict of metadata (must be serializable)
         :return: None
         """
+
         # make sure to save the factorised form
         script_ast = factorize(script_ast)
 
