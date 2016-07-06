@@ -1,5 +1,6 @@
 from os import makedirs
 from os.path import dirname, join, isdir
+
 from werkzeug.contrib.cache import FileSystemCache
 
 CACHE_TIMEOUT = 300
@@ -12,6 +13,7 @@ if not isdir(CACHE_DIRNAME):
         pass
 
 cache = FileSystemCache(CACHE_DIRNAME)
+
 
 class cached(object):
 

@@ -4,8 +4,10 @@ from ieml.script.constants import AUXILIARY_CLASS, VERB_CLASS, NOUN_CLASS
 from ieml.script.script import MultiplicativeScript, NullScript
 from ieml.script.tables import generate_tables
 from ieml.script.tools import old_canonical
+from ..caching import cached
 
 
+@cached("all_ieml", 60)
 def all_ieml():
     """Returns a dump of all the terms contained in the DB, formatted for the JS client"""
     def _build_old_model_from_term_entry(term_db_entry):
