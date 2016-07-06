@@ -1,7 +1,10 @@
 from ieml.script import AdditiveScript, MultiplicativeScript
 from collections import namedtuple
 import numpy as np
-import models
+from models.relations import RelationsConnector
+from ieml.script.tools import factorize
+from collections import deque
+import itertools
 
 Variable = namedtuple('Variable', ['address', 'script'])
 Table = namedtuple('Table', ['headers', 'cells', 'paradigm'])
@@ -223,13 +226,37 @@ def print_cells(cells):
             print('\n')
 
 
-def _compute_rank(term):
-    pass
+def get_table_rank(paradigm):
+    """
+        This method will compute the rank of the table associated to the paradigm given as input
+
+        :param paradigm: An IEML paradigm term
+        :return: The rank of the table associated with the paradigm as an integer from 1 to 5
+        """
+    rc = RelationsConnector()
+    paradigm = rc.get_script(paradigm)
+
+    if paradigm["TYPE"] == "ROOT_PARADIGM":
+        return 1
+    for parent_paradigm in paradigm['RELATIONS']['CONTAINED']:
+        if parent_paradigm['TYPE'] == 'ROOT_PARADIGM':
+            return _compute_rank(paradigm, parent_paradigm)
+
+
+def _compute_rank(paradigm, root, rank=1):
+
+    nodes = deque()
+    nodes.append(root)
+
+    while nodes:
+
+        pass
+
 
 
 def _regroup_headers(*headers):
     """Takes in a list of table headers and 'collapses' them"""
-    pass
+    return factorize(headers)
 
 
 def _get_common_factors(*terms):
