@@ -1,3 +1,4 @@
+from handlers.dictionary.client import need_login
 from ieml.exceptions import CannotParse
 from ieml.script.script import MultiplicativeScript, NullScript
 from ieml.script.tools import old_canonical
@@ -37,7 +38,6 @@ def parse_ieml(iemltext):
     except CannotParse:
         return {"success" : False,
                 "exception" : "Invalid script"}
-
 
 
 def script_table(iemltext):
@@ -193,6 +193,7 @@ def script_tree(iemltext):
         pass
 
 
+@need_login
 def new_ieml_script(body):
     try:
         script_ast = script_parser.parse(body["IEML"])
@@ -205,6 +206,7 @@ def new_ieml_script(body):
         pass # TODO ; maybe define an error for this case
 
 
+@need_login
 def remove_ieml_script(term_id):
     try:
         script_ast = script_parser.parse(term_id)
@@ -213,6 +215,7 @@ def remove_ieml_script(term_id):
         pass  # TODO ; maybe define an error for this case
 
 
+@need_login
 def update_ieml_script(body):
     """Updates an IEML Term's properties (mainly the tags, and the paradigm). If the IEML is changed,
     a new term is created"""

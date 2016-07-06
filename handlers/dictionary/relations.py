@@ -1,5 +1,6 @@
 from bidict import bidict
 
+from handlers.dictionary.client import need_login
 from handlers.dictionary.commons import script_parser, terms_db
 from ieml.exceptions import CannotParse
 from ieml.script.constants import OPPOSED_SIBLING_RELATION, ASSOCIATED_SIBLING_RELATION, CROSSED_SIBLING_RELATION, \
@@ -34,6 +35,7 @@ def get_relation_visibility(body):
     return {"viz": inhibited_relations}
 
 
+@need_login
 def add_relation_visiblity(body):
     added_inibitions_set = set(relation_name_table[relation] for relation in body["relations"])
     current_relations_set = set(terms_db.get_term(body["ieml"])["INHIBITS"])
@@ -45,6 +47,7 @@ def add_relation_visiblity(body):
         pass
 
 
+@need_login
 def remove_relation_visibility(body):
     try:
         script_ast = script_parser.parse(body["ieml"])
