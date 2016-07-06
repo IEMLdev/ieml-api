@@ -1,3 +1,4 @@
+from ..caching import cached
 from handlers.dictionary.commons import terms_db, script_parser
 from ieml.exceptions import CannotParse
 from ieml.script.constants import AUXILIARY_CLASS, VERB_CLASS, NOUN_CLASS
