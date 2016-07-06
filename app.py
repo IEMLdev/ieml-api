@@ -1,5 +1,7 @@
 import connexion
+import handlers
 from flask_cors import CORS
+from flask import session
 
 app = connexion.App(__name__, specification_dir='api-doc/')
 app.add_api('rest_api.yaml')
