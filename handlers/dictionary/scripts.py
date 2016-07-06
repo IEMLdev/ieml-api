@@ -1,19 +1,22 @@
 from handlers.dictionary.client import need_login
-from ieml.exceptions import CannotParse
-from ieml.script.script import MultiplicativeScript, NullScript
-from ieml.script.tools import old_canonical
+from ..caching import cached
 from handlers.dictionary.commons import terms_db, script_parser
-from ieml.script.tables import generate_tables
+from ieml.exceptions import CannotParse
 from ieml.script.constants import AUXILIARY_CLASS, VERB_CLASS, NOUN_CLASS
+from ieml.script.script import MultiplicativeScript, NullScript
+from ieml.script.tables import generate_tables
+from ieml.script.tools import old_canonical
+from ..caching import cached
 
 
+@cached("all_ieml", 60)
 def all_ieml():
     """Returns a dump of all the terms contained in the DB, formatted for the JS client"""
     def _build_old_model_from_term_entry(term_db_entry):
         terms_ast = script_parser.parse(term_db_entry["_id"])
         return {"_id" : term_db_entry["_id"],
                 "IEML" : term_db_entry["_id"],
-                "CLASS" : terms_ast.script_class, # TODO : cannot compute that yet
+                "CLASS" : terms_ast.script_class,
                 "EN" : term_db_entry["TAGS"]["EN"],
                 "FR" : term_db_entry["TAGS"]["FR"],
                 "PARADIGM" : "1" if term_db_entry["ROOT"] else "0",
@@ -92,7 +95,7 @@ def script_table(iemltext):
             col_size = len(table.headers[1])
 
             result = [
-                _table_entry(col_size + 1, ieml='king size', header=True, meta=True),
+                _table_entry(col_size + 1, ieml=str(script_ast), header=True, meta=True),
                 _table_entry(meta=True)  # grey square
             ]
 
@@ -133,8 +136,8 @@ def script_table(iemltext):
         return result
 
     try:
-        script = script_parser.parse(iemltext)
-        tables = generate_tables(script)
+        script_ast = script_parser.parse(iemltext)
+        tables = generate_tables(script_ast)
 
         if tables is None:
             return {
@@ -145,7 +148,7 @@ def script_table(iemltext):
 
         return {
             'tree': {
-                'input': str(script),
+                'input': str(script_ast),
                 'Tables': _build_tables(tables)
             },
             'success': True
@@ -199,7 +202,7 @@ def new_ieml_script(body):
         script_ast = script_parser.parse(body["IEML"])
         terms_db.add_term(script_ast,  # the ieml script's ast
                           {"FR": body["FR"], "EN": body["EN"]},  # the
-                          [],
+                          [], # no inhibitions at the script's creation
                           root=body["PARADIGM"] == "1")
         return { "success" : True, "IEML" : str(script_ast)}
     except CannotParse:
