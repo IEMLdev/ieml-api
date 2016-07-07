@@ -15,9 +15,34 @@ paths:
   ##          INTLEKT         ##
   ##############################
 
+  /intlekt/push:
+    post:
+      operationId: handlers.push_server_event
+      tags:
+        - Intlekt
+      parameters:
+        - name: screen_name
+          in: query
+          description: The twitter screen_name of the user we wish to notify of the event
+          type: string
+          required: true
+        - name: event_data
+          in: body
+          description: |
+            A description of the event
+          required: true
+          schema:
+            type: object
+      description: |
+        Push asynchronous server event to the client
+      responses:
+        '200':
+          description: |
+            Everything went well
+
   /intlekt/test:
     get:
-      operationId: app.handlers.test_endpoint
+      operationId: handlers.test_endpoint
       tags:
         - Intlekt
       description: |
@@ -29,7 +54,7 @@ paths:
 
   /intlekt/auth/logout:
     get:
-      operationId: app.handlers.logout
+      operationId: handlers.logout
       tags:
         - Intlekt
       description: |
@@ -41,7 +66,7 @@ paths:
 
   /intlekt/auth/info:
     get:
-      operationId: app.handlers.info
+      operationId: handlers.info
       tags:
         - Intlekt
       description: |
@@ -53,7 +78,7 @@ paths:
 
   /intlekt/twitter/token:
     get:
-      operationId: app.handlers.twitter_token
+      operationId: handlers.twitter_token
       tags:
         - Intlekt
       description: |
@@ -65,7 +90,7 @@ paths:
 
   /intlekt/twitter/upgradeToken:
     get:
-      operationId: app.handlers.twitter_upgradeToken
+      operationId: handlers.twitter_upgradeToken
       tags:
         - Intlekt
       description: |
@@ -76,7 +101,7 @@ paths:
 
   /intlekt/twitter/home_timeline:
     get:
-      operationId: app.handlers.twitter_home_timeline
+      operationId: handlers.twitter_home_timeline
       tags:
         - Intlekt
       description: |
@@ -88,7 +113,7 @@ paths:
 
   /intlekt/twitter/update:
     get:
-      operationId: app.handlers.twitter_update
+      operationId: handlers.twitter_update
       tags:
         - Intlekt
       description: |
@@ -104,7 +129,7 @@ paths:
 
   /allieml:
     get:
-      operationId: app.handlers.all_ieml
+      operationId: handlers.all_ieml
       tags:
         - IEML
       description: |
@@ -119,7 +144,7 @@ paths:
 
   /client/authenticate:
     post:
-      operationId: app.handlers.authenticate
+      operationId: handlers.authenticate
       description: |
         Not yet implemented
       responses:
@@ -128,7 +153,7 @@ paths:
 
   /scriptparser/parse:
     post:
-      operationId: app.handlers.parse_ieml
+      operationId: handlers.parse_ieml
       tags:
         - Parsing
       description: |
@@ -145,7 +170,7 @@ paths:
 
   /scriptparser/tables:
     post:
-      operationId: app.handlers.script_table
+      operationId: handlers.script_table
       tags:
         - Parsing
       description: |
@@ -176,7 +201,7 @@ paths:
 
   /scriptparser/tree:
     post:
-      operationId: app.handlers.script_tree
+      operationId: handlers.script_tree
       tags:
         - Parsing
       description: |
@@ -193,7 +218,7 @@ paths:
 
   /getRelVisibility:
     post:
-      operationId: app.handlers.get_relation_visibility
+      operationId: handlers.get_relation_visibility
       description: |
         TODO
       responses:
@@ -202,7 +227,7 @@ paths:
 
   /addRelVisibility:
     post:
-      operationId: app.handlers.add_relation_visiblity
+      operationId: handlers.add_relation_visiblity
       description: |
         TODO
       responses:
@@ -210,7 +235,7 @@ paths:
           description: Successful response
   /remRelVisibility:
     post:
-      operationId: app.handlers.remove_relation_visibility
+      operationId: handlers.remove_relation_visibility
       description: |
         TODO
       responses:
@@ -218,7 +243,7 @@ paths:
           description: Successful response
   /toggleRelVisibility:
     post:
-      operationId: app.handlers.toggle_relation_visibility
+      operationId: handlers.toggle_relation_visibility
       description: |
         TODO
       responses:
@@ -226,7 +251,7 @@ paths:
           description: Successful response
   /rels:
     post:
-      operationId: app.handlers.get_relations
+      operationId: handlers.get_relations
       tags:
         - Relations
       description: >
@@ -273,7 +298,7 @@ paths:
                   type: boolean
   /newieml:
     post:
-      operationId: app.handlers.new_ieml_script
+      operationId: handlers.new_ieml_script
       description: |
         Add a new `IEML` term to the dictionary
       responses:
@@ -281,7 +306,7 @@ paths:
           description: Successful response
   /updateieml:
     post:
-      operationId: app.handlers.update_ieml_script
+      operationId: handlers.update_ieml_script
       description: |
         Modify an `IEML` term from the dictionary
       responses:
@@ -289,7 +314,7 @@ paths:
           description: Successful response
   '/remieml/{term_id}':
     post:
-      operationId: app.handlers.remove_ieml_script
+      operationId: handlers.remove_ieml_script
       description: |
         Delete an `IEML` term from the dictionary
       parameters:
@@ -302,7 +327,7 @@ paths:
           description: Successful response
   '/exists/ieml/{ieml_term}':
     post:
-      operationId: app.handlers.ieml_term_exists
+      operationId: handlers.ieml_term_exists
       description: |
         Check if `<term_ieml>` exists in the dictionary
       parameters:
@@ -315,7 +340,7 @@ paths:
           description: Successful response
   '/exists/FR/{tag_fr}':
     post:
-      operationId: app.handlers.fr_tag_exists
+      operationId: handlers.fr_tag_exists
       description: |
         Check if `<term_ieml>` exists in the **French** dictionary
       parameters:
@@ -328,7 +353,7 @@ paths:
           description: Successful response
   '/exists/EN/{tag_en}':
     post:
-      operationId: app.handlers.en_tag_exists
+      operationId: handlers.en_tag_exists
       description: |
         Check if `<term_ieml>` exists in the **English** dictionary
       parameters:
@@ -347,7 +372,7 @@ paths:
   /search:
     post:
       description: Search for propositions or  USLs in the library's database
-      operationId: app.handlers.search_library
+      operationId: handlers.search_library
       parameters:
         - name: query
           in: body
@@ -363,11 +388,11 @@ paths:
             type: array
             items:
               $ref: '#/definitions/ieml_element'
-              
+
   /tags/check_exists:
     post:
       description: Checks if a tag already exists for a proposition or an hypertext
-      operationId: app.handlers.check_library_tag_exists
+      operationId: handlers.check_library_tag_exists
       consumes:
         - application/x-www-form-urlencoded
       parameters:
@@ -386,10 +411,10 @@ paths:
           description: Successful response
           schema:
             $ref: '#/definitions/tag_exists'
-            
+
   /word/validate:
     post:
-      operationId: app.handlers.validate_word
+      operationId: handlers.validate_word
       tags:
         - Propositions
       description: Checks if a created word is good or not
@@ -405,10 +430,10 @@ paths:
           description: Successful response
           schema:
             $ref: '#/definitions/validate_response'
-          
+
   /word/save:
     post:
-      operationId: app.handlers.save_word
+      operationId: handlers.save_word
       tags:
         - Propositions
       description: Checks if a created word is good or not, and if good, saves it to the DB
@@ -424,10 +449,10 @@ paths:
           description: Successful response
           schema:
             $ref: '#/definitions/validate_response'
-  
+
   /tree/validate:
     post:
-      operationId: app.handlers.validate_tree
+      operationId: handlers.validate_tree
       tags:
         - Propositions
       description: Checks if a created sentence/super sentence graph is good or not, and if good, saves it to the DB
@@ -443,10 +468,10 @@ paths:
           description: Successful response
           schema:
             $ref: '#/definitions/validate_response'
-  
+
   /tree/save:
     post:
-      operationId: app.handlers.save_tree
+      operationId: handlers.save_tree
       tags:
         - Propositions
       description: Checks if a created sentence/super sentence graph is good or not, and if good, saves it to the DB
@@ -462,10 +487,10 @@ paths:
           description: Successful response
           schema:
             $ref: '#/definitions/validate_response'
-            
+
   /text/validate:
     post:
-      operationId: app.handlers.validate_text
+      operationId: handlers.validate_text
       tags:
         - USL
       description: Checks if a text is good or not,  and if good, saves it to the DB.
@@ -481,10 +506,10 @@ paths:
           description: Successful response
           schema:
             $ref: '#/definitions/validate_response'
-  
+
   /hypertext/validate:
     post:
-      operationId: app.handlers.validate_hypertext
+      operationId: handlers.validate_hypertext
       tags:
         - USL
       description: Checks if an hypertext graph is good or not, and if good saves it to the DB
@@ -500,10 +525,10 @@ paths:
           description: Successful response
           schema:
             $ref: '#/definitions/validate_response'
-            
+
   /text/decompose:
     post:
-      operationId: app.handlers.decompose_text
+      operationId: handlers.decompose_text
       tags:
         - USL
       description: |
@@ -521,10 +546,10 @@ paths:
             type : array
             items:
               $ref: '#/definitions/proposition_tree'
-              
+
   /element/decompose:
     post:
-      operationId: app.handlers.decompose_ieml_element
+      operationId: handlers.decompose_ieml_element
       description: Decomposes any IEML element to its children element (eg, a text into propositions, a sentence into a tree of words, or a word into two lists of terms)
       parameters:
         - name: ieml_string
@@ -590,7 +615,7 @@ definitions:
         type: string
       term_type:
         type : string
-    
+
   ieml_element:
     type: object
     required:
@@ -598,19 +623,19 @@ definitions:
       - TAGS
       - TYPE
     properties:
-      IEML: 
+      IEML:
         type : string
       TAGS:
         type : string
       TYPE:
         type : string
-        
+
   tag_exists:
     type: object
     properties:
-      exist: 
+      exist:
         type: boolean
-    
+
   tags:
     type : object
     required:
@@ -621,7 +646,7 @@ definitions:
         type : string
       EN:
         type : string
-  
+
   word_data:
     type: object
     required:
@@ -639,7 +664,7 @@ definitions:
           type: string
       tags:
         $ref: "#/definitions/tags"
-      
+
   node:
     type: object
     required:
@@ -650,7 +675,7 @@ definitions:
         type : string
       id :
         type : string
-  
+
   proposition_graph:
     type : object
     required:
@@ -681,7 +706,7 @@ definitions:
         $ref: "#/definitions/tags"
       validation_type:
         type : integer
-    
+
   text_data:
     type: object
     required:
@@ -694,7 +719,7 @@ definitions:
           type: string
       tags:
         $ref: "#/definitions/tags"
-  
+
   hyperlink_data:
     type: object
     required:
@@ -707,7 +732,7 @@ definitions:
         type : array
         items:
           type : string
-  
+
   hypertext_graph:
     type : object
     required:
@@ -734,12 +759,12 @@ definitions:
               type : string
             mode :
               $ref: "#/definitions/hyperlink_data"
-              
+
       tags:
         $ref: "#/definitions/tags"
       validation_type:
         type : integer
-  
+
   validate_response :
     type : object
     required:
@@ -750,7 +775,7 @@ definitions:
         type : boolean
       ieml:
         type : string
-  
+
   proposition_tree:
     type: object
     required :
@@ -765,7 +790,7 @@ definitions:
         type: string
       data :
         type: object
-        required : 
+        required :
           - PATH
           - TAGS
           - TYPE
@@ -776,13 +801,13 @@ definitions:
               type : string
           TAGS:
             $ref: "#/definitions/tags"
-          TYPE : 
+          TYPE :
             type: string
       children:
         type : array
         items:
           $ref: "#/definitions/proposition_tree"
-  
+
   proposition_data:
     type : object
     required:
@@ -794,14 +819,14 @@ definitions:
             type: string
           TAGS:
             $ref: "#/definitions/tags"
-          TYPE : 
+          TYPE :
             type: string
-  
+
   decomposed_ieml_element:
     type: object
     properties:
-    
-      word_data: 
+
+      word_data:
         type: object
         required :
           - substance
@@ -815,7 +840,7 @@ definitions:
             type: array
             items:
               $ref: "#/definitions/proposition_data"
-      
+
       sentence_data:
         type : array
         items:
@@ -831,12 +856,12 @@ definitions:
               $ref: "#/definitions/proposition_data"
             mode:
               $ref: "#/definitions/proposition_data"
-      
+
       text_data:
         type: array
         items :
           $ref: "#/definitions/proposition_data"
-      
+
       hypertext_data:
         type: array
         items:
@@ -846,9 +871,9 @@ definitions:
             - attribute
             - mode
           properties:
-            substance: 
+            substance:
               type: string
-            attribute : 
+            attribute :
               type: string
             mode :
               type: object
@@ -862,4 +887,3 @@ definitions:
                   type: array
                   items:
                     type : string
-        

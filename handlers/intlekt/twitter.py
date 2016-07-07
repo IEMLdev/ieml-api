@@ -3,7 +3,7 @@ import config
 import logging
 import json
 from bson import ObjectId
-from flask import redirect, session, request
+from flask import redirect, session
 import pika
 from pymongo import MongoClient
 from time import strftime
@@ -32,6 +32,7 @@ def twitter_token():
 
 
 def twitter_upgradeToken():
+    from flask import request
     verifier = request.args["oauth_verifier"]
     auth = tweepy.OAuthHandler(config.TWITTER_CONSUMER_KEY,
                                config.TWITTER_CONSUMER_SECRET,
@@ -48,8 +49,6 @@ def twitter_upgradeToken():
     API = api(auth.access_token, auth.access_token_secret)
     screenName = get_twitter_screen_name(API)
     save_access_token(screenName, auth.access_token, auth.access_token_secret)
-    # print(auth.access_token)
-    # print(auth.access_token_secret)
 
     return redirect(config.BASE_HOSTNAME+"/home", 302)
 
@@ -124,11 +123,3 @@ def test_endpoint():
     current_guest = session.get("current_guest")
     print(current_guest)
     return json.loads(current_guest)
-
-
-# def push_server_event(screen_name, data):
-#     client = MongoClient()
-#     dbusers = client.dbusers
-#     user = dbusers.users.find_one({"apis.twitter.screen_name": screen_name})
-#     global socketio
-#     socketio.
