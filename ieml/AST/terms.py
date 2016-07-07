@@ -1,76 +1,61 @@
 from functools import total_ordering
-
-from .commons import PropositionPath, AbstractPropositionMetaclass
+from ieml.AST.commons import AbstractProposition
 from .tree_metadata import TermMetadata
 from ieml.exceptions import TermComparisonFailed, CannotRetrieveMetadata, IEMLTermNotFoundInDictionnary
+from ieml.parsing.script import ScriptParser
+from ieml.script import Script
+from models.terms import TermsConnector
 
 
-@total_ordering
-class Term(metaclass=AbstractPropositionMetaclass):
+class Term(AbstractProposition):
 
-    def __init__(self, ieml_string):
-        if ieml_string[0] == '[' and ieml_string[-1] == ']':
-            self.ieml = ieml_string[1:-1]
+    def __init__(self, script):
+        super().__init__()
+        self.children = []
+
+        if isinstance(script, str):
+            if script[0] == '[' and script[-1] == ']':
+                script = script[1:-1]
+            else:
+                script = script
+            self.script = ScriptParser().parse(script)
+        elif isinstance(script, Script):
+            self.script = script
+        elif isinstance(script, Term):
+            self.script = script.script
         else:
-            self.ieml = ieml_string
+            raise ValueError
 
-        self.objectid = None
-        self.canonical = None
-        self._metadata = None
+    def __eq__(self, other):
+        if not isinstance(other, Term):
+            return False
+        return self.script == other.script
 
-    def __str__(self):
-        return "[" + self.ieml + "]"
+    __hash__ = AbstractProposition.__hash__
 
     def __repr__(self):
         return str(self)
 
-    def __hash__(self):
-        return self.objectid.__hash__()
-
-    def __eq__(self, other):
-        if isinstance(other, Term):
-            return self.objectid is not None and self.objectid == other.objectid
-        else:
-            return False
-
-    def __contains__(self, proposition):
-        return proposition == self
-
     def __gt__(self, other):
-        # we use the DB's canonical forms
-        # if the term has MORE canonical sequences, it's "BIGGER", so GT is TRUE
-        if len(self.canonical) != len(other.canonical):
-            return len(self.canonical) > len(other.canonical)
+        return self.script > other.script
 
-        else: # else, we have to compare sequences using the regular aphabetical order
-            for i, seq in enumerate(self.canonical):
-                # for each sequence, if the sequences are different, we can return the comparison
-                if self.canonical[i] != other.canonical[i]:
-                    return self.canonical[i] > other.canonical[i]
+    def _do_precompute_str(self):
+        self._str = "[" + str(self.script) + "]"
 
-        raise TermComparisonFailed(self.ieml, other.ieml)
+    def _do_checking(self):
+        from models.base_queries import DictionaryQueries
+        TermMetadata.set_connector(DictionaryQueries())
+
+        term = TermsConnector().get_term(self.script)
+        if term is None:
+            raise IEMLTermNotFoundInDictionnary(str(self.script))
+
+    def _do_ordering(self):
+        pass
 
     @property
     def is_null(self):
-        null_term = Term("E:")
-        null_term.check()
-        return self == null_term
-
-    @property
-    def level(self):
-        """Returns the string level of an IEML object, such as TEXT, WORD, SENTENCE, ..."""
-        return self.__class__.__name__.upper()
-
-    @property
-    def metadata(self):
-        if self._metadata is None:
-            self._metadata = self._retrieve_metadata_instance()
-            if self._metadata is not None:
-                return self._metadata
-            else:
-                raise CannotRetrieveMetadata("Cannot retrieve metadata for term %s" % self.ieml)
-        else:
-            return self._metadata
+        return self.script.empty
 
     @property
     def is_promotion(self):
@@ -80,30 +65,8 @@ class Term(metaclass=AbstractPropositionMetaclass):
     def _retrieve_metadata_instance(self):
         return TermMetadata(self)
 
-    def render_hyperlinks(self, hyperlinks, path):
-        current_path = PropositionPath(path.path, self)
-        result = self._do_render_hyperlinks(hyperlinks, current_path)
-
-        if current_path in hyperlinks:
-            result += ''.join(map(lambda e: "<" + str(e[0]) + ">" + str(e[1]), hyperlinks[current_path]))
-
-        return result
-
     def _do_render_hyperlinks(self, hyperlinks, path):
-        return "[" + self.ieml + "]"
-
-    def check(self):
-        """Checks that the term exists in the database, and if found, stores the terms's objectid"""
-        from models.base_queries import DictionaryQueries
-        TermMetadata.set_connector(DictionaryQueries())
-        try:
-            self.objectid = self.metadata["OBJECT_ID"]
-            self.canonical = self.metadata["CANONICAL"]
-        except TypeError:
-            raise IEMLTermNotFoundInDictionnary(self.ieml)
-
-    def order(self):
-        pass
+        return str(self)
 
     def get_promotion_origin(self):
         return self

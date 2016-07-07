@@ -5,7 +5,7 @@ from ieml.AST.tools import RandomPropositionGenerator, NULL_WORD, NULL_SENTENCE,
 from ieml.AST.usl import Text, HyperText
 from ieml.exceptions import SeveralRootNodeFound, NodeHasTooMuchParents, NoRootNodeFound
 from testing.helper import *
-
+from ieml.AST.terms import Term
 
 class TestMetaFeatures(unittest.TestCase):
     """Tests inter-class operations and metaclass related features"""
@@ -61,12 +61,12 @@ class TestTermsFeatures(unittest.TestCase):
         self.term_a, self.term_b, self.term_c = Term("E:A:T:."), Term("E:S:.wa.-"), Term("E:S:.o.-")
         self.term_a.check(), self.term_b.check(), self.term_c.check()
 
-    def test_term_check(self):
-        """Tests that a term actually "finds itself" in the database"""
-        self.assertEqual(self.term_a.objectid, ObjectId("55d220df6653c32453c0ac94"))
+    # def test_term_check(self):
+    #     """Tests that a term actually "finds itself" in the database"""
+    #     self.assertEqual(self.term_a.objectid, ObjectId("55d220df6653c32453c0ac94"))
 
     def test_term_check_fail(self):
-        term = Term("E:A:Tqsdf")
+        term = Term("E:A:T:.wa.wa.-")
         with self.assertRaises(IEMLTermNotFoundInDictionnary):
             term.check()
 
@@ -241,7 +241,6 @@ class TestSentences(unittest.TestCase):
         clause_a, clause_b, clause_c, clause_d = Clause(a,b,f), Clause(a,c,f), Clause(b,d,f), Clause(b,e,f)
         sentence = Sentence([clause_a, clause_b, clause_c, clause_d])
         sentence.check()
-        sentence.order()
         self.assertEqual(sentence.children,[clause_a, clause_b,clause_c, clause_d])
 
 

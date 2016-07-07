@@ -24,7 +24,7 @@ class ScriptParser(metaclass=Singleton):
     @lru_cache()
     def t_parse(self, s):
         self.root = None
-        self.parser.parse(s)
+        self.parser.parse(s, lexer=self.lexer)
 
         if self.root is not None:
             self.root.check()
