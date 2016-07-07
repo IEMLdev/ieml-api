@@ -1,12 +1,11 @@
-from handlers.dictionary.client import need_login
-from ..caching import cached
+from ..caching import cached, flush_cache
 from handlers.dictionary.commons import terms_db, script_parser
 from ieml.exceptions import CannotParse
 from ieml.script.constants import AUXILIARY_CLASS, VERB_CLASS, NOUN_CLASS
 from ieml.script.script import MultiplicativeScript, NullScript
 from ieml.script.tables import generate_tables
 from ieml.script.tools import old_canonical
-from ..caching import cached
+from .client import need_login
 
 
 @cached("all_ieml", 60)
@@ -197,6 +196,7 @@ def script_tree(iemltext):
 
 
 @need_login
+@flush_cache()
 def new_ieml_script(body):
     try:
         script_ast = script_parser.parse(body["IEML"])
@@ -210,6 +210,7 @@ def new_ieml_script(body):
 
 
 @need_login
+@flush_cache()
 def remove_ieml_script(term_id):
     try:
         script_ast = script_parser.parse(term_id)
@@ -219,6 +220,7 @@ def remove_ieml_script(term_id):
 
 
 @need_login
+@flush_cache()
 def update_ieml_script(body):
     """Updates an IEML Term's properties (mainly the tags, and the paradigm). If the IEML is changed,
     a new term is created"""
