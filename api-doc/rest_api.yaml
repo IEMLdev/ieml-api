@@ -15,7 +15,43 @@ paths:
   ##          INTLEKT         ##
   ##############################
 
-  /twitter/token:
+  /intlekt/test:
+    get:
+      operationId: app.handlers.test_endpoint
+      tags:
+        - Intlekt
+      description: |
+        A wildcard endpoint for testing purposes
+      responses:
+        '200':
+          description: |
+            Some message
+
+  /intlekt/auth/logout:
+    get:
+      operationId: app.handlers.logout
+      tags:
+        - Intlekt
+      description: |
+        log out
+      responses:
+        '200':
+          description: |
+            json formatted success message
+
+  /intlekt/auth/info:
+    get:
+      operationId: app.handlers.info
+      tags:
+        - Intlekt
+      description: |
+        get info about the currently logged-in user
+      responses:
+        '200':
+          description: |
+            info about the currently logged-in user
+
+  /intlekt/twitter/token:
     get:
       operationId: app.handlers.twitter_token
       tags:
@@ -27,7 +63,7 @@ paths:
           description: |
             redirect the user's browser to Twitter's authorization page
 
-  /twitter/upgradeToken:
+  /intlekt/twitter/upgradeToken:
     get:
       operationId: app.handlers.twitter_upgradeToken
       tags:
@@ -38,13 +74,25 @@ paths:
         '302':
           description: redirect the our home screen
 
-  /twitter/home_timeline:
+  /intlekt/twitter/home_timeline:
     get:
       operationId: app.handlers.twitter_home_timeline
       tags:
         - Intlekt
       description: |
         Generate a visualization for the user's home timeline
+      responses:
+        '200':
+          description: |
+            a series of coordinates adequate for a specific type of visualization
+
+  /intlekt/twitter/update:
+    get:
+      operationId: app.handlers.twitter_update
+      tags:
+        - Intlekt
+      description: |
+        Request an update of the user's twitter feed
       responses:
         '200':
           description: |
