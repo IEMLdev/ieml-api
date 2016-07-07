@@ -361,7 +361,7 @@ def pack_factorisation(facto_list):
 def factorize(script):
     if isinstance(script, Script):
         seqs = script.singular_sequences
-    elif isinstance(script, list):
+    elif isinstance(script, list) or hasattr(script, '__iter__'):
         seqs = list(it.chain.from_iterable(s.singular_sequences for s in script))
     else:
         raise ValueError
