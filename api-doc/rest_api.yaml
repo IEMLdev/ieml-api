@@ -168,6 +168,8 @@ paths:
                 type : array
                 items:
                   type : string
+              token :
+                type : string
 
       responses:
         '200':
@@ -185,6 +187,8 @@ paths:
             type: object
             properties:
               ieml:
+                type: string
+              token:
                 type: string
 
       responses:
@@ -251,12 +255,14 @@ paths:
             required:
               - IEML
               - PARADIGM
+              - token
             properties:
               IEML:
                 type : string
               PARADIGM:
                 type : string
-
+              token :
+                type : string
       responses:
         '200':
           description: Successful response
@@ -273,6 +279,7 @@ paths:
             type : object
             required:
               - ID
+              - token
             properties:
               ID :
                 type : string
@@ -283,6 +290,8 @@ paths:
               FR :
                 type : string
               EN :
+                type : string
+              token :
                 type : string
       responses:
         '200':
@@ -297,6 +306,11 @@ paths:
           name: term_id
           required: true
           type: string
+        - in: query
+          name : token
+          description: The jwt session token.
+          type: string
+          required: true
       responses:
         '200':
           description: Successful response

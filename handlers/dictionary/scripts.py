@@ -1,3 +1,4 @@
+from models.exceptions import DBException
 from ..caching import cached, flush_cache
 from handlers.dictionary.commons import terms_db, script_parser
 from ieml.exceptions import CannotParse
@@ -207,7 +208,9 @@ def new_ieml_script(body):
                           root=body["PARADIGM"] == "1")
         return { "success" : True, "IEML" : str(script_ast)}
     except CannotParse:
-        pass # TODO ; maybe define an error for this case
+        return {"success": False, "message": 'Invalid IEML.'}
+    except DBException:
+        return {"success": False, "message": 'Db exception.'}
 
 
 @need_login
