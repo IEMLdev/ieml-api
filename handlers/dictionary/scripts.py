@@ -18,10 +18,11 @@ def all_ieml():
                 "CLASS" : terms_ast.script_class,
                 "EN" : term_db_entry["TAGS"]["EN"],
                 "FR" : term_db_entry["TAGS"]["FR"],
-                "PARADIGM" : "1" if term_db_entry["ROOT"] else "0",
+                "PARADIGM" : "1" if terms_ast.paradigm else "0",
                 "LAYER" : terms_ast.layer,
                 "TAILLE" : terms_ast.cardinal,
-                "CANONICAL" : old_canonical(terms_ast)
+                "CANONICAL" : old_canonical(terms_ast),
+                "ROOT_PARADIGM" : term_db_entry["ROOT"]
                 }
 
     return [_build_old_model_from_term_entry(entry) for entry in terms_db.get_all_terms()]
