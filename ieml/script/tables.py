@@ -1,7 +1,6 @@
 from ieml.script import AdditiveScript, MultiplicativeScript
 from collections import namedtuple
 import numpy as np
-import models
 
 Variable = namedtuple('Variable', ['address', 'script'])
 Table = namedtuple('Table', ['headers', 'cells', 'paradigm'])
