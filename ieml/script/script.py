@@ -1,4 +1,5 @@
 from ieml.AST.commons import TreeStructure
+from ieml.script.constants import MAX_LAYER
 from .constants import LAYER_MARKS, PRIMITVES, remarkable_multiplication_lookup_table, REMARKABLE_ADDITION, \
     character_value, AUXILIARY_CLASS, VERB_CLASS, NOUN_CLASS
 import itertools
@@ -130,22 +131,6 @@ class Script(TreeStructure):
     def __getitem__(self, index):
         return self.children[index]
 
-    @property
-    def tables(self):
-        if self.paradigm and len(self._tables) == 0:
-            # compute the tables
-            self._tables = self._compute_tables()
-        return self._tables
-
-    def _compute_tables(self):
-        if isinstance(self, AdditiveScript):
-            return [e for child in self.children for e in child._compute_tables()]
-
-        dim = []
-        for child in self.children:
-            if child.paradigm:
-                dim.append(child)
-
     def _compute_singular_sequences(self):
         pass
 
@@ -238,7 +223,6 @@ class AdditiveScript(Script):
             self.canonical = bytes([value])
         else:
             self.canonical = b''.join([child.canonical for child in self])
-
 
     def _compute_singular_sequences(self):
         # Generating the singular sequence
@@ -406,6 +390,12 @@ class NullScript(Script):
         self.canonical = bytes([character_value[self.character]] * pow(3, self.layer))
         self.script_class = AUXILIARY_CLASS
 
+    def __iter__(self):
+        if self.layer == 0:
+            return [].__iter__()
+
+        return ([NULL_SCRIPTS[self.layer - 1]] * 3).__iter__()
+
     def _do_precompute_str(self):
         result = self.character
         for l in range(0, self.layer + 1):
@@ -422,6 +412,9 @@ class NullScript(Script):
     def _compute_singular_sequences(self):
         return [self]
 
+
+
+NULL_SCRIPTS = [NullScript(level) for level in range(0, MAX_LAYER)]
 
 # Building the remarkable multiplication to script
 REMARKABLE_MULTIPLICATION_SCRIPT = {

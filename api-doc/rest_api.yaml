@@ -154,8 +154,21 @@ paths:
   /addRelVisibility:
     post:
       operationId: app.handlers.add_relation_visiblity
-      description: |
-        TODO
+      description: Inhibits relations of a paradigm
+      parameters:
+        - name: body
+          in: body
+          required: True
+          schema:
+            type: object
+            properties:
+              ieml:
+                type: string
+              relations:
+                type : array
+                items:
+                  type : string
+
       responses:
         '200':
           description: Successful response
@@ -164,14 +177,16 @@ paths:
       operationId: app.handlers.remove_relation_visibility
       description: |
         TODO
-      responses:
-        '200':
-          description: Successful response
-  /toggleRelVisibility:
-    post:
-      operationId: app.handlers.toggle_relation_visibility
-      description: |
-        TODO
+      parameters:
+        - name: body
+          in: body
+          required: True
+          schema:
+            type: object
+            properties:
+              ieml:
+                type: string
+
       responses:
         '200':
           description: Successful response

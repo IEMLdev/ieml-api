@@ -1,12 +1,14 @@
+import itertools as it
 import re
 
-from ieml.exceptions import NoRemarkableSiblingForAdditiveScript, InvalidScript
+import numpy as np
+from bidict import bidict
+
+from ieml.exceptions import NoRemarkableSiblingForAdditiveScript
 from ieml.script.constants import LAYER_MARKS, REMARKABLE_ADDITION, PRIMITVES, OPPOSED_SIBLING_RELATION, \
-    ASSOCIATED_SIBLING_RELATION, CROSSED_SIBLING_RELATION, TWIN_SIBLING_RELATION, MAX_LAYER, character_value
+    ASSOCIATED_SIBLING_RELATION, CROSSED_SIBLING_RELATION, TWIN_SIBLING_RELATION, MAX_LAYER
 from ieml.script.script import MultiplicativeScript, REMARKABLE_MULTIPLICATION_SCRIPT, Script, NullScript, AdditiveScript, remarkable_multiplication_lookup_table
-import itertools as it
-import math
-import collections
+
 
 class RemarkableSibling:
 
@@ -244,27 +246,6 @@ _remarkable_multiplications_opposed_siblings = \
      'y.': 'j\\.', 'h.': 'o\\.', 's.': 's\\.', 'g.': 'u\\.', 'c.': 'a\\.'}
 
 
-# map_byte_to_old_canonical = {}
-# list_value = []
-# for c in product((True, False), repeat=len(PRIMITVES)):
-#     if not any(c):
-#         # no empty addition
-#         continue
-#     e = 0
-#     for b, k in zip(c, PRIMITVES):
-#         if not b:
-#             continue
-#         e |= character_value[k]
-#     list_value.append(e)
-# list_value.sort()
-#
-# for v, l in zip(list_value, ascii_lowercase):
-#     map_byte_to_old_canonical[v] = l
-#
-# # map_byte_to_old_canonical = {16: 'f', 1: 'a', 2: 'b', 4: 'c', 56: 'h', 6: 'd', 32: 'g', 8: 'e', 62: 'i', 63: 'j'}
-#
-
-
 def old_canonical(script_ast):
     result = ''
     for byte in script_ast.canonical:
@@ -272,239 +253,138 @@ def old_canonical(script_ast):
     return [result]
 
 
-def factorize(seqs):
-    if not seqs:
-        return None, 0
+def factor(sequences):
+    layer = next(iter(sequences)).layer
 
-    if next(iter(seqs)).layer == 0:
-        return seqs, 0
+    if layer == 0:
+        return list(sequences)
 
-    factorize_set = {}
-    for s in seqs:
-        if isinstance(s, NullScript):
+    if len(sequences) == 1:
+        return list(sequences)
+
+    # holds the attributes/substances/modes as individual sets in primitives[0]/primitives[1]/primitives[2] respectively
+    primitives = (set(seme) for seme in zip(*sequences))
+
+    # same but now there is a bijection between the coordinate system and the primitives semes
+    primitives = [bidict({i: s for i, s in enumerate(p_set)}) for p_set in primitives]
+
+    # hold the mapping coordinate -> script
+    scripts = {tuple(primitives[i].inv[seme] for i, seme in enumerate(s)):s for s in sequences}
+
+    # hold the primitive as coodinate described in scripts keys
+    shape = tuple(len(p) for p in primitives)
+    topology = np.full(shape, False, dtype=bool)
+    for s in scripts:
+        topology[s[0]][s[1]][s[2]] = True
+
+    # calculate the relations, ie for a seq, the others seq that can be factorized with it
+    relations = {}
+    _computed = set()
+    for seq in scripts:
+        if not topology[seq[0]][seq[1]][seq[2]]:
             continue
-        for i in range(3):
-            key = tuple([s.children[j] if i != j else None for j in range(3)])
-            if key not in factorize_set:
-                factorize_set[key] = set()
-            factorize_set[key].add(s.children[i])
-            # now factorize_set = {(script|None,script|None,script|None) -> [script, ...]}
 
-    # create a list ordered by the biggest factorisation to the smallest
-    fa_list = [(key, factorize_set[key]) for key in factorize_set if len(factorize_set[key]) > 1 ]
-    fa_list.sort(key=lambda k: len(k[1]), reverse=True)
+        cubes = {e for e in _computed if
+                 topology[e[0]][seq[1]][seq[2]] and
+                 topology[seq[0]][e[1]][seq[2]] and
+                 topology[seq[0]][seq[1]][e[2]]}
 
-    def _script(key, script):
-        return tuple((i if i is not None else script for i in key))
+        for c in cubes:
+            relations[c].add(seq)
 
-    def solutions(factors_sets, max_score=math.inf):
-        if not factors_sets:
-            raise StopIteration
+        relations[seq] = cubes
+        _computed.add(seq)
 
-        f = factors_sets[0]
-#        elem = (f[0], *factorize(f[1]))
+    def _neighbours(t1, t2):
+        x1, y1, z1 = t1
+        x2, y2, z2 = t2
+        yield x1, y1, z1
+        yield x1, y1, z2
+        yield x1, y2, z1
+        yield x1, y2, z2
+        yield x2, y1, z1
+        yield x2, y1, z2
+        yield x2, y2, z1
+        yield x2, y2, z2
 
-        script_elem = [_script(elem[0], e) for e in elem[1]]
-        # pprint.pprint(script_elem)
-        # script_elem = {_script(elem[0], e) for e in elem[1]}
-        remaining = ((key, {e for e in x if _script(key, e) not in script_elem}) for key, x in factors_sets if key != elem[0])
-        # remove empty factorisation
-        remaining = [e for e in remaining if e[1]]
-        # sorting
-        remaining.sort(key=lambda e: len(e[1]), reverse=True)
+    def _factors(candidate, factorisation):
+        # sorting the list of candidate to get the one with the most of potential factors
+        candidate.sort(key=lambda e: len(relations[e]), reverse=True)
 
-        for sol, score in solutions(remaining):
-            current = score + 1 + elem[2]
-            if current < max_score:
-                max_score = current
-            if current == max_score:
-                yield sol + [elem], current
+        for r in candidate:
+            _facto = set(it.chain.from_iterable(_neighbours(t, r) for t in factorisation))
+            _candidate = set(candidate)
+            for i in _facto:
+                _candidate &= set(relations[i])
 
-        yield from solutions(factors_sets[1:], max_score=max_score)
-        # for sol, score in solutions(factors_sets[1:], max_score=max_score):
-            # current = score
-            # if current < max_score:
-            #     max_score = current
-            # if current == max_score:
-            #     yield sol, score
+            if _candidate:
+                yield from _factors(list(_candidate), _facto)
+            else:
+                yield _facto
 
+        yield factorisation
 
+    _candidate = [r for r in relations]
+    _candidate.sort(key=lambda e: len(relations[e]))
 
-    _max_score = math.inf
-    solutions_list = []
-    for _sol, _score in solutions(fa_list):
-        pprint.pprint(_sol)
-        if _score < _max_score:
-            _max_score = _score
-            solutions_list = []
-        if _score == _max_score:
-            solutions_list.append(_sol)
+    e = _candidate.pop()
+    factorisations = next(iter(_factors(list(relations[e]), [e])))
 
-    return list(solutions_list[0]), _max_score
+    remaining = set(sequences) - set(scripts[f] for f in factorisations)
+    factorisations = tuple(factor({primitives[i][seme] for seme in semes}) for i, semes in enumerate(zip(*factorisations)))
+
+    if remaining:
+        return [factorisations] + factor(remaining)
+    else:
+        return [factorisations]
 
 
-def unpack(result):
-    script_elem = []
-    for e in result:
-        if isinstance(e, Script):
-            script_elem.append(e)
+def pack_factorisation(facto_list):
+    """
+    :param facto_list: list of script or tuple of factorisation
+    :return:
+    """
+    _sum = []
+    for f in facto_list:
+        if isinstance(f, Script):
+            _sum.append(f)
         else:
-            script_elem.append(MultiplicativeScript(children=tuple((i if i is not None else unpack(e[1]) for i in e[0]))))
-    if len(script_elem) == 1:
-        return script_elem[0]
-    return AdditiveScript(children=script_elem)
+            # tuple of factorisation
+            _sum.append(MultiplicativeScript(children=(pack_factorisation(l_f) for l_f in f)))
+
+    if len(_sum) == 1:
+        return _sum[0]
+    else:
+        return AdditiveScript(children=_sum)
 
 
+def factorize(script):
+    if isinstance(script, Script):
+        seqs = script.singular_sequences
+    elif isinstance(script, list):
+        seqs = list(it.chain.from_iterable(s.singular_sequences for s in script))
+    else:
+        raise ValueError
 
-def factorize3(seqs):
-    if next(iter(seqs)).layer == 0:
-        return seqs, 0
-
-    triplets = [((tuple((k,) for k in s.children), (s,))) for s in seqs]
-
-    def _factor(factor, seq):
-        count = 0
-        result = []
-        for f, s in zip(factor[0], seq[0]):
-            if set(f) == set(s):
-                count += 1
-                result.append(s)
-            elif s in f or f in s:
-                count += 1
-                result.append(s)
-            else:
-                result.append(f + s)
-
-        if count == 2:
-            return tuple(result)
-        return None
-
-    map_seq_to_factors = {}
-    factors = []
-    for s in triplets:
-        stack = [s]
-        i = 0
-        while len(stack) > i:
-            for f in factors:
-                if set(f[1]).intersection(set(stack[i][1])):
-                    continue
-
-                list_seqs = list(f[1] + stack[i][1])
-                list_seqs.sort()
-                list_seqs = tuple(list_seqs)
-                if list_seqs in map_seq_to_factors:
-                    continue
-
-                new_factor = _factor(f, stack[i])
-                if new_factor is not None:
-                    new_factor = (new_factor, list_seqs)
-                    map_seq_to_factors[list_seqs] = new_factor
-                    stack.append(new_factor)
-            i += 1
-        factors.extend(stack)
-
-    def _score(s):
-        return pow(3, s.layer) * 0.5 - 0.5
-
-    def _sol(factorization):
-        result = []
-        score = 1
-        for operand in factorization[0]:
-            if len(operand) == 1:
-                score += _score(operand[0])
-                result.append(operand)
-            else:
-                f, s = factorize3(operand)
-                score += s
-                result.append(tuple(f))
-
-        return tuple(result), score
-
-    def unpack(solution):
-        script_elem = []
-        for t in solution:
-            if isinstance(t, Script):
-                script_elem.append(t)
-            else:
-                # otherwise it is a tuple
-                script_elem.append(
-                    MultiplicativeScript(children=tuple(unpack(t[i]) for i in range(3))))
-
-        if len(script_elem) == 1:
-            return script_elem[0]
-        return AdditiveScript(children=script_elem)
-
-    def _sub_factorization(factorization, all_factorization):
-        seq_set = set(factorization[1])
-        sub_factorization = [f for f in all_factorization if not set(f[1]).intersection(seq_set)]
-        sub_factorization.sort(key=lambda e: len(e[1]), reverse=True)
-        return sub_factorization
-
-    def solutions(factors_list, max_score=math.inf):
-        if not factors_list:
-            raise StopIteration
-
-        # f is the factorisation we gonna use
-        f = factors_list[0]
-
-        solution, sol_score = _sol(f)
-
-        sub_factors = _sub_factorization(f, factors_list)
-
-        if not sub_factors:
-            yield [solution], sol_score
-
-        for sol, score in solutions(sub_factors):
-            current = score + sol_score
-            if current < max_score:
-                max_score = current
-            if current == max_score:
-                yield sol + [solution], current
-
-        yield from solutions(factors_list[1:], max_score=max_score)
-
-    # factors are all possible factorisation available.
-    # we iterate over them to build a complete factorization.
-    factors.sort(key=lambda e: len(e[1]), reverse=True)
-    max_score = math.inf
-    solutions_list = []
-    for s, score in solutions(factors):
-        if score < max_score:
-            max_score = score
-            solutions_list = []
-        if score == max_score:
-            solution = unpack(s)
-            solution.check()
-            print('%s - %d'%(str(solution), score))
-            solutions_list.append(solution)
-
-    return solutions_list[0], max_score
-
+    result = pack_factorisation(factor(seqs))
+    result.check()
+    return result
 
 if __name__ == '__main__':
     from ieml.parsing.script import ScriptParser
-    import pprint
-    script = ScriptParser().parse("M:M:.U:M:.-")
+    script = ScriptParser().parse("M:M:.U:M:.-+F:F:.-+F:O:.A:.T:.-")
+
     l = ['S:A:A:.','B:A:A:.','T:A:A:.', 'S:A:B:.', 'B:A:B:.', 'T:A:B:.']
     _fail = ['S:A:A:.', 'T:A:B:.', 'B:A:B:.', 'S:A:B:.', 'T:A:A:.', 'B:A:A:.']
-#list({'B:A:B:.', 'S:A:A:.', 'B:A:A:.', 'T:A:A:.', 'T:A:B:.', 'S:A:B:.'})
-    l2 = map(lambda e: e + '.', remarkable_multiplication_lookup_table.values())
-    seq_ences = [ScriptParser().parse(d) for d in l2]
-    r = factorize3(seq_ences)
-    #result = unpack(r)
-    #result.check()
-    from random import shuffle
-    # best = max(r, key=lambda e: len(e[1]))
-    # diff = set()
-    # for i in range(100):
-    #     shuffle(seq_ences)
-    #     if max(factorize3(seq_ences), key=lambda e: len(e[1])) != max:
-    #         diff.add(tuple(seq_ences))
 
-    # pprint.pprint([[str(e) for e in lit] for lit in diff])
-    # pprint.pprint(_fail)
-    # pprint.pprint(len(diff))
-    # pprint.pprint([str(b) for b in best[1]])
-    # pprint.pprint({'s' : [str(b) for b in best[0][0]],
-    #                'a' : [str(b) for b in best[0][1]],
-    #                'm' : [str(b) for b in best[0][2]]})
+    l2 = map(lambda e: e + '.', remarkable_multiplication_lookup_table.values())
+
+    seqs = ['S:A:A:.', 'S:B:T:.', 'S:S:T:.', 'A:U:A:.', 'B:B:T:.']
+    saa_ = ScriptParser().parse("t.i.-s.i.-'u.T:.-U:.-'O:O:.-',B:.-',_M:.-',_;")
+    sqq_ = ScriptParser().parse("M:M:.o.-M:M:.o.-E:.-+s.u.-'")
+    sdd_ = ScriptParser().parse("M:M:.-O:M:.-E:.-+s.y.-'+M:M:.-M:O:.-E:.-+s.y.-'")
+    shh_ = ScriptParser().parse("i.B:.-+u.M:.-")
+    soo_ = ScriptParser().parse("M:O:.")
+    ast_seqs = [script]
+    print(str(soo_))
+    print(str(factorize(soo_)))

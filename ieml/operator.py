@@ -14,7 +14,9 @@ def m(substance, attribute=None, mode=None):
 
 def script(arg):
     if isinstance(arg, str):
-        return ScriptParser().parse(arg)
+        s = ScriptParser().parse(arg)
+        s.check()
+        return s
     if isinstance(arg, Script):
         return arg
     else:

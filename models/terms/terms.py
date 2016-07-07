@@ -1,3 +1,4 @@
+from ieml.script.tools import factorize
 from models.base_queries import DBConnector, Tag
 from models.constants import TERMS_COLLECTION
 from models.exceptions import InvalidInhibitArgument, InvalidScript, InvalidTags, TermAlreadyExists, InvalidMetadata,\
@@ -39,10 +40,14 @@ class TermsConnector(DBConnector):
         :param metadata: a dict of metadata (must be serializable)
         :return: None
         """
-        self._save_term(script_ast, tags, inhibits, root, metadata)
+
+        # make sure to save the factorised form
+        script_ast = factorize(script_ast)
 
         # update the relations of the paradigm in the relation collection
         RelationsQueries.save_script(script_ast, self.get_inhibitions(), root=root)
+
+        self._save_term(script_ast, tags, inhibits, root, metadata)
 
     def save_multiple_terms(self, list_terms):
         """
