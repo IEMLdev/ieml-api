@@ -1,3 +1,4 @@
+from models.exceptions import DBException
 from ..caching import cached, flush_cache
 from handlers.dictionary.commons import terms_db, script_parser
 from ieml.exceptions import CannotParse
@@ -207,7 +208,9 @@ def new_ieml_script(body):
                           root=body["PARADIGM"] == "1")
         return { "success" : True, "IEML" : str(script_ast)}
     except CannotParse:
-        pass # TODO ; maybe define an error for this case
+        return {"success": False, "message": 'Invalid IEML.'}
+    except DBException:
+        return {"success": False, "message": 'Db exception.'}
 
 
 @need_login
@@ -226,11 +229,11 @@ def update_ieml_script(body):
     """Updates an IEML Term's properties (mainly the tags, and the paradigm). If the IEML is changed,
     a new term is created"""
     try:
-        script_ast = script_parser.parse(body["ID"])
+        script_ast = script_parser.parse(body["ID"]) # the ID is used to fireu
         if body["IEML"] == body["ID"]:
             terms_db.update_term(script_ast,
                                  tags={ "FR" : body["FR"], "EN" : body["EN"]},
-                                 root= body["PARADIGM"] == "1")
+                                 root=body["PARADIGM"] == "1")
         else:
             terms_db.remove_term(script_ast)
             terms_db.add_term(script_ast,  # the ieml script's ast
