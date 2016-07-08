@@ -15,6 +15,15 @@ if not isdir(CACHE_DIRNAME):
 cache = FileSystemCache(CACHE_DIRNAME)
 
 
+class flush_cache(object):
+
+    def __call__(self, func):
+        def wrapper(*args, **kwargs):
+            cache.clear()
+            print("cache cleared")
+            return func(*args, **kwargs)
+        return wrapper
+
 class cached(object):
 
     def __init__(self, cache_key, timeout=None):
@@ -34,6 +43,7 @@ class cached(object):
 kwd_mark = object
 
 
+# Might be used for something else, this cache uses arguments as a key.
 class memoized(object):
 
     def __init__(self, cache_key, timeout=None):

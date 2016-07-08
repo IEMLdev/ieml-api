@@ -1,12 +1,12 @@
-from handlers.dictionary.client import need_login
-from ..caching import cached
+from models.exceptions import DBException
+from ..caching import cached, flush_cache
 from handlers.dictionary.commons import terms_db, script_parser
 from ieml.exceptions import CannotParse
 from ieml.script.constants import AUXILIARY_CLASS, VERB_CLASS, NOUN_CLASS
 from ieml.script.script import MultiplicativeScript, NullScript
 from ieml.script.tables import generate_tables
 from ieml.script.tools import old_canonical
-from ..caching import cached
+from .client import need_login
 
 
 @cached("all_ieml", 60)
@@ -19,10 +19,11 @@ def all_ieml():
                 "CLASS" : terms_ast.script_class,
                 "EN" : term_db_entry["TAGS"]["EN"],
                 "FR" : term_db_entry["TAGS"]["FR"],
-                "PARADIGM" : "1" if term_db_entry["ROOT"] else "0",
+                "PARADIGM" : "1" if terms_ast.paradigm else "0",
                 "LAYER" : terms_ast.layer,
                 "TAILLE" : terms_ast.cardinal,
-                "CANONICAL" : old_canonical(terms_ast)
+                "CANONICAL" : old_canonical(terms_ast),
+                "ROOT_PARADIGM" : term_db_entry["ROOT"]
                 }
 
     return [_build_old_model_from_term_entry(entry) for entry in terms_db.get_all_terms()]
@@ -197,6 +198,7 @@ def script_tree(iemltext):
 
 
 @need_login
+@flush_cache()
 def new_ieml_script(body):
     try:
         script_ast = script_parser.parse(body["IEML"])
@@ -206,10 +208,13 @@ def new_ieml_script(body):
                           root=body["PARADIGM"] == "1")
         return { "success" : True, "IEML" : str(script_ast)}
     except CannotParse:
-        pass # TODO ; maybe define an error for this case
+        return {"success": False, "message": 'Invalid IEML.'}
+    except DBException:
+        return {"success": False, "message": 'Db exception.'}
 
 
 @need_login
+@flush_cache()
 def remove_ieml_script(term_id):
     try:
         script_ast = script_parser.parse(term_id)
@@ -219,15 +224,16 @@ def remove_ieml_script(term_id):
 
 
 @need_login
+@flush_cache()
 def update_ieml_script(body):
     """Updates an IEML Term's properties (mainly the tags, and the paradigm). If the IEML is changed,
     a new term is created"""
     try:
-        script_ast = script_parser.parse(body["ID"])
+        script_ast = script_parser.parse(body["ID"]) # the ID is used to fireu
         if body["IEML"] == body["ID"]:
             terms_db.update_term(script_ast,
                                  tags={ "FR" : body["FR"], "EN" : body["EN"]},
-                                 root= body["PARADIGM"] == "1")
+                                 root=body["PARADIGM"] == "1")
         else:
             terms_db.remove_term(script_ast)
             terms_db.add_term(script_ast,  # the ieml script's ast

@@ -23,7 +23,7 @@ class PropositionsParser(metaclass=Singleton):
     def parse(self, s):
         """Parses the input string, and returns a reference to the created AST's root"""
         self.root = None
-        self.parser.parse(s)
+        self.parser.parse(s, lexer=self.lexer)
 
         if self.root is not None:
             self.root.check()
