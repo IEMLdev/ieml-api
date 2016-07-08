@@ -1,5 +1,4 @@
 flask
-flask_cors
 flask_socketio
 flask_cors
 connexion
