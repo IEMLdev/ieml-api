@@ -3,8 +3,7 @@ from collections import namedtuple
 import numpy as np
 from models.relations import RelationsConnector
 from ieml.script.tools import factorize
-from collections import deque
-import itertools
+from ieml.operator import sc
 
 Variable = namedtuple('Variable', ['address', 'script'])
 Table = namedtuple('Table', ['headers', 'cells', 'paradigm'])
@@ -234,24 +233,65 @@ def get_table_rank(paradigm):
         :return: The rank of the table associated with the paradigm as an integer from 1 to 5
         """
     rc = RelationsConnector()
-    paradigm = rc.get_script(paradigm)
+    paradigm_rel = rc.get_script(paradigm)
 
-    if paradigm["TYPE"] == "ROOT_PARADIGM":
+    if paradigm_rel["TYPE"] == "ROOT_PARADIGM":
         return 1
-    for parent_paradigm in paradigm['RELATIONS']['CONTAINED']:
-        if parent_paradigm['TYPE'] == 'ROOT_PARADIGM':
-            return _compute_rank(paradigm, parent_paradigm)
+
+    return _compute_rank(paradigm, rc.get_script(paradigm['ROOT']))
 
 
-def _compute_rank(paradigm, root, rank=1):
+def _compute_rank(paradigm, root):
 
-    nodes = deque()
-    nodes.append(root)
+    singular_sequences = paradigm.singular_sequences
+    if isinstance(root, dict):
+        root = sc(root)
+    table = _get_table(root, singular_sequences)
+    coordinates = _get_seq_coordinates(singular_sequences, table)
+    coordinates = [np.unique(coord) for coord in coordinates if len(coord) > 0]
+    ancestor_list = [root]
 
-    while nodes:
+    if len(coordinates[0]) == 1 or len(coordinates[1]) == 1 or len(coordinates[2]) == 1:
+        while table.paradigm != paradigm:
+            coordinates = _get_seq_coordinates(singular_sequences, table)
+            coordinates = [np.unique(coord) for coord in coordinates if len(coord) > 0]
+            heads = []
+            for dim, dim_coord in enumerate(coordinates):
+                heads.append([table.headers[dim][i] for i in dim_coord])
+            candidate_paradigms = [candidate for candidate in [factorize(headers) for headers in heads] if
+                                   candidate not in ancestor_list]
+    else:
+        # otherwise if the paradigm is constructed from more than one header then its rank is 2
+        return 2
 
-        pass
 
+def _get_seq_coordinates(singular_sequences, table):
+    """
+
+    Parameters
+    ----------
+    singular_sequences
+    table
+
+    Returns
+    -------
+    list: numpy arrays containing the coordinates in the table of all the singular sequences.
+          coords = [array(), array(), array()] where coords[0] and row indices, coords[1] are column indices, coords[2]
+          are tab indices.
+
+    """
+
+    coords = [np.empty(0, dtype=int) for i in range(3)]
+
+    for seq in singular_sequences:
+        if isinstance(seq, str):
+            seq = sc(seq)
+        if seq in table.cells:
+            coord = np.where(table.cells == seq)
+            for i, coordinate in enumerate(coord):
+                coords[i] = np.append(coords[i], coordinate)
+
+    return coords
 
 
 def _regroup_headers(*headers):
@@ -259,11 +299,24 @@ def _regroup_headers(*headers):
     return factorize(headers)
 
 
-def _get_common_factors(*terms):
-    """Takes in a list of terms and returns the address of the common factors if they exist"""
+def _get_table(root, singular_sequences):
+    """
 
-    pass
+    Parameters
+    ----------
+    root
+    singular_sequences
 
+    Returns
+    -------
+    The root table that contains the singular sequences of the paradigm for which we're computing the rank
+    """
+    if isinstance(root, dict):
+        root = sc(root["_id"])
+
+    for table in generate_tables(root):
+        if all(seq in table.paradigm.singular_sequences for seq in singular_sequences):
+            return table
 
 if __name__ == "__main__":
 
