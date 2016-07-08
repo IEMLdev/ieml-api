@@ -6,7 +6,6 @@ from flask_socketio import emit
 def bind_screen_name_to_this_socket_io_session(message):
     screen_name = message['screen_name']
     session_id = message['session_id']
-    print("session_id: " + session_id)
     client = MongoClient()
     dbusers = client.dbusers
     dbusers.users.update({"apis.twitter.screen_name": screen_name},
