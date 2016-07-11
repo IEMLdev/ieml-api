@@ -110,10 +110,11 @@ def twitter_update():
             'localhost'))
     channel = connection.channel()
 
-    user_info = json.dumps(session['current_guest'])
+    user_info = json.loads(session['current_guest'])
+    print("user_info", user_info)
     channel.basic_publish(exchange='twitter-updater-exchange',
                           routing_key='twitter-updater',
-                          body=user_info)
+                          body=json.dumps(user_info['apis']['twitter']))
     print("sent update request to the queue'")
 
     return "OK, cool"
