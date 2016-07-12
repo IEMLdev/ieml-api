@@ -7,11 +7,12 @@ from ieml.AST.terms import Term
 from ieml.AST.usl import Text, HyperText
 from ieml.operator import usl
 from bidict import bidict
+from models.relations import RelationsConnector
+
 
 
 def distance(uslA, uslB, weights):
     categories = bidict({Term: 1, Word: 2, Sentence: 3, SuperSentence: 4, Text: 5, HyperText: 6})
-
 
     def compute_stages(usl):
         '''
@@ -46,7 +47,6 @@ def distance(uslA, uslB, weights):
                 if isinstance(e, Text):
                     children[e] = set(e.children)
                     continue
-
 
         result = defaultdict(lambda: defaultdict(lambda: 0))
         stack = [usl]
@@ -85,7 +85,11 @@ def distance(uslA, uslB, weights):
         return accum
 
     def O_O(stage):
-        pass
+
+        size = float(len(stages_A[stage]) * len(stages_B[stage]))
+        sum = 0.0
+
+        # A T B = sum(#Pi)/n*#(A inter B)
 
     def Oo(stage):
         result = {Sentence: 0, SuperSentence: 0, Text: 0, HyperText: 0}
@@ -110,8 +114,48 @@ def distance(uslA, uslB, weights):
                 result[b_st] += accum / 2.0
         return result
 
+    def get_parents():
+
+        def tupleize(arr):
+            return frozenset({(elem, arr.count(elem)) for elem in arr})
+
+        rc = RelationsConnector()
+        parents_A = {tupleize(flatten_dict(rc.get_script(terms)['RELATIONS']['FATHER_RELATION'])) for terms in stages_A['Terms']}
+        parents_B = {tupleize(flatten_dict(rc.get_script(terms)['RELATIONS']['FATHER_RELATION'])) for terms in stages_B['Terms']}
+
+        return parents_A, parents_B
+
+    def get_paradigm():
+        rc = RelationsConnector()
+        paradigms_A = {rc.get_script(term)['ROOT'] for term in stages_A['Terms']}
+        paradigms_B = {rc.get_script(term)['ROOT'] for term in stages_B['Terms']}
+
+        return paradigms_A, paradigms_B
+
+    def get_grammar_class():
+
+        grammar_classes_A = [term.script.script_class for term in stages_A['Terms']]
+        grammar_classes_B = [term.script.script_class for term in stages_B['Terms']]
+
+        return grammar_classes_A, grammar_classes_B
+
+def flatten_dict(dico):
+
+    lineage = []
+    if isinstance(dico, list):
+        return dico
+    for child in dico:
+        lineage.extend(flatten_dict(dico[child]))
+    return lineage
+
+
 if __name__ == '__main__':
     a = "{/[([a.i.-]+[i.i.-])*([E:A:T:.]+[E:S:.wa.-]+[E:S:.o.-])]//[([([a.i.-]+[i.i.-])*([E:A:T:.]+[E:S:.wa.-]+[E:S:.o.-])]{/[([a.i.-]+[i.i.-])*([E:A:T:.]+[E:S:.wa.-]+[E:S:.o.-])]/}*[([t.i.-s.i.-'i.B:.-U:.-'we.-',])*([E:O:.wa.-])]*[([E:E:T:.])])+([([a.i.-]+[i.i.-])*([E:A:T:.]+[E:S:.wa.-]+[E:S:.o.-])]*[([t.i.-s.i.-'u.B:.-A:.-'wo.-',])]*[([E:T:.f.-])])]/}"
     b = usl(a)
     c = usl(a)
-    distance(b, c , None)
+    distance(b, c, None)
+
+    rc = RelationsConnector()
+    script = rc.get_script("E:M:.M:O:.-")
+    d = flatten_dict(script['RELATIONS']['FATHER_RELATION'])
+    print(d)
