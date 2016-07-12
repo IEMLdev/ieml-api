@@ -91,6 +91,11 @@ class TreeStructure:
         """Enables the syntaxic sugar of iterating directly on an element without accessing "children" """
         return self.children.__iter__()
 
+    def tree_iter(self):
+        yield self
+        for c in self.children:
+            yield from c.tree_iter()
+
     @property
     def level(self):
         """Returns the string level of an IEML object, such as TEXT, WORD, SENTENCE, ..."""
