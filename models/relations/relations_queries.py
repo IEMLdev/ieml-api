@@ -1,3 +1,5 @@
+import logging
+
 from ieml.parsing.script import ScriptParser
 from ieml.script import CONTAINED_RELATION, CONTAINS_RELATION, RemarkableSibling, TWIN_SIBLING_RELATION, \
     ASSOCIATED_SIBLING_RELATION, CROSSED_SIBLING_RELATION, OPPOSED_SIBLING_RELATION, ATTRIBUTE, SUBSTANCE, MODE, \
@@ -173,7 +175,7 @@ class RelationsQueries:
             {'$set': {'RELATIONS': {}}},
             multi=True
         )
-
+        logging.info('Computing local relations for paradigm %s...' % str(paradigm_ast))
         # Compute and save contains and contained (can't be inhibited)
         cls._compute_containing_relations(scripts_ast)
 
@@ -205,6 +207,7 @@ class RelationsQueries:
             {},
             {'$unset': {'RELATIONS' + '.' + CHILD_RELATION: 1, 'RELATIONS' + '.' + FATHER_RELATION: 1}})
 
+        logging.info('Computing global relations...')
         father_bar = progressbar.ProgressBar()
         # compute and save the fathers relations
         for s in father_bar(scripts):
@@ -237,7 +240,7 @@ class RelationsQueries:
                     if key == ELEMENTS:
                         if current_path not in result:
                             result[current_path] = []
-                        result[current_path].extend(dic[ELEMENTS])
+                        result[current_path] = list(set(result[current_path]).union(dic[ELEMENTS]))
                     else:
                         _accumulation(current_path, dic[key])
                 else:
@@ -266,6 +269,7 @@ class RelationsQueries:
         with the given name. For the relation_title that can be specified, see the list in constant of ieml.
         :param script: the script to get the relation from. (str or Script instance)
         :param relation_title: optional, the name of a particular relation to see.
+        :param pack_ancestor: pack the ancestors relations.
         :return: a dict of all relations or a specific relation.
         """
         relations = cls.relations_db.relations.find_one(

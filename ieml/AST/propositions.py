@@ -1,7 +1,7 @@
 from functools import total_ordering
 
 from .terms import Term
-from .commons import TreeStructure, AbstractPropositionMetaclass, PropositionPath
+from .commons import PropositionPath, AbstractProposition
 from .constants import MAX_TERMS_IN_MORPHEME
 from .propositional_graph import PropositionGraph
 from .tree_metadata import ClosedPropositionMetadata, NonClosedPropositionMetadata
@@ -57,52 +57,6 @@ class NonClosedProposition:
     def _retrieve_metadata_instance(self):
         return NonClosedPropositionMetadata(self)
 
-
-class AbstractProposition(TreeStructure, metaclass=AbstractPropositionMetaclass):
-    """This class is the parent class of all propositions, namely Morpheme, Word,
-    Clause, Sentence, Superclause, Supersentence"""
-
-    class RenderSymbols:
-        """This class is just a container for the rendering symbols"""
-        times = "*"
-        left_parent = "("
-        right_parent = ")"
-        plus = "+"
-        left_bracket = "["
-        right_bracket = "]"
-
-    def __init__(self):
-        super().__init__()
-
-    def __contains__(self, proposition):
-        """Tests if the input proposition is contained in the current one, or in one of its child"""
-        if proposition == self:
-            return True
-        else: # could be contained in the children proposition
-            if proposition.__class__ < self.__class__:
-                # testing if it's contained in one of the child
-                for child in self.children:
-                    if proposition in child:
-                        return True
-                # contained nowhere!
-                return False
-            else:
-                # can't be contained if the level is higher
-                return False
-
-    def _gather_child_links(self, current_path):
-        path = current_path + [self]
-        return [couple for sublist in [child.gather_hyperlinks(path) for child in self.children]
-                for couple in sublist]
-
-    def render_hyperlinks(self, hyperlinks, path):
-        current_path = PropositionPath(path.path, self)
-        result = self._do_render_hyperlinks(hyperlinks, current_path)
-
-        if current_path in hyperlinks:
-            result += ''.join(map(lambda t: "<" + str(t[0]) + ">" + str(t[1]), hyperlinks[current_path]))
-
-        return result
 
 
 class AbstractAdditiveProposition(AbstractProposition):

@@ -121,7 +121,7 @@ class RelationsConnector(DBConnector):
         # defensive check
 
         # check if paradigm already saved
-        if self.get_script(str(script_ast)):
+        if self.get_script(str(script_ast)) is not None:
             raise ParadigmAlreadyExist()
 
         # get all the singular sequence of the db to avoid intersection

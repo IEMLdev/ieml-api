@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import progressbar
 import pprint
 from ieml.parsing import ScriptParser
@@ -70,7 +71,6 @@ def recompute_relations():
 
     RelationsQueries.compute_global_relations()
     RelationsQueries.do_inhibition(TermsConnector().get_inhibitions())
-
 
 def check_old_relations():
     terms = TermsConnector()

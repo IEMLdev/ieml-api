@@ -27,6 +27,10 @@ class InvalidScript(Exception):
     pass
 
 
+class IncompatiblesScriptsLayers(Exception):
+    pass
+
+
 class NoRemarkableSiblingForAdditiveScript(Exception):
     pass
 ### These exeception are raised by the AST

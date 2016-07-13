@@ -146,13 +146,24 @@ paths:
     post:
       operationId: handlers.authenticate
       description: |
-        Not yet implemented
+        Login handler for the dictionary user
+      consumes:
+        - application/x-www-form-urlencoded
+      parameters:
+        - name: name
+          in: formData
+          type: string
+          required: true
+        - name: password
+          in: formData
+          type: string
+          required: true
       responses:
         '200':
           description: Successful response
 
   /scriptparser/parse:
-    post:
+    get:
       operationId: handlers.parse_ieml
       tags:
         - Parsing
@@ -167,9 +178,27 @@ paths:
       responses:
         '200':
           description: Successful response
+          schema:
+            title: Parsed term
+            type: object
+            required:
+              - success
+            properties:
+              level:
+                type : integer
+              taille:
+                type : integer
+              class:
+                type: integer
+              success  :
+                type: boolean
+              canonical:
+                type: array
+                items:
+                  type : string
 
   /scriptparser/tables:
-    post:
+    get:
       operationId: handlers.script_table
       tags:
         - Parsing
@@ -200,7 +229,7 @@ paths:
                     type: string
 
   /scriptparser/tree:
-    post:
+    get:
       operationId: handlers.script_tree
       tags:
         - Parsing
@@ -221,6 +250,15 @@ paths:
       operationId: handlers.get_relation_visibility
       description: |
         TODO
+      parameters:
+        - name: body
+          in: body
+          required: True
+          schema:
+            type: object
+            properties:
+              ieml:
+                type: string
       responses:
         '200':
           description: Successful response
@@ -228,8 +266,23 @@ paths:
   /addRelVisibility:
     post:
       operationId: handlers.add_relation_visiblity
-      description: |
-        TODO
+      description: Inhibits relations of a paradigm
+      parameters:
+        - name: body
+          in: body
+          required: True
+          schema:
+            type: object
+            properties:
+              ieml:
+                type: string
+              relations:
+                type : array
+                items:
+                  type : string
+              token :
+                type : string
+
       responses:
         '200':
           description: Successful response
@@ -238,14 +291,18 @@ paths:
       operationId: handlers.remove_relation_visibility
       description: |
         TODO
-      responses:
-        '200':
-          description: Successful response
-  /toggleRelVisibility:
-    post:
-      operationId: handlers.toggle_relation_visibility
-      description: |
-        TODO
+      parameters:
+        - name: body
+          in: body
+          required: True
+          schema:
+            type: object
+            properties:
+              ieml:
+                type: string
+              token:
+                type: string
+
       responses:
         '200':
           description: Successful response
@@ -267,7 +324,7 @@ paths:
           schema:
             type: object
             properties:
-              IEML:
+              ieml:
                 type: string
       responses:
         '200':
@@ -301,6 +358,23 @@ paths:
       operationId: handlers.new_ieml_script
       description: |
         Add a new `IEML` term to the dictionary
+      parameters:
+        - in : body
+          name : body
+          required : true
+          schema :
+            type: object
+            required:
+              - IEML
+              - PARADIGM
+              - token
+            properties:
+              IEML:
+                type : string
+              PARADIGM:
+                type : string
+              token :
+                type : string
       responses:
         '200':
           description: Successful response
@@ -309,11 +383,33 @@ paths:
       operationId: handlers.update_ieml_script
       description: |
         Modify an `IEML` term from the dictionary
+      parameters:
+        - name : body
+          in: body
+          required : true
+          schema:
+            type : object
+            required:
+              - ID
+              - token
+            properties:
+              ID :
+                type : string
+              PARADIGM :
+                type : string
+              IEML :
+                type : string
+              FR :
+                type : string
+              EN :
+                type : string
+              token :
+                type : string
       responses:
         '200':
           description: Successful response
   '/remieml/{term_id}':
-    post:
+    get:
       operationId: handlers.remove_ieml_script
       description: |
         Delete an `IEML` term from the dictionary
@@ -322,11 +418,16 @@ paths:
           name: term_id
           required: true
           type: string
+        - in: query
+          name : token
+          description: The jwt session token.
+          type: string
+          required: true
       responses:
         '200':
           description: Successful response
   '/exists/ieml/{ieml_term}':
-    post:
+    get:
       operationId: handlers.ieml_term_exists
       description: |
         Check if `<term_ieml>` exists in the dictionary
@@ -339,7 +440,7 @@ paths:
         '200':
           description: Successful response
   '/exists/FR/{tag_fr}':
-    post:
+    get:
       operationId: handlers.fr_tag_exists
       description: |
         Check if `<term_ieml>` exists in the **French** dictionary
@@ -352,7 +453,7 @@ paths:
         '200':
           description: Successful response
   '/exists/EN/{tag_en}':
-    post:
+    get:
       operationId: handlers.en_tag_exists
       description: |
         Check if `<term_ieml>` exists in the **English** dictionary
@@ -388,7 +489,7 @@ paths:
             type: array
             items:
               $ref: '#/definitions/ieml_element'
-
+              
   /tags/check_exists:
     post:
       description: Checks if a tag already exists for a proposition or an hypertext
@@ -411,7 +512,7 @@ paths:
           description: Successful response
           schema:
             $ref: '#/definitions/tag_exists'
-
+            
   /word/validate:
     post:
       operationId: handlers.validate_word
@@ -430,7 +531,7 @@ paths:
           description: Successful response
           schema:
             $ref: '#/definitions/validate_response'
-
+          
   /word/save:
     post:
       operationId: handlers.save_word
@@ -449,7 +550,7 @@ paths:
           description: Successful response
           schema:
             $ref: '#/definitions/validate_response'
-
+  
   /tree/validate:
     post:
       operationId: handlers.validate_tree
@@ -468,7 +569,7 @@ paths:
           description: Successful response
           schema:
             $ref: '#/definitions/validate_response'
-
+  
   /tree/save:
     post:
       operationId: handlers.save_tree
@@ -487,7 +588,7 @@ paths:
           description: Successful response
           schema:
             $ref: '#/definitions/validate_response'
-
+            
   /text/validate:
     post:
       operationId: handlers.validate_text
@@ -506,7 +607,7 @@ paths:
           description: Successful response
           schema:
             $ref: '#/definitions/validate_response'
-
+  
   /hypertext/validate:
     post:
       operationId: handlers.validate_hypertext
@@ -525,7 +626,7 @@ paths:
           description: Successful response
           schema:
             $ref: '#/definitions/validate_response'
-
+            
   /text/decompose:
     post:
       operationId: handlers.decompose_text
@@ -546,7 +647,7 @@ paths:
             type : array
             items:
               $ref: '#/definitions/proposition_tree'
-
+              
   /element/decompose:
     post:
       operationId: handlers.decompose_ieml_element
@@ -589,6 +690,8 @@ definitions:
         type: number
       PARADIGM:
         type: number
+      ROOT_PARADIGM:
+        type: boolean
       TAILLE:
         type: number
       _id:
@@ -615,7 +718,7 @@ definitions:
         type: string
       term_type:
         type : string
-
+    
   ieml_element:
     type: object
     required:
@@ -629,13 +732,13 @@ definitions:
         type : string
       TYPE:
         type : string
-
+        
   tag_exists:
     type: object
     properties:
-      exist:
+      exist: 
         type: boolean
-
+    
   tags:
     type : object
     required:
@@ -646,7 +749,7 @@ definitions:
         type : string
       EN:
         type : string
-
+  
   word_data:
     type: object
     required:
@@ -664,7 +767,7 @@ definitions:
           type: string
       tags:
         $ref: "#/definitions/tags"
-
+      
   node:
     type: object
     required:
@@ -675,7 +778,7 @@ definitions:
         type : string
       id :
         type : string
-
+  
   proposition_graph:
     type : object
     required:
@@ -706,7 +809,7 @@ definitions:
         $ref: "#/definitions/tags"
       validation_type:
         type : integer
-
+    
   text_data:
     type: object
     required:
@@ -719,7 +822,7 @@ definitions:
           type: string
       tags:
         $ref: "#/definitions/tags"
-
+  
   hyperlink_data:
     type: object
     required:
@@ -732,7 +835,7 @@ definitions:
         type : array
         items:
           type : string
-
+  
   hypertext_graph:
     type : object
     required:
@@ -759,12 +862,12 @@ definitions:
               type : string
             mode :
               $ref: "#/definitions/hyperlink_data"
-
+              
       tags:
         $ref: "#/definitions/tags"
       validation_type:
         type : integer
-
+  
   validate_response :
     type : object
     required:
@@ -775,7 +878,7 @@ definitions:
         type : boolean
       ieml:
         type : string
-
+  
   proposition_tree:
     type: object
     required :
@@ -790,7 +893,7 @@ definitions:
         type: string
       data :
         type: object
-        required :
+        required : 
           - PATH
           - TAGS
           - TYPE
@@ -801,13 +904,13 @@ definitions:
               type : string
           TAGS:
             $ref: "#/definitions/tags"
-          TYPE :
+          TYPE : 
             type: string
       children:
         type : array
         items:
           $ref: "#/definitions/proposition_tree"
-
+  
   proposition_data:
     type : object
     required:
@@ -819,14 +922,14 @@ definitions:
             type: string
           TAGS:
             $ref: "#/definitions/tags"
-          TYPE :
+          TYPE : 
             type: string
-
+  
   decomposed_ieml_element:
     type: object
     properties:
-
-      word_data:
+    
+      word_data: 
         type: object
         required :
           - substance
@@ -840,7 +943,7 @@ definitions:
             type: array
             items:
               $ref: "#/definitions/proposition_data"
-
+      
       sentence_data:
         type : array
         items:
@@ -856,12 +959,12 @@ definitions:
               $ref: "#/definitions/proposition_data"
             mode:
               $ref: "#/definitions/proposition_data"
-
+      
       text_data:
         type: array
         items :
           $ref: "#/definitions/proposition_data"
-
+      
       hypertext_data:
         type: array
         items:
@@ -871,9 +974,9 @@ definitions:
             - attribute
             - mode
           properties:
-            substance:
+            substance: 
               type: string
-            attribute :
+            attribute : 
               type: string
             mode :
               type: object
@@ -887,3 +990,4 @@ definitions:
                   type: array
                   items:
                     type : string
+        

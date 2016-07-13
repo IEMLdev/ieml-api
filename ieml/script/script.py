@@ -1,9 +1,9 @@
 from ieml.AST.commons import TreeStructure
+from ieml.script.constants import MAX_LAYER
 from .constants import LAYER_MARKS, PRIMITVES, remarkable_multiplication_lookup_table, REMARKABLE_ADDITION, \
-    character_value
-import numpy as np
+    character_value, AUXILIARY_CLASS, VERB_CLASS, NOUN_CLASS
 import itertools
-from ieml.exceptions import InvalidScriptForTableCreation, InvalidScriptCharacter, InvalidScript
+from ieml.exceptions import InvalidScriptCharacter, InvalidScript
 
 
 class Script(TreeStructure):
@@ -44,10 +44,20 @@ class Script(TreeStructure):
         # The canonical string to compare same layer and cardinal script (__lt__)
         self.canonical = None
 
-    # def __gt__(self, other):
-    #     return self != other and not self.__lt__(other)
+        # class of the script, one of the following : VERB (1), AUXILIARY (0), and NOUN (2)
+        self.script_class = None
+
+    def __add__(self, other):
+        if not isinstance(other, Script):
+            raise InvalidScript()
+
+        return AdditiveScript(children=[self, other])
+
 
     def __eq__(self, other):
+        if not isinstance(other, Script):
+            return False
+
         if self._str is None or other._str is None:
             raise NotImplemented()
         return self._str == other._str
@@ -121,22 +131,6 @@ class Script(TreeStructure):
     def __getitem__(self, index):
         return self.children[index]
 
-    @property
-    def tables(self):
-        if self.paradigm and len(self._tables) == 0:
-            # compute the tables
-            self._tables = self._compute_tables()
-        return self._tables
-
-    def _compute_tables(self):
-        if isinstance(self, AdditiveScript):
-            return [e for child in self.children for e in child._compute_tables()]
-
-        dim = []
-        for child in self.children:
-            if child.paradigm:
-                dim.append(child)
-
     def _compute_singular_sequences(self):
         pass
 
@@ -208,6 +202,8 @@ class AdditiveScript(Script):
             self.paradigm = len(self.children) > 1 or any(child.paradigm for child in self.children)
             self.cardinal = sum((e.cardinal for e in self.children))
 
+        self.script_class = max(c.script_class for c in self)
+
     def _do_checking(self):
         pass
 
@@ -247,15 +243,14 @@ class MultiplicativeScript(Script):
 
         # Build children
         if children is None:
-            _children = []
-            if substance is not None:
-                _children.append(substance)
-                if attribute is not None:
-                    _children.append(attribute)
-                    if mode is not None:
-                        _children.append(mode)
-        else:
-            _children = list(children)
+            children = [substance, attribute, mode]
+
+        _children = []
+        for child in children:
+            if child is not None:
+                _children.append(child)
+            else:
+                break
 
         # Replace all the corresponding children to character
         _character = None
@@ -311,6 +306,11 @@ class MultiplicativeScript(Script):
             self.cardinal = 1
             for e in self.children:
                 self.cardinal = self.cardinal * e.cardinal
+
+        if self.layer == 0:
+            self.script_class = VERB_CLASS if self.character in REMARKABLE_ADDITION['O'] else NOUN_CLASS
+        else:
+            self.script_class = self.children[0].script_class
 
     def _render_children(self, children=None, character=None):
         if character:
@@ -388,6 +388,13 @@ class NullScript(Script):
 
         self._do_precompute_str()
         self.canonical = bytes([character_value[self.character]] * pow(3, self.layer))
+        self.script_class = AUXILIARY_CLASS
+
+    def __iter__(self):
+        if self.layer == 0:
+            return [].__iter__()
+
+        return ([NULL_SCRIPTS[self.layer - 1]] * 3).__iter__()
 
     def _do_precompute_str(self):
         result = self.character
@@ -405,6 +412,9 @@ class NullScript(Script):
     def _compute_singular_sequences(self):
         return [self]
 
+
+
+NULL_SCRIPTS = [NullScript(level) for level in range(0, MAX_LAYER)]
 
 # Building the remarkable multiplication to script
 REMARKABLE_MULTIPLICATION_SCRIPT = {

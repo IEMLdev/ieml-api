@@ -1,3 +1,4 @@
+from ieml.script.tools import factorize
 from models.base_queries import DBConnector, Tag
 from models.constants import TERMS_COLLECTION
 from models.exceptions import InvalidInhibitArgument, InvalidScript, InvalidTags, TermAlreadyExists, InvalidMetadata,\
@@ -22,6 +23,13 @@ class TermsConnector(DBConnector):
         """
         return self.terms.find_one({'_id': script if isinstance(script, str) else str(script)})
 
+    def get_all_terms(self):
+        """
+        Returns all the terms contained in the term database
+        :return: a list of dictionaries corresponding to the documents
+        """
+        return self.terms.find()
+
     def add_term(self, script_ast, tags, inhibits, root=False, metadata=None):
         """
         Save a term in the term collection and update the relations collection accordingly.
@@ -32,10 +40,14 @@ class TermsConnector(DBConnector):
         :param metadata: a dict of metadata (must be serializable)
         :return: None
         """
-        self._save_term(script_ast, tags, inhibits, root, metadata)
+
+        # make sure to save the factorised form
+        script_ast = factorize(script_ast)
 
         # update the relations of the paradigm in the relation collection
         RelationsQueries.save_script(script_ast, self.get_inhibitions(), root=root)
+
+        self._save_term(script_ast, tags, inhibits, root, metadata)
 
     def save_multiple_terms(self, list_terms):
         """
@@ -135,6 +147,7 @@ class TermsConnector(DBConnector):
         :param metadata: the metadata
         :return: None
         """
+
         # Argument check
         if not isinstance(script_ast, Script):
             raise InvalidScript()
@@ -168,3 +181,13 @@ class TermsConnector(DBConnector):
     def get_inhibitions(self):
         paradigms = self.terms.find({'ROOT': True, 'INHIBITS': {'$ne': []}})
         return [(p['_id'], p['INHIBITS']) for p in paradigms]
+
+    def search_by_tag(self, tag, language):
+        """
+        returns a list of terms with a matching tag for a
+        :param tag: value of the tested tag
+        :param language: language of the tag
+        :return: list of
+        """
+        #TODO : IMPROVE THIS
+        return self.terms.find({ "TAGS.%s" % language : tag })
