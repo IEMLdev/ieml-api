@@ -87,9 +87,15 @@ def distance(uslA, uslB, weights):
     def O_O(stage):
 
         size = float(len(stages_A[stage]) * len(stages_B[stage]))
-        sum = 0.0
+        accum = 0.0
 
-        # A T B = sum(#Pi)/n*#(A inter B)
+        for a, b in it.product(stages_A[stage], stages_B[stage]):
+            intersection = children_A[a] & children_B[b]
+            graph = build_graph(children_A[a], children_B[b], intersection)
+            partitions = partition_graph(graph)
+            accum += sum(len(p) for p in partitions if len(p) > 1)/(len(partitions) * len(intersection))
+
+        return accum/size
 
     def Oo(stage):
         result = {Sentence: 0, SuperSentence: 0, Text: 0, HyperText: 0}
@@ -139,6 +145,7 @@ def distance(uslA, uslB, weights):
 
         return grammar_classes_A, grammar_classes_B
 
+
 def flatten_dict(dico):
 
     lineage = []
@@ -148,6 +155,82 @@ def flatten_dict(dico):
         lineage.extend(flatten_dict(dico[child]))
     return lineage
 
+
+def partition_graph(graph):
+
+    partitions = []
+    explored = set()
+
+    def _explore_graph(node, graph, p):
+
+        explored.add(node)
+        p.add(node)
+        for adjacent_node in graph[node]:
+            if adjacent_node not in explored:
+                return _explore_graph(adjacent_node, graph)
+        return
+
+    for node in graph:
+        p = set()
+        _explore_graph(node, graph, p)
+        partitions.append(p)
+
+    return partitions
+
+
+def build_graph(usl_a, usl_b, intersection):
+
+    graph = {node: [] for node in intersection}
+
+    if isinstance(usl_a, (Sentence, SuperSentence)):
+        for node in intersection:
+            node_addr = usl_a.graph.nodes_list.index(node)
+            for i, n in enumerate(zip(usl_a.graph.adjacency_matrix[node_addr], usl_b.graph.adjacency_matrix[node_addr])):
+                if all(n):
+                    graph[node].append(usl_a.graph.nodes_list[i])
+                    graph[usl_a.graph.nodes_list[i]].append(node)
+
+    if isinstance(usl_a, Word):
+
+        combos = it.combinations(intersection, 2)
+
+        for combination in combos:
+            if combination == (usl_a.subst, usl_a.mode) and combination == (usl_b.subst, usl_b.mode):
+                graph[combination[0]].append(combination[1])
+                graph[combination[1]].append(combination[0])
+            elif combination == (usl_a.mode, usl_a.subst) and combination == (usl_b.mode, usl_b.subst):
+                graph[combination[0]].append(combination[1])
+                graph[combination[1]].append(combination[0])
+
+    if isinstance(usl_a, (Text, HyperText)):
+
+        combos = it.combinations(intersection, 2)
+        for combination in combos:
+            if combination[0].__class__ == combination[1].__class__:
+                graph = _build_proposition_graph(combination, graph)
+            elif combination[0].__class__ < combination[1].__class__:
+                graph = _build_proposition_graph(combination, graph)
+            elif combination[0].__class__ > combination[1].__class__:
+                graph = _build_proposition_graph(combination, graph)
+
+    return graph
+
+
+def _build_proposition_graph(combination, graph):
+
+    if isinstance(combination[0], (Sentence, SuperSentence)):
+        prop_a = {elem for elem in combination[0].tree_iter() if isinstance(elem, Word)}
+        prop_b = {elem for elem in combination[1].tree_iter() if isinstance(elem, Word)}
+        if prop_a <= prop_b or prop_b <= prop_a or prop_a & prop_b:
+            graph[combination[0]].append(combination[1])
+            graph[combination[1]].append(combination[0])
+    elif isinstance(combination[0], Word):
+        prop_a = {elem for elem in combination[0].tree_iter() if isinstance(elem, Term)}
+        prop_b = {elem for elem in combination[1].tree_iter() if isinstance(elem, Term)}
+        if prop_a <= prop_b or prop_b <= prop_a or prop_a & prop_b:
+            graph[combination[0]].append(combination[1])
+            graph[combination[1]].append(combination[0])
+    return graph
 
 if __name__ == '__main__':
     a = "{/[([a.i.-]+[i.i.-])*([E:A:T:.]+[E:S:.wa.-]+[E:S:.o.-])]//[([([a.i.-]+[i.i.-])*([E:A:T:.]+[E:S:.wa.-]+[E:S:.o.-])]{/[([a.i.-]+[i.i.-])*([E:A:T:.]+[E:S:.wa.-]+[E:S:.o.-])]/}*[([t.i.-s.i.-'i.B:.-U:.-'we.-',])*([E:O:.wa.-])]*[([E:E:T:.])])+([([a.i.-]+[i.i.-])*([E:A:T:.]+[E:S:.wa.-]+[E:S:.o.-])]*[([t.i.-s.i.-'u.B:.-A:.-'wo.-',])]*[([E:T:.f.-])])]/}"
