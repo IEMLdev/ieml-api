@@ -198,7 +198,7 @@ def script_tree(iemltext):
 
 
 @need_login
-@flush_cache()
+@flush_cache
 def new_ieml_script(body):
     try:
         script_ast = script_parser.parse(body["IEML"])
@@ -214,8 +214,8 @@ def new_ieml_script(body):
 
 
 @need_login
-@flush_cache()
-def remove_ieml_script(term_id):
+@flush_cache
+def remove_ieml_script(term_id, token):
     try:
         script_ast = script_parser.parse(term_id)
         terms_db.remove_term(script_ast)
@@ -224,7 +224,7 @@ def remove_ieml_script(term_id):
 
 
 @need_login
-@flush_cache()
+@flush_cache
 def update_ieml_script(body):
     """Updates an IEML Term's properties (mainly the tags, and the paradigm). If the IEML is changed,
     a new term is created"""

@@ -1,3 +1,4 @@
+import functools
 from os import makedirs
 from os.path import dirname, join, isdir
 
@@ -15,14 +16,13 @@ if not isdir(CACHE_DIRNAME):
 cache = FileSystemCache(CACHE_DIRNAME)
 
 
-class flush_cache(object):
-
-    def __call__(self, func):
-        def wrapper(*args, **kwargs):
-            cache.clear()
-            print("cache cleared")
-            return func(*args, **kwargs)
-        return wrapper
+def flush_cache(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        cache.clear()
+        print("cache cleared")
+        return func(*args, **kwargs)
+    return wrapper
 
 class cached(object):
 
