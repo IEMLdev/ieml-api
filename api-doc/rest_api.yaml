@@ -489,7 +489,7 @@ paths:
             type: array
             items:
               $ref: '#/definitions/ieml_element'
-              
+
   /tags/check_exists:
     post:
       description: Checks if a tag already exists for a proposition or an hypertext
@@ -512,7 +512,7 @@ paths:
           description: Successful response
           schema:
             $ref: '#/definitions/tag_exists'
-            
+
   /word/validate:
     post:
       operationId: handlers.validate_word
@@ -531,7 +531,7 @@ paths:
           description: Successful response
           schema:
             $ref: '#/definitions/validate_response'
-          
+
   /word/save:
     post:
       operationId: handlers.save_word
@@ -550,7 +550,7 @@ paths:
           description: Successful response
           schema:
             $ref: '#/definitions/validate_response'
-  
+
   /tree/validate:
     post:
       operationId: handlers.validate_tree
@@ -569,7 +569,7 @@ paths:
           description: Successful response
           schema:
             $ref: '#/definitions/validate_response'
-  
+
   /tree/save:
     post:
       operationId: handlers.save_tree
@@ -588,7 +588,7 @@ paths:
           description: Successful response
           schema:
             $ref: '#/definitions/validate_response'
-            
+
   /text/validate:
     post:
       operationId: handlers.validate_text
@@ -607,7 +607,7 @@ paths:
           description: Successful response
           schema:
             $ref: '#/definitions/validate_response'
-  
+
   /hypertext/validate:
     post:
       operationId: handlers.validate_hypertext
@@ -626,7 +626,7 @@ paths:
           description: Successful response
           schema:
             $ref: '#/definitions/validate_response'
-            
+
   /text/decompose:
     post:
       operationId: handlers.decompose_text
@@ -647,7 +647,7 @@ paths:
             type : array
             items:
               $ref: '#/definitions/proposition_tree'
-              
+
   /element/decompose:
     post:
       operationId: handlers.decompose_ieml_element
@@ -718,7 +718,7 @@ definitions:
         type: string
       term_type:
         type : string
-    
+
   ieml_element:
     type: object
     required:
@@ -732,13 +732,13 @@ definitions:
         type : string
       TYPE:
         type : string
-        
+
   tag_exists:
     type: object
     properties:
-      exist: 
+      exist:
         type: boolean
-    
+
   tags:
     type : object
     required:
@@ -749,7 +749,7 @@ definitions:
         type : string
       EN:
         type : string
-  
+
   word_data:
     type: object
     required:
@@ -767,7 +767,7 @@ definitions:
           type: string
       tags:
         $ref: "#/definitions/tags"
-      
+
   node:
     type: object
     required:
@@ -778,7 +778,7 @@ definitions:
         type : string
       id :
         type : string
-  
+
   proposition_graph:
     type : object
     required:
@@ -809,7 +809,7 @@ definitions:
         $ref: "#/definitions/tags"
       validation_type:
         type : integer
-    
+
   text_data:
     type: object
     required:
@@ -822,7 +822,7 @@ definitions:
           type: string
       tags:
         $ref: "#/definitions/tags"
-  
+
   hyperlink_data:
     type: object
     required:
@@ -835,7 +835,7 @@ definitions:
         type : array
         items:
           type : string
-  
+
   hypertext_graph:
     type : object
     required:
@@ -862,12 +862,12 @@ definitions:
               type : string
             mode :
               $ref: "#/definitions/hyperlink_data"
-              
+
       tags:
         $ref: "#/definitions/tags"
       validation_type:
         type : integer
-  
+
   validate_response :
     type : object
     required:
@@ -878,7 +878,7 @@ definitions:
         type : boolean
       ieml:
         type : string
-  
+
   proposition_tree:
     type: object
     required :
@@ -893,7 +893,7 @@ definitions:
         type: string
       data :
         type: object
-        required : 
+        required :
           - PATH
           - TAGS
           - TYPE
@@ -904,13 +904,13 @@ definitions:
               type : string
           TAGS:
             $ref: "#/definitions/tags"
-          TYPE : 
+          TYPE :
             type: string
       children:
         type : array
         items:
           $ref: "#/definitions/proposition_tree"
-  
+
   proposition_data:
     type : object
     required:
@@ -922,14 +922,14 @@ definitions:
             type: string
           TAGS:
             $ref: "#/definitions/tags"
-          TYPE : 
+          TYPE :
             type: string
-  
+
   decomposed_ieml_element:
     type: object
     properties:
-    
-      word_data: 
+
+      word_data:
         type: object
         required :
           - substance
@@ -943,7 +943,7 @@ definitions:
             type: array
             items:
               $ref: "#/definitions/proposition_data"
-      
+
       sentence_data:
         type : array
         items:
@@ -959,12 +959,12 @@ definitions:
               $ref: "#/definitions/proposition_data"
             mode:
               $ref: "#/definitions/proposition_data"
-      
+
       text_data:
         type: array
         items :
           $ref: "#/definitions/proposition_data"
-      
+
       hypertext_data:
         type: array
         items:
@@ -974,9 +974,9 @@ definitions:
             - attribute
             - mode
           properties:
-            substance: 
+            substance:
               type: string
-            attribute : 
+            attribute :
               type: string
             mode :
               type: object

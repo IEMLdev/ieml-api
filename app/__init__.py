@@ -1,5 +1,6 @@
 from flask_socketio import SocketIO
 
+
 socketio = SocketIO()
 
 def create_app():
@@ -17,5 +18,6 @@ def create_app():
     cors = CORS(app.app, resources={r"/*": {"origins": "*"}})
     app.app.secret_key = 'ZLX9PUQULLAKKLWDI1B9CDZ34H1LIGCW7CA3OVJYWLWF23UW80ONS0REZQAKJKKSFVPIF037VGIXIVE6AYN5AJJRONF2TFKMLLZM'
     app.app.config['SESSION_TYPE'] = 'filesystem'
+
     socketio.init_app(app.app)
     return app
