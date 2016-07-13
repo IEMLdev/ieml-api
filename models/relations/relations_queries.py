@@ -276,11 +276,11 @@ class RelationsQueries:
             {'_id': script if isinstance(script, str) else str(script)}
         )
 
-        relations = ['RELATIONS']
+        relations = relations_db_entry['RELATIONS']
         if relation_title:
             return relations[relation_title] # we only return the selected relation
         else:
-            output_relation_dict =  cls._format_relations(relations, pack_ancestor)
+            output_relation_dict = cls._format_relations(relations, pack_ancestor)
             output_relation_dict["ROOT"] = relations_db_entry["ROOT"]
             return output_relation_dict # we output all relations PLUS the root paradigm property
 
