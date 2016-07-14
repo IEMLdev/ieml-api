@@ -10,7 +10,6 @@ from bidict import bidict
 from models.relations import RelationsConnector
 
 
-
 def distance(uslA, uslB, weights):
     categories = bidict({Term: 1, Word: 2, Sentence: 3, SuperSentence: 4, Text: 5, HyperText: 6})
 
@@ -69,7 +68,7 @@ def distance(uslA, uslB, weights):
 
     def EO(stage):
         if len(stages_A[stage] | stages_B[stage]) == 0:
-            raise ValueError
+            return 1.0
 
         return float(len(stages_A[stage] & stages_B[stage])) / len(stages_A[stage] | stages_B[stage])
 
@@ -145,6 +144,10 @@ def distance(uslA, uslB, weights):
 
         return grammar_classes_A, grammar_classes_B
 
+    eo_total = sum(EO(i) for i in categories if i != HyperText)/(len(categories) - 1)
+    oo_total = sum(OO(i) for i in categories if i != Term)/(len(categories) - 1)
+
+    return (eo_total + oo_total) / 2
 
 def flatten_dict(dico):
 
@@ -236,7 +239,7 @@ if __name__ == '__main__':
     a = "{/[([a.i.-]+[i.i.-])*([E:A:T:.]+[E:S:.wa.-]+[E:S:.o.-])]//[([([a.i.-]+[i.i.-])*([E:A:T:.]+[E:S:.wa.-]+[E:S:.o.-])]{/[([a.i.-]+[i.i.-])*([E:A:T:.]+[E:S:.wa.-]+[E:S:.o.-])]/}*[([t.i.-s.i.-'i.B:.-U:.-'we.-',])*([E:O:.wa.-])]*[([E:E:T:.])])+([([a.i.-]+[i.i.-])*([E:A:T:.]+[E:S:.wa.-]+[E:S:.o.-])]*[([t.i.-s.i.-'u.B:.-A:.-'wo.-',])]*[([E:T:.f.-])])]/}"
     b = usl(a)
     c = usl(a)
-    distance(b, c, None)
+    print(distance(b, c, None))
 
     rc = RelationsConnector()
     script = rc.get_script("E:M:.M:O:.-")
