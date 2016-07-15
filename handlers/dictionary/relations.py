@@ -56,6 +56,11 @@ def remove_relation_visibility(body):
         pass
 
 
+@need_login
+def update_relations(body):
+    terms_db.recompute_relations()
+
+
 def get_relations(term):
     try:
         script_ast = script_parser.parse(term["ieml"])

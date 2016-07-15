@@ -318,6 +318,25 @@ paths:
       responses:
         '200':
           description: Successful response
+  '/updaterelations':
+    post:
+      operationId: app.handlers.update_relations
+      description: |
+        Recompute the relations in the dictionary. This operation may take a long time (~2min).
+      parameters:
+        - in : body
+          name : body
+          required : true
+          schema :
+            type: object
+            required:
+              - token
+            properties:
+              token:
+                type : string
+      responses:
+        '200':
+          description: Successful response
   '/exists/ieml/{ieml_term}':
     get:
       operationId: app.handlers.ieml_term_exists
