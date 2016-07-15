@@ -30,7 +30,7 @@ class TermsConnector(DBConnector):
         """
         return self.terms.find()
 
-    def add_term(self, script_ast, tags, inhibits, root=False, metadata=None):
+    def add_term(self, script_ast, tags, inhibits, root=False, metadata=None, recompute_relations=True):
         """
         Save a term in the term collection and update the relations collection accordingly.
         :param script_ast: the script to save.
@@ -38,6 +38,7 @@ class TermsConnector(DBConnector):
         :param inhibits: the inhibition of the relations for this term.
         :param root: if this term is a root paradigm.
         :param metadata: a dict of metadata (must be serializable)
+        :param recompute_relations: if we must recompute the relations after the insertion.
         :return: None
         """
 
@@ -45,7 +46,7 @@ class TermsConnector(DBConnector):
         script_ast = factorize(script_ast)
 
         # update the relations of the paradigm in the relation collection
-        RelationsQueries.save_script(script_ast, self.get_inhibitions(), root=root)
+        RelationsQueries.save_script(script_ast, self.get_inhibitions(), root=root, recompute_relations=recompute_relations)
 
         self._save_term(script_ast, tags, inhibits, root, metadata)
 
@@ -72,11 +73,12 @@ class TermsConnector(DBConnector):
 
         RelationsQueries.save_multiple_script(list_terms, self.get_inhibitions())
 
-    def remove_term(self, script_ast):
+    def remove_term(self, script_ast, recompute_relations=True):
         """
         Remove the given term from the term and relation collection. Can fail if not possible (can't remove a non-empty
         root paradigm)
         :param script_ast: the script to remove.
+        :param recompute_relations: if the relations have to be recomputed after the removal.
         :return: None
         """
         # Argument check
@@ -92,9 +94,9 @@ class TermsConnector(DBConnector):
             raise CantRemoveNonEmptyRootParadigm()
 
         self.terms.remove({'_id': str(script_ast)})
-        RelationsQueries.remove_script(script_ast, self.get_inhibitions())
+        RelationsQueries.remove_script(script_ast, self.get_inhibitions(), recompute_relations=recompute_relations)
 
-    def update_term(self, script, tags=None, inhibits=None, root=None, metadata=None):
+    def update_term(self, script, tags=None, inhibits=None, root=None, metadata=None, recompute_relations=True):
         """
         Update the term and relation collection for this term.
         :param script: the script to update
@@ -102,6 +104,7 @@ class TermsConnector(DBConnector):
         :param inhibits: optional, the inhibition to update
         :param root: optional, the rootness to update
         :param metadata: optional, the metadata to update
+        :param recompute_relations: if the relation must be recomputed after the update.
         :return: None
         """
         if not self.get_term(script):
@@ -125,7 +128,7 @@ class TermsConnector(DBConnector):
 
             # the inhibition and rootness impact the relations
             if inhibits or root:
-                RelationsQueries.update_script(script, self.get_inhibitions(), root)
+                RelationsQueries.update_script(script, self.get_inhibitions(), root, recompute_relations=recompute_relations)
         else:
             logging.warning("No update performed for script " + script +
                             ", no argument are matching the update criteria.")
@@ -191,3 +194,7 @@ class TermsConnector(DBConnector):
         """
         #TODO : IMPROVE THIS
         return self.terms.find({ "TAGS.%s" % language : tag })
+
+    def recompute_relations(self):
+        roots = {r['_id'] for r in self.root_paradigms()}
+        RelationsQueries.compute_all_relations(paradigms=roots)
