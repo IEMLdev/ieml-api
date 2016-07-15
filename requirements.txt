@@ -14,3 +14,4 @@ pika
 flask-socketio
 eventlet
 gevent-websocket
+beautifulsoup4
