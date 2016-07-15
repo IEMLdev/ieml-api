@@ -296,21 +296,25 @@ paths:
       responses:
         '200':
           description: Successful response
-  '/remieml/{term_id}':
-    get:
+  '/remieml':
+    post:
       operationId: app.handlers.remove_ieml_script
       description: |
         Delete an `IEML` term from the dictionary
       parameters:
-        - in: path
-          name: term_id
-          required: true
-          type: string
-        - in: query
-          name : token
-          description: The jwt session token.
-          type: string
-          required: true
+        - in : body
+          name : body
+          required : true
+          schema :
+            type: object
+            required:
+              - id
+              - token
+            properties:
+              id:
+                type : string
+              token:
+                type : string
       responses:
         '200':
           description: Successful response

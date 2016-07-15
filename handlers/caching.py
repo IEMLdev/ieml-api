@@ -19,10 +19,11 @@ cache = FileSystemCache(CACHE_DIRNAME)
 def flush_cache(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
-        cache.clear()
+        cache.delete("all_ieml")
         print("cache cleared")
         return func(*args, **kwargs)
     return wrapper
+
 
 class cached(object):
 

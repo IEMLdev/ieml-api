@@ -215,9 +215,9 @@ def new_ieml_script(body):
 
 @need_login
 @flush_cache
-def remove_ieml_script(term_id, token):
+def remove_ieml_script(body):
     try:
-        script_ast = script_parser.parse(term_id)
+        script_ast = script_parser.parse(body['id'])
         terms_db.remove_term(script_ast)
     except CannotParse:
         pass  # TODO ; maybe define an error for this case
