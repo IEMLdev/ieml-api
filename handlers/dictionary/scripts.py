@@ -205,7 +205,7 @@ def new_ieml_script(body):
         terms_db.add_term(script_ast,  # the ieml script's ast
                           {"FR": body["FR"], "EN": body["EN"]},  # the
                           [], # no inhibitions at the script's creation
-                          root=body["PARADIGM"] == "1")
+                          root=body["PARADIGM"] == "1", recompute_relations=False)
         return { "success" : True, "IEML" : str(script_ast)}
     except CannotParse:
         return {"success": False, "message": 'Invalid IEML.'}
@@ -218,7 +218,7 @@ def new_ieml_script(body):
 def remove_ieml_script(body):
     try:
         script_ast = script_parser.parse(body['id'])
-        terms_db.remove_term(script_ast)
+        terms_db.remove_term(script_ast, recompute_relations=False)
     except CannotParse:
         pass  # TODO ; maybe define an error for this case
 
@@ -233,12 +233,12 @@ def update_ieml_script(body):
         if body["IEML"] == body["ID"]:
             terms_db.update_term(script_ast,
                                  tags={ "FR" : body["FR"], "EN" : body["EN"]},
-                                 root=body["PARADIGM"] == "1")
+                                 root=body["PARADIGM"] == "1", recompute_relations=False)
         else:
             terms_db.remove_term(script_ast)
             terms_db.add_term(script_ast,  # the ieml script's ast
                               {"FR": body["FR"], "EN": body["EN"]},  # the
-                              root=body["PARADIGM"] == "1")
+                              root=body["PARADIGM"] == "1", recompute_relations=False)
     except CannotParse:
         pass  # TODO ; maybe define an error for this case
 
