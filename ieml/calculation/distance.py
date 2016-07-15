@@ -14,13 +14,25 @@ categories = bidict({Term: 1, Word: 2, Sentence: 3, SuperSentence: 4, Text: 5, H
 
 def distance(uslA, uslB, weights):
 
-    eo_total = sum(EO(i, uslA, uslB) for i in categories if i != HyperText)/(len(categories) - 1)
-    oo_total = sum(OO(i, uslA, uslB) for i in categories if i != Term)/(len(categories) - 1)
+    eo_total = sum(set_proximity_index(i, uslA, uslB) for i in categories if i != HyperText) / (len(categories) - 1)
+    oo_total = sum(object_proximity_index(i, uslA, uslB) for i in categories if i != Term) / (len(categories) - 1)
 
     return (eo_total + oo_total) / 2
 
 
-def EO(stage, uslA, uslB):
+def set_proximity_index(stage, uslA, uslB):
+    """
+
+    Parameters
+    ----------
+    stage
+    uslA
+    uslB
+
+    Returns
+    -------
+    Proximity index between two sets of objects of the same layer
+    """
     stages_A, children_A, children_multi_A = compute_stages(uslA)
     stages_B, children_B, children_multi_B = compute_stages(uslB)
 
@@ -30,8 +42,19 @@ def EO(stage, uslA, uslB):
     return float(len(stages_A[stage] & stages_B[stage])) / len(stages_A[stage] | stages_B[stage])
 
 
-def OO(stage, uslA, uslB):
+def object_proximity_index(stage, uslA, uslB):
+    """
 
+    Parameters
+    ----------
+    stage
+    uslA
+    uslB
+
+    Returns
+    -------
+    Proximity index for 2 objects of the same layer
+    """
     stages_A, children_A, children_multi_A = compute_stages(uslA)
     stages_B, children_B, children_multi_B = compute_stages(uslB)
 
@@ -46,7 +69,7 @@ def OO(stage, uslA, uslB):
     return accum
 
 
-def O_O(stage, uslA, uslB):
+def connexity_index(stage, uslA, uslB):
 
     stages_A, children_A, children_multi_A = compute_stages(uslA)
     stages_B, children_B, children_multi_B = compute_stages(uslB)
@@ -58,12 +81,12 @@ def O_O(stage, uslA, uslB):
         intersection = children_A[a] & children_B[b]
         graph = build_graph(a, b, intersection)
         partitions = partition_graph(graph)
-        accum += connectivity_index(partitions, intersection)
+        accum += connexity(partitions, intersection)
 
     return accum / size
 
 
-def Oo(uslA, uslB):
+def mutual_inclusion_index(uslA, uslB):
 
     stages_A, children_A, children_multi_A = compute_stages(uslA)
     stages_B, children_B, children_multi_B = compute_stages(uslB)
@@ -184,14 +207,22 @@ def build_graph(usl_a, usl_b, intersection):
 
     if isinstance(usl_a, (Sentence, SuperSentence)):
         for node in intersection:
-            node_addr = usl_a.graph.nodes_list.index(node)
-            for i, n in enumerate(zip(usl_a.graph.adjacency_matrix[node_addr], usl_b.graph.adjacency_matrix[node_addr])):
-                if all(n):
-                    graph[node].append(usl_a.graph.nodes_list[i])
-                    graph[usl_a.graph.nodes_list[i]].append(node)
+            node_addr_a = usl_a.graph.nodes_list.index(node)
+            node_addr_b = usl_b.graph.nodes_list.index(node)
+
+            if any(usl_a.graph.adjacency_matrix[node_addr_a]) and any(usl_b.graph.adjacency_matrix[node_addr_b]):
+                true_indices_a = [usl_a.graph.adjacency_matrix[node_addr_a].index(elem)
+                                  for elem in usl_a.graph.adjacency_matrix[node_addr_a] if elem]
+                true_indices_b = [usl_b.graph.adjacency_matrix[node_addr_b].index(elem)
+                                  for elem in usl_b.graph.adjacency_matrix[node_addr_b] if elem]
+                connected_nodes = [usl_a.graph.nodes_list[i] for i in true_indices_a for j in true_indices_b
+                                   if usl_a.graph.nodes_list[i] == usl_b.node_list[j]]
+
+                for n in connected_nodes:
+                    graph[node].append(n)
+                    graph[n].append(node)
 
     if isinstance(usl_a, Word):
-
         combos = it.combinations(intersection, 2)
 
         for combination in combos:
@@ -271,7 +302,11 @@ def get_grammar_class(uslA, uslB):
     return grammar_classes_A, grammar_classes_B
 
 
-def connectivity_index(partitions, node_intersection):
+def connexity(partitions, node_intersection):
+
+    if len(node_intersection) == 0:
+        return 0
+
     return sum(len(p) for p in partitions if len(p) > 1) / (len(partitions) * len(node_intersection))
 
 if __name__ == '__main__':
@@ -280,14 +315,17 @@ if __name__ == '__main__':
     c = usl(a)
     print(distance(b, c, None))
 
-    word_a = Word(Morpheme([Term(sc('wa.')), Term(sc("l.-x.-s.y.-'")), Term(sc("e.-u.-we.h.-'"))]), Morpheme([Term(sc('wo.')), Term(sc("T:.E:A:T:.-"))]))
+    word_a = Word(Morpheme(
+        [Term(sc('wa.')), Term(sc("l.-x.-s.y.-'")), Term(sc("e.-u.-we.h.-'")), Term(sc("M:.E:A:M:.-")),
+         Term(sc("E:A:.k.-"))]), Morpheme([Term(sc('wo.')), Term(sc("T:.E:A:T:.-")), Term(sc("E:A:.k.-")),
+                                           Term(sc("T:.-',S:.-',S:.-'B:.-'n.-S:.U:.-',_"))]))
     word_b = Word(Morpheme([Term(sc("l.-x.-s.y.-'")), Term(sc("e.-u.-we.h.-'"))]), Morpheme([Term(sc("T:.E:A:T:.-"))]))
 
     ht_a = HyperText(Text([word_a]))
     ht_b = HyperText(Text([word_b]))
     ht_a.check()
     ht_b.check()
-    O_O(Word, ht_a, ht_b)
+    connexity_index(Word, ht_a, ht_b)
 
     # rc = RelationsConnector()
     # script = rc.get_script("E:M:.M:O:.-")
