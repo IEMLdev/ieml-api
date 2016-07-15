@@ -19,7 +19,7 @@ class flush_cache(object):
 
     def __call__(self, func):
         def wrapper(*args, **kwargs):
-            cache.clear()
+            cache.delete("all_ieml")
             print("cache cleared")
             return func(*args, **kwargs)
         return wrapper
