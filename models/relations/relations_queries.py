@@ -246,7 +246,7 @@ class RelationsQueries:
 
         inhibit_bar = progressbar.ProgressBar()
         for s, i in inhibit_bar(inhibition):
-            cls._inhibit_relations(s, i)
+            cls._inhibit_relations(str(s), i)
 
     @staticmethod
     def _format_relations(relations, pack_ancestor=False):

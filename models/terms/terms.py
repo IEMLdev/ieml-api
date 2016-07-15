@@ -196,5 +196,4 @@ class TermsConnector(DBConnector):
         return self.terms.find({ "TAGS.%s" % language : tag })
 
     def recompute_relations(self):
-        roots = {r['_id'] for r in self.root_paradigms()}
-        RelationsQueries.compute_all_relations(paradigms=roots)
+        RelationsQueries.compute_all_relations(paradigms=self.root_paradigms())
