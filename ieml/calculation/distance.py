@@ -1,7 +1,7 @@
 import pprint
 import itertools as it
 from collections import defaultdict
-
+import numpy as np
 from ieml.AST.propositions import Word, Sentence, SuperSentence, Morpheme
 from ieml.AST.terms import Term
 from ieml.AST.usl import Text, HyperText
@@ -78,7 +78,12 @@ def connexity_index(stage, uslA, uslB):
     accum = 0.0
 
     for a, b in it.product(stages_A[stage], stages_B[stage]):
-        intersection = children_A[a] & children_B[b]
+
+        if stage == Sentence or stage == SuperSentence:
+            intersection = a.graph.nodes_set & b.graph.nodes_set
+        else:
+            intersection = children_A[a] & children_B[b]
+
         graph = build_graph(a, b, intersection)
         partitions = partition_graph(graph)
         accum += connexity(partitions, intersection)
@@ -91,8 +96,8 @@ def mutual_inclusion_index(uslA, uslB):
     stages_A, children_A, children_multi_A = compute_stages(uslA)
     stages_B, children_B, children_multi_B = compute_stages(uslB)
 
-    result = {Sentence: 0, SuperSentence: 0, Text: 0, HyperText: 0}
-    for a_st, b_st in it.permutations(categories.values(), 2):
+    result = {Word: 0, Sentence: 0, SuperSentence: 0, Text: 0, HyperText: 0}
+    for a_st, b_st in it.permutations(categories.keys(), 2):
         size = float(len(stages_A[a_st]) * len(stages_B[b_st]))
         accum = 0.0
 
@@ -111,7 +116,7 @@ def mutual_inclusion_index(uslA, uslB):
             result[a_st] += accum / 2.0
         else:
             result[b_st] += accum / 2.0
-    return result
+    return sum(result.values())/len(result)  # Return mean of the matrix cell index values
 
 
 def compute_stages(usl):
@@ -205,36 +210,6 @@ def build_graph(usl_a, usl_b, intersection):
 
     graph = {node: [] for node in intersection}
 
-    if isinstance(usl_a, (Sentence, SuperSentence)):
-        for node in intersection:
-            node_addr_a = usl_a.graph.nodes_list.index(node)
-            node_addr_b = usl_b.graph.nodes_list.index(node)
-
-            if any(usl_a.graph.adjacency_matrix[node_addr_a]) and any(usl_b.graph.adjacency_matrix[node_addr_b]):
-                true_indices_a = [usl_a.graph.adjacency_matrix[node_addr_a].index(elem)
-                                  for elem in usl_a.graph.adjacency_matrix[node_addr_a] if elem]
-                true_indices_b = [usl_b.graph.adjacency_matrix[node_addr_b].index(elem)
-                                  for elem in usl_b.graph.adjacency_matrix[node_addr_b] if elem]
-                connected_nodes = [usl_a.graph.nodes_list[i] for i in true_indices_a for j in true_indices_b
-                                   if usl_a.graph.nodes_list[i] == usl_b.node_list[j]]
-
-                for n in connected_nodes:
-                    graph[node].append(n)
-                    graph[n].append(node)
-
-    if isinstance(usl_a, Word):
-        combos = it.combinations(intersection, 2)
-
-        for combination in combos:
-            if combination[0] in usl_a.subst.children and combination[1] in usl_a.mode.children and \
-                            combination[0] in usl_b.subst.children and combination[1] in usl_b.mode.children:
-                graph[combination[0]].append(combination[1])
-                graph[combination[1]].append(combination[0])
-            elif combination[0] in usl_a.mode.children and combination[1] in usl_a.subst.children and \
-                            combination[0] in usl_b.mode.children and combination[1] in usl_b.subst.children:
-                graph[combination[0]].append(combination[1])
-                graph[combination[1]].append(combination[0])
-
     if isinstance(usl_a, (Text, HyperText)):
 
         combos = it.combinations(intersection, 2)
@@ -245,6 +220,35 @@ def build_graph(usl_a, usl_b, intersection):
                 graph = _build_proposition_graph(combination, graph)
             elif combination[0].__class__ > combination[1].__class__:
                 graph = _build_proposition_graph(combination, graph)
+
+    if isinstance(usl_a, (Sentence, SuperSentence)):
+        for node in intersection:
+
+            node_addr_a = usl_a.graph.nodes_list.index(node)
+            node_addr_b = usl_b.graph.nodes_list.index(node)
+
+            if any(usl_a.graph.adjacency_matrix[node_addr_a]) and any(usl_b.graph.adjacency_matrix[node_addr_b]):
+                true_indices_a = np.where(usl_a.graph.adjacency_matrix[node_addr_a])[0]
+                true_indices_b = np.where(usl_b.graph.adjacency_matrix[node_addr_b])[0]
+                connected_nodes = [usl_a.graph.nodes_list[i] for i in true_indices_a for j in true_indices_b
+                                   if usl_a.graph.nodes_list[i] == usl_b.graph.nodes_list[j]]
+
+                for n in connected_nodes:
+                    graph[node].append(n)
+                    graph[n].append(node)
+
+    if isinstance(usl_a, Word):
+        combos = it.combinations(intersection, 2)
+
+        for combination in combos:
+            if combination[0] in usl_a.subst.children and combination[1] in usl_a.mode.children and \
+               combination[0] in usl_b.subst.children and combination[1] in usl_b.mode.children:
+                graph[combination[0]].append(combination[1])
+                graph[combination[1]].append(combination[0])
+            elif combination[0] in usl_a.mode.children and combination[1] in usl_a.subst.children and \
+                 combination[0] in usl_b.mode.children and combination[1] in usl_b.subst.children:
+                graph[combination[0]].append(combination[1])
+                graph[combination[1]].append(combination[0])
 
     return graph
 

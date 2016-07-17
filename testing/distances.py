@@ -84,11 +84,11 @@ class DistanceComputationTests(unittest.TestCase):
         usl_a.check()
         usl_b.check()
         index = set_proximity_index(SuperSentence, usl_a, usl_b)
-        print("Proximity Index for the USLs: " + str(usl_a) + str(usl_b) + " is " + str(index))
+        print("Proximity Index for the different USLs: " + str(index))
         self.assertTrue(index != 1 and index != 0, "Different USLs should yield and index that isn't null nor is 1")
 
         index = set_proximity_index(SuperSentence, usl_a, usl_a)
-        print("Proximity Index for the USLs: " + str(usl_a) + " is " + str(index))
+        print("Proximity Index for the identical USLs: " + str(index))
         self.assertTrue(index == 1, "Identical USLs should yield and index of 1")
 
     def test_set_proximity_sentence(self):
@@ -116,11 +116,11 @@ class DistanceComputationTests(unittest.TestCase):
         usl_a.check()
         usl_b.check()
         index = set_proximity_index(Sentence, usl_a, usl_b)
-        print("Proximity Index for the USLs: " + str(usl_a) + str(usl_b) + " is " + str(index))
+        print("Proximity Index for the different USLs: " + str(index))
         self.assertTrue(index != 1 and index != 0, "Different USLs should yield and index that isn't null nor is 1")
 
         index = set_proximity_index(Sentence, usl_a, usl_a)
-        print("Proximity Index for the USLs: " + str(usl_a) + " is " + str(index))
+        print("Proximity Index for the identical USLs: " + str(index))
         self.assertTrue(index == 1, "Identical USLs should yield and index of 1")
 
     def test_set_proximity_word(self):
@@ -130,12 +130,12 @@ class DistanceComputationTests(unittest.TestCase):
         usl_a.check()
         usl_b.check()
 
-        index = set_proximity_index(Sentence, usl_a, usl_b)
-        print("Proximity Index for the USLs: " + str(usl_a) + str(usl_b) + " is " + str(index))
+        index = set_proximity_index(Word, usl_a, usl_b)
+        print("Proximity Index for the different USLs: " + str(index))
         self.assertTrue(index != 1 and index != 0, "Different USLs should yield and index that isn't null nor is 1")
 
-        index = set_proximity_index(Sentence, usl_a, usl_a)
-        print("Proximity Index for the USLs: " + str(usl_a) + " is " + str(index))
+        index = set_proximity_index(Word, usl_a, usl_a)
+        print("Proximity Index for the identical USLs: " + str(index))
         self.assertTrue(index == 1, "Identical USLs should yield and index of 1")
 
     def test_object_proximity_text(self):
@@ -176,11 +176,11 @@ class DistanceComputationTests(unittest.TestCase):
         usl_a.check()
         usl_b.check()
         index = object_proximity_index(SuperSentence, usl_a, usl_b)
-        print("Proximity Index for the USLs: " + str(usl_a) + str(usl_b) + " is " + str(index))
+        print("Proximity Index for the different USLs: " + str(index))
         self.assertTrue(index != 1 and index != 0, "Different USLs should yield and index that isn't null nor is 1")
 
         # index = object_proximity_index(SuperSentence, usl_a, usl_a)
-        # print("Proximity Index for the USLs: " + str(usl_a) + " is " + str(index))
+        # print("Proximity Index for the identical USLs: " + str(index))
         # self.assertTrue(index == 1, "Identical USLs should yield and index of 1")
 
     def test_object_proximity_sentence(self):
@@ -208,11 +208,11 @@ class DistanceComputationTests(unittest.TestCase):
         usl_a.check()
         usl_b.check()
         index = object_proximity_index(Sentence, usl_a, usl_b)
-        print("Proximity Index for the USLs: " + str(usl_a) + str(usl_b) + " is " + str(index))
+        print("Proximity Index for the different USLs: " + str(index))
         self.assertTrue(index != 1 and index != 0, "Different USLs should yield and index that isn't null nor is 1")
 
         # index = object_proximity_index(Sentence, usl_a, usl_a)
-        # print("Proximity Index for the USLs: " + str(usl_a) + " is " + str(index))
+        # print("Proximity Index for the identical USLs: " + str(index)))
         # self.assertTrue(index == 1, "Identical USLs should yield and index of 1")
 
     def test_object_proximity_word(self):
@@ -222,14 +222,15 @@ class DistanceComputationTests(unittest.TestCase):
         usl_b.check()
 
         index = object_proximity_index(Word, usl_a, usl_b)
-        print("Proximity Index for the USLs: " + str(usl_a) + str(usl_b) + " is " + str(index))
+        print("Proximity Index for the different USLs: " + str(index))
         self.assertTrue(index != 1 and index != 0, "Different USLs should yield and index that isn't null nor is 1")
 
         # index = object_proximity_index(Sentence, usl_a, usl_a)
-        # print("Proximity Index for the USLs: " + str(usl_a) + " is " + str(index))
+        # print("Proximity Index for the identical USLs: " + str(index))
         # self.assertTrue(index == 1, "Identical USLs should yield and index of 1")
 
     def test_mutual_inclusion_text(self):
+        # TODO: implement
         pass
 
     def test_mutual_inclusion_super_sentence(self):
@@ -266,11 +267,11 @@ class DistanceComputationTests(unittest.TestCase):
         usl_a.check()
         usl_b.check()
         index = mutual_inclusion_index(usl_a, usl_b)
-        print("Proximity Index for the USLs: " + str(usl_a) + str(usl_b) + " is " + str(index))
+        print("Proximity Index for the different USLs: " + str(index))
         self.assertTrue(index != 1 and index != 0, "Different USLs should yield and index that isn't null nor is 1")
 
         index = mutual_inclusion_index(usl_a, usl_a)
-        print("Proximity Index for the USLs: " + str(usl_a) + " is " + str(index))
+        print("Proximity Index for the identical USLs: " + str(index))
         self.assertTrue(index == 1, "Identical USLs should yield and index of 1")
 
     def test_mutual_inclusion_sentence(self):
@@ -298,11 +299,11 @@ class DistanceComputationTests(unittest.TestCase):
         usl_a.check()
         usl_b.check()
         index = mutual_inclusion_index(usl_a, usl_b)
-        print("Proximity Index for the USLs: " + str(usl_a) + str(usl_b) + " is " + str(index))
+        print("Proximity Index for the different USLs: " + str(index))
         self.assertTrue(index != 1 and index != 0, "Different USLs should yield and index that isn't null nor is 1")
 
         # index = mutual_inclusion_index(Sentence, usl_a, usl_a)
-        # print("Proximity Index for the USLs: " + str(usl_a) + " is " + str(index))
+        # print("Proximity Index for the same USLs: " + str(index))
         # self.assertTrue(index == 1, "Identical USLs should yield and index of 1")
 
     def test_mutual_inclusion_word(self):
@@ -311,12 +312,12 @@ class DistanceComputationTests(unittest.TestCase):
         usl_a.check()
         usl_b.check()
 
-        index = mutual_inclusion_index(Word, usl_a, usl_b)
-        print("Proximity Index for the USLs: " + str(usl_a) + str(usl_b) + " is " + str(index))
+        index = mutual_inclusion_index(usl_a, usl_b)
+        print("Proximity Index for the different USLs: " + str(index))
         self.assertTrue(index != 1 and index != 0, "Different USLs should yield and index that isn't null nor is 1")
 
         # index = mutual_inclusion_index(Sentence, usl_a, usl_a)
-        # print("Proximity Index for the USLs: " + str(usl_a) + " is " + str(index))
+        # print("Proximity Index for the identical USLs: " + str(index))
         # self.assertTrue(index == 1, "Identical USLs should yield and index of 1")
 
     def test_connexity_index_text(self):
@@ -345,22 +346,22 @@ class DistanceComputationTests(unittest.TestCase):
 
         super_sentence_1 = SuperSentence([SuperClause(s_1, s_2, s_3), SuperClause(s_1, s_6, s_4)])
         super_sentence_2 = SuperSentence([SuperClause(s_4, s_2, s_5), SuperClause(s_4, s_1, s_6),
-                                      SuperClause(s_4, s_3, s_5)])
+                                         SuperClause(s_4, s_3, s_5)])
         super_sentence_3 = SuperSentence([SuperClause(s_6, s_1, s_3), SuperClause(s_1, s_2, s_4),
-                                      SuperClause(s_2, s_5, s_3)])
+                                          SuperClause(s_2, s_5, s_3)])
         super_sentence_4 = SuperSentence([SuperClause(s_4, s_2, s_6), SuperClause(s_4, s_1, s_6),
-                                      SuperClause(s_2, s_3, s_6)])
+                                          SuperClause(s_2, s_3, s_6)])
 
         usl_a = HyperText(Text([super_sentence_1, super_sentence_2, super_sentence_3]))
         usl_b = HyperText(Text([super_sentence_1, super_sentence_2, super_sentence_4]))
         usl_a.check()
         usl_b.check()
         index = connexity_index(SuperSentence, usl_a, usl_b)
-        print("Proximity Index for the USLs: " + str(usl_a) + str(usl_b) + " is " + str(index))
+        print("Proximity Index for the different USLs: " + str(index))
         self.assertTrue(index != 1 and index != 0, "Different USLs should yield and index that isn't null nor is 1")
 
         index = connexity_index(SuperSentence, usl_a, usl_a)
-        print("Proximity Index for the USLs: " + str(usl_a) + " is " + str(index))
+        print("Proximity Index for the same USLs: " + str(index))
         self.assertTrue(index == 1, "Identical USLs should yield and index of 1")
 
     def test_connexity_index_sentence(self):
@@ -369,8 +370,8 @@ class DistanceComputationTests(unittest.TestCase):
                         Clause(self.word_2, self.word_8, self.word_5), Clause(self.word_6, self.word_10, self.word_5)])
 
         s_2 = Sentence([Clause(self.word_4, self.word_1, self.word_7), Clause(self.word_4, self.word_6, self.word_8),
-                    Clause(self.word_1, self.word_3, self.word_9), Clause(self.word_1, self.word_10, self.word_2),
-                    Clause(self.word_6, self.word_5, self.word_9)])
+                        Clause(self.word_1, self.word_3, self.word_9), Clause(self.word_1, self.word_10, self.word_2),
+                        Clause(self.word_6, self.word_5, self.word_9)])
 
         s_3 = Sentence([Clause(self.word_9, self.word_2, self.word_1), Clause(self.word_2, self.word_6, self.word_3),
                     Clause(self.word_2, self.word_4, self.word_3), Clause(self.word_2, self.word_8, self.word_7),
@@ -388,11 +389,11 @@ class DistanceComputationTests(unittest.TestCase):
         usl_a.check()
         usl_b.check()
         index = connexity_index(Sentence, usl_a, usl_b)
-        print("Proximity Index for the USLs: " + str(usl_a) + str(usl_b) + " is " + str(index))
+        print("Proximity Index for the different USLs: " + str(index))
         self.assertTrue(index != 1 and index != 0, "Different USLs should yield and index that isn't null nor is 1")
 
         # index = connexity_index(Sentence, usl_a, usl_a)
-        # print("Proximity Index for the USLs: " + str(usl_a) + " is " + str(index))
+        # print("Proximity Index for the same USLs: " + str(index))
         # self.assertTrue(index == 1, "Identical USLs should yield and index of 1")
 
     def test_connexity_index_word(self):
@@ -402,11 +403,11 @@ class DistanceComputationTests(unittest.TestCase):
         usl_b.check()
 
         index = connexity_index(Word, usl_a, usl_b)
-        print("Proximity Index for the USLs: " + str(usl_a) + str(usl_b) + " is " + str(index))
+        print("Proximity Index for the different USLs: " + str(index))
         self.assertTrue(index != 1 and index != 0, "Different USLs should yield and index that isn't null nor is 1")
 
         # index = connexity_index(Sentence, usl_a, usl_a)
-        # print("Proximity Index for the USLs: " + str(usl_a) + " is " + str(index))
+        # print("Proximity Index for the same USLs: " + str(index))
         # self.assertTrue(index == 1, "Identical USLs should yield and index of 1")
 
 if __name__ == '__main__':
