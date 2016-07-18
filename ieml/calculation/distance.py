@@ -149,6 +149,7 @@ def distance(uslA, uslB, weights):
 
     return (eo_total + oo_total) / 2
 
+
 def flatten_dict(dico):
 
     lineage = []

@@ -568,24 +568,39 @@ paths:
       operationId: app.handlers.distance_usl_group
       description: Compute the distance between the usl in argument.
       parameters:
-        - name: usl_list
+        - name: body
           in: body
           description: A list of usl
           required: true
-          type: array
-          items:
-            type: string
+          schema:
+#            type: object
+#            properties:
+#              usls:
+            type: array
+            items:
+              type: string
       responses:
         200:
           description: Successful response
           schema:
-            type: array
-            items:
-              type: array
-              items:
-                type: number
+            $ref: '#/definitions/distance_group'
 
 definitions:
+
+  distance_group:
+    properties:
+      usls:
+        type: array
+        items:
+          type: string
+      distances:
+        type: array
+        items:
+          type: array
+          items:
+            type: number
+
+
   ##############################
   ## FOR THE DICTIONARY'S API ##
   ##############################
