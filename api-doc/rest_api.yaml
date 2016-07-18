@@ -559,6 +559,32 @@ paths:
               $ref: '#/definitions/decomposed_ieml_element'
 
 
+  ##############################
+  ## FOR THE
+  ##############################
+
+  /distance/usls:
+    post:
+      operationId: app.handlers.distance_usl_group
+      description: Compute the distance between the usl in argument.
+      parameters:
+        - name: usl_list
+          in: body
+          description: A list of usl
+          required: true
+          type: array
+          items:
+            type: string
+      responses:
+        200:
+          description: Successful response
+          schema:
+            type: array
+            items:
+              type: array
+              items:
+                type: number
+
 definitions:
   ##############################
   ## FOR THE DICTIONARY'S API ##
