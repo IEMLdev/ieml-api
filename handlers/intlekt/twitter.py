@@ -7,6 +7,7 @@ from flask import redirect, session
 import pika
 from pymongo import MongoClient
 from time import strftime
+from bson.json_util import *
 
 class JSONEncoder(json.JSONEncoder):
     def default(self, o):
@@ -121,6 +122,33 @@ def twitter_update():
 
 
 def test_endpoint():
-    current_guest = session.get("current_guest")
-    print(current_guest)
-    return json.loads(current_guest)
+    client = MongoClient()
+    library = client.library
+    screen_name = get_screen_name()
+    all_resources = library[screen_name].find()
+    usls = {}
+    for doc in all_resources:
+        if doc['expandedUrl'] is None: continue
+        if doc['hashtags'] is not None:
+            for kw in doc['hashtags']:
+                add_keyword(library, doc, usls, kw)
+    all_resources = library.ckemmler_resources.find()
+    for doc in all_resources:
+        if doc['expandedUrl'] is None: continue
+        if doc['keywords'] is not None:
+            for kw in doc['keywords'].split(","):
+                add_keyword(library, doc, usls, kw)
+    return usls
+
+def add_keyword(library, doc, usls, kw):
+    results = library.usl.find({"KEYWORDS_EN.ORIGINAL": kw})
+    for found in results:
+        key = found["KEYWORDS_FR"]["ORIGINAL"][0]+" **"+found["_id"] + "*"
+        if key in usls:
+            usls[key].append(doc["expandedUrl"])
+        else:
+            usls[key] = [doc["expandedUrl"]]
+
+def get_screen_name():
+    user_info = json.loads(session['current_guest'])
+    return user_info["apis"]["twitter"]["screen_name"]

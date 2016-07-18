@@ -71,9 +71,11 @@ class UslConnector(DemoConnector):
 
     #Alice
     def load_collection(self):
-        self.usls.create_index([('KEYWORDS.DERIVED', pymongo.TEXT)])
+        self.usls.create_index([
+            ('KEYWORDS_EN.ORIGINAL', pymongo.TEXT)
+        ])
         terms = TermsConnector().get_all_terms()
-        p = progressbar.ProgressBar(max_value=4136)
+        p = progressbar.ProgressBar(max_value=terms.count())
         for t in p(terms):
             w = Word(Morpheme(Term(t['_id'])))
             w.check()
@@ -81,25 +83,28 @@ class UslConnector(DemoConnector):
             if self.check_usl_exists(str(w)): #check si l'usl existe
                 continue
 
-            total_derived_terms = defaultdict(lambda: set())
+            # total_derived_terms = defaultdict(lambda: set())
+            original_terms = defaultdict(lambda: set())
             for l in (('EN', 'english'), ('FR', 'french')):
                 for e in t['TAGS'][l[0]].split('|'):
                     e = e.strip()
-                    total_derived_terms[l[1]].add(e)
+                    original_terms[l[1]].add(e)
 
-                    derived_terms = self.get_derived_terms_from_wiktionnary(e)
-                    if not derived_terms:
-                        continue
-
-                    for key in derived_terms:
-                        total_derived_terms[key] |= derived_terms[key]
+                    # derived_terms = self.get_derived_terms_from_wiktionnary(e)
+                    # if not derived_terms:
+                    #     continue
+                    #
+                    # for key in derived_terms:
+                    #     total_derived_terms[key] |= derived_terms[key]
 
             insertion = {
                 '_id': str(w),  #enfin le mot de l usl avec fonction, if isinstance(usl, str) else str(usl) ???
-                'KEYWORDS': [{
-                                 'language': key,
-                                 'DERIVED': list(total_derived_terms[key])
-                             } for key in total_derived_terms]
+                'KEYWORDS_EN': {
+                                 'ORIGINAL': list(original_terms['english'])
+                               },
+                'KEYWORDS_FR': {
+                                 'ORIGINAL': list(original_terms['french'])
+                               }
             }
 
             self.usls.insert(insertion)
