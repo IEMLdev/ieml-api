@@ -677,7 +677,7 @@ paths:
 
   /distance/usls:
     post:
-      operationId: app.handlers.distance_usl_group
+      operationId: handlers.distance_usl_group
       description: Compute the distance between the usl in argument.
       parameters:
         - name: body
