@@ -4,7 +4,7 @@ swagger: '2.0'
 info:
   version: "0.1.0"
   title: IEML Library API
-  description : API for both the IEML dictionary and the IEML librairy
+  description : API for both the IEML dictionary and the IEML library
 
 basePath : /api
 produces : 
@@ -12,12 +12,124 @@ produces :
 paths:
 
   ##############################
+  ##          INTLEKT         ##
+  ##############################
+
+  /intlekt/push:
+    post:
+      operationId: handlers.push_server_event
+      tags:
+        - Intlekt
+      parameters:
+        - name: screen_name
+          in: query
+          description: The twitter screen_name of the user we wish to notify of the event
+          type: string
+          required: true
+        - name: event_data
+          in: body
+          description: |
+            A description of the event
+          required: true
+          schema:
+            type: object
+      description: |
+        Push asynchronous server event to the client
+      responses:
+        '200':
+          description: |
+            Everything went well
+
+  /intlekt/test:
+    get:
+      operationId: handlers.test_endpoint
+      tags:
+        - Intlekt
+      description: |
+        A wildcard endpoint for testing purposes
+      responses:
+        '200':
+          description: |
+            Some message
+
+  /intlekt/auth/logout:
+    get:
+      operationId: handlers.logout
+      tags:
+        - Intlekt
+      description: |
+        log out
+      responses:
+        '200':
+          description: |
+            json formatted success message
+
+  /intlekt/auth/info:
+    get:
+      operationId: handlers.info
+      tags:
+        - Intlekt
+      description: |
+        get info about the currently logged-in user
+      responses:
+        '200':
+          description: |
+            info about the currently logged-in user
+
+  /intlekt/twitter/token:
+    get:
+      operationId: handlers.twitter_token
+      tags:
+        - Intlekt
+      description: |
+        Initiate the oauth dance
+      responses:
+        '302':
+          description: |
+            redirect the user's browser to Twitter's authorization page
+
+  /intlekt/twitter/upgradeToken:
+    get:
+      operationId: handlers.twitter_upgradeToken
+      tags:
+        - Intlekt
+      description: |
+        retrieve the token
+      responses:
+        '302':
+          description: redirect the our home screen
+
+  /intlekt/twitter/home_timeline:
+    get:
+      operationId: handlers.twitter_home_timeline
+      tags:
+        - Intlekt
+      description: |
+        Generate a visualization for the user's home timeline
+      responses:
+        '200':
+          description: |
+            a series of coordinates adequate for a specific type of visualization
+
+  /intlekt/twitter/update:
+    get:
+      operationId: handlers.twitter_update
+      tags:
+        - Intlekt
+      description: |
+        Request an update of the user's twitter feed
+      responses:
+        '200':
+          description: |
+            a series of coordinates adequate for a specific type of visualization
+
+  ##############################
   ## FOR THE DICTIONARY'S API ##
   ##############################
 
   /allieml:
     get:
-      operationId: app.handlers.all_ieml
+      operationId: handlers.all_ieml
       tags:
         - IEML
       description: |
@@ -32,7 +144,7 @@ paths:
 
   /client/authenticate:
     post:
-      operationId: app.handlers.authenticate
+      operationId: handlers.authenticate
       description: |
         Login handler for the dictionary user
       consumes:
@@ -52,7 +164,7 @@ paths:
 
   /scriptparser/parse:
     get:
-      operationId: app.handlers.parse_ieml
+      operationId: handlers.parse_ieml
       tags:
         - Parsing
       description: |
@@ -87,7 +199,7 @@ paths:
 
   /scriptparser/tables:
     get:
-      operationId: app.handlers.script_table
+      operationId: handlers.script_table
       tags:
         - Parsing
       description: |
@@ -118,7 +230,7 @@ paths:
 
   /scriptparser/tree:
     get:
-      operationId: app.handlers.script_tree
+      operationId: handlers.script_tree
       tags:
         - Parsing
       description: |
@@ -135,7 +247,7 @@ paths:
 
   /getRelVisibility:
     post:
-      operationId: app.handlers.get_relation_visibility
+      operationId: handlers.get_relation_visibility
       description: |
         TODO
       parameters:
@@ -153,7 +265,7 @@ paths:
 
   /addRelVisibility:
     post:
-      operationId: app.handlers.add_relation_visiblity
+      operationId: handlers.add_relation_visiblity
       description: Inhibits relations of a paradigm
       parameters:
         - name: body
@@ -176,7 +288,7 @@ paths:
           description: Successful response
   /remRelVisibility:
     post:
-      operationId: app.handlers.remove_relation_visibility
+      operationId: handlers.remove_relation_visibility
       description: |
         TODO
       parameters:
@@ -196,7 +308,7 @@ paths:
           description: Successful response
   /rels:
     post:
-      operationId: app.handlers.get_relations
+      operationId: handlers.get_relations
       tags:
         - Relations
       description: >
@@ -243,7 +355,7 @@ paths:
                   type: boolean
   /newieml:
     post:
-      operationId: app.handlers.new_ieml_script
+      operationId: handlers.new_ieml_script
       description: |
         Add a new `IEML` term to the dictionary
       parameters:
@@ -268,7 +380,7 @@ paths:
           description: Successful response
   /updateieml:
     post:
-      operationId: app.handlers.update_ieml_script
+      operationId: handlers.update_ieml_script
       description: |
         Modify an `IEML` term from the dictionary
       parameters:
@@ -298,7 +410,7 @@ paths:
           description: Successful response
   '/remieml':
     post:
-      operationId: app.handlers.remove_ieml_script
+      operationId: handlers.remove_ieml_script
       description: |
         Delete an `IEML` term from the dictionary
       parameters:
@@ -320,7 +432,7 @@ paths:
           description: Successful response
   '/exists/ieml/{ieml_term}':
     get:
-      operationId: app.handlers.ieml_term_exists
+      operationId: handlers.ieml_term_exists
       description: |
         Check if `<term_ieml>` exists in the dictionary
       parameters:
@@ -333,7 +445,7 @@ paths:
           description: Successful response
   '/exists/FR/{tag_fr}':
     get:
-      operationId: app.handlers.fr_tag_exists
+      operationId: handlers.fr_tag_exists
       description: |
         Check if `<term_ieml>` exists in the **French** dictionary
       parameters:
@@ -346,7 +458,7 @@ paths:
           description: Successful response
   '/exists/EN/{tag_en}':
     get:
-      operationId: app.handlers.en_tag_exists
+      operationId: handlers.en_tag_exists
       description: |
         Check if `<term_ieml>` exists in the **English** dictionary
       parameters:
@@ -365,7 +477,7 @@ paths:
   /search:
     post:
       description: Search for propositions or  USLs in the library's database
-      operationId: app.handlers.search_library
+      operationId: handlers.search_library
       parameters:
         - name: query
           in: body
@@ -385,7 +497,7 @@ paths:
   /tags/check_exists:
     post:
       description: Checks if a tag already exists for a proposition or an hypertext
-      operationId: app.handlers.check_library_tag_exists
+      operationId: handlers.check_library_tag_exists
       consumes:
         - application/x-www-form-urlencoded
       parameters:
@@ -407,7 +519,7 @@ paths:
             
   /word/validate:
     post:
-      operationId: app.handlers.validate_word
+      operationId: handlers.validate_word
       tags:
         - Propositions
       description: Checks if a created word is good or not
@@ -426,7 +538,7 @@ paths:
           
   /word/save:
     post:
-      operationId: app.handlers.save_word
+      operationId: handlers.save_word
       tags:
         - Propositions
       description: Checks if a created word is good or not, and if good, saves it to the DB
@@ -445,7 +557,7 @@ paths:
   
   /tree/validate:
     post:
-      operationId: app.handlers.validate_tree
+      operationId: handlers.validate_tree
       tags:
         - Propositions
       description: Checks if a created sentence/super sentence graph is good or not, and if good, saves it to the DB
@@ -464,7 +576,7 @@ paths:
   
   /tree/save:
     post:
-      operationId: app.handlers.save_tree
+      operationId: handlers.save_tree
       tags:
         - Propositions
       description: Checks if a created sentence/super sentence graph is good or not, and if good, saves it to the DB
@@ -483,7 +595,7 @@ paths:
             
   /text/validate:
     post:
-      operationId: app.handlers.validate_text
+      operationId: handlers.validate_text
       tags:
         - USL
       description: Checks if a text is good or not,  and if good, saves it to the DB.
@@ -502,7 +614,7 @@ paths:
   
   /hypertext/validate:
     post:
-      operationId: app.handlers.validate_hypertext
+      operationId: handlers.validate_hypertext
       tags:
         - USL
       description: Checks if an hypertext graph is good or not, and if good saves it to the DB
@@ -521,7 +633,7 @@ paths:
             
   /text/decompose:
     post:
-      operationId: app.handlers.decompose_text
+      operationId: handlers.decompose_text
       tags:
         - USL
       description: |
@@ -542,7 +654,7 @@ paths:
               
   /element/decompose:
     post:
-      operationId: app.handlers.decompose_ieml_element
+      operationId: handlers.decompose_ieml_element
       description: Decomposes any IEML element to its children element (eg, a text into propositions, a sentence into a tree of words, or a word into two lists of terms)
       parameters:
         - name: ieml_string
