@@ -1,8 +1,9 @@
+from ieml.AST.usl import HyperText
 from ieml.parsing.script.parser import ScriptParser
 from ieml.script import Script
 from ieml.exceptions import IncompatiblesScriptsLayers
 from ieml.script.script import MultiplicativeScript
-
+from ieml.parsing.parser import USLParser
 
 def m(substance, attribute=None, mode=None):
     children = (substance, attribute, mode)
@@ -17,10 +18,25 @@ def script(arg):
         s = ScriptParser().parse(arg)
         s.check()
         return s
-    if isinstance(arg, Script):
+    elif isinstance(arg, Script):
+        if not arg.is_checked():
+            arg.check()
         return arg
     else:
         raise NotImplemented
 
 # shorthand
 sc = script
+
+
+def usl(arg):
+    if isinstance(arg, str):
+        usl = USLParser().parse(arg)
+        usl.check()
+        return usl
+    elif isinstance(arg, HyperText):
+        if not arg.is_checked():
+            arg.check()
+        return arg
+    else:
+        raise NotImplemented
