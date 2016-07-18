@@ -231,10 +231,13 @@ class RelationsQueries:
             cls._inhibit_relations(s, i)
 
     @staticmethod
-    def _format_relations(relations, pack_ancestor=False):
+    def _format_relations(relations, pack_ancestor=False, max_depth=-1):
         result = {}
 
-        def _accumulation(current_path, dic):
+        def _accumulation(current_path, dic, max_depth=-1):
+            if max_depth == 0:
+                return
+
             for key in dic:
                 if pack_ancestor:
                     if key == ELEMENTS:
@@ -242,12 +245,12 @@ class RelationsQueries:
                             result[current_path] = []
                         result[current_path] = list(set(result[current_path]).union(dic[ELEMENTS]))
                     else:
-                        _accumulation(current_path, dic[key])
+                        _accumulation(current_path, dic[key], max_depth=max_depth-1)
                 else:
                     if key == ELEMENTS:
                         result[current_path] = dic[ELEMENTS]
                     else:
-                        _accumulation(current_path + '.' + key, dic[key])
+                        _accumulation(current_path + '.' + key, dic[key], max_depth=max_depth-1)
 
         for r in relations:
             if r in [FATHER_RELATION, CHILD_RELATION]:
@@ -255,7 +258,7 @@ class RelationsQueries:
                     if i not in relations[r]:
                         relations[r][i] = []
                     else:
-                        _accumulation(r + '.' + i, relations[r][i])
+                        _accumulation(r + '.' + i, relations[r][i], max_depth=max_depth)
             else:
                 # list type
                 result[r] = relations[r]
@@ -263,13 +266,14 @@ class RelationsQueries:
         return result
 
     @classmethod
-    def relations(cls, script, relation_title=None, pack_ancestor=False):
+    def relations(cls, script, relation_title=None, pack_ancestor=False, max_depth=-1):
         """
         Relation getter, get the relations for the argument script. If relation_title is specified, return the relation
         with the given name. For the relation_title that can be specified, see the list in constant of ieml.
         :param script: the script to get the relation from. (str or Script instance)
         :param relation_title: optional, the name of a particular relation to see.
         :param pack_ancestor: pack the ancestors relations.
+        :param max_depth: the max depth we fetch the ancestors.
         :return: a dict of all relations or a specific relation.
         """
         relations_db_entry = cls.relations_db.relations.find_one(
@@ -280,10 +284,9 @@ class RelationsQueries:
         if relation_title:
             return relations[relation_title] # we only return the selected relation
         else:
-            output_relation_dict = cls._format_relations(relations, pack_ancestor)
+            output_relation_dict = cls._format_relations(relations, pack_ancestor, max_depth=max_depth)
             output_relation_dict["ROOT"] = relations_db_entry["ROOT"]
             return output_relation_dict # we output all relations PLUS the root paradigm property
-
 
     @staticmethod
     def _merge(dic1, dic2, inverse_key=None):
