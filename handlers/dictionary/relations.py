@@ -69,7 +69,7 @@ def get_relations(term):
     try:
         script_ast = script_parser.parse(term["ieml"])
         all_relations = []
-        for relation_type, relations in RelationsQueries.relations(script_ast, pack_ancestor=True, max_depth=1).items():
+        for relation_type, relations in RelationsQueries.relations(script_ast, pack_ancestor=True, max_depth_child=1).items():
             if relations: # if there aren't any relations, we skip
                 all_relations.append({
                     "reltype" : relation_name_table.inv[relation_type],
