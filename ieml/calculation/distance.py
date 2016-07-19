@@ -206,11 +206,12 @@ def partition_graph(graph):
     return partitions
 
 
-def build_graph(usl_a, usl_b, intersection):
+def build_graph(object_set_a, object_set_b, intersection):
+    # See IEML pour l'ingenieur section 6.7.4.2 for the graph building algorithm
 
     graph = {node: [] for node in intersection}
 
-    if isinstance(usl_a, (Text, HyperText)):
+    if isinstance(object_set_a, (Text, HyperText)):
 
         combos = it.combinations(intersection, 2)
         for combination in combos:
@@ -221,32 +222,39 @@ def build_graph(usl_a, usl_b, intersection):
             elif combination[0].__class__ > combination[1].__class__:
                 graph = _build_proposition_graph(combination, graph)
 
-    if isinstance(usl_a, (Sentence, SuperSentence)):
-        for node in intersection:
+    if isinstance(object_set_a, (Sentence, SuperSentence)):
+        # In this case the nodes are of type Word
 
-            node_addr_a = usl_a.graph.nodes_list.index(node)
-            node_addr_b = usl_b.graph.nodes_list.index(node)
+        node_pairs = it.combinations(intersection, 2)
 
-            if any(usl_a.graph.adjacency_matrix[node_addr_a]) and any(usl_b.graph.adjacency_matrix[node_addr_b]):
-                true_indices_a = np.where(usl_a.graph.adjacency_matrix[node_addr_a])[0]
-                true_indices_b = np.where(usl_b.graph.adjacency_matrix[node_addr_b])[0]
-                connected_nodes = [usl_a.graph.nodes_list[i] for i in true_indices_a for j in true_indices_b
-                                   if usl_a.graph.nodes_list[i] == usl_b.graph.nodes_list[j]]
+        for pair in node_pairs:
+            node_1_addr_a = object_set_a.graph.nodes_list.index(pair[0])
+            node_2_addr_a = object_set_a.graph.nodes_list.index(pair[1])
+            node_1_addr_b = object_set_b.graph.nodes_list.index(pair[0])
+            node_2_addr_b = object_set_b.graph.nodes_list.index(pair[1])
 
-                for n in connected_nodes:
-                    graph[node].append(n)
-                    graph[n].append(node)
+            if ((object_set_a.graph.adjacency_matrix[node_1_addr_a][node_2_addr_a] or
+                 object_set_a.graph.adjacency_matrix[node_2_addr_a][node_1_addr_a]) and
+                (object_set_b.graph.adjacency_matrix[node_1_addr_b][node_2_addr_b] or
+                 object_set_b.graph.adjacency_matrix[node_2_addr_b][node_1_addr_b])):
 
-    if isinstance(usl_a, Word):
+                graph[pair[0]].append(pair[1])
+                graph[pair[1]].append(pair[0])
+
+
+
+    if isinstance(object_set_a, Word):
+        # The nodes in the intersection set are Terms
+
         combos = it.combinations(intersection, 2)
 
         for combination in combos:
-            if combination[0] in usl_a.subst.children and combination[1] in usl_a.mode.children and \
-               combination[0] in usl_b.subst.children and combination[1] in usl_b.mode.children:
+            if combination[0] in object_set_a.subst.children and combination[1] in object_set_a.mode.children and \
+               combination[0] in object_set_b.subst.children and combination[1] in object_set_b.mode.children:
                 graph[combination[0]].append(combination[1])
                 graph[combination[1]].append(combination[0])
-            elif combination[0] in usl_a.mode.children and combination[1] in usl_a.subst.children and \
-                 combination[0] in usl_b.mode.children and combination[1] in usl_b.subst.children:
+            elif combination[0] in object_set_a.mode.children and combination[1] in object_set_a.subst.children and \
+                 combination[0] in object_set_b.mode.children and combination[1] in object_set_b.subst.children:
                 graph[combination[0]].append(combination[1])
                 graph[combination[1]].append(combination[0])
 
@@ -312,6 +320,17 @@ def connexity(partitions, node_intersection):
         return 0
 
     return sum(len(p) for p in partitions if len(p) > 1) / (len(partitions) * len(node_intersection))
+
+
+def print_graph(graph):
+
+    for k, v in graph.items():
+        print(str(k) + ": ")
+        print("[", end="")
+        for elem in v:
+            print(str(elem), end=", ")
+        print("]")
+
 
 if __name__ == '__main__':
     a = "{/[([a.i.-]+[i.i.-])*([E:A:T:.]+[E:S:.wa.-]+[E:S:.o.-])]//[([([a.i.-]+[i.i.-])*([E:A:T:.]+[E:S:.wa.-]+[E:S:.o.-])]{/[([a.i.-]+[i.i.-])*([E:A:T:.]+[E:S:.wa.-]+[E:S:.o.-])]/}*[([t.i.-s.i.-'i.B:.-U:.-'we.-',])*([E:O:.wa.-])]*[([E:E:T:.])])+([([a.i.-]+[i.i.-])*([E:A:T:.]+[E:S:.wa.-]+[E:S:.o.-])]*[([t.i.-s.i.-'u.B:.-A:.-'wo.-',])]*[([E:T:.f.-])])]/}"
