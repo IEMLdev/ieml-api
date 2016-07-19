@@ -432,7 +432,7 @@ paths:
           description: Successful response
   '/updaterelations':
     post:
-      operationId: app.handlers.update_relations
+      operationId: handlers.update_relations
       description: |
         Recompute the relations in the dictionary. This operation may take a long time (~2min).
       parameters:
