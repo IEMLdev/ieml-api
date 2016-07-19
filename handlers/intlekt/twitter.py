@@ -5,9 +5,11 @@ import json
 from bson import ObjectId
 from flask import redirect, session
 import pika
+from .Constants import *
 from pymongo import MongoClient
 from time import strftime
 from bson.json_util import *
+from config import *
 
 class JSONEncoder(json.JSONEncoder):
     def default(self, o):
@@ -107,19 +109,23 @@ def twitter_home_timeline():
 
 
 def twitter_update():
+    return queue_request(TWITTER_UPDATE_REQUEST_TYPE)
+
+def twitter_similarities():
+    return queue_request(SIMILARITY_COMPUTATION_REQUEST_TYPE)
+
+def queue_request(request_type):
     connection = pika.BlockingConnection(pika.ConnectionParameters(
-            'localhost'))
+            RABBITMQ_HOST))
     channel = connection.channel()
 
     user_info = json.loads(session['current_guest'])
-    print("user_info", user_info)
-    channel.basic_publish(exchange='twitter-updater-exchange',
-                          routing_key='twitter-updater',
-                          body=json.dumps(user_info['apis']['twitter']))
-    print("sent update request to the queue'")
-
-    return "OK, cool"
-
+    request_info = user_info['apis']['twitter']
+    request_info[REQUEST_TYPE]=request_type
+    channel.basic_publish(exchange='async-workers-exchange',
+                          routing_key='async-workers',
+                          body=json.dumps(request_info))
+    return {'message': 'request_sent'}
 
 def test_endpoint():
     client = MongoClient()
