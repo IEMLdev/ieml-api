@@ -1,9 +1,11 @@
 import logging
+from collections import defaultdict
 
 from ieml.parsing.script import ScriptParser
 from ieml.script import CONTAINED_RELATION, CONTAINS_RELATION, RemarkableSibling, TWIN_SIBLING_RELATION, \
     ASSOCIATED_SIBLING_RELATION, CROSSED_SIBLING_RELATION, OPPOSED_SIBLING_RELATION, ATTRIBUTE, SUBSTANCE, MODE, \
     ELEMENTS, FATHER_RELATION, CHILD_RELATION, AdditiveScript, NullScript, Script, SCRIPT_RELATIONS
+from ieml.script.constants import ROOT_RELATION
 from models.exceptions import NotARootParadigm, InvalidScript, CantRemoveNonEmptyRootParadigm, InvalidRelationTitle
 from models.relations.relations import RelationsConnector
 import progressbar
@@ -249,8 +251,8 @@ class RelationsQueries:
             cls._inhibit_relations(str(s), i)
 
     @staticmethod
-    def _format_relations(relations, pack_ancestor=False, max_depth=-1):
-        result = {}
+    def _format_relations(relations, pack_ancestor=False, max_depth_father=-1, max_depth_child=-1):
+        result = defaultdict(lambda: list())
 
         def _accumulation(current_path, dic, max_depth=-1):
             if max_depth == 0:
@@ -259,8 +261,6 @@ class RelationsQueries:
             for key in dic:
                 if pack_ancestor:
                     if key == ELEMENTS:
-                        if current_path not in result:
-                            result[current_path] = []
                         result[current_path] = list(set(result[current_path]).union(dic[ELEMENTS]))
                     else:
                         _accumulation(current_path, dic[key], max_depth=max_depth-1)
@@ -271,12 +271,13 @@ class RelationsQueries:
                         _accumulation(current_path + '.' + key, dic[key], max_depth=max_depth-1)
 
         for r in relations:
-            if r in [FATHER_RELATION, CHILD_RELATION]:
+            if r in (FATHER_RELATION, CHILD_RELATION):
                 for i in (MODE, ATTRIBUTE, SUBSTANCE):
                     if i not in relations[r]:
                         relations[r][i] = []
                     else:
-                        _accumulation(r + '.' + i, relations[r][i], max_depth=max_depth)
+                        _accumulation(r + '.' + i, relations[r][i],
+                                      max_depth=(max_depth_father if r == FATHER_RELATION else max_depth_child))
             else:
                 # list type
                 result[r] = relations[r]
@@ -284,14 +285,15 @@ class RelationsQueries:
         return result
 
     @classmethod
-    def relations(cls, script, relation_title=None, pack_ancestor=False, max_depth=-1):
+    def relations(cls, script, relation_title=None, pack_ancestor=False, max_depth_father=-1, max_depth_child=-1):
         """
         Relation getter, get the relations for the argument script. If relation_title is specified, return the relation
         with the given name. For the relation_title that can be specified, see the list in constant of ieml.
         :param script: the script to get the relation from. (str or Script instance)
         :param relation_title: optional, the name of a particular relation to see.
         :param pack_ancestor: pack the ancestors relations.
-        :param max_depth: the max depth we fetch the ancestors.
+        :param max_depth_father: the max depth we fetch the ancestors.
+        :param max_depth_child: the max depth we fetch the descendant.
         :return: a dict of all relations or a specific relation.
         """
         relations_db_entry = cls.relations_db.relations.find_one(
@@ -300,11 +302,19 @@ class RelationsQueries:
 
         relations = relations_db_entry['RELATIONS']
         if relation_title:
-            return relations[relation_title] # we only return the selected relation
+
+            if relation_title == ROOT_RELATION:
+                return relations_db_entry["ROOT"]
+            elif relation_title in (FATHER_RELATION, CHILD_RELATION):
+                return cls._format_relations((relation_title,), pack_ancestor=pack_ancestor,
+                                             max_depth_father=max_depth_father, max_depth_child=max_depth_child)
+            else:
+                return relations[relation_title] # we only return the selected relation
         else:
-            output_relation_dict = cls._format_relations(relations, pack_ancestor, max_depth=max_depth)
-            output_relation_dict["ROOT"] = relations_db_entry["ROOT"]
-            return output_relation_dict # we output all relations PLUS the root paradigm property
+            result = cls._format_relations(relations, pack_ancestor=pack_ancestor,
+                                           max_depth_father=max_depth_father, max_depth_child=max_depth_child)
+            result["ROOT"] = relations_db_entry["ROOT"]
+            return result # we output all relations PLUS the root paradigm property
 
     @staticmethod
     def _merge(dic1, dic2, inverse_key=None):
