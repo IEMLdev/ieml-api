@@ -1,4 +1,6 @@
-from ieml.AST.usl import HyperText
+from ieml.AST.propositions import SuperSentence, Word, Sentence, Morpheme
+from ieml.AST.terms import Term
+from ieml.AST.usl import HyperText, Text
 from ieml.parsing.script.parser import ScriptParser
 from ieml.script import Script
 from ieml.exceptions import IncompatiblesScriptsLayers
@@ -32,11 +34,22 @@ sc = script
 def usl(arg):
     if isinstance(arg, str):
         usl = USLParser().parse(arg)
-        usl.check()
         return usl
     elif isinstance(arg, HyperText):
         if not arg.is_checked():
             arg.check()
         return arg
+    elif isinstance(arg, (Word, Sentence, SuperSentence)):
+        usl = HyperText(Text([arg]))
+        usl.check()
+        return usl
+    elif isinstance(arg, Text):
+        usl = HyperText(arg)
+        usl.check()
+        return usl
+    elif isinstance(arg, Term):
+        usl = HyperText(Text([Word(Morpheme([arg]))]))
+        usl.check()
+        return usl
     else:
         raise NotImplemented
