@@ -123,6 +123,18 @@ paths:
           description: |
             a series of coordinates adequate for a specific type of visualization
 
+  /intlekt/twitter/similarities:
+    get:
+      operationId: handlers.twitter_similarities
+      tags:
+        - Intlekt
+      description: |
+        Request a similarity computation on the user's home timeline
+      responses:
+        '200':
+          description: |
+            a list of resources ranked by similarity
+
   ##############################
   ## FOR THE DICTIONARY'S API ##
   ##############################
