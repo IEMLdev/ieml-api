@@ -171,6 +171,7 @@ def compute_stages(usl):
     return stages, children, result
 
 
+
 def flatten_dict(dico):
 
     lineage = []

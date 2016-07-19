@@ -1,3 +1,5 @@
+import functools
+
 from models.logins import is_user
 import jwt
 from ..caching import cache
@@ -20,18 +22,23 @@ def authenticate(name, password):
 
 
 def need_login(func):
-    def wrapper(body):
-        if 'token' not in body:
+
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        if 'token' in kwargs:
+            token = kwargs["token"]
+        elif 'body' in kwargs and 'token' in kwargs["body"]:
+            token = kwargs["body"]['token']
+        else:
             return {'success': False, 'message': 'Authentication required.'}
 
-        token = bytes(body['token'], 'utf8')
-        del body['token']
+        token = bytes(token, 'utf8') #encoding the string into bytes
         payload = jwt.decode(token, cache.get(SECRET_CACHE))
 
         if 'name' not in payload or 'hash' not in payload or \
                         hashlib.sha224(bytes(payload['name'], 'utf8') + cache.get(PAYLOAD_SALT_CACHE)).hexdigest() != payload['hash']:
             return {'success': False, 'message': 'Invalid token.'}
 
-        return func(body)
+        return func(*args, **kwargs)
     return wrapper
 

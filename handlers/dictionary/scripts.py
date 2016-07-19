@@ -46,32 +46,32 @@ def parse_ieml(iemltext):
 
 def script_table(iemltext):
     class_to_color = {
-        AUXILIARY_CLASS: 'red',
-        VERB_CLASS: 'pink',
-        NOUN_CLASS: 'yellow'
+        AUXILIARY_CLASS: 'yellow',
+        VERB_CLASS: 'orange',
+        NOUN_CLASS: 'cyan'
     }
 
-    def _table_entry(col_size=0, ieml=None, header=False, meta=False):
+    def _table_entry(col_size=0, ieml=None, header=False, top_header=False):
         '''
-        header + ieml + !meta = colomn and line header
-        header + ieml + meta = top header
-        !ieml + meta = gray square -_-'
+        header + ieml + !top_header = colomn and line header
+        header + ieml + top_header = top header
+        !ieml + top_header = gray square -_-'
         ieml + !header = cell
 
         :param ieml:
         :param auto_color:
         :param header:
-        :param meta:
+        :param top_header:
         :return:
         '''
         if not ieml:
-            color = 'gray'
+            color = 'black'
         elif not header:
             color = class_to_color[ieml.script_class]
-        elif meta:
-            color = 'green'
+        elif top_header:
+            color = 'grey'
         else:
-            color = 'blue'
+            color = 'green'
 
         return {
             'background': color,
@@ -80,7 +80,7 @@ def script_table(iemltext):
             'creatable': False,
             'editable': bool(ieml),
             'span': {
-                'col': col_size if header and meta and ieml else 1,
+                'col': col_size if header and top_header and ieml else 1,
                 'row': 1
             }
         }
@@ -88,7 +88,7 @@ def script_table(iemltext):
     def _slice_array(table, col=False, dim=None):
         if col:
             result = [
-                _table_entry(1, ieml=table.headers[0][0], header=True, meta=True)
+                _table_entry(1, ieml=table.headers[0][0], header=True, top_header=True)
             ]
             result.extend([_table_entry(ieml=e) for e in table.cells])
 
@@ -96,8 +96,8 @@ def script_table(iemltext):
             col_size = len(table.headers[1])
 
             result = [
-                _table_entry(col_size + 1, ieml=table.paradigm, header=True, meta=True),
-                _table_entry(meta=True)  # grey square
+                _table_entry(col_size + 1, ieml=table.paradigm, header=True, top_header=True),
+                _table_entry(top_header=True)  # grey square
             ]
 
             for col in table.headers[1]:
@@ -198,7 +198,7 @@ def script_tree(iemltext):
 
 
 @need_login
-@flush_cache()
+@flush_cache
 def new_ieml_script(body):
     try:
         script_ast = script_parser.parse(body["IEML"])
@@ -214,17 +214,17 @@ def new_ieml_script(body):
 
 
 @need_login
-@flush_cache()
-def remove_ieml_script(term_id):
+@flush_cache
+def remove_ieml_script(body):
     try:
-        script_ast = script_parser.parse(term_id)
+        script_ast = script_parser.parse(body['id'])
         terms_db.remove_term(script_ast)
     except CannotParse:
         pass  # TODO ; maybe define an error for this case
 
 
 @need_login
-@flush_cache()
+@flush_cache
 def update_ieml_script(body):
     """Updates an IEML Term's properties (mainly the tags, and the paradigm). If the IEML is changed,
     a new term is created"""
