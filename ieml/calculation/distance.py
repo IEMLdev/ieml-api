@@ -331,6 +331,31 @@ def print_graph(graph):
         print("]")
 
 
+def list_intersection_cardinal(list_a, list_b):
+    """
+    The purpose of this method is to perform the intersection of two lists.
+    The reason why we need this method is because we have a use case where we need to keed repeted element in memory
+    and also use the list as a set.
+    :return:
+    """
+    intersection_cardinal = 0
+
+    if len(list_a) >= len(list_b):
+        tmp = list_a
+        iteration_list = list_b
+
+    else:
+        iteration_list = list_a
+
+    for element in iteration_list:
+        if element in tmp:
+            intersection_cardinal += 1
+            tmp.remove(element)
+            
+    return intersection_cardinal
+
+
+
 if __name__ == '__main__':
     a = "{/[([a.i.-]+[i.i.-])*([E:A:T:.]+[E:S:.wa.-]+[E:S:.o.-])]//[([([a.i.-]+[i.i.-])*([E:A:T:.]+[E:S:.wa.-]+[E:S:.o.-])]{/[([a.i.-]+[i.i.-])*([E:A:T:.]+[E:S:.wa.-]+[E:S:.o.-])]/}*[([t.i.-s.i.-'i.B:.-U:.-'we.-',])*([E:O:.wa.-])]*[([E:E:T:.])])+([([a.i.-]+[i.i.-])*([E:A:T:.]+[E:S:.wa.-]+[E:S:.o.-])]*[([t.i.-s.i.-'u.B:.-A:.-'wo.-',])]*[([E:T:.f.-])])]/}"
     b = usl(a)
