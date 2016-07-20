@@ -46,12 +46,12 @@ def parse_ieml(iemltext):
 
 def script_table(iemltext):
     class_to_color = {
-        AUXILIARY_CLASS: 'yellow',
-        VERB_CLASS: 'orange',
-        NOUN_CLASS: 'cyan'
+        AUXILIARY_CLASS: 'auxiliary',
+        VERB_CLASS: 'verb',
+        NOUN_CLASS: 'noun'
     }
 
-    class_to_color_light = {k: 'light-'+class_to_color[k] for k in class_to_color}
+    class_to_header_color = {k: 'header-'+class_to_color[k] for k in class_to_color}
 
     def _table_entry(col_size=0, ieml=None, header=False, top_header=False):
         '''
@@ -69,11 +69,11 @@ def script_table(iemltext):
         if not ieml:
             color = 'black'
         elif not header:
-            color = class_to_color_light[ieml.script_class]
+            color = class_to_color[ieml.script_class]
         elif top_header:
             color = 'grey'
         else:
-            color = class_to_color[ieml.script_class]
+            color = class_to_header_color[ieml.script_class]
 
         return {
             'background': color,
