@@ -30,9 +30,13 @@ relation_name_table = bidict({
 
 
 def get_relation_visibility(body):
-    term_db_entry = terms_db.get_term(body["ieml"])
-    inhibited_relations = [relation_name_table.inv[rel_name] for rel_name in term_db_entry["INHIBITS"]]
-    return {"viz": inhibited_relations}
+    try:
+        script_ast = script_parser.parse(body["ieml"])
+        term_db_entry = terms_db.get_term(script_ast)
+        inhibited_relations = [relation_name_table.inv[rel_name] for rel_name in term_db_entry["INHIBITS"]]
+        return {"viz": inhibited_relations}
+    except CannotParse:
+        pass
 
 
 @need_login
@@ -60,14 +64,19 @@ def get_relations(term):
     try:
         script_ast = script_parser.parse(term["ieml"])
         all_relations = []
-        for relation_type, relations in RelationsQueries.relations(script_ast, pack_ancestor=True).items():
+        for relation_type, relations in RelationsQueries.relations(script_ast, pack_ancestor=True, max_depth=1).items():
             if relations: # if there aren't any relations, we skip
                 all_relations.append({
                     "reltype" : relation_name_table.inv[relation_type],
-                    "rellist" : [{"ieml" : rel,
-                                  "exists": True,
-                                  "visible": True}
-                                 for rel in relations],
+                    "rellist" :
+                        [{"ieml" : rel,
+                          "exists": True,
+                          "visible": True}
+                         for rel in relations]
+                        if relation_type != "ROOT" else
+                        [{"ieml": relations,
+                          "exists": True,
+                          "visible": True}],
                     "exists" : True,
                     "visible" : True
                 })

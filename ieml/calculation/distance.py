@@ -1,13 +1,12 @@
-import pprint
 import itertools as it
 from collections import defaultdict
-import numpy as np
 from ieml.AST.propositions import Word, Sentence, SuperSentence, Morpheme
 from ieml.AST.terms import Term
 from ieml.AST.usl import Text, HyperText
 from ieml.operator import usl, sc
 from bidict import bidict
 from models.relations import RelationsConnector
+from fractions import Fraction
 
 categories = bidict({Term: 1, Word: 2, Sentence: 3, SuperSentence: 4, Text: 5, HyperText: 6})
 
@@ -76,6 +75,7 @@ def connexity_index(stage, uslA, uslB):
 
     size = float(len(stages_A[stage]) * len(stages_B[stage]))
     accum = 0.0
+    values = []
 
     for a, b in it.product(stages_A[stage], stages_B[stage]):
 
@@ -86,9 +86,9 @@ def connexity_index(stage, uslA, uslB):
 
         graph = build_graph(a, b, intersection)
         partitions = partition_graph(graph)
-        accum += connexity(partitions, intersection)
+        values.append(connexity(partitions, intersection))
 
-    return accum / size
+    return sum(values) / size
 
 
 def mutual_inclusion_index(uslA, uslB):
@@ -171,6 +171,7 @@ def compute_stages(usl):
     return stages, children, result
 
 
+
 def flatten_dict(dico):
 
     lineage = []
@@ -193,7 +194,7 @@ def partition_graph(graph):
         explored.add(node)
         for adjacent_node in graph[node]:
             if adjacent_node not in explored:
-                return _explore_graph(adjacent_node, graph, p)
+                _explore_graph(adjacent_node, graph, p)
         return
 
     for node in graph:
@@ -240,8 +241,6 @@ def build_graph(object_set_a, object_set_b, intersection):
 
                 graph[pair[0]].append(pair[1])
                 graph[pair[1]].append(pair[0])
-
-
 
     if isinstance(object_set_a, Word):
         # The nodes in the intersection set are Terms
@@ -319,7 +318,7 @@ def connexity(partitions, node_intersection):
     if len(node_intersection) == 0:
         return 0
 
-    return sum(len(p) for p in partitions if len(p) > 1) / (len(partitions) * len(node_intersection))
+    return Fraction(sum(len(p) for p in partitions if len(p) > 1), (len(partitions) * len(node_intersection)))
 
 
 def print_graph(graph):

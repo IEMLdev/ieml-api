@@ -476,9 +476,7 @@ class DistanceComputationTests(unittest.TestCase):
         s_1.check()
         s_2.check()
 
-        intersection = list(s_1.graph.nodes_set & s_2.graph.nodes_set)
-        intersection.sort()
-
+        intersection = s_1.graph.nodes_set & s_1.graph.nodes_set
         graph = build_graph(s_1, s_2, intersection)
 
         correct_graph = {
@@ -545,6 +543,38 @@ class DistanceComputationTests(unittest.TestCase):
 
         self.assertEqual(graph, correct_graph)
 
+    def test_partition_sentences(self):
+        s_1 = Sentence([Clause(self.word_1, self.word_2, self.word_10), Clause(self.word_1, self.word_3, self.word_10),
+                        Clause(self.word_1, self.word_4, self.word_10), Clause(self.word_3, self.word_9, self.word_10),
+                        Clause(self.word_3, self.word_5, self.word_10), Clause(self.word_4, self.word_6, self.word_10),
+                        Clause(self.word_5, self.word_8, self.word_10), Clause(self.word_6, self.word_7, self.word_10)])
+
+        s_2 = Sentence([Clause(self.word_2, self.word_1, self.word_10), Clause(self.word_2, self.word_5, self.word_10),
+                    Clause(self.word_2, self.word_3, self.word_10), Clause(self.word_1, self.word_4, self.word_10),
+                    Clause(self.word_5, self.word_7, self.word_10), Clause(self.word_5, self.word_8, self.word_10),
+                    Clause(self.word_3, self.word_9, self.word_10), Clause(self.word_4, self.word_6, self.word_10)])
+
+        s_1.check()
+        s_2.check()
+
+        intersection = list(s_1.graph.nodes_set & s_2.graph.nodes_set)
+        intersection.sort()
+
+        graph = build_graph(s_1, s_2, intersection)
+
+        partitions = partition_graph(graph)
+        correct_partitions = [{self.word_1, self.word_2, self.word_4, self.word_6}, {self.word_3, self.word_9},
+                              {self.word_5, self.word_8}, {self.word_7}]
+
+        # This is because the order doesn't matter to us but the partition_graph method returns a list
+        def same_partitions(p1, p2):
+
+            if len(p1) != len(p2):
+                return False
+            else:
+                return all(partition in p2 for partition in p1)
+
+        self.assertTrue(same_partitions(partitions, correct_partitions))
 
 if __name__ == '__main__':
     unittest.main()
