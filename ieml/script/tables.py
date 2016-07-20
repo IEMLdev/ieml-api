@@ -196,15 +196,22 @@ def _make_headers(plural_variable, substance, attribute, mode):
     return headers
 
 
-def print_headers(headers):
+def print_headers(headers, debug=True):
     """Print headers for debugging purposes"""
     dimensions = ['row_headers', 'col_headers', 'tab_headers']
 
-    for title, dim in zip(dimensions, headers):
-        print(title + " = [", end=" ")
-        for elem in dim:
-            print("self.parser.parse(\"" + str(elem) + "\"),", end=" ")
-        print(']')
+    if debug:
+        for title, dim in zip(dimensions, headers):
+            print(title + " = [", end=" ")
+            for elem in dim:
+                print("self.parser.parse(\"" + str(elem) + "\"),", end=" ")
+            print(']')
+    else:
+        for title, dim in zip(dimensions, headers):
+            print(title + " = [", end=" ")
+            for elem in dim:
+                print(str(elem), end=" ")
+            print(']')
 
 
 def print_cells(cells):
