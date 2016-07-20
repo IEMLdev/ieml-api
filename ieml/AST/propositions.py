@@ -258,6 +258,7 @@ class AbstractSentence(AbstractAdditiveProposition, ClosedProposition):
     def __init__(self, child_elements):
         super().__init__(child_elements)
         self.graph = None
+        self.grammatical_class = None
 
     def gather_hyperlinks(self, current_path):
         # first we build the (object, usl) tuple list for the current object
@@ -271,6 +272,7 @@ class AbstractSentence(AbstractAdditiveProposition, ClosedProposition):
             # then, we build the (super)sentence's graph using the (super)clause list
             self.graph = PropositionGraph(self.children)
             self.graph.check() #the graph does some checking
+            self.grammatical_class = self.graph.root_node.grammatical_class
 
     def _do_ordering(self):
         """Orders the clauses/superclauses inside the sentence/supersentence, using the graph"""
