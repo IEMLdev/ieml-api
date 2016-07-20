@@ -5,7 +5,7 @@ from ieml.AST.terms import Term
 from ieml.AST.usl import Text, HyperText
 from ieml.operator import usl, sc
 from bidict import bidict
-from models.relations import RelationsConnector
+from models.relations import RelationsConnector, RelationsQueries
 from fractions import Fraction
 
 categories = bidict({Term: 1, Word: 2, Sentence: 3, SuperSentence: 4, Text: 5, HyperText: 6})
@@ -312,6 +312,30 @@ def get_grammar_class(uslA, uslB):
 
     return grammar_classes_A, grammar_classes_B
 
+#Ma fonction grammar_class en partant de celle d'avant
+#TODO complete this function
+def get_grammar_class_of_level(uslA, uslB, level):
+    stages_A, children_A, children_multi_A = compute_stages(uslA)
+    stages_B, children_B, children_multi_B = compute_stages(uslB)
+
+    if level == 'term':
+        grammar_classes_a = [term.script.script_class for term in stages_A['Terms']]
+        grammar_classes_b = [term.script.script_class for term in stages_B['Terms']]
+
+    if level == 'word':
+        grammar_classes_a = [term.script.script_class for term in stages_A['Terms']]
+        grammar_classes_b = [term.script.script_class for term in stages_B['Terms']]
+
+    if level == 'sentence':
+        pass
+
+    if level == 'supersentence':
+        pass
+
+    else:
+        pass #raise exception si jamais on l'utilise mal
+
+    return grammar_classes_a, grammar_classes_b
 
 def connexity(partitions, node_intersection):
 
@@ -351,9 +375,115 @@ def list_intersection_cardinal(list_a, list_b):
         if element in tmp:
             intersection_cardinal += 1
             tmp.remove(element)
-            
+
     return intersection_cardinal
 
+
+#TODO complete this function
+def grammatical_equivalence_class_index(uslA, uslB, index, level):
+    """
+
+    :param uslA:
+    :param uslB:
+    :param index:must be the set proximity index (EO) or the object proximity index (OO)
+    :param level:must be term, word, sentence or supersentence
+    :return:the value of the index
+    """
+    # a la place de level : categories ? ou stage
+    if index == 'EO':
+        if level == 'term':
+            grammar_classes_a, grammar_classes_b = get_grammar_class(uslA, uslB)
+            index_value = list_intersection_cardinal(grammar_classes_a, grammar_classes_b)
+
+        if level == 'word':
+            pass
+
+        if level == 'sentence':
+            pass
+
+        if level == 'supersentence':
+            pass
+
+        else:
+            pass #raise exception si jamais on l'utilise mal
+
+    if index == 'OO':
+        if level == 'term':
+            pass
+
+        if level == 'word':
+            pass
+
+        if level == 'sentence':
+            pass
+
+        if level == 'supersentence':
+            pass
+
+        else:
+            pass #raise exception si jamais on l'utilise mal
+
+# ou alors dans l'autre sens ,d'abord if level et puis if index
+    else:
+        pass
+
+    return index_value
+
+def paradigmatic_equivalence_class_index(uslA, uslB, table_rank, index):
+    """
+
+    :param uslA:
+    :param uslB:
+    :param table_rank: rank of the table/paradigm wanted, must be 1 (root paradigm), 2, 3, 4 or 5
+    :param index: must be the set proximity index (EO) or the object proximity index (OO)
+    :return the paradigmatic equivalence class of the choosen index (EO or OO)
+    """
+    index_value = 0
+
+    stages_A, children_A, children_multi_A = compute_stages(uslA)
+    stages_B, children_B, children_multi_B = compute_stages(uslB)
+
+    #faire l inverse, d abord if table_rank puis if index ?
+    if index == 'EO':
+        if table_rank == 1: #  In this case there is only one root paradigm for each terms in uslA and in uslB
+            a_root_paradigms = [RelationsQueries.relations(term.script, relation_title='ROOT') for term in stages_A['Terms']]
+            #il faut que term.script soit bien un script
+            b_root_paradigms = [RelationsQueries.relations(term.script, relation_title='ROOT') for term in stages_B['Terms']]
+
+            index_value = list_intersection_cardinal(a_root_paradigms, b_root_paradigms)
+            
+        if table_rank == 2:
+            pass
+
+        if table_rank == 3:
+            pass
+
+        if table_rank == 4:
+            pass
+
+        if table_rank == 5:
+            pass
+
+    if index == 'OO':
+        if table_rank == 1:
+            pass
+
+        if table_rank == 2:
+            pass
+
+        if table_rank == 3:
+            pass
+
+        if table_rank == 4:
+            pass
+
+        if table_rank == 5:
+            pass
+
+    else:
+        pass #raise execption
+
+    return index_value
 
 
 if __name__ == '__main__':
