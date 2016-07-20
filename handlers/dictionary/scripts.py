@@ -51,6 +51,8 @@ def script_table(iemltext):
         NOUN_CLASS: 'cyan'
     }
 
+    class_to_color_light = {k: 'light-'+class_to_color[k] for k in class_to_color}
+
     def _table_entry(col_size=0, ieml=None, header=False, top_header=False):
         '''
         header + ieml + !top_header = colomn and line header
@@ -67,11 +69,11 @@ def script_table(iemltext):
         if not ieml:
             color = 'black'
         elif not header:
-            color = class_to_color[ieml.script_class]
+            color = class_to_color_light[ieml.script_class]
         elif top_header:
             color = 'grey'
         else:
-            color = 'green'
+            color = class_to_color[ieml.script_class]
 
         return {
             'background': color,
