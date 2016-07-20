@@ -26,6 +26,8 @@ class Term(AbstractProposition):
         else:
             raise ValueError
 
+        self.grammatical_class = self.script.script_class
+
     def __eq__(self, other):
         if not isinstance(other, Term):
             return False
