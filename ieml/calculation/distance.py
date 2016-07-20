@@ -171,7 +171,6 @@ def compute_stages(usl):
     return stages, children, result
 
 
-
 def flatten_dict(dico):
 
     lineage = []
@@ -263,16 +262,16 @@ def build_graph(object_set_a, object_set_b, intersection):
 def parents(usl_a, usl_b, index='EO'):
 
     parents_a, parents_b = get_parents(usl_a, usl_b)
-    parents_a.sort()
-    parents_b.sort()
 
     if index == 'EO':
-        pass
+        return len(parents_a & parents_b) / len(parents_a | parents_b)
     elif index == 'OO':
-        pass
+        return sum(len(a & b)/len(a | b) for a, b in it.product(parents_a, parents_b))/(len(parents_a) * len(parents_b))
+
     else:
         # TODO: create an invalid index exception and throw it here
         print("Wrong index")
+
 
 def _build_proposition_graph(combination, graph):
 
@@ -300,8 +299,8 @@ def get_parents(usl_a, usl_b):
         return frozenset({(elem, arr.count(elem)) for elem in arr})
 
     rc = RelationsConnector()
-    parents_a = {tupleize(flatten_dict(rc.get_script(terms)['RELATIONS']['FATHER_RELATION'])) for terms in stages_A['Terms']}
-    parents_b = {tupleize(flatten_dict(rc.get_script(terms)['RELATIONS']['FATHER_RELATION'])) for terms in stages_B['Terms']}
+    parents_a = {tupleize(flatten_dict(rc.get_script(term.script)['RELATIONS']['FATHER_RELATION'])) for term in stages_A[Term]}
+    parents_b = {tupleize(flatten_dict(rc.get_script(term.script)['RELATIONS']['FATHER_RELATION'])) for term in stages_B[Term]}
 
     return parents_a, parents_b
 
