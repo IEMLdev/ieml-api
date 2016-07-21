@@ -259,7 +259,7 @@ def build_graph(object_set_a, object_set_b, intersection):
     return graph
 
 
-def parents(usl_a, usl_b, index='EO'):
+def parents_index(usl_a, usl_b, index="EO"):
 
     parents_a, parents_b = get_parents(usl_a, usl_b)
 
