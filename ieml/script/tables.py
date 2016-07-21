@@ -15,9 +15,13 @@ def generate_tables(parent_script):
     table_list = []
 
     if isinstance(parent_script, AdditiveScript):
-        for child in parent_script.children:
-            table_list.extend(generate_tables(child))
-        return table_list
+        if parent_script.layer == 0:
+            table_list.append(_build_table(1, parent_script, parent_script))
+            return table_list
+        else:
+            for child in parent_script.children:
+                table_list.extend(generate_tables(child))
+            return table_list
     elif isinstance(parent_script, MultiplicativeScript):
         # Holds the plural vars of the multiplicative script and their position in the script
         # 0: substance, 1: attribute, 2: mode
@@ -137,9 +141,16 @@ def _build_table(dimension, parent_script, plural_vars):
     tab_headers = []
 
     if dimension == 1:
-        # In this case we only have one header, which is the multiplicative Script given to us
-        # that we will expand in the cells array
-        cells = np.empty(plural_vars[0].script.cardinal, dtype=object)
+        if isinstance(plural_vars, AdditiveScript):
+            cells = np.empty(plural_vars.cardinal, dtype=object)
+            row_headers.append(parent_script)
+            for i, child in enumerate(plural_vars.children):
+                cells[i] = child
+            return Table(headers=[row_headers, col_headers, tab_headers], cells=cells, paradigm=parent_script)
+        else:
+            # In this case we only have one header, which is the multiplicative Script given to us
+            # that we will expand in the cells array
+            cells = np.empty(plural_vars[0].script.cardinal, dtype=object)
         row_headers.append(parent_script)
     if dimension >= 2:
         cells = np.empty((plural_vars[0].script.cardinal, plural_vars[1].script.cardinal), dtype=object)
