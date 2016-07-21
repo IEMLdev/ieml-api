@@ -4,8 +4,10 @@ from ieml.AST.propositions import Word, Sentence, SuperSentence, Morpheme
 from ieml.AST.terms import Term
 from ieml.AST.usl import Text, HyperText
 from ieml.operator import usl, sc
+from ieml.script import CONTAINED_RELATION
+from ieml.script.tables import get_table_rank
 from bidict import bidict
-from models.relations import RelationsConnector
+from models.relations import RelationsConnector, RelationsQueries
 from fractions import Fraction
 
 categories = bidict({Term: 1, Word: 2, Sentence: 3, SuperSentence: 4, Text: 5, HyperText: 6})
@@ -171,7 +173,6 @@ def compute_stages(usl):
     return stages, children, result
 
 
-
 def flatten_dict(dico):
 
     lineage = []
@@ -260,6 +261,20 @@ def build_graph(object_set_a, object_set_b, intersection):
     return graph
 
 
+def parents_index(usl_a, usl_b, index="EO"):
+
+    parents_a, parents_b = get_parents(usl_a, usl_b)
+
+    if index == 'EO':
+        return len(parents_a & parents_b) / len(parents_a | parents_b)
+    elif index == 'OO':
+        return sum(len(a & b)/len(a | b) for a, b in it.product(parents_a, parents_b))/(len(parents_a) * len(parents_b))
+
+    else:
+        # TODO: create an invalid index exception and throw it here
+        print("Wrong index")
+
+
 def _build_proposition_graph(combination, graph):
 
     if isinstance(combination[0], (Sentence, SuperSentence)):
@@ -277,38 +292,46 @@ def _build_proposition_graph(combination, graph):
     return graph
 
 
-def get_parents(uslA, uslB):
+def get_parents(usl_a, usl_b):
 
-    stages_A, children_A, children_multi_A = compute_stages(uslA)
-    stages_B, children_B, children_multi_B = compute_stages(uslB)
+    stages_A, children_A, children_multi_A = compute_stages(usl_a)
+    stages_B, children_B, children_multi_B = compute_stages(usl_b)
 
     def tupleize(arr):
         return frozenset({(elem, arr.count(elem)) for elem in arr})
 
     rc = RelationsConnector()
-    parents_A = {tupleize(flatten_dict(rc.get_script(terms)['RELATIONS']['FATHER_RELATION'])) for terms in stages_A['Terms']}
-    parents_B = {tupleize(flatten_dict(rc.get_script(terms)['RELATIONS']['FATHER_RELATION'])) for terms in stages_B['Terms']}
+    parents_a = {tupleize(flatten_dict(rc.get_script(term.script)['RELATIONS']['FATHER_RELATION'])) for term in stages_A[Term]}
+    parents_b = {tupleize(flatten_dict(rc.get_script(term.script)['RELATIONS']['FATHER_RELATION'])) for term in stages_B[Term]}
 
-    return parents_A, parents_B
+    return parents_a, parents_b
 
 
-def get_paradigm(uslA, uslB):
+def get_paradigms(object_set_a):
 
-    stages_A, children_A, children_multi_A = compute_stages(uslA)
-    stages_B, children_B, children_multi_B = compute_stages(uslB)
+    if isinstance(object_set_a, Word) or isinstance(object_set_a, Sentence) or isinstance(object_set_a, SuperSentence):
+        term_list = [elem for elem in object_set_a.tree_iter() if isinstance(elem, Term)]
+    else:
+        stages_A, children_A, children_multi_A = compute_stages(object_set_a)
+        term_list = stages_A[Term]
+
+    paradigms = {i: [] for i in range(1, 6)}
+
     rc = RelationsConnector()
-    paradigms_A = {rc.get_script(term)['ROOT'] for term in stages_A['Terms']}
-    paradigms_B = {rc.get_script(term)['ROOT'] for term in stages_B['Terms']}
 
-    return paradigms_A, paradigms_B
+    for term in term_list:
+        for paradigm in rc.get_script(term.script)["RELATIONS"]["CONTAINED"]:
+            paradigms[get_table_rank(sc(paradigm))].append(paradigm)
+
+    return paradigms
 
 
 def get_grammar_class(uslA, uslB):
     stages_A, children_A, children_multi_A = compute_stages(uslA)
     stages_B, children_B, children_multi_B = compute_stages(uslB)
 
-    grammar_classes_A = [term.script.script_class for term in stages_A['Terms']]
-    grammar_classes_B = [term.script.script_class for term in stages_B['Terms']]
+    grammar_classes_A = [term.script.script_class for term in stages_A[Term]]
+    grammar_classes_B = [term.script.script_class for term in stages_B[Term]]
 
     return grammar_classes_A, grammar_classes_B
 
@@ -329,6 +352,119 @@ def print_graph(graph):
         for elem in v:
             print(str(elem), end=", ")
         print("]")
+
+
+def list_intersection_cardinal(list_a, list_b):
+    """
+    The purpose of this method is to perform the intersection of two lists.
+    The reason why we need this method is because we have a use case where we need to keed repeted element in memory
+    and also use the list as a set.
+    :return:
+    """
+    intersection_cardinal = 0
+
+    if len(list_a) >= len(list_b):
+        tmp = list_a
+        iteration_list = list_b
+
+    else:
+        tmp = list_b
+        iteration_list = list_a
+
+
+    for element in iteration_list:
+        if element in tmp:
+            intersection_cardinal += 1
+            tmp.remove(element)
+
+    return intersection_cardinal
+
+
+def list_union_cardinal(list_a, list_b):
+    union_cardinal = len(list_a) + len(list_b)
+    return union_cardinal
+
+
+def grammatical_class_index(uslA, uslB, index, stage):
+    """
+
+    :param uslA:
+    :param uslB:
+    :param index:must be the set proximity index : "EO" or the object proximity index : "OO"
+    :param stage:must be Term, Word, Sentence or SuperSentence
+    :return:the value of the index
+    """
+    stages_A, children_A, children_multi_A = compute_stages(uslA)
+    stages_B, children_B, children_multi_B = compute_stages(uslB)
+
+    grammar_classes_a = [elem.grammatical_class for elem in stages_A[stage]]
+    grammar_classes_b = [elem.grammatical_class for elem in stages_B[stage]]
+
+    if index == 'EO':
+        index_value = (list_intersection_cardinal(grammar_classes_a, grammar_classes_b) /
+                      list_union_cardinal(grammar_classes_a, grammar_classes_b))
+
+    elif index == 'OO':
+        if stage is Term:
+            raise ValueError
+
+        size = float(len(stages_A[stage]) * len(stages_B[stage]))
+        index_value = 0.0
+        for a, b in it.product(stages_A[stage], stages_B[stage]):
+            # we replace every child of A and B by their grammatical class, and create a list of it
+            grammar_list_a = [e.grammatical_class for e in children_A[a]]
+            grammar_list_b = [e.grammatical_class for e in children_B[b]]
+
+            # we sort the list in order to do the intersection and union of lists
+            grammar_list_a.sort()
+            grammar_list_b.sort()
+
+            index_value += (list_intersection_cardinal(grammar_list_a, grammar_list_b) /
+                           (size * list_union_cardinal(grammar_list_a, grammar_list_b)))
+    else:
+        raise ValueError
+
+    return index_value
+
+
+#TODO complete this function with loulou functions
+def paradigmatic_equivalence_class_index(uslA, uslB, paradigm_rank, index):
+    """
+
+    :param uslA:
+    :param uslB:
+    :param paradigm_rank: rank of the paradigm wanted, must be 1 (root paradigm), 2, 3, 4 or 5
+    :param index: must be the set proximity index (EO) or the object proximity index (OO)
+    :return the paradigmatic equivalence class of the choosen index (EO or OO)
+    """
+    index_value = 0
+
+    stages_A, children_A, children_multi_A = compute_stages(uslA)
+    stages_B, children_B, children_multi_B = compute_stages(uslB)
+    paradigms_a = get_paradigms(uslA)
+    paradigms_b = get_paradigms(uslB)
+
+    #faire l inverse, d abord if table_rank puis if index ?
+    if index == 'EO':
+        index_value = (list_intersection_cardinal(paradigms_a[paradigm_rank], paradigms_b[paradigm_rank]) /
+                       list_union_cardinal(paradigms_a[paradigm_rank], paradigms_b[paradigm_rank]))
+
+    elif index == 'OO':
+        #  We can only find paradigms of terms.
+        # So we have to build the '00' matrix with the words of uslA and uslB as rows and columns
+        size = float(len(stages_A[Word]) * len(stages_B[Word]))
+        if size == 0:
+            raise ValueError
+
+        for a, b in it.product(stages_A[Word], stages_B[Word]):
+            paradigms_a = get_paradigms(a)
+            paradigms_b = get_paradigms(b)
+
+            index_value += (list_intersection_cardinal(paradigms_a[paradigm_rank], paradigms_b[paradigm_rank]) /
+                            list_union_cardinal(paradigms_a[paradigm_rank], paradigms_b[paradigm_rank]))
+        index_value /= size
+
+    return index_value
 
 
 if __name__ == '__main__':
