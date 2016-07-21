@@ -376,7 +376,6 @@ def list_union_cardinal(list_a, list_b):
     return union_cardinal
 
 
-#TODO faire relire cette fonction par Zack
 def grammatical_class_index(uslA, uslB, index, stage):
     """
 
@@ -393,8 +392,8 @@ def grammatical_class_index(uslA, uslB, index, stage):
     grammar_classes_b = [elem.grammatical_class for elem in stages_B[stage]]
 
     if index == 'EO':
-        index_value = list_intersection_cardinal(grammar_classes_a, grammar_classes_b) / \
-                      list_union_cardinal(grammar_classes_a, grammar_classes_b)
+        index_value = (list_intersection_cardinal(grammar_classes_a, grammar_classes_b) /
+                      list_union_cardinal(grammar_classes_a, grammar_classes_b))
 
     elif index == 'OO':
         if stage is Term:
@@ -404,21 +403,15 @@ def grammatical_class_index(uslA, uslB, index, stage):
         index_value = 0.0
         for a, b in it.product(stages_A[stage], stages_B[stage]):
             # we replace every child of A and B by their grammatical class, and create a list of it
-            grammar_list_a = (e.grammatical_class for e in children_A[a])
-            grammar_list_b = (e.grammatical_class for e in children_B[b])
+            grammar_list_a = [e.grammatical_class for e in children_A[a]]
+            grammar_list_b = [e.grammatical_class for e in children_B[b]]
 
             # we sort the list in order to do the intersection and union of lists
             grammar_list_a.sort()
             grammar_list_b.sort()
 
-            if len(list_union_cardinal(grammar_list_a, grammar_list_b)):  # not to divide by 0
-                index_value += list_intersection_cardinal(grammar_list_a, grammar_list_b) / \
-                               (size * list_union_cardinal(grammar_list_a, grammar_list_b))
-            else:
-                index_value = 1
-
-
-# ou alors dans l'autre sens ,d'abord if level et puis if index
+            index_value += (list_intersection_cardinal(grammar_list_a, grammar_list_b) /
+                           (size * list_union_cardinal(grammar_list_a, grammar_list_b)))
     else:
         raise ValueError
 
