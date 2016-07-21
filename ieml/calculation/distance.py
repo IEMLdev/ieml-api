@@ -4,6 +4,7 @@ from ieml.AST.propositions import Word, Sentence, SuperSentence, Morpheme
 from ieml.AST.terms import Term
 from ieml.AST.usl import Text, HyperText
 from ieml.operator import usl, sc
+from ieml.script import CONTAINED_RELATION
 from bidict import bidict
 from models.relations import RelationsConnector, RelationsQueries
 from fractions import Fraction
@@ -296,8 +297,8 @@ def get_paradigm(uslA, uslB):
     stages_A, children_A, children_multi_A = compute_stages(uslA)
     stages_B, children_B, children_multi_B = compute_stages(uslB)
     rc = RelationsConnector()
-    paradigms_A = {rc.get_script(term)['ROOT'] for term in stages_A['Terms']}
-    paradigms_B = {rc.get_script(term)['ROOT'] for term in stages_B['Terms']}
+    paradigms_A = {rc.get_script(term)['ROOT'] for term in stages_A[Term]}
+    paradigms_B = {rc.get_script(term)['ROOT'] for term in stages_B[Term]}
 
     return paradigms_A, paradigms_B
 
@@ -311,37 +312,6 @@ def get_grammar_class(uslA, uslB):
 
     return grammar_classes_A, grammar_classes_B
 
-#Ma fonction grammar_class en partant de celle d'avant
-#TODO faire relire cette fonction par Zack
-def get_grammar_class_of_level(uslA, uslB, level):
-    stages_A, children_A, children_multi_A = compute_stages(uslA)
-    stages_B, children_B, children_multi_B = compute_stages(uslB)
-
-    if level == 'term':
-        grammar_classes_a = [term.script.script_class for term in stages_A['Terms']]
-        grammar_classes_b = [term.script.script_class for term in stages_B['Terms']]
-
-    if level == 'word':
-        grammar_classes_a = [word.grammatical_class for word in stages_A['Word']]
-        grammar_classes_b = [word.grammatical_class for word in stages_B['Word']]
-
-    if level == 'sentence':
-        grammar_classes_a = [sentence.grammatical_class for sentence in stages_A['Sentence']]
-        grammar_classes_b = [sentence.grammatical_class for sentence in stages_B['Sentence']]
-
-    if level == 'supersentence':
-        grammar_classes_a = [supersentence.grammatical_class for supersentence in stages_A['SuperSentence']]
-        grammar_classes_b = [supersentence.grammatical_class for supersentence in stages_B['SuperSentence']]
-
-    else:
-        raise ValueError
-
-    #Est ce que c'est equivalent à ca :
-    grammar_classes_a = [elem.script.script_class for elem in stages_A[level]]
-    grammar_classes_b = [elem.script.script_class for elem in stages_B[level]]
-    # il faudrait lever une execption si level n'est pas entré correctement
-
-    return grammar_classes_a, grammar_classes_b
 
 def connexity(partitions, node_intersection):
 
@@ -359,6 +329,7 @@ def print_graph(graph):
         for elem in v:
             print(str(elem), end=", ")
         print("]")
+
 
 def list_intersection_cardinal(list_a, list_b):
     """
@@ -385,14 +356,14 @@ def list_intersection_cardinal(list_a, list_b):
 
     return intersection_cardinal
 
+
 def list_union_cardinal(list_a, list_b):
     union_cardinal = len(list_a) + len(list_b)
     return union_cardinal
 
 
-
-#TODO complete this function
-def grammatical_equivalence_class_index(uslA, uslB, index, stage):
+#TODO faire relire cette fonction par Zack
+def grammatical_class_index(uslA, uslB, index, stage):
     """
 
     :param uslA:
@@ -407,75 +378,16 @@ def grammatical_equivalence_class_index(uslA, uslB, index, stage):
     grammar_classes_a = [elem.grammatical_class for elem in stages_A[stage]]
     grammar_classes_b = [elem.grammatical_class for elem in stages_B[stage]]
 
-    if index == "EO":
-        if stage == Term:
-            grammar_classes_a, grammar_classes_b = get_grammar_class(uslA, uslB)
-            if list_union_cardinal(grammar_classes_a, grammar_classes_b) : # if the cardinal of the union is not 0
-                index_value = list_intersection_cardinal(grammar_classes_a, grammar_classes_b)/ \
-                              list_union_cardinal(grammar_classes_a, grammar_classes_b)
-            else:
-                index_value = 1
-
-        elif stage == Word:
-            grammar_classes_a = [word.grammatical_class for word in stages_A[Word]]
-            grammar_classes_b = [word.grammatical_class for word in stages_B[Word]]
-            if list_union_cardinal(grammar_classes_a, grammar_classes_b) : # if the cardinal of the union is not 0
-                index_value = list_intersection_cardinal(grammar_classes_a, grammar_classes_b)/ \
-                              list_union_cardinal(grammar_classes_a, grammar_classes_b)
-            else:
-                index_value = 1
-
-        elif stage == Sentence:
-            grammar_classes_a = [sentence.grammatical_class for sentence in stages_A[Sentence]]
-            grammar_classes_b = [sentence.grammatical_class for sentence in stages_B[Sentence]]
-            if list_union_cardinal(grammar_classes_a, grammar_classes_b) : # if the cardinal of the union is not 0
-                index_value = list_intersection_cardinal(grammar_classes_a, grammar_classes_b)/ \
-                              list_union_cardinal(grammar_classes_a, grammar_classes_b)
-            else:
-                index_value = 1
-
-        elif stage == SuperSentence:
-            grammar_classes_a = [supersentence.grammatical_class for supersentence in stages_A[SuperSentence]]
-            grammar_classes_b = [supersentence.grammatical_class for supersentence in stages_B[SuperSentence]]
-            if list_union_cardinal(grammar_classes_a, grammar_classes_b) : # if the cardinal of the union is not 0
-                index_value = list_intersection_cardinal(grammar_classes_a, grammar_classes_b)/ \
-                              list_union_cardinal(grammar_classes_a, grammar_classes_b)
-            else:
-                index_value = 1
-
-        else:
-            # TODO: create invalid level exception
-            raise ValueError
-
-    #on peut remplacer tout ce que est en haut par ceci :
-    #mais du coup pas de invalid level exception
-
-
     if index == 'EO':
-        #grammar_classes_a = [elem.grammatical_class for elem in stages_A[stage]]
-        #grammar_classes_b = [elem.grammatical_class for elem in stages_B[stage]]
-        if list_union_cardinal(grammar_classes_a, grammar_classes_b) : # if the cardinal of the union is not 0
-            index_value = list_intersection_cardinal(grammar_classes_a, grammar_classes_b)/ \
-                          list_union_cardinal(grammar_classes_a, grammar_classes_b)
-        else:
-            index_value = 1
-
-    #if stage is Term:
-    #    raise ValueError
-
-    #size = float(len(stages_A[stage]) * len(stages_B[stage]))
-    #accum = 0.0
-    #for a, b in it.product(stages_A[stage], stages_B[stage]):
-    #    accum += len(children_A[a] & children_B[b]) / (size * len(children_A[a] | children_B[b]))
-
-    #return accum
+        index_value = list_intersection_cardinal(grammar_classes_a, grammar_classes_b) / \
+                      list_union_cardinal(grammar_classes_a, grammar_classes_b)
 
     elif index == 'OO':
         if stage is Term:
             raise ValueError
 
         size = float(len(stages_A[stage]) * len(stages_B[stage]))
-        accum = 0.0
+        index_value = 0.0
         for a, b in it.product(stages_A[stage], stages_B[stage]):
             # we replace every child of A and B by their grammatical class, and create a list of it
             grammar_list_a = (e.grammatical_class for e in children_A[a])
@@ -485,32 +397,12 @@ def grammatical_equivalence_class_index(uslA, uslB, index, stage):
             grammar_list_a.sort()
             grammar_list_b.sort()
 
-            accum += len(list_intersection_cardinal(grammar_classes_a[a], grammar_classes_b[b])) / \
-                     (size * len(children_A[a] | children_B[b]))
+            if len(list_union_cardinal(grammar_list_a, grammar_list_b)):  # not to divide by 0
+                index_value += list_intersection_cardinal(grammar_list_a, grammar_list_b) / \
+                               (size * list_union_cardinal(grammar_list_a, grammar_list_b))
+            else:
+                index_value = 1
 
-
-        if stage == Term:
-            raise ValueError
-
-        if stage == Word:
-            grammar_classes_a = [word.grammatical_class for word in stages_A[Word]]
-            grammar_classes_b = [word.grammatical_class for word in stages_B[Word]]
-
-            size = float(len(stages_A[stage]) * len(stages_B[stage]))
-            accum = 0.0
-            for a, b in it.product(stages_A[stage], stages_B[stage]):
-                accum += len(grammar_classes_a[a] & grammar_classes_b[b]) / (size * len(children_A[a] | children_B[b]))
-
-
-
-        if stage == Sentence:
-            pass
-
-        if stage == SuperSentence:
-            pass
-
-        else:
-            raise ValueError
 
 # ou alors dans l'autre sens ,d'abord if level et puis if index
     else:
@@ -520,12 +412,12 @@ def grammatical_equivalence_class_index(uslA, uslB, index, stage):
 
 
 #TODO complete this function with loulou functions
-def paradigmatic_equivalence_class_index(uslA, uslB, table_rank, index):
+def paradigmatic_equivalence_class_index(uslA, uslB, paradigm_rank, index):
     """
 
     :param uslA:
     :param uslB:
-    :param table_rank: rank of the table/paradigm wanted, must be 1 (root paradigm), 2, 3, 4 or 5
+    :param paradigm_rank: rank of the paradigm wanted, must be 1 (root paradigm), 2, 3, 4 or 5
     :param index: must be the set proximity index (EO) or the object proximity index (OO)
     :return the paradigmatic equivalence class of the choosen index (EO or OO)
     """
@@ -536,10 +428,10 @@ def paradigmatic_equivalence_class_index(uslA, uslB, table_rank, index):
 
     #faire l inverse, d abord if table_rank puis if index ?
     if index == 'EO':
-        if table_rank == 1: #  In this case there is only one root paradigm for each terms in uslA and in uslB
-            a_root_paradigms = [RelationsQueries.relations(term.script, relation_title='ROOT') for term in stages_A['Terms']]
+        if paradigm_rank == 1: #  In this case there is only one root paradigm for each terms in uslA and in uslB
+            a_root_paradigms = [RelationsQueries.relations(term.script, relation_title='ROOT') for term in stages_A[Term]]
             #il faut que term.script soit bien un script
-            b_root_paradigms = [RelationsQueries.relations(term.script, relation_title='ROOT') for term in stages_B['Terms']]
+            b_root_paradigms = [RelationsQueries.relations(term.script, relation_title='ROOT') for term in stages_B[Term]]
             # for uslA and uslB we replace their terms by their grammatical class
 
             if list_union_cardinal(a_root_paradigms, b_root_paradigms) : # if this cardinal does not equal 0
@@ -548,36 +440,66 @@ def paradigmatic_equivalence_class_index(uslA, uslB, table_rank, index):
             else:
                 index_value = 1
 
-        if table_rank == 2:
-            pass
+        else:
+            if paradigm_rank not in (2, 3, 4, 5):
+                raise ValueError
+            else:
+                table_a = [RelationsQueries.relations(term.script, relation_title=CONTAINED_RELATION) for term in stages_A[Term]]
+                paradigms_a = [paradigm for paradigm in table_a if paradigm.get_rank() == paradigm_rank]
 
-        if table_rank == 3:
-            pass
+                table_b = [RelationsQueries.relations(term.script, relation_title=CONTAINED_RELATION) for term in stages_B[Term]]
+                paradigms_b = [paradigm for paradigm in table_b if paradigm.get_rank() == paradigm_rank]
 
-        if table_rank == 4:
-            pass
+                if list_union_cardinal(paradigms_a, paradigms_b) : # if this cardinal does not equal 0
+                    index_value = list_intersection_cardinal(paradigms_a, paradigms_b)/ \
+                                  list_union_cardinal(paradigms_a, paradigms_b)
+                else:
+                    index_value = 1
 
-        if table_rank == 5:
-            pass
+    elif index == 'OO':
+        #  We can only find paradigms of terms.
+        # So we have to build the '00' matrix with the words of uslA and uslB as rows and columns
+        size = float(len(stages_A[Word]) * len(stages_B[Word]))
+        if size != 0:
+            if paradigm_rank == 1:
+                # we replace every term of A and B by their paradigm of rank 1, and create a list of it
+                for a, b in it.product(stages_A[Word], stages_B[Word]):
 
-    if index == 'OO':
-        if table_rank == 1:
-            pass
+                    a_root_paradigms = [RelationsQueries.relations(term.script, relation_title='ROOT')for term in children_A[a]]
+                    b_root_paradigms = [RelationsQueries.relations(term.script, relation_title='ROOT')for term in children_B[b]]
 
-        if table_rank == 2:
-            pass
+                    # we sort the list in order to do the intersection and union of lists
+                    a_root_paradigms.sort()
+                    b_root_paradigms.sort()
 
-        if table_rank == 3:
-            pass
+                    if list_union_cardinal(a_root_paradigms, b_root_paradigms) != 0: # not to divide by 0
+                        index_value += list_intersection_cardinal(a_root_paradigms, b_root_paradigms) / \
+                                       (size * list_union_cardinal(a_root_paradigms, b_root_paradigms))
+                    else:
+                        index_value = 1
+                #a_root_paradigms = [RelationsQueries.relations(term.script, relation_title='ROOT') for term in stages_A[Term]]
+                #b_root_paradigms = [RelationsQueries.relations(term.script, relation_title='ROOT') for term in stages_B[Term]]
 
-        if table_rank == 4:
-            pass
+            else:
+                if paradigm_rank not in (2, 3, 4, 5):
+                    raise ValueError
 
-        if table_rank == 5:
-            pass
+                else:
+                    for a, b in it.product(stages_A[Word], stages_B[Word]):
+
+                        table_a = [RelationsQueries.relations(term.script, relation_title=CONTAINED_RELATION) for term in children_A[a]]
+
+                        table_b = [RelationsQueries.relations(term.script, relation_title=CONTAINED_RELATION) for term in children_B[b]]
+                    paradigms_a = [paradigm for paradigm in table_a if paradigm.get_rank() == paradigm_rank]
+
+                    table_b = [RelationsQueries.relations(term.script, relation_title=CONTAINED_RELATION) for term in stages_B[Term]]
+                    paradigms_b = [paradigm for paradigm in table_b if paradigm.get_rank() == paradigm_rank]
+
+        else:
+            index_value = 1
 
     else:
-        pass #raise execption
+        raise ValueError
 
     return index_value
 
