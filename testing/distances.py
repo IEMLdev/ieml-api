@@ -6,8 +6,8 @@ from ieml.AST.usl import Text, HyperText
 from ieml.operator import usl, sc
 from ieml.calculation.distance import (object_proximity_index,
                                        set_proximity_index, mutual_inclusion_index, connexity, build_graph,
-                                       partition_graph, get_parents, get_grammar_class, get_paradigm, connexity_index,
-                                       grammatical_class_index)
+                                       partition_graph, get_parents, get_grammar_class, get_paradigms, connexity_index,
+                                       grammatical_class_index, paradigmatic_equivalence_class_index)
 
 
 class DistanceComputationTests(unittest.TestCase):
@@ -654,7 +654,15 @@ class DistanceComputationTests(unittest.TestCase):
         self.assertTrue(eo_index != 1, "Two different USLs don't have an EO index of 1")
         self.assertTrue(oo_index != 1, "Two different USLs don't have an EO index of 1")
 
+    def test_get_paradigm(self):
+        usl_a = HyperText(Text([self.word_1, self.word_3, self.word_2]))
+        usl_a.check()
 
+        paradigms = get_paradigms(self.word_1)
+
+        print(paradigms)
+
+        self.assertTrue(isinstance(paradigms, dict))
 
     def test_grammatical_class_index_words(self):
         usl_a = HyperText(Text([self.word_1, self.word_3, self.word_2]))
@@ -664,6 +672,21 @@ class DistanceComputationTests(unittest.TestCase):
 
         eo_index = grammatical_class_index(usl_a, usl_b, 'EO', Word)
         oo_index = grammatical_class_index(usl_a, usl_b, 'OO', Word)
+
+        print("EO index: " + str(eo_index))
+        print("OO index: " + str(oo_index))
+
+        self.assertTrue(eo_index != 1, "Two different USLs don't have an EO index of 1")
+        self.assertTrue(oo_index != 1, "Two different USLs don't have an EO index of 1")
+
+    def test_paradigm_class_index_word(self):
+        usl_a = HyperText(Text([self.word_1, self.word_3, self.word_2]))
+        usl_b = HyperText(Text([self.word_2, self.word_5]))
+        usl_a.check()
+        usl_b.check()
+
+        eo_index = paradigmatic_equivalence_class_index(usl_a, usl_b, 1, 'EO')
+        oo_index = paradigmatic_equivalence_class_index(usl_a, usl_b, 1, 'OO')
 
         print("EO index: " + str(eo_index))
         print("OO index: " + str(oo_index))
