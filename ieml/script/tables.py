@@ -196,15 +196,22 @@ def _make_headers(plural_variable, substance, attribute, mode):
     return headers
 
 
-def print_headers(headers):
+def print_headers(headers, debug=True):
     """Print headers for debugging purposes"""
     dimensions = ['row_headers', 'col_headers', 'tab_headers']
 
-    for title, dim in zip(dimensions, headers):
-        print(title + " = [", end=" ")
-        for elem in dim:
-            print("self.parser.parse(\"" + str(elem) + "\"),", end=" ")
-        print(']')
+    if debug:
+        for title, dim in zip(dimensions, headers):
+            print(title + " = [", end=" ")
+            for elem in dim:
+                print("self.parser.parse(\"" + str(elem) + "\"),", end=" ")
+            print(']')
+    else:
+        for title, dim in zip(dimensions, headers):
+            print(title + " = [", end=" ")
+            for elem in dim:
+                print(str(elem), end=" ")
+            print(']')
 
 
 def print_cells(cells):
@@ -262,14 +269,17 @@ def _compute_rank(paradigm, root):
     """
     if isinstance(root, dict):
         root = sc(root["_id"])
-    table = _get_table(root, paradigm.singular_sequences)
-    coordinates = _get_seq_coordinates(paradigm.singular_sequences, table)
-    # We are checking if only one header for the root table was used to create the child paradigm
-    check_dim = [len(dim_coord) == 1 for dim_coord in coordinates]
-    if any(check_dim):  # In this case the paradigm has at least a rank of 3
+
+    tbls = _get_tables(root, paradigm.singular_sequences)  # We get the tables that contain our paradigm
+    coordinates = _get_seq_coordinates(paradigm.singular_sequences, tbls)
+
+    if len(tbls) == 1:
+        # We are checking if only one header for the root table was used to create the child paradigm
+        check_dim = [len(dim_coord) == 1 for dim_coord in coordinates[tbls[0].paradigm]]
+    if len(tbls) == 1 and any(check_dim):  # In this case the paradigm has at least a rank of 3
         # now we check if it has, in fact, a rank for 3, or either 4 or 5.
         # We start by getting the header that contain our paradigms singular sequences
-        header = table.headers[check_dim.index(True)][coordinates[check_dim.index(True)][0]]
+        header = tbls[0].headers[check_dim.index(True)][coordinates[tbls[0].paradigm][check_dim.index(True)][0]]
         if header.singular_sequences == paradigm.singular_sequences:
             # In this case the header is actually our paradigm and we're done. (It has a rank of 3)
             return 3
@@ -277,9 +287,9 @@ def _compute_rank(paradigm, root):
         elif _is_sublist(paradigm.singular_sequences, header.singular_sequences):
             # TODO: I don't think we really need to check that condition.
             # We need to build the table associated with the header (which is a paradigm) of rank 3
-            table = _get_table(header, paradigm.singular_sequences)
-            coordinates = _get_seq_coordinates(paradigm.singular_sequences, table)
-            if any(len(dim_coord) == 1 for dim_coord in coordinates):
+            tbls = _get_tables(header, paradigm.singular_sequences)
+            coordinates = _get_seq_coordinates(paradigm.singular_sequences, tbls)
+            if len(tbls) == 1 and any(len(dim_coord) == 1 for dim_coord in coordinates[tbls[0].paradigm]):
                 return 5
             else:
                 return 4
@@ -288,32 +298,13 @@ def _compute_rank(paradigm, root):
         return 2
 
 
-def _get_rank(parent_table, parent_rank, paradigm):
-
-    if parent_rank == 1:
-        coordinates = _get_seq_coordinates(paradigm.singular_sequences, parent_table)
-        # remove the empty index arrays inside coordinates
-        coordinates = [np.unique(coord) for coord in coordinates if len(coord) > 0]
-        # We are checking if only one header for the root table was used to create the child paradigm
-        check_dim = [len(dim_coord) == 1 for dim_coord in coordinates]
-        if any(check_dim):  # In this case the paradigm has at least a rank of 3
-            # now we check if it has, in fact, a rank for 3, or either 4 or 5.
-            # We start by getting the header that contain our paradigms singular sequences
-            header = parent_table.headers[check_dim.index(True)][coordinates[check_dim.index(True)][0]]
-            if header.singular_sequences == paradigm.singular_sequences:
-                # In this case the header is actually our paradigm and we're done. (It has a rank of 3)
-                return 3
-    elif parent_rank == 3:
-        pass
-
-
-def _get_seq_coordinates(singular_sequences, table):
+def _get_seq_coordinates(singular_sequences, tables):
     """
 
     Parameters
     ----------
     singular_sequences
-    table
+    tables
 
     Returns
     -------
@@ -323,18 +314,22 @@ def _get_seq_coordinates(singular_sequences, table):
 
     """
 
-    coords = [np.empty(0, dtype=int) for i in range(3)]
+    coordinates = {table.paradigm: [] for table in tables}
 
-    for seq in singular_sequences:
-        if isinstance(seq, str):
-            seq = sc(seq)
-        if seq in table.cells:
-            coord = np.where(table.cells == seq)
-            for i, coordinate in enumerate(coord):
-                coords[i] = np.append(coords[i], coordinate)
+    for table in tables:
+        coords = [np.empty(0, dtype=int) for i in range(3)]
+        for seq in singular_sequences:
+            if isinstance(seq, str):
+                seq = sc(seq)
+            if seq in table.cells:
+                coord = np.where(table.cells == seq)
+                for i, coordinate in enumerate(coord):
+                    coords[i] = np.append(coords[i], coordinate)
+        # remove the empty index arrays inside coordinates
+        coordinates[table.paradigm] = [np.unique(coord) for coord in coords if len(coord) > 0]
 
-    # remove the empty index arrays inside coordinates
-    return [np.unique(coord) for coord in coords if len(coord) > 0]
+
+    return coordinates
 
 
 def _regroup_headers(*headers):
@@ -342,7 +337,7 @@ def _regroup_headers(*headers):
     return factorize(headers)
 
 
-def _get_table(root, singular_sequences):
+def _get_tables(root, singular_sequences):
     """
 
     Parameters
@@ -352,14 +347,18 @@ def _get_table(root, singular_sequences):
 
     Returns
     -------
-    The root table that contains the singular sequences of the paradigm for which we're computing the rank
+    The root tables that contain the singular sequences of the paradigm for which we're computing the rank
     """
     if isinstance(root, dict):
         root = sc(root["_id"])
 
-    for table in generate_tables(root):
-        if _is_sublist(singular_sequences, table.paradigm.singular_sequences):
-            return table
+    # Intersection of tables of the same paradigm are always empty
+    # So candidates contains tables that partition of our singular_sequences
+    candidates = [table for table in generate_tables(root)
+                  if set(singular_sequences) & set(table.paradigm.singular_sequences)]
+    return candidates
+
+
 
 
 def _is_sublist(small_list, big_list):
