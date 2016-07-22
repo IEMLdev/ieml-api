@@ -328,13 +328,7 @@ def _get_seq_coordinates(singular_sequences, tables):
         # remove the empty index arrays inside coordinates
         coordinates[table.paradigm] = [np.unique(coord) for coord in coords if len(coord) > 0]
 
-
     return coordinates
-
-
-def _regroup_headers(*headers):
-    """Takes in a list of table headers and 'collapses' them"""
-    return factorize(headers)
 
 
 def _get_tables(root, singular_sequences):
@@ -357,8 +351,6 @@ def _get_tables(root, singular_sequences):
     candidates = [table for table in generate_tables(root)
                   if set(singular_sequences) & set(table.paradigm.singular_sequences)]
     return candidates
-
-
 
 
 def _is_sublist(small_list, big_list):

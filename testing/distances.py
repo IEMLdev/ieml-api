@@ -6,7 +6,8 @@ from ieml.AST.usl import Text, HyperText
 from ieml.operator import usl, sc
 from ieml.calculation.distance import (object_proximity_index,
                                        set_proximity_index, mutual_inclusion_index, connexity, build_graph,
-                                       partition_graph, get_parents, get_grammar_class, get_paradigm, connexity_index)
+                                       partition_graph, get_parents, get_grammar_class, get_paradigms, connexity_index,
+                                       grammatical_class_index, paradigmatic_equivalence_class_index)
 
 
 class DistanceComputationTests(unittest.TestCase):
@@ -575,6 +576,124 @@ class DistanceComputationTests(unittest.TestCase):
                 return all(partition in p2 for partition in p1)
 
         self.assertTrue(same_partitions(partitions, correct_partitions))
+
+    def test_grammatical_class_index_sentences(self):
+        s_1 = Sentence([Clause(self.word_1, self.word_2, self.word_5), Clause(self.word_1, self.word_4, self.word_7),
+                        Clause(self.word_1, self.word_6, self.word_9), Clause(self.word_2, self.word_3, self.word_7),
+                        Clause(self.word_2, self.word_8, self.word_5), Clause(self.word_6, self.word_10, self.word_5)])
+
+        s_2 = Sentence([Clause(self.word_4, self.word_1, self.word_7), Clause(self.word_4, self.word_6, self.word_8),
+                        Clause(self.word_1, self.word_3, self.word_9), Clause(self.word_1, self.word_10, self.word_2),
+                        Clause(self.word_6, self.word_5, self.word_9)])
+
+        s_3 = Sentence([Clause(self.word_9, self.word_2, self.word_1), Clause(self.word_2, self.word_6, self.word_3),
+                        Clause(self.word_2, self.word_4, self.word_3), Clause(self.word_2, self.word_8, self.word_7),
+                        Clause(self.word_4, self.word_10, self.word_7)])
+        s_4 = Sentence([Clause(self.word_8, self.word_7, self.word_1), Clause(self.word_7, self.word_6, self.word_2),
+                        Clause(self.word_6, self.word_4, self.word_3), Clause(self.word_6, self.word_5, self.word_9)])
+
+        s_5 = Sentence([Clause(self.word_8, self.word_7, self.word_4), Clause(self.word_8, self.word_10, self.word_3)])
+
+        s_6 = Sentence([Clause(self.word_6, self.word_3, self.word_1), Clause(self.word_6, self.word_4, self.word_10),
+                        Clause(self.word_4, self.word_7, self.word_9)])
+
+        usl_a = HyperText(Text([s_1, s_2, s_6, s_5]))
+        usl_b = HyperText(Text([s_2, s_3, s_6, s_4]))
+        usl_a.check()
+        usl_b.check()
+
+        eo_index = grammatical_class_index(usl_a, usl_b, 'EO', Sentence)
+        oo_index = grammatical_class_index(usl_a, usl_b, 'OO', Sentence)
+
+        print("EO index: " + str(eo_index))
+        print("OO index: " + str(oo_index))
+
+        self.assertTrue(eo_index != 1, "Two different USLs don't have an EO index of 1")
+        self.assertTrue(oo_index != 1, "Two different USLs don't have an EO index of 1")
+
+    def test_grammatical_class_index_super_sentence(self):
+        s_1 = Sentence([Clause(self.word_1, self.word_2, self.word_5), Clause(self.word_1, self.word_4, self.word_7),
+                        Clause(self.word_1, self.word_6, self.word_9), Clause(self.word_2, self.word_3, self.word_7),
+                        Clause(self.word_2, self.word_8, self.word_5), Clause(self.word_6, self.word_10, self.word_5)])
+
+        s_2 = Sentence([Clause(self.word_4, self.word_1, self.word_7), Clause(self.word_4, self.word_6, self.word_8),
+                        Clause(self.word_1, self.word_3, self.word_9), Clause(self.word_1, self.word_10, self.word_2),
+                        Clause(self.word_6, self.word_5, self.word_9)])
+
+        s_3 = Sentence([Clause(self.word_9, self.word_2, self.word_1), Clause(self.word_2, self.word_6, self.word_3),
+                        Clause(self.word_2, self.word_4, self.word_3), Clause(self.word_2, self.word_8, self.word_7),
+                        Clause(self.word_4, self.word_10, self.word_7)])
+
+        s_4 = Sentence([Clause(self.word_8, self.word_7, self.word_1), Clause(self.word_7, self.word_6, self.word_2),
+                        Clause(self.word_6, self.word_4, self.word_3), Clause(self.word_6, self.word_5, self.word_9)])
+
+        s_5 = Sentence([Clause(self.word_8, self.word_7, self.word_4), Clause(self.word_8, self.word_10, self.word_3)])
+
+        s_6 = Sentence([Clause(self.word_6, self.word_3, self.word_1), Clause(self.word_6, self.word_4, self.word_10),
+                        Clause(self.word_4, self.word_7, self.word_9)])
+
+        super_sentence_1 = SuperSentence([SuperClause(s_1, s_2, s_3), SuperClause(s_1, s_6, s_4)])
+        super_sentence_2 = SuperSentence([SuperClause(s_4, s_2, s_5), SuperClause(s_4, s_1, s_6),
+                                          SuperClause(s_4, s_3, s_5)])
+        super_sentence_3 = SuperSentence([SuperClause(s_6, s_1, s_3), SuperClause(s_1, s_2, s_4),
+                                          SuperClause(s_2, s_5, s_3)])
+        super_sentence_4 = SuperSentence([SuperClause(s_4, s_2, s_6), SuperClause(s_4, s_1, s_6),
+                                          SuperClause(s_2, s_3, s_6)])
+
+        usl_a = HyperText(Text([super_sentence_1, super_sentence_2, super_sentence_3]))
+        usl_b = HyperText(Text([super_sentence_1, super_sentence_2, super_sentence_4]))
+        usl_a.check()
+        usl_b.check()
+
+        eo_index = grammatical_class_index(usl_a, usl_b, 'EO', SuperSentence)
+        oo_index = grammatical_class_index(usl_a, usl_b, 'OO', SuperSentence)
+
+        print("EO index: " + str(eo_index))
+        print("OO index: " + str(oo_index))
+
+        self.assertTrue(eo_index != 1, "Two different USLs don't have an EO index of 1")
+        self.assertTrue(oo_index != 1, "Two different USLs don't have an EO index of 1")
+
+    def test_get_paradigm(self):
+        usl_a = HyperText(Text([self.word_1, self.word_3, self.word_2]))
+        usl_a.check()
+
+        paradigms = get_paradigms(self.word_1)
+
+        print(paradigms)
+
+        self.assertTrue(isinstance(paradigms, dict))
+
+    def test_grammatical_class_index_words(self):
+        usl_a = HyperText(Text([self.word_1, self.word_3, self.word_2]))
+        usl_b = HyperText(Text([self.word_2, self.word_5]))
+        usl_a.check()
+        usl_b.check()
+
+        eo_index = grammatical_class_index(usl_a, usl_b, 'EO', Word)
+        oo_index = grammatical_class_index(usl_a, usl_b, 'OO', Word)
+
+        print("EO index: " + str(eo_index))
+        print("OO index: " + str(oo_index))
+
+        self.assertTrue(eo_index != 1, "Two different USLs don't have an EO index of 1")
+        self.assertTrue(oo_index != 1, "Two different USLs don't have an EO index of 1")
+
+    def test_paradigm_class_index_word(self):
+        usl_a = HyperText(Text([self.word_1, self.word_3, self.word_2]))
+        usl_b = HyperText(Text([self.word_2, self.word_5]))
+        usl_a.check()
+        usl_b.check()
+
+        eo_index = paradigmatic_equivalence_class_index(usl_a, usl_b, 1, 'EO')
+        oo_index = paradigmatic_equivalence_class_index(usl_a, usl_b, 1, 'OO')
+
+        print("EO index: " + str(eo_index))
+        print("OO index: " + str(oo_index))
+
+        self.assertTrue(eo_index != 1, "Two different USLs don't have an EO index of 1")
+        self.assertTrue(oo_index != 1, "Two different USLs don't have an EO index of 1")
+
 
 if __name__ == '__main__':
     unittest.main()

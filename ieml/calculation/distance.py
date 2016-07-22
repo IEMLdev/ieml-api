@@ -5,6 +5,7 @@ from ieml.AST.terms import Term
 from ieml.AST.usl import Text, HyperText
 from ieml.operator import usl, sc
 from ieml.script import CONTAINED_RELATION
+from ieml.script.tables import get_table_rank
 from bidict import bidict
 from models.relations import RelationsConnector, RelationsQueries
 from fractions import Fraction
@@ -260,7 +261,7 @@ def build_graph(object_set_a, object_set_b, intersection):
     return graph
 
 
-def parents(usl_a, usl_b, index='EO'):
+def parents_index(usl_a, usl_b, index="EO"):
 
     parents_a, parents_b = get_parents(usl_a, usl_b)
 
@@ -306,15 +307,23 @@ def get_parents(usl_a, usl_b):
     return parents_a, parents_b
 
 
-def get_paradigm(uslA, uslB):
+def get_paradigms(object_set_a):
 
-    stages_A, children_A, children_multi_A = compute_stages(uslA)
-    stages_B, children_B, children_multi_B = compute_stages(uslB)
+    if isinstance(object_set_a, Word) or isinstance(object_set_a, Sentence) or isinstance(object_set_a, SuperSentence):
+        term_list = [elem for elem in object_set_a.tree_iter() if isinstance(elem, Term)]
+    else:
+        stages_A, children_A, children_multi_A = compute_stages(object_set_a)
+        term_list = stages_A[Term]
+
+    paradigms = {i: [] for i in range(1, 6)}
+
     rc = RelationsConnector()
-    paradigms_A = {rc.get_script(term)['ROOT'] for term in stages_A[Term]}
-    paradigms_B = {rc.get_script(term)['ROOT'] for term in stages_B[Term]}
 
-    return paradigms_A, paradigms_B
+    for term in term_list:
+        for paradigm in rc.get_script(term.script)["RELATIONS"]["CONTAINED"]:
+            paradigms[get_table_rank(sc(paradigm))].append(paradigm)
+
+    return paradigms
 
 
 def get_grammar_class(uslA, uslB):
@@ -376,7 +385,6 @@ def list_union_cardinal(list_a, list_b):
     return union_cardinal
 
 
-#TODO faire relire cette fonction par Zack
 def grammatical_class_index(uslA, uslB, index, stage):
     """
 
@@ -393,8 +401,8 @@ def grammatical_class_index(uslA, uslB, index, stage):
     grammar_classes_b = [elem.grammatical_class for elem in stages_B[stage]]
 
     if index == 'EO':
-        index_value = list_intersection_cardinal(grammar_classes_a, grammar_classes_b) / \
-                      list_union_cardinal(grammar_classes_a, grammar_classes_b)
+        index_value = (list_intersection_cardinal(grammar_classes_a, grammar_classes_b) /
+                      list_union_cardinal(grammar_classes_a, grammar_classes_b))
 
     elif index == 'OO':
         if stage is Term:
@@ -404,21 +412,15 @@ def grammatical_class_index(uslA, uslB, index, stage):
         index_value = 0.0
         for a, b in it.product(stages_A[stage], stages_B[stage]):
             # we replace every child of A and B by their grammatical class, and create a list of it
-            grammar_list_a = (e.grammatical_class for e in children_A[a])
-            grammar_list_b = (e.grammatical_class for e in children_B[b])
+            grammar_list_a = [e.grammatical_class for e in children_A[a]]
+            grammar_list_b = [e.grammatical_class for e in children_B[b]]
 
             # we sort the list in order to do the intersection and union of lists
             grammar_list_a.sort()
             grammar_list_b.sort()
 
-            if len(list_union_cardinal(grammar_list_a, grammar_list_b)):  # not to divide by 0
-                index_value += list_intersection_cardinal(grammar_list_a, grammar_list_b) / \
-                               (size * list_union_cardinal(grammar_list_a, grammar_list_b))
-            else:
-                index_value = 1
-
-
-# ou alors dans l'autre sens ,d'abord if level et puis if index
+            index_value += (list_intersection_cardinal(grammar_list_a, grammar_list_b) /
+                           (size * list_union_cardinal(grammar_list_a, grammar_list_b)))
     else:
         raise ValueError
 
@@ -439,81 +441,28 @@ def paradigmatic_equivalence_class_index(uslA, uslB, paradigm_rank, index):
 
     stages_A, children_A, children_multi_A = compute_stages(uslA)
     stages_B, children_B, children_multi_B = compute_stages(uslB)
+    paradigms_a = get_paradigms(uslA)
+    paradigms_b = get_paradigms(uslB)
 
     #faire l inverse, d abord if table_rank puis if index ?
     if index == 'EO':
-        if paradigm_rank == 1: #  In this case there is only one root paradigm for each terms in uslA and in uslB
-            a_root_paradigms = [RelationsQueries.relations(term.script, relation_title='ROOT') for term in stages_A[Term]]
-            #il faut que term.script soit bien un script
-            b_root_paradigms = [RelationsQueries.relations(term.script, relation_title='ROOT') for term in stages_B[Term]]
-            # for uslA and uslB we replace their terms by their grammatical class
-
-            if list_union_cardinal(a_root_paradigms, b_root_paradigms) : # if this cardinal does not equal 0
-                index_value = list_intersection_cardinal(a_root_paradigms, b_root_paradigms)/ \
-                              list_union_cardinal(a_root_paradigms, b_root_paradigms)
-            else:
-                index_value = 1
-
-        else:
-            if paradigm_rank not in (2, 3, 4, 5):
-                raise ValueError
-            else:
-                table_a = [RelationsQueries.relations(term.script, relation_title=CONTAINED_RELATION) for term in stages_A[Term]]
-                paradigms_a = [paradigm for paradigm in table_a if paradigm.get_rank() == paradigm_rank]
-
-                table_b = [RelationsQueries.relations(term.script, relation_title=CONTAINED_RELATION) for term in stages_B[Term]]
-                paradigms_b = [paradigm for paradigm in table_b if paradigm.get_rank() == paradigm_rank]
-
-                if list_union_cardinal(paradigms_a, paradigms_b) : # if this cardinal does not equal 0
-                    index_value = list_intersection_cardinal(paradigms_a, paradigms_b)/ \
-                                  list_union_cardinal(paradigms_a, paradigms_b)
-                else:
-                    index_value = 1
+        index_value = (list_intersection_cardinal(paradigms_a[paradigm_rank], paradigms_b[paradigm_rank]) /
+                       list_union_cardinal(paradigms_a[paradigm_rank], paradigms_b[paradigm_rank]))
 
     elif index == 'OO':
         #  We can only find paradigms of terms.
         # So we have to build the '00' matrix with the words of uslA and uslB as rows and columns
         size = float(len(stages_A[Word]) * len(stages_B[Word]))
-        if size != 0:
-            if paradigm_rank == 1:
-                # we replace every term of A and B by their paradigm of rank 1, and create a list of it
-                for a, b in it.product(stages_A[Word], stages_B[Word]):
+        if size == 0:
+            raise ValueError
 
-                    a_root_paradigms = [RelationsQueries.relations(term.script, relation_title='ROOT')for term in children_A[a]]
-                    b_root_paradigms = [RelationsQueries.relations(term.script, relation_title='ROOT')for term in children_B[b]]
+        for a, b in it.product(stages_A[Word], stages_B[Word]):
+            paradigms_a = get_paradigms(a)
+            paradigms_b = get_paradigms(b)
 
-                    # we sort the list in order to do the intersection and union of lists
-                    a_root_paradigms.sort()
-                    b_root_paradigms.sort()
-
-                    if list_union_cardinal(a_root_paradigms, b_root_paradigms) != 0: # not to divide by 0
-                        index_value += list_intersection_cardinal(a_root_paradigms, b_root_paradigms) / \
-                                       (size * list_union_cardinal(a_root_paradigms, b_root_paradigms))
-                    else:
-                        index_value = 1
-                #a_root_paradigms = [RelationsQueries.relations(term.script, relation_title='ROOT') for term in stages_A[Term]]
-                #b_root_paradigms = [RelationsQueries.relations(term.script, relation_title='ROOT') for term in stages_B[Term]]
-
-            else:
-                if paradigm_rank not in (2, 3, 4, 5):
-                    raise ValueError
-
-                else:
-                    for a, b in it.product(stages_A[Word], stages_B[Word]):
-
-                        table_a = [RelationsQueries.relations(term.script, relation_title=CONTAINED_RELATION) for term in children_A[a]]
-
-                        table_b = [RelationsQueries.relations(term.script, relation_title=CONTAINED_RELATION) for term in children_B[b]]
-                    paradigms_a = [paradigm for paradigm in table_a if paradigm.get_rank() == paradigm_rank]
-
-                    table_b = [RelationsQueries.relations(term.script, relation_title=CONTAINED_RELATION) for term in stages_B[Term]]
-                    paradigms_b = [paradigm for paradigm in table_b if paradigm.get_rank() == paradigm_rank]
-
-        else:
-            index_value = 1
-
-    else:
-        raise ValueError
+            index_value += (list_intersection_cardinal(paradigms_a[paradigm_rank], paradigms_b[paradigm_rank]) /
+                            list_union_cardinal(paradigms_a[paradigm_rank], paradigms_b[paradigm_rank]))
+        index_value /= size
 
     return index_value
 
