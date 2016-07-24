@@ -39,6 +39,10 @@ class RankComputationTest(unittest.TestCase):
         paradigm = rank_3_table.headers[0][0]
         self.assertEqual(_compute_rank(paradigm, root_paradigm), 5)
 
+    def test_paradigm_from_multiple_tables(self):
+        paradigm = sc("S:M:.e.-M:M:.u.-wa.e.-'+B:M:.e.-M:M:.a.-wa.e.-'+T:M:.e.-M:M:.i.-wa.e.-'")
+        self.assertEquals(get_table_rank(paradigm), 2)
+
 
 if __name__ == '__main__':
     unittest.main()

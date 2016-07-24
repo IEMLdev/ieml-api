@@ -1,5 +1,6 @@
 from ieml.parsing.script import ScriptParser
 from ieml.script.tables import generate_tables
+from ieml.operator import sc
 import numpy as np
 import unittest
 
@@ -8,6 +9,30 @@ class TableGenerationTest(unittest.TestCase):
 
     def setUp(self):
         self.parser = ScriptParser()
+
+    def test_additive_script_layer_0(self):
+        script = sc("I:")
+        tables = generate_tables(script)
+        row_headers = [self.parser.parse("I:"), ]
+        col_headers = []
+        tab_headers = []
+
+        cells = np.empty(6, dtype=object)
+
+        cells[0] = self.parser.parse("E:")
+        cells[1] = self.parser.parse("U:")
+        cells[2] = self.parser.parse("A:")
+        cells[3] = self.parser.parse("S:")
+        cells[4] = self.parser.parse("B:")
+        cells[5] = self.parser.parse("T:")
+
+        self.assertEqual(len(tables), 1, "Correct number of tables generated")
+        self.assertTrue(tables[0].cells.shape == cells.shape, "Table has the correct shape")
+        self.assertEqual(tables[0].headers[0], row_headers, "Row headers are generated correctly")
+        self.assertEqual(tables[0].headers[1], col_headers, "Column headers are generated correctly")
+        self.assertEqual(tables[0].headers[2], tab_headers, "Tab headers are generated correctly")
+        self.assertTrue((tables[0].cells == cells).all(), "Cells are generated correctly")
+        self.assertTrue(tables[0].paradigm == script, "Table has correct paradigm")
 
     def test_additive_script(self):
         script = self.parser.parse("O:B:.+M:S:A:+S:.")
