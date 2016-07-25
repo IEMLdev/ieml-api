@@ -88,5 +88,19 @@ def rank_usls(paradigms_list, usl_list):
 
     return paradigm_dico
 
+def rank_usl_terms(term_list, usl_list):
+
+    usl_id_map = {usl: i for i, usl in enumerate(usl_list)}
+    term_citations = {term: [0 for i in range(len(usl_list))] for term in term_list}
+
+    for term in term_list:
+        for usl in usl_list:
+            if term in usl.children:
+                term_citations[term][usl_id_map[usl]] += 1
+
+    return {term: sorted(usl_list, key=lambda e: term_citations[term][usl_id_map[e]]) for term in term_list}
+
+
 if __name__ == '__main__':
     pass
+
