@@ -59,15 +59,34 @@ def rank_paradigms(paradigms_list, usl_list):
 
 # 3 Pour chaque paradigme-racine, une liste ordonnée des USLs qui le citent le plus
 def rank_usls(paradigms_list, usl_list):
-    #paradigm_dico = {p:[] for p in paradigms_list}
-    pass
+    """
+
+    :param paradigms_list: list of the root paradigms we want to analyse
+    :param usl_list: list of the uls (a collection) we want to analyse
+    :return:a dictionary whose keys are the paradigms of paradigms_list
+    and the values : an ordered list of the usls (of usl_list) which most quote the paradigm
+     (first element is usl which quotes the most the paradigm in key)
+    """
+    paradigm_dico = {p:[] for p in paradigms_list}
+    for p in paradigms_list:
+        p_term = Term(sc(p))
+        usl_dico = {usl:0 for usl in usl_list}
+        for usl in usl_list:
+            term_list = [term for term in usl.tree_iter() if isinstance(term, Term)]
+            for term in term_list:
+                if set(term.script.singular_sequences) <= set(p_term.script.singular_sequences):
+                    usl_dico[usl] += 1
+
+        # we remove the usls which do not quote the paradigm p
+        for usl in usl_list:
+            if usl_dico[usl] == 0:
+                del usl_dico[usl]
+
+        sorted_usls = sorted(usl_dico, key= lambda e: usl_dico[e], reverse=True)  #  this is a list
+        for e in sorted_usls:
+            paradigm_dico[p].append(e)
+
+    return paradigm_dico
 
 if __name__ == '__main__':
-        # These 2 terms have the same root paradigm : E:E:F:.
-        term_1 = Term(sc("E:E:F:."))
-        term_2 = Term(sc("E:E:M:."))
-
-        usl_list = [term_1, term_2]
-        paradigms_list = ["E:F:.O:O:.-", "E:F:.M:M:.-", "E:E:F:."]
-
-        dico_test = rank_paradigms(paradigms_list,usl_list)
+    pass
