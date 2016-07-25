@@ -5,6 +5,8 @@ from ieml.AST.terms import Term
 from ieml.AST.usl import Text, HyperText
 from ieml.operator import usl, sc
 from ieml.calculation.thesaurus import rank_paradigms
+from models.terms import TermsConnector
+
 
 class ThesaurusTests(unittest.TestCase):
     def test_rank_paradigms(self):
@@ -62,39 +64,41 @@ class ThesaurusTests(unittest.TestCase):
         term_1 = Term(sc("E:E:F:."))
         term_2 = Term(sc("E:E:M:."))
 
-        #
+        # The root paradigm of term_3 is E:F:.M:M:.-
         term_3 = Term(sc("E:M:.k.-"))
-        root_p3 = Term(sc("E:F:.M:M:.-"))
 
-        # est ce qu'un paradigme est un term ?
-        root_p = Term(sc("E:E:F:."))
+        usl_list1 = [term_1, term_2]
+        usl_list2 = [term_3, term_1, term_3]
+        usl_list3 = [term_1, term_3, term_2]
+        usl_list4 = [s_1, s_2, s_3, s_4, s_5]
 
-        usl_list1 = [s_1, s_2, s_3, s_4, s_5]
-        usl_list2 = [term_1, term_2]
-        usl_list3 = [term_3, term_1, term_3]
+        tc = TermsConnector()
+        full_root_paradigms = tc.root_paradigms(ieml_only = True) # list of the 53 strings of the root paradigms
 
-        # get the list of all the root paradigms in mongodb
-        # comment faire ?
-        # presque cette commande : avec redondance ici : db.getCollection('relations').find({}, {'_id':0, 'ROOT':1}).sort({'ROOT':1})
+        # E:F:.O:O:.- is a random paradigm to create paradigms_list
+        #paradigms_list = ["E:F:.O:O:.-", "E:F:.M:M:.-", "E:E:F:."]
 
+        (rootp_list_1, dico_1) = rank_paradigms(full_root_paradigms, usl_list1)
+        self.assertTrue(len(rootp_list_1) == 1)
+        self.assertTrue(rootp_list_1[0] == "E:E:F:.")
+        self.assertTrue(dico_1["E:E:F:."][0] == dico_1["E:E:F:."][1] + dico_1["E:E:F:."][2] + dico_1["E:E:F:."][3])
 
-        # paradigm random to create paradigms_list
-        root_pr = Term(sc("E:F:.O:O:.-"))
-        #paradigms_list = [root_pr, root_p3, root_p]
-        paradigms_list = ["E:F:.O:O:.-", "E:F:.M:M:.-", "E:E:F:."]
+        (rootp_list_2, dico_2) = rank_paradigms(full_root_paradigms, usl_list2)
+        self.assertTrue(len(rootp_list_2) == 2)
+        self.assertTrue(rootp_list_2[0] == "E:F:.M:M:.-")
+        self.assertTrue(rootp_list_2[1] == "E:E:F:.")
+        self.assertTrue(dico_2["E:E:F:."][0] == dico_2["E:E:F:."][1] + dico_2["E:E:F:."][2] + dico_2["E:E:F:."][3])
+        self.assertTrue(dico_2["E:F:.M:M:.-"][0] == dico_2["E:F:.M:M:.-"][1] + dico_2["E:F:.M:M:.-"][2] + dico_2["E:F:.M:M:.-"][3])
 
-        # pas sure du résultat à voir en laissant tourner
-        #self.assertTrue(len(rank_paradigms(paradigms_list, usl_list1)) == 0)
+        (rootp_list_3, dico_3) = rank_paradigms(full_root_paradigms, usl_list3)
+        self.assertTrue(len(rootp_list_3) == 2)
+        self.assertTrue(rootp_list_3[0] == "E:E:F:.")
+        self.assertTrue(rootp_list_3[1] == "E:F:.M:M:.-")
+        self.assertTrue(dico_3["E:E:F:."][0] == dico_3["E:E:F:."][1] + dico_3["E:E:F:."][2] + dico_3["E:E:F:."][3])
+        self.assertTrue(dico_3["E:F:.M:M:.-"][0] == dico_3["E:F:.M:M:.-"][1] + dico_3["E:F:.M:M:.-"][2] + dico_3["E:F:.M:M:.-"][3])
 
-        dico_2 = rank_paradigms(paradigms_list, usl_list2)
-        #self.assertTrue(len(rank_paradigms(paradigms_list, usl_list2)) == 1)
-        self.assertTrue(dico_2[0] == 2)
-        #self.assertTrue(dico_2["E:E:F:."] == 2)
-
-        #self.assertTrue(len(rank_paradigms(paradigms_list, usl_list3)) == 2)
-        #self.assertTrue(rank_paradigms([root_p] == 1))
-        #self.assertTrue(rank_paradigms([root_p3] == 2))
-
+        (rootp_list_4, dico_4) = rank_paradigms(full_root_paradigms, usl_list4)
+        self.assertFalse(len(rootp_list_4) == 0)
 
 if __name__ == '__main__':
     unittest.main()
