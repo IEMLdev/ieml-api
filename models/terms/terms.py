@@ -130,12 +130,16 @@ class TermsConnector(DBConnector):
             logging.warning("No update performed for script " + script +
                             ", no argument are matching the update criteria.")
 
-    def root_paradigms(self):
+    def root_paradigms(self, ieml_only=False):
         """
         Get all the roots paradigms stored in this collections.
+        :param ieml_only: if True, return a list of the ieml string of the paradigms
         :return: a list of root paradigm documents
         """
-        return list(self.terms.find({'ROOT': True}))
+        roots = self.terms.find({'ROOT': True})
+        if ieml_only:
+            return [elem['_id'] for elem in roots]
+        return list(roots)
 
     def _save_term(self, script_ast, tags, inhibits, root=False, metadata=None):
         """
