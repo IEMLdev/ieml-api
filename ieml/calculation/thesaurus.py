@@ -1,14 +1,7 @@
 from ieml.AST.terms import Term
-from ieml.AST.usl import Text, HyperText
 from ieml.script.tables import generate_tables
-from ieml.operator import usl, sc
-from ieml.script import CONTAINED_RELATION
-from bidict import bidict
-from models.relations import RelationsConnector, RelationsQueries
-from fractions import Fraction
+from ieml.operator import sc
 from collections import namedtuple
-from ieml.calculation.distance import get_grammar_class
-import ieml.AST.terms
 from ieml.script.constants import AUXILIARY_CLASS, VERB_CLASS, NOUN_CLASS
 from models.terms import TermsConnector
 import numpy as np
@@ -43,11 +36,11 @@ def rank_paradigms(paradigms_list, usl_list):
                 if set(term.script.singular_sequences) <= set(p_term.script.singular_sequences):
                     paradigms[paradigm][0] += 1
                     # verifify the grammatical of the term citing the root paradigm
-                    if term.grammatical_class == 2: # noun
+                    if term.grammatical_class == NOUN_CLASS:
                         paradigms[paradigm][1] += 1
-                    elif term.grammatical_class == 0: # aux
+                    elif term.grammatical_class == AUXILIARY_CLASS:
                         paradigms[paradigm][2] += 1
-                    elif term.grammatical_class == 1: # verb
+                    elif term.grammatical_class == VERB_CLASS:
                         paradigms[paradigm][3] += 1
 
 
