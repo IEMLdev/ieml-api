@@ -9,6 +9,7 @@ from collections import namedtuple
 from ieml.calculation.distance import get_grammar_class
 import ieml.AST.terms
 from ieml.script.constants import AUXILIARY_CLASS, VERB_CLASS, NOUN_CLASS
+from models.terms import TermsConnector
 
 ScoreNode = namedtuple('ScoreNode', ['script', 'score'])
 
@@ -65,22 +66,23 @@ def rank_usls(paradigms_list, usl_list):
     :param usl_list: list of the uls (a collection) we want to analyse
     :return:a dictionary whose keys are the paradigms of paradigms_list
     and the values : an ordered list of the usls (of usl_list) which most quote the paradigm
-     (first element is usl which quotes the most the paradigm in key)
+     (first element is usl which quotes the most the paradigm in key), the usls are converted into strings
+     if in usl_list there is the same usl twice, in the returned dictionary this usl will appear only once
     """
     paradigm_dico = {p:[] for p in paradigms_list}
     for p in paradigms_list:
         p_term = Term(sc(p))
-        usl_dico = {usl:0 for usl in usl_list}
+        usl_dico = {str(usl):0 for usl in usl_list}  # convert usl to string, to use a dictionary
         for usl in usl_list:
             term_list = [term for term in usl.tree_iter() if isinstance(term, Term)]
             for term in term_list:
                 if set(term.script.singular_sequences) <= set(p_term.script.singular_sequences):
-                    usl_dico[usl] += 1
+                    usl_dico[str(usl)] += 1
 
         # we remove the usls which do not quote the paradigm p
         for usl in usl_list:
-            if usl_dico[usl] == 0:
-                del usl_dico[usl]
+            if str(usl) in usl_dico and usl_dico[str(usl)] == 0:
+                del usl_dico[str(usl)]
 
         sorted_usls = sorted(usl_dico, key= lambda e: usl_dico[e], reverse=True)  #  this is a list
         for e in sorted_usls:
@@ -102,5 +104,29 @@ def rank_usl_terms(term_list, usl_list):
 
 
 if __name__ == '__main__':
-    pass
 
+    paradigms_list = ["E:E:F:.", "E:F:.M:M:.-", "E:F:.O:O:.-"]
+
+    #These 2 terms have the same root paradigm : E:E:F:.
+    term_1 = Term(sc("E:E:F:."))
+    term_2 = Term(sc("E:E:M:."))
+
+    #The root paradigm of term_3 is E:F:.M:M:.-
+    term_3 = Term(sc("E:M:.k.-"))
+
+    usl_list1 = [term_1, term_2]
+    usl_list2 = [term_3, term_1, term_3]
+    usl_list3 = [term_1, term_3, term_2]
+
+    term_1.check()
+    term_2.check()
+    term_3.check()
+
+    paradigm_dico = rank_usls(paradigms_list,usl_list1)
+    tc = TermsConnector()
+    full_root_paradigms = tc.root_paradigms(ieml_only = True) # list of the 53 strings of the root paradigms
+
+    paradigm_dico2 = rank_usls(paradigms_list, usl_list2)
+    #self.assertTrue(len(paradigm_dico2) == len(full_root_paradigms))
+    #self.assertTrue(len(paradigm_dico2["E:E:F:."]) == 1)
+    #self.assertTrue(paradigm_dico2["E:F:.M:M:.-"] == 2)

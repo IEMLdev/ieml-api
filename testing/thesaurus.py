@@ -2,7 +2,7 @@ import unittest
 import pprint
 from ieml.AST.propositions import Word, Clause, Sentence, SuperSentence, Morpheme, SuperClause
 from ieml.AST.terms import Term
-from ieml.AST.usl import Text, HyperText
+from ieml.AST.usl import Sentence, Text, HyperText
 from ieml.operator import usl, sc
 from ieml.calculation.thesaurus import rank_paradigms, rank_usls
 from models.terms import TermsConnector
@@ -150,12 +150,21 @@ class ThesaurusTests(unittest.TestCase):
 
         s_5 = Sentence([Clause(self.word_8, self.word_7, self.word_4), Clause(self.word_8, self.word_10, self.word_3)])
 
+        s_1.check()
+        s_2.check()
+        s_3.check()
+        s_4.check()
+        s_5.check()
+
         # These 2 terms have the same root paradigm : E:E:F:.
         term_1 = Term(sc("E:E:F:."))
         term_2 = Term(sc("E:E:M:."))
 
+        term_1.check()
+        term_2.check()
         # The root paradigm of term_3 is E:F:.M:M:.-
         term_3 = Term(sc("E:M:.k.-"))
+        term_3.check()
 
         usl_list1 = [term_1, term_2]
         usl_list2 = [term_3, term_1, term_3]
@@ -169,6 +178,32 @@ class ThesaurusTests(unittest.TestCase):
         self.assertTrue(len(paradigm_dico1) == len(full_root_paradigms))
         self.assertTrue(len(paradigm_dico1["E:E:F:."]) == 2)
         self.assertTrue(paradigm_dico1["E:F:.M:M:.-"] == [])
+
+        paradigm_dico2 = rank_usls(full_root_paradigms, usl_list2)
+        self.assertTrue(len(paradigm_dico2) == len(full_root_paradigms))
+        self.assertTrue(len(paradigm_dico2["E:E:F:."]) == 1)
+        self.assertTrue(paradigm_dico2["E:E:F:."][0] == str(term_1))
+        self.assertTrue(paradigm_dico2["E:F:.M:M:.-"][0] == str(term_3))
+
+
+        paradigms_list = ["E:F:.O:O:.-", "E:F:.M:M:.-"]
+
+        paradigm_dico3 = rank_usls(paradigms_list, usl_list3)
+        self.assertTrue(len(paradigm_dico3) == len(paradigms_list))
+        self.assertTrue(paradigm_dico3["E:F:.O:O:.-"] == [])
+        self.assertTrue(len(paradigm_dico3["E:F:.M:M:.-"]) == 1)
+        self.assertTrue(paradigm_dico3["E:F:.M:M:.-"][0] == str(term_3))
+
+
+        paradigm_dico4 = rank_usls(full_root_paradigms, usl_list3)
+        self.assertTrue(len(paradigm_dico4) == len(full_root_paradigms))
+        self.assertTrue(len(paradigm_dico4["E:E:F:."]) == 2)
+        self.assertTrue(len(paradigm_dico4["E:F:.M:M:.-"]) == 1)
+        self.assertTrue(paradigm_dico4["E:F:.M:M:.-"][0] == str(term_3))
+
+        paradigm_dico5 = rank_usls(full_root_paradigms, usl_list4)
+        self.assertTrue(len(paradigm_dico5) == len(full_root_paradigms))
+
 
 if __name__ == '__main__':
     unittest.main()
