@@ -1,5 +1,6 @@
 from ieml.AST.terms import Term
 from ieml.AST.usl import Text, HyperText
+from ieml.script.tables import generate_tables
 from ieml.operator import usl, sc
 from ieml.script import CONTAINED_RELATION
 from bidict import bidict
@@ -10,6 +11,7 @@ from ieml.calculation.distance import get_grammar_class
 import ieml.AST.terms
 from ieml.script.constants import AUXILIARY_CLASS, VERB_CLASS, NOUN_CLASS
 from models.terms import TermsConnector
+import numpy as np
 
 ScoreNode = namedtuple('ScoreNode', ['script', 'score'])
 
@@ -90,18 +92,61 @@ def rank_usls(paradigms_list, usl_list):
 
     return paradigm_dico
 
+
 def rank_usl_terms(term_list, usl_list):
 
     usl_id_map = {usl: i for i, usl in enumerate(usl_list)}
+    # IMPORTANT: dictionary keys must be Term objects not Script objects
     term_citations = {term: [0 for i in range(len(usl_list))] for term in term_list}
 
-    for term in term_list:
-        for usl in usl_list:
-            if term in usl.children:
-                term_citations[term][usl_id_map[usl]] += 1
+    for i, usl in enumerate(usl_list):
+        for elem in usl.tree_iter():
+            if isinstance(elem, Term):
+                term_citations[elem][i] += 1
 
     return {term: sorted(usl_list, key=lambda e: term_citations[term][usl_id_map[e]]) for term in term_list}
 
+
+def paradigm_usl_distribution(paradigm, usl_collection):
+    """
+
+    Parameters
+    ----------
+    paradigm
+    usl_collection
+
+    Returns
+    -------
+    Distribution of number of terms (contained in 'paradigm') cited overlayed on the paradigms table
+    """
+
+    TermLocation = namedtuple('TermLocation', ['table', 'coords'])
+    if isinstance(paradigm, str):
+        paradigm = sc(paradigm)
+
+    tbls = generate_tables(paradigm)
+    term_coordinates = {}
+    dist_tables = [np.zeros(table.cells.shape, dtype=int) for table in tbls]
+
+    for term in paradigm.singular_sequences:
+        for i, table in enumerate(tbls):
+            if term in table.paradigm.singular_sequences:
+                table_idx = i
+                coord = np.where(table == term)
+        term_coordinates[term] = TermLocation(table=table_idx, coords=coord)
+
+    for usl in usl_collection:
+        for elem in usl.tree_iter():
+            if isinstance(elem, Term) and elem.script in term_coordinates:
+                term_loc = term_coordinates[elem.script]
+                if dist_tables[term_loc.table].ndim == 1:
+                    dist_tables[term_loc.table][term_loc.coords[0][0]] += 1
+                elif dist_tables[term_loc.table].ndim == 2:
+                    dist_tables[term_loc.table][term_loc.coords[0][0]][term_loc.coords[1][0]] += 1
+                elif dist_tables[term_loc.table].ndim == 3:
+                    dist_tables[term_loc.table][term_loc.coords[0][0]][term_loc.coords[1][0]][term_loc.coords[2][0]] += 1
+
+    return dist_tables
 
 if __name__ == '__main__':
 
