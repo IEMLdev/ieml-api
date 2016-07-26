@@ -9,8 +9,8 @@ from models.terms import TermsConnector
 
 
 class ThesaurusTests(unittest.TestCase):
-    def test_rank_paradigms(self):
 
+    def setUp(self):
         self.word_1 = Word(Morpheme([Term(sc('wa.')), Term(sc("l.-x.-s.y.-'")), Term(sc("e.-u.-we.h.-'")),
                                      Term(sc("M:.E:A:M:.-")), Term(sc("E:A:.k.-"))]),
                            Morpheme([Term(sc('wo.')), Term(sc("T:.E:A:T:.-")),
@@ -43,6 +43,8 @@ class ThesaurusTests(unittest.TestCase):
         self.word_8.check()
         self.word_9.check()
         self.word_10.check()
+
+    def test_rank_paradigms(self):
 
         s_1 = Sentence([Clause(self.word_1, self.word_2, self.word_5), Clause(self.word_1, self.word_4, self.word_7),
                         Clause(self.word_1, self.word_6, self.word_9), Clause(self.word_2, self.word_3, self.word_7),
@@ -101,38 +103,7 @@ class ThesaurusTests(unittest.TestCase):
         self.assertFalse(len(rootp_list_4) == 0)
 
     def test_rank_usls(self):
-        self.word_1 = Word(Morpheme([Term(sc('wa.')), Term(sc("l.-x.-s.y.-'")), Term(sc("e.-u.-we.h.-'")),
-                                     Term(sc("M:.E:A:M:.-")), Term(sc("E:A:.k.-"))]),
-                           Morpheme([Term(sc('wo.')), Term(sc("T:.E:A:T:.-")),
-                                     Term(sc("T:.-',S:.-',S:.-'B:.-'n.-S:.U:.-',_"))]))
-        self.word_2 = Word(Morpheme([Term(sc("l.-x.-s.y.-'")), Term(sc("e.-u.-we.h.-'"))]),
-                           Morpheme([Term(sc("T:.E:A:T:.-")), Term(sc("E:A:.k.-"))]))
-        self.word_3 = Word(Morpheme([Term(sc("E:S:.O:B:.-")), Term(sc("E:S:.O:T:.-")), Term(sc("E:S:.U:M:.-"))]),
-                           Morpheme([Term(sc("E:O:.S:M:.-"))]))
-        self.word_4 = Word(Morpheme([Term(sc("S:M:.e.-t.u.-'"))]),
-                           Morpheme([Term(sc("B:M:.y.-")), Term(sc("T:M:.y.-")), Term(sc("M:S:.y.-"))]))
-        self.word_5 = Word(Morpheme([Term(sc("j.-'F:.-'k.o.-t.o.-',")), Term(sc("h.-'F:.-'k.o.-t.o.-',")),
-                                     Term(sc("c.-'F:.-'k.o.-t.o.-',"))]),
-                           Morpheme([Term(sc("E:M:.wa.-")), Term(sc("E:M:.wu.-")), Term(sc("E:M:.we.-"))]))
-        self.word_6 = Word(Morpheme([Term(sc("we.y.-"))]))
-        self.word_7 = Word(Morpheme([Term(sc("we.b.-")), Term(sc("p.m.-")), Term(sc("M:M:.we.-"))]),
-                           Morpheme([Term(sc("a."))]))
-        self.word_8 = Word(Morpheme([Term(sc("s.i.-b.i.-'"))]))
-        self.word_9 = Word(Morpheme([Term(sc("we.O:B:.-")), Term(sc("we.O:T:.-")), Term(sc("wo.M:U:.-"))]))
-        self.word_10 = Word(Morpheme([Term(sc("b.-S:.A:.-'B:.-'B:.-',")), Term(sc("e.-u.-we.h.-'"))]),
-                            Morpheme([Term(sc("m.a.-M:M:.a.-f.o.-'")), Term(sc("n.a.-M:M:.a.-f.o.-'")),
-                                      Term(sc("b.-S:.A:.-'T:.-'T:.-',"))]))
 
-        self.word_1.check()
-        self.word_2.check()
-        self.word_3.check()
-        self.word_4.check()
-        self.word_5.check()
-        self.word_6.check()
-        self.word_7.check()
-        self.word_8.check()
-        self.word_9.check()
-        self.word_10.check()
 
         s_1 = Sentence([Clause(self.word_1, self.word_2, self.word_5), Clause(self.word_1, self.word_4, self.word_7),
                         Clause(self.word_1, self.word_6, self.word_9), Clause(self.word_2, self.word_3, self.word_7),

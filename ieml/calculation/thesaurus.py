@@ -99,6 +99,7 @@ def rank_usl_terms(term_list, usl_list):
 
     return {term: sorted(usl_list, key=lambda e: term_citations[term][usl_id_map[e]]) for term in term_list}
 
+
 def rank_usl_single_term(term, usl_collection):
     """
 
