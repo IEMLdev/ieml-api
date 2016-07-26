@@ -4,13 +4,14 @@ from ieml.AST.propositions import Word, Clause, Sentence, SuperSentence, Morphem
 from ieml.AST.terms import Term
 from ieml.AST.usl import Sentence, Text, HyperText
 from ieml.operator import usl, sc
-from ieml.calculation.thesaurus import rank_paradigms, rank_usls
+from ieml.calculation.thesaurus import rank_paradigms, rank_usls, rank_usl_single_term, rank_usl_terms, paradigm_usl_distribution
 from models.terms import TermsConnector
 
 
 class ThesaurusTests(unittest.TestCase):
 
     def setUp(self):
+
         self.word_1 = Word(Morpheme([Term(sc('wa.')), Term(sc("l.-x.-s.y.-'")), Term(sc("e.-u.-we.h.-'")),
                                      Term(sc("M:.E:A:M:.-")), Term(sc("E:A:.k.-"))]),
                            Morpheme([Term(sc('wo.')), Term(sc("T:.E:A:T:.-")),
@@ -43,6 +44,7 @@ class ThesaurusTests(unittest.TestCase):
         self.word_8.check()
         self.word_9.check()
         self.word_10.check()
+
 
     def test_rank_paradigms(self):
 
@@ -103,7 +105,6 @@ class ThesaurusTests(unittest.TestCase):
         self.assertFalse(len(rootp_list_4) == 0)
 
     def test_rank_usls(self):
-
 
         s_1 = Sentence([Clause(self.word_1, self.word_2, self.word_5), Clause(self.word_1, self.word_4, self.word_7),
                         Clause(self.word_1, self.word_6, self.word_9), Clause(self.word_2, self.word_3, self.word_7),
@@ -175,6 +176,50 @@ class ThesaurusTests(unittest.TestCase):
         paradigm_dico5 = rank_usls(full_root_paradigms, usl_list4)
         self.assertTrue(len(paradigm_dico5) == len(full_root_paradigms))
 
+
+    def test_rank_usl_single_term(self):
+
+        word_1 = Word(Morpheme([Term(sc('wa.')), Term(sc("l.-x.-s.y.-'")), Term(sc("e.-u.-we.h.-'")),
+                                Term(sc("M:.E:A:M:.-")), Term(sc("E:A:.k.-"))]),
+                      Morpheme([Term(sc('wo.')), Term(sc("T:.E:A:T:.-")),
+                                Term(sc("T:.-',S:.-',S:.-'B:.-'n.-S:.U:.-',_"))]))
+
+        word_2 = Word(Morpheme([Term(sc("l.-x.-s.y.-'")), Term(sc("e.-u.-we.h.-'"))]),
+                      Morpheme([Term(sc("T:.E:A:T:.-")), Term(sc("E:A:.k.-"))]))
+
+        word_3 = Word(Morpheme([Term(sc("E:S:.O:B:.-")), Term(sc("E:S:.O:T:.-")), Term(sc("E:S:.U:M:.-"))]),
+                      Morpheme([Term(sc("l.-x.-s.y.-'"))]))
+
+        word_4 = Word(Morpheme([Term(sc("S:M:.e.-t.u.-'"))]),
+                      Morpheme([Term(sc("B:M:.y.-")), Term(sc("T:M:.y.-")), Term(sc("M:S:.y.-"))]))
+
+        word_5 = Word(Morpheme([Term(sc("j.-'F:.-'k.o.-t.o.-',")), Term(sc("h.-'F:.-'k.o.-t.o.-',")),
+                                Term(sc("c.-'F:.-'k.o.-t.o.-',"))]),
+                      Morpheme([Term(sc("E:M:.wa.-")), Term(sc("E:M:.wu.-")), Term(sc("E:M:.we.-"))]))
+        word_6 = Word(Morpheme([Term(sc("we.y.-"))]))
+
+        s_1 = Sentence([Clause(word_1, word_4, word_5)])
+        s_2 = Sentence([Clause(word_1, word_2, word_3)])
+        s_3 = Sentence([Clause(word_4, word_5, word_6)])
+        s_4 = Sentence([Clause(word_2, word_4, word_1)])
+
+        s_1.check()
+        s_2.check()
+        s_3.check()
+        s_4.check()
+
+        usl_collection = [s_1, s_2, s_3, s_4]
+
+        term = Term(sc("l.-x.-s.y.-'"))
+        term.check()
+
+        ranked_usls = rank_usl_single_term(term, usl_collection)
+
+        self.assertEquals(ranked_usls, [s_2, s_4, s_1, s_3])
+
+
+    def paradigm_usl_distribution(self):
+        pass
 
 if __name__ == '__main__':
     unittest.main()
