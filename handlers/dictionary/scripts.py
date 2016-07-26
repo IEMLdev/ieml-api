@@ -87,10 +87,10 @@ def script_table(iemltext):
             }
         }
 
-    def _slice_array(table, col=False, dim=None):
+    def _slice_array(table, col=False, dim=None, tab_header=None):
         if col:
             result = [
-                _table_entry(1, ieml=table.headers[0][0], header=True, top_header=True)
+                _table_entry(1, ieml=tab_header if tab_header else table.headers[0][0], header=True, top_header=True)
             ]
             result.extend([_table_entry(ieml=e) for e in table.cells])
 
@@ -98,7 +98,7 @@ def script_table(iemltext):
             col_size = len(table.headers[1])
 
             result = [
-                _table_entry(col_size + 1, ieml=table.paradigm, header=True, top_header=True),
+                _table_entry(col_size + 1, ieml=tab_header if tab_header else table.paradigm, header=True, top_header=True),
                 _table_entry(top_header=True)  # grey square
             ]
 
@@ -125,10 +125,11 @@ def script_table(iemltext):
                     'slice': _slice_array(table, col=len(table.headers[1]) == 0)
                 }]
             else:
+                # multiple tabs
                 for i, tab in enumerate(table.headers[2]):
                     tabs.append({
                         'tabTitle': str(tab),
-                        'slice': _slice_array(table, dim=i)
+                        'slice': _slice_array(table, dim=i, tab_header=str(tab))
                     })
 
             result.append({
