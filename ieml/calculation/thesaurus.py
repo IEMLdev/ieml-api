@@ -94,10 +94,42 @@ def rank_usl_terms(term_list, usl_list):
 
     for i, usl in enumerate(usl_list):
         for elem in usl.tree_iter():
-            if isinstance(elem, Term):
+            if isinstance(elem, Term) and elem in term_citations:
                 term_citations[elem][i] += 1
 
     return {term: sorted(usl_list, key=lambda e: term_citations[term][usl_id_map[e]]) for term in term_list}
+
+def rank_usl_single_term(term, usl_collection):
+    """
+
+    Parameters
+    ----------
+    term
+    usl_collection
+
+    Returns
+    -------
+
+    """
+
+    # We will work with a term that is of type Script
+    if isinstance(term, str):
+        term = sc(term)
+    elif isinstance(term, Term):
+        term = term.script
+
+    usl_id_map = {usl: i for i, usl in enumerate(usl_collection)}
+    score_count = [0 for i in range(len(usl_collection))]
+
+    for i, usl in enumerate(usl_collection):
+        for elem in usl.tree_iter():
+            # I'm checking singular sequence set equality because we can be sure it's the same term object if they
+            # describe the same singular sequence set regardless if it is correctly factorized
+            if isinstance(elem, Term) and elem.script.singular_sequences == term.singular_sequences:
+                score_count[i] += 1
+
+    return sorted(usl_collection, lambda e: score_count[usl_id_map[e]])
+
 
 
 def paradigm_usl_distribution(paradigm, usl_collection):
