@@ -3,6 +3,7 @@ from functools import total_ordering
 from .terms import Term
 from .commons import PropositionPath, AbstractProposition
 from .constants import MAX_TERMS_IN_MORPHEME
+from ieml.script.constants import AUXILIARY_CLASS, VERB_CLASS, NOUN_CLASS
 from .propositional_graph import PropositionGraph
 from .tree_metadata import ClosedPropositionMetadata, NonClosedPropositionMetadata
 from ieml.exceptions import IndistintiveTermsExist, InvalidConstructorParameter, \
@@ -125,6 +126,10 @@ class AbstractMultiplicativeProposition(AbstractProposition):
 @total_ordering
 class Morpheme(AbstractAdditiveProposition, NonClosedProposition):
 
+    def __init__(self, child_elements):
+        super().__init__(child_elements)
+        self.grammatical_class = max(c.script.script_class for c in child_elements)
+
     def _do_precompute_str(self):
         self._str = self.RenderSymbols.left_parent + \
                     self.RenderSymbols.plus.join([str(element) for element in self.children]) + \
@@ -166,6 +171,7 @@ class Word(AbstractMultiplicativeProposition, ClosedProposition):
             self.children = (self.subst,)
         else:
             self.children = (self.subst, self.mode)
+        self.grammatical_class = self.subst.grammatical_class
 
     @property
     def is_null(self):
@@ -252,6 +258,7 @@ class AbstractSentence(AbstractAdditiveProposition, ClosedProposition):
     def __init__(self, child_elements):
         super().__init__(child_elements)
         self.graph = None
+        self.grammatical_class = None
 
     def gather_hyperlinks(self, current_path):
         # first we build the (object, usl) tuple list for the current object
@@ -265,6 +272,7 @@ class AbstractSentence(AbstractAdditiveProposition, ClosedProposition):
             # then, we build the (super)sentence's graph using the (super)clause list
             self.graph = PropositionGraph(self.children)
             self.graph.check() #the graph does some checking
+            self.grammatical_class = self.graph.root_node.grammatical_class
 
     def _do_ordering(self):
         """Orders the clauses/superclauses inside the sentence/supersentence, using the graph"""
