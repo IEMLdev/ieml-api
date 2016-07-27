@@ -1,3 +1,4 @@
+from ieml.parsing.script.parser import ScriptParser
 from ieml.script.tools import factorize
 from models.base_queries import DBConnector, Tag
 from models.constants import TERMS_COLLECTION
@@ -6,6 +7,7 @@ from models.exceptions import InvalidInhibitArgument, InvalidScript, InvalidTags
 from ieml.script.constants import INHIBIT_RELATIONS
 from ieml.script import Script
 from models.relations.relations_queries import RelationsQueries
+from models.relations.relations import RelationsConnector
 import logging
 import progressbar
 
@@ -91,7 +93,7 @@ class TermsConnector(DBConnector):
             return
 
         if not RelationsQueries.check_removable(script_ast):
-            raise CantRemoveNonEmptyRootParadigm()
+            raise CantRemoveNonEmptyRootParadigm(script_ast)
 
         self.terms.remove({'_id': str(script_ast)})
         RelationsQueries.remove_script(script_ast, self.get_inhibitions(), recompute_relations=recompute_relations)
@@ -108,7 +110,7 @@ class TermsConnector(DBConnector):
         :return: None
         """
         if not self.get_term(script):
-            raise TermNotFound()
+            raise TermNotFound(script)
 
         update = {}
         if tags and Tag.check_tags(tags):
@@ -199,5 +201,19 @@ class TermsConnector(DBConnector):
         #TODO : IMPROVE THIS
         return self.terms.find({ "TAGS.%s" % language : tag })
 
-    def recompute_relations(self):
+    def recompute_relations(self, all_delete=False):
+        """
+        Recompute all the relation in the relation collection.
+        :param all_delete: if true, the relation collection is recomputed from the term collection.
+        :return: None
+        """
+        if all_delete:
+            rc = RelationsConnector()
+            rc.relations.drop()
+
+            sp = ScriptParser()
+            RelationsQueries.save_multiple_script(
+                [{'AST': sp.parse(t['_id']),
+                  'ROOT': t['ROOT']} for t in self.get_all_terms()], self.get_inhibitions())
+
         RelationsQueries.compute_all_relations(paradigms=self.root_paradigms())

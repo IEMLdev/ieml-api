@@ -118,7 +118,7 @@ class RelationsQueries:
 
         # Defensive check
         if not cls.check_removable(script_ast):
-            raise CantRemoveNonEmptyRootParadigm()
+            raise CantRemoveNonEmptyRootParadigm(script_ast)
 
         # Remove the script
         script_entry = cls.relations_db.get_script(script_ast)
@@ -168,6 +168,9 @@ class RelationsQueries:
         :return:
         """
         paradigms = [(cls._to_ast(p['_id']), p['INHIBITS']) for p in paradigms]
+
+
+
         for p in paradigms:
             cls.compute_relations(p[0])
 
@@ -184,7 +187,7 @@ class RelationsQueries:
 
         paradigm_entry = cls.relations_db.get_script(str(paradigm_ast))
         if paradigm_entry is None or paradigm_entry['ROOT'] != str(paradigm_ast):
-            raise NotARootParadigm()
+            raise NotARootParadigm(paradigm_ast)
 
         # Compute the list of script in the paradigm
         scripts_ast = [cls.script_parser.parse(s['_id']) for s in cls.paradigm(paradigm_ast)]
@@ -454,7 +457,7 @@ class RelationsQueries:
         :return: None
         """
         if relation_title not in SCRIPT_RELATIONS:
-            raise InvalidRelationTitle()
+            raise InvalidRelationTitle(relation_title)
 
         cls.relations_db.relations.update(
             {'_id': script if isinstance(script, str) else str(script)},

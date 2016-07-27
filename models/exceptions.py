@@ -39,7 +39,11 @@ class InvalidScript(DBException):
 
 
 class NotAParadigm(DBException):
-    pass
+    def __init__(self, p):
+        self.p = str(p)
+
+    def __str__(self):
+        return self.p
 
 
 class InvalidDbState(DBException):
@@ -47,27 +51,52 @@ class InvalidDbState(DBException):
 
 
 class RootParadigmIntersection(DBException):
-    pass
+    def __init__(self, p1, p2):
+        self.p1 = str(p1)
+        self.p2 = str(p2)
+
+    def __str__(self):
+        return '%s, %s'%(self.p1, self.p2)
 
 
 class ParadigmAlreadyExist(DBException):
-    pass
+    def __init__(self, p):
+        self.p = str(p)
+
+    def __str__(self):
+        return self.p
 
 
 class NotARootParadigm(DBException):
-    pass
+    def __init__(self, p):
+        self.p = str(p)
+
+    def __str__(self):
+        return self.p
 
 
 class RootParadigmMissing(DBException):
-    pass
+    def __init__(self, p):
+        self.p = str(p)
+
+    def __str__(self):
+        return self.p
 
 
 class SingularSequenceAlreadyExist(DBException):
-    pass
+    def __init__(self, p):
+        self.p = str(p)
+
+    def __str__(self):
+        return self.p
 
 
 class NotASingularSequence(DBException):
-    pass
+    def __init__(self, p):
+        self.p = str(p)
+
+    def __str__(self):
+        return self.p
 
 
 class InvalidInhibitArgument(DBException):
@@ -79,13 +108,25 @@ class InvalidMetadata(DBException):
 
 
 class CantRemoveNonEmptyRootParadigm(DBException):
-    pass
+    def __init__(self, p):
+        self.p = str(p)
+
+    def __str__(self):
+        return self.p
 
 
 class InvalidRelationTitle(DBException):
-    pass
+    def __init__(self, p):
+        self.p = str(p)
+
+    def __str__(self):
+        return self.p
 
 
 class TermNotFound(ObjectNotFound):
-    pass
+    def __init__(self, p):
+        self.p = str(p)
+
+    def __str__(self):
+        return self.p
 
