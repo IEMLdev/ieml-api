@@ -40,6 +40,46 @@ paths:
           description: |
             Everything went well
 
+  /intlekt/collections/draft:
+    post:
+      operationId: handlers.createCollectionDraft
+      tags:
+        - Intlekt
+      parameters:
+        - name: collectionParams
+          in: body
+          description: |
+            A description of the starting parameters of a new collection
+          required: true
+          schema:
+            type: object
+      description: |
+        Ask the server to create a new collection for us
+      responses:
+        '200':
+          description: |
+            The request has been accepted
+
+  /intlekt/collections/{collection_id}/dataset:
+    get:
+      operationId: handlers.getPreTaggedDataset
+      tags:
+        - Intlekt
+      parameters:
+        - name: collection_id
+          in: path
+          description: |
+            The id of the collection
+          required: true
+          type: string
+          description: |
+            Return the collection of Tagged Resources associated with a collection. If no
+            Resources currently exist, a request will be made to retrieve them
+      responses:
+        '200':
+          description: |
+            The tagged resources associated with the requested collection
+
   /intlekt/test:
     get:
       operationId: handlers.test_endpoint

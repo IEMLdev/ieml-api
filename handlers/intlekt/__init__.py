@@ -3,4 +3,5 @@ from .twitter import twitter_token, twitter_upgradeToken,\
     twitter_similarities
 from .auth import logout, info
 from .io import push_server_event
+from .collections import createCollectionDraft, getPreTaggedDataset
 from .Constants import *
