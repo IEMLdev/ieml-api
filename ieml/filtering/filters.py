@@ -1,3 +1,7 @@
+from ieml.calculation.distance import (paradigmatic_equivalence_class_index, set_proximity_index,
+                                       object_proximity_index, connexity_index, mutual_inclusion_index)
+from math import ceil
+
 
 class AbstractFilter:
     def __init__(self, level=1, ratio=None):
@@ -12,8 +16,18 @@ class AbstractFilter:
 
 
 class ParadigmaticProximityFilter(AbstractFilter):
-    """Filter based on the P(OE^k) indicator"""
-    pass
+    """Filter based on the P(OE^1) indicator"""
+
+    def proportional_filtering(self, query_usl, usl_list, ratio):
+        """Overrides the AbstractFilter method to return a list ranked based on the
+        P(OE^1) indicator """
+
+        # TODO: check which paradigm rank to use and how (i.e. should we take the mean of the indicator over all ranks)
+        usl_score = {usl: paradigmatic_equivalence_class_index(query_usl, usl, 1, "OE") for usl in usl_list}
+
+        return sorted(usl_score, key=lambda e: usl_score[e], reversed=True)[:ceil(ratio*len(usl_list))]
+
+
 
 
 class ProximityFilter(AbstractFilter):
