@@ -3,8 +3,11 @@ class AbstractFilter:
     def __init__(self, level=1, ratio=None):
         pass
 
-    def score(self, query_usl, other_usl):
-        """Returns a score for a given filter"""
+    def proportional_filtering(self, query_usl, usl_list, ratio):
+        """Returns a list of filtered usl, using the ratio"""
+        pass
+
+    def binary_filtering(self, query_usl, usl_list):
         pass
 
 
@@ -14,7 +17,8 @@ class ParadigmaticProximityFilter(AbstractFilter):
 
 
 class ProximityFilter(AbstractFilter):
-    """Filter based on the P(OE^k) indicator"""
+    """Filter based on the OE^k indicator"""
+    pass
 
 
 class TwoByTwoProximityFilter(AbstractFilter):
