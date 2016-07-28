@@ -3,6 +3,7 @@ from os import makedirs
 from os.path import dirname, join, isdir
 
 from werkzeug.contrib.cache import FileSystemCache
+import logging
 
 CACHE_TIMEOUT = 300
 CACHE_DIRNAME = join(dirname(__file__), "cache")
@@ -20,7 +21,7 @@ def flush_cache(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         cache.delete("all_ieml")
-        print("cache cleared")
+        logging.debug("Cache cleared")
         return func(*args, **kwargs)
     return wrapper
 
