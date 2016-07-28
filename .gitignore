@@ -61,6 +61,6 @@ data/dump
 parsetab.py
 ieml/parsing/parser.out
 *.iml
-/config.py
+# /config.py
 
 handlers/cache
