@@ -1,14 +1,7 @@
 from ieml.AST.terms import Term
-from ieml.AST.usl import Text, HyperText
 from ieml.script.tables import generate_tables
-from ieml.operator import usl, sc
-from ieml.script import CONTAINED_RELATION
-from bidict import bidict
-from models.relations import RelationsConnector, RelationsQueries
-from fractions import Fraction
+from ieml.operator import sc
 from collections import namedtuple
-from ieml.calculation.distance import get_grammar_class
-import ieml.AST.terms
 from ieml.script.constants import AUXILIARY_CLASS, VERB_CLASS, NOUN_CLASS
 from models.terms import TermsConnector
 import numpy as np
@@ -43,11 +36,11 @@ def rank_paradigms(paradigms_list, usl_list):
                 if set(term.script.singular_sequences) <= set(p_term.script.singular_sequences):
                     paradigms[paradigm][0] += 1
                     # verifify the grammatical of the term citing the root paradigm
-                    if term.grammatical_class == 2: # noun
+                    if term.grammatical_class == NOUN_CLASS:
                         paradigms[paradigm][1] += 1
-                    elif term.grammatical_class == 0: # aux
+                    elif term.grammatical_class == AUXILIARY_CLASS:
                         paradigms[paradigm][2] += 1
-                    elif term.grammatical_class == 1: # verb
+                    elif term.grammatical_class == VERB_CLASS:
                         paradigms[paradigm][3] += 1
 
 
@@ -93,18 +86,41 @@ def rank_usls(paradigms_list, usl_list):
     return paradigm_dico
 
 
-def rank_usl_terms(term_list, usl_list):
+def rank_usl_terms(term_list, usl_collection):
+    return {term: rank_usl_single_term(term, usl_collection) for term in term_list}
 
-    usl_id_map = {usl: i for i, usl in enumerate(usl_list)}
-    # IMPORTANT: dictionary keys must be Term objects not Script objects
-    term_citations = {term: [0 for i in range(len(usl_list))] for term in term_list}
 
-    for i, usl in enumerate(usl_list):
+def rank_usl_single_term(term, usl_collection):
+    """
+
+    Parameters
+    ----------
+    term
+    usl_collection
+
+    Returns
+    -------
+
+    """
+
+    # We will work with a term that is of type Script
+    if isinstance(term, str):
+        term = sc(term)
+    elif isinstance(term, Term):
+        term = term.script
+
+    usl_id_map = {usl: i for i, usl in enumerate(usl_collection)}
+    score_count = [0 for i in range(len(usl_collection))]
+
+    for i, usl in enumerate(usl_collection):
         for elem in usl.tree_iter():
-            if isinstance(elem, Term):
-                term_citations[elem][i] += 1
+            # I'm checking singular sequence set equality because we can be sure it's the same term object if they
+            # describe the same singular sequence set regardless if it is correctly factorized
+            if isinstance(elem, Term) and elem.script.singular_sequences == term.singular_sequences:
+                score_count[i] += 1
 
-    return {term: sorted(usl_list, key=lambda e: term_citations[term][usl_id_map[e]]) for term in term_list}
+    return sorted(usl_collection, key=lambda e: score_count[usl_id_map[e]], reverse=True)
+
 
 
 def paradigm_usl_distribution(paradigm, usl_collection):
