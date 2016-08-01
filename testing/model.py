@@ -1,21 +1,32 @@
+import random
+from string import ascii_lowercase
+
 import models.base_queries
-from models.exceptions import RootParadigmMissing, RootParadigmIntersection
 
 models.base_queries.DB_NAME = 'test_db'
 
+from models.exceptions import RootParadigmMissing, RootParadigmIntersection, InvalidTags, DuplicateTag
 from ieml.operator import *
-from models.terms import TermsConnector
-from models.relations import RelationsConnector
+from models.terms.terms import TermsConnector
+from models.relations.relations import RelationsConnector
 from models.base_queries import DBConnector
-from models.constants import TERMS_COLLECTION, SCRIPTS_COLLECTION
+from models.constants import TERMS_COLLECTION, SCRIPTS_COLLECTION, TAG_LANGUAGES
 from scripts import load_old_db
 from testing.helper import *
+
+
+def _tag():
+    return {l: ''.join(random.sample(ascii_lowercase, 20)) for l in TAG_LANGUAGES}
 
 
 class TestModel(unittest.TestCase):
     def setUp(self):
         self.terms = TermsConnector()
         self.relations = RelationsConnector()
+
+    def _clear(self):
+        self.terms.terms.drop()
+        self.relations.relations.drop()
 
     def test_insert_term(self):
         script = sc("M:M:M:.U:U:U:.e.-")
@@ -48,12 +59,11 @@ class TestModel(unittest.TestCase):
     def test_fail_paradigm_intersect(self):
         s1 = sc('M:')
         s2 = sc('F:')
-        self.terms.add_term(s1, {'FR': 'fr', 'EN': 'en'}, [], root=True)
-        try:
-            self.terms.add_term(s2, {'FR': 'frd', 'EN': 'end'}, [], root=True)
-        except Exception:
-            self.assertRaises(RootParadigmIntersection)
-        self.terms.remove_term(s1)
+        self.terms.add_term(s1, _tag(), [], root=True)
+        with self.assertRaises(RootParadigmIntersection):
+            self.terms.add_term(s2, _tag(), [], root=True)
+
+        self._clear()
 
     def test_update(self):
         s1 = sc('F:')
@@ -62,3 +72,68 @@ class TestModel(unittest.TestCase):
         self.terms.update_term(s1, tags=newt)
         self.assertEqual(self.terms.get_term(s1)['TAGS'], newt)
         self.terms.remove_term(s1)
+
+    def test_remove_root_paradigm(self):
+        self._clear()
+
+        root = sc('F:F:.O:.M:.-')
+        paradigms = list(map(sc, ('T:M:.O:.M:.-', 'F:M:.O:.M:.-', 'T:U:.O:.M:.-')))
+        list_terms = [{
+            'AST': s,
+            'ROOT': False,
+            'TAGS': _tag(),
+            'INHIBITS': [],
+            'METADATA': {}
+        } for s in paradigms]
+
+        list_terms.append({
+            'AST': root,
+            'ROOT': True,
+            'TAGS': _tag(),
+            'INHIBITS': [],
+            'METADATA': {}
+        })
+        self.terms.save_multiple_terms(list_terms)
+
+        self.terms.remove_term(root, remove_roots_child=True)
+        self.assertTrue(self.terms.get_all_terms().count() == 0,
+                        msg='Delete of root paradigm have not remove subsequent paradigms.')
+
+    def test_tag(self):
+        self._clear()
+        with self.assertRaises(InvalidTags, msg='Term saved with an empty tag.'):
+            self.terms.add_term(sc('M:'), tags={}, root=True, inhibits=[])
+        self.assertTrue(self._count() == 0, msg='Term created anyway.')
+
+        with self.assertRaises(InvalidTags, msg='Term saved with missing languages.'):
+            self.terms.add_term(sc('M:'), tags={'FR':'fdsas'}, root=True, inhibits=[])
+        self.assertTrue(self._count() == 0, msg='Term created anyway.')
+
+        with self.assertRaises(InvalidTags, msg='Term saved with an unknown language.'):
+            self.terms.add_term(sc('M:'), tags={'QW': 'dsadsa'}, root=True, inhibits=[])
+        self.assertTrue(self._count() == 0, msg='Term created anyway.')
+
+        with self.assertRaises(InvalidTags, msg='Term saved with tag of incompatible type.'):
+            self.terms.add_term(sc('M:'), tags={
+                'FR': ('f', 'e', 'e'),
+                'EN': ()
+            }, root=True, inhibits=[])
+        self.assertTrue(self._count() == 0, msg='Term created anyway.')
+
+        tag = _tag()
+
+        self.terms.add_term(sc('M:'), tags=tag, root=True, inhibits=[])
+
+        with self.assertRaises(DuplicateTag, msg='Term saved with duplicate tag.'):
+            self.terms.add_term(sc('O:'), tags=tag, root=True, inhibits=[])
+
+        self._clear()
+
+    def test_search_by_tag(self):
+        self._clear()
+        tag = _tag()
+        self.terms.add_term(sc('M:'), tag, [], root=True)
+        self.assertTrue(self.terms.search_by_tag(tag['EN'], 'EN').count() == 1)
+
+    def _count(self):
+        return self.terms.terms.find().count() + self.relations.relations.find().count()
