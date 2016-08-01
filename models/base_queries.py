@@ -98,4 +98,5 @@ class Tag:
     @staticmethod
     def check_tags(tags):
         return isinstance(tags, dict) and all(lang in tags for lang in TAG_LANGUAGES) \
-               and all((tag in TAG_LANGUAGES and tag) for tag in tags)
+               and all((tag in TAG_LANGUAGES and tag) for tag in tags) \
+               and all(isinstance(tags[tag], str) for tag in tags)

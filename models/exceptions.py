@@ -26,6 +26,14 @@ class InvalidTags(DBException):
     pass
 
 
+class DuplicateTag(DBException):
+    def __init__(self, tag):
+        self.tag = tag
+
+    def __str__(self):
+        return self.tag
+
+
 class ObjectNotFound(DBException):
     pass
 

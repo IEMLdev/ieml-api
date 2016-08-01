@@ -1,9 +1,9 @@
 from ieml.parsing.script.parser import ScriptParser
 from ieml.script.tools import factorize
 from models.base_queries import DBConnector, Tag
-from models.constants import TERMS_COLLECTION
+from models.constants import TERMS_COLLECTION, TAG_LANGUAGES
 from models.exceptions import InvalidInhibitArgument, InvalidScript, InvalidTags, TermAlreadyExists, InvalidMetadata,\
-    CantRemoveNonEmptyRootParadigm, TermNotFound
+    CantRemoveNonEmptyRootParadigm, TermNotFound, DuplicateTag
 from ieml.script.constants import INHIBIT_RELATIONS
 from ieml.script import Script
 from models.relations.relations_queries import RelationsQueries
@@ -16,6 +16,7 @@ class TermsConnector(DBConnector):
     def __init__(self):
         super().__init__()
         self.terms = self.db[TERMS_COLLECTION]
+        self.parser = ScriptParser()
 
     def get_term(self, script):
         """
@@ -47,6 +48,8 @@ class TermsConnector(DBConnector):
         # make sure to save the factorised form
         script_ast = factorize(script_ast)
 
+        self._check_tags(tags)
+
         # update the relations of the paradigm in the relation collection
         RelationsQueries.save_script(script_ast, self.get_inhibitions(), root=root, recompute_relations=recompute_relations)
 
@@ -67,19 +70,24 @@ class TermsConnector(DBConnector):
          ]
         :return:
         """
-        bar = progressbar.ProgressBar(max_value=len(list_terms))
 
-        for i, t in enumerate(list_terms):
-            self._save_term(t['AST'], t['TAGS'], t['INHIBITS'], t['ROOT'], t['METADATA'])
-            bar.update(i + 1)
+        roots = [e for e in list_terms if e['ROOT']]
+        other = [e for e in list_terms if not e['ROOT']]
 
-        RelationsQueries.save_multiple_script(list_terms, self.get_inhibitions())
+        for r in roots:
+            self.add_term(r['AST'], r['TAGS'], root=True, inhibits=r['INHIBITS'], metadata=r['METADATA'], recompute_relations=False)
 
-    def remove_term(self, script_ast, recompute_relations=True):
+        for o in other:
+            self.add_term(o['AST'], o['TAGS'], root=False, inhibits=o['INHIBITS'], metadata=o['METADATA'], recompute_relations=False)
+
+        self.recompute_relations()
+
+    def remove_term(self, script_ast, remove_roots_child=True, recompute_relations=True):
         """
         Remove the given term from the term and relation collection. Can fail if not possible (can't remove a non-empty
         root paradigm)
         :param script_ast: the script to remove.
+        :param remove_roots_child: if we remove a root paradigm, we remove the contained of the root paradigm.
         :param recompute_relations: if the relations have to be recomputed after the removal.
         :return: None
         """
@@ -93,8 +101,18 @@ class TermsConnector(DBConnector):
             return
 
         if not RelationsQueries.check_removable(script_ast):
-            raise CantRemoveNonEmptyRootParadigm(script_ast)
+            if not remove_roots_child:
+                raise CantRemoveNonEmptyRootParadigm(script_ast)
 
+            # all the contained script without the root paradigm.
+            paradigm = (self.parser.parse(p['_id']) for p in RelationsQueries.paradigm(script_ast) if p['_id'] != str(script_ast))
+
+            # remove all the paradigm without recomputing the relations
+            for p in paradigm:
+                self.terms.remove({'_id': str(p)})
+                RelationsQueries.remove_script(p, self.get_inhibitions(), recompute_relations=False)
+
+        # remove the root paradigm
         self.terms.remove({'_id': str(script_ast)})
         RelationsQueries.remove_script(script_ast, self.get_inhibitions(), recompute_relations=recompute_relations)
 
@@ -164,9 +182,6 @@ class TermsConnector(DBConnector):
         if not isinstance(inhibits, list) or any(r not in INHIBIT_RELATIONS for r in inhibits):
             raise InvalidInhibitArgument()
 
-        if not Tag.check_tags(tags):
-            raise InvalidTags()
-
         if self.get_term(script_ast) is not None:
             raise TermAlreadyExists()
 
@@ -191,7 +206,7 @@ class TermsConnector(DBConnector):
         paradigms = self.terms.find({'ROOT': True, 'INHIBITS': {'$ne': []}})
         return [(p['_id'], p['INHIBITS']) for p in paradigms]
 
-    def search_by_tag(self, tag, language):
+    def search_by_tag(self, tag, language=None):
         """
         returns a list of terms with a matching tag for a
         :param tag: value of the tested tag
@@ -199,7 +214,11 @@ class TermsConnector(DBConnector):
         :return: list of
         """
         #TODO : IMPROVE THIS
-        return self.terms.find({ "TAGS.%s" % language : tag })
+        if language is None:
+            return self.terms.find({
+                'TAG.%s'%language: tag for language in TAG_LANGUAGES})
+
+        return self.terms.find({"TAGS.%s" % language : tag })
 
     def recompute_relations(self, all_delete=False):
         """
@@ -211,9 +230,16 @@ class TermsConnector(DBConnector):
             rc = RelationsConnector()
             rc.relations.drop()
 
-            sp = ScriptParser()
             RelationsQueries.save_multiple_script(
-                [{'AST': sp.parse(t['_id']),
+                [{'AST': self.parser.parse(t['_id']),
                   'ROOT': t['ROOT']} for t in self.get_all_terms()], self.get_inhibitions())
 
         RelationsQueries.compute_all_relations(paradigms=self.root_paradigms())
+
+    def _check_tags(self, tags):
+        if not Tag.check_tags(tags):
+            raise InvalidTags()
+
+        for l in tags:
+            if self.search_by_tag(tags[l], language=l).count() != 0:
+                raise DuplicateTag(tags[l])

@@ -126,7 +126,7 @@ class RelationsConnector(DBConnector):
         # get all the singular sequence of the db to avoid intersection
         if set.intersection(set(str(seq) for seq in script_ast.singular_sequences), self.singular_sequences()):
             raise RootParadigmIntersection(script_ast,
-                                           next(set(str(seq) for seq in script_ast.singular_sequences) & self.singular_sequences()))
+                                           set(str(seq) for seq in script_ast.singular_sequences) & set(self.singular_sequences()))
 
         # save the root paradigm
         insertion = {
