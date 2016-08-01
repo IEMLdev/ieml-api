@@ -4,7 +4,7 @@ from .tree_metadata import TermMetadata
 from ieml.exceptions import TermComparisonFailed, CannotRetrieveMetadata, IEMLTermNotFoundInDictionnary
 from ieml.parsing.script import ScriptParser
 from ieml.script import Script
-from models.terms import TermsConnector
+from models.terms.terms import TermsConnector
 
 
 class Term(AbstractProposition):
