@@ -1,3 +1,5 @@
+from __builtin__ import isinstance
+
 from ieml.calculation.distance import (paradigmatic_equivalence_class_index, set_proximity_index,
                                        object_proximity_index, connexity_index, mutual_inclusion_index)
 from ieml.AST.propositions import Word, Sentence, SuperSentence
@@ -14,9 +16,6 @@ class AbstractFilter:
         """Returns a list of filtered usl, using the ratio"""
         pass
 
-    def binary_filtering(self, query_usl, usl_list):
-        pass
-
 
 class ParadigmaticProximityFilter(AbstractFilter):
     """Filter based on the P(OE^1) indicator"""
@@ -29,51 +28,49 @@ class ParadigmaticProximityFilter(AbstractFilter):
         usl_score = {usl: paradigmatic_equivalence_class_index(query_usl, usl, 1, "OE") for usl in usl_list}
         return sorted(usl_score, key=lambda e: usl_score[e], reversed=True)[:ceil(ratio*len(usl_list))]
 
-    def binary_filtering(self, query_usl, usl_list):
-        usl_score = {usl: paradigmatic_equivalence_class_index(query_usl, usl, 1, "OE") for usl in usl_list}
-        return sorted(usl_score, key=lambda e: usl_score[e], reversed=True)
-
 
 class ProximityFilter(AbstractFilter):
     """Filter based on the OE^k indicator"""
 
     def proportional_filtering(self, query_usl, usl_list, ratio):
-        usl_score = {usl: object_proximity_index(stage_mapping[self.level], query_usl, usl) for usl in usl_list}
+        usl_score = {usl: object_proximity_index(level_mapping[self.level], query_usl, usl) for usl in usl_list}
         return sorted(usl_score, key=lambda e: usl_score[e], reversed=True)[:ceil(ratio * len(usl_list))]
-
-    def binary_filtering(self, query_usl, usl_list):
-        usl_score = {usl: object_proximity_index(stage_mapping[self.level], query_usl, usl) for usl in usl_list}
-        return sorted(usl_score, key=lambda e: usl_score[e], reversed=True)
-
-
 
 
 class TwoByTwoProximityFilter(AbstractFilter):
     """Filter based on the (O^k,O^k) indicator"""
 
     def proportional_filtering(self, query_usl, usl_list, ratio):
-        usl_score = {usl: set_proximity_index(stage_mapping[self.level], query_usl, usl) for usl in usl_list}
+        usl_score = {usl: set_proximity_index(level_mapping[self.level], query_usl, usl) for usl in usl_list}
         return sorted(usl_score, key=lambda e: usl_score[e], reversed=True)[:ceil(ratio * len(usl_list))]
 
-    def binary_filtering(self, query_usl, usl_list):
-        usl_score = {usl: set_proximity_index(stage_mapping[self.level], query_usl, usl) for usl in usl_list}
-        return sorted(usl_score, key=lambda e: usl_score[e], reversed=True)
 
 class ConnexityFilter(AbstractFilter):
     """Filter based on the O^k - O^k indicator"""
 
     def proportional_filtering(self, query_usl, usl_list, ratio):
-        usl_score = {usl: connexity_index(stage_mapping[self.level], query_usl, usl) for usl in usl_list}
+        usl_score = {usl: connexity_index(level_mapping[self.level], query_usl, usl) for usl in usl_list}
         return sorted(usl_score, key=lambda e: usl_score[e], reversed=True)[:ceil(ratio * len(usl_list))]
 
-    def binary_filtering(self, query_usl, usl_list):
-        usl_score = {usl: connexity_index(stage_mapping[self.level], query_usl, usl) for usl in usl_list}
-        return sorted(usl_score, key=lambda e: usl_score[e], reversed=True)
 
+class BinaryFilter:
 
-stage_mapping = {
+    def __init__(self, mode='word'):
+        self.mode = type_mapping[mode]
+
+    def filter(self, query_usl, usl_list):
+        return [usl for usl in usl_list if any(query_obj in usl for query_obj in query_usl.tree_iter()
+                                               if isinstance(query_obj, type_mapping[self.mode]))]
+
+level_mapping = {
     1: Term,
     2: Word,
     3: Sentence,
     4: SuperSentence
+}
+
+type_mapping = {
+    'word': Word,
+    'sentence': Sentence,
+    'super_sentence': SuperSentence
 }
