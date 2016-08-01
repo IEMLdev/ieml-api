@@ -1,14 +1,11 @@
 import models.base_queries
-from models.exceptions import RootParadigmMissing, RootParadigmIntersection
 
 models.base_queries.DB_NAME = 'test_db'
 
+from models.exceptions import RootParadigmMissing, RootParadigmIntersection
 from ieml.operator import *
-from models.terms import TermsConnector
-from models.relations import RelationsConnector
-from models.base_queries import DBConnector
-from models.constants import TERMS_COLLECTION, SCRIPTS_COLLECTION
-from scripts import load_old_db
+from models.terms.terms import TermsConnector
+from models.relations.relations import RelationsConnector
 from testing.helper import *
 
 
