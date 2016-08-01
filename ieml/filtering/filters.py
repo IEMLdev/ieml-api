@@ -1,5 +1,3 @@
-from __builtin__ import isinstance
-
 from ieml.calculation.distance import (paradigmatic_equivalence_class_index, set_proximity_index,
                                        object_proximity_index, connexity_index, mutual_inclusion_index)
 from ieml.AST.propositions import Word, Sentence, SuperSentence
