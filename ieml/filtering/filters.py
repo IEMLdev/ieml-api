@@ -27,27 +27,13 @@ class ParadigmaticProximityFilter(AbstractFilter):
         return sorted(usl_score, key=lambda e: usl_score[e], reversed=True)[:ceil(ratio*len(usl_list))]
 
 
-class ProximityFilter(AbstractFilter):
-    """Filter based on the OE^k indicator"""
+class IndicatorFilter(AbstractFilter):
+    def __init__(self, indicator_function, **kwargs):
+        super().__init__(**kwargs)
+        self.indicator = indicator_function
 
     def proportional_filtering(self, query_usl, usl_list, ratio):
-        usl_score = {usl: object_proximity_index(level_mapping[self.level], query_usl, usl) for usl in usl_list}
-        return sorted(usl_score, key=lambda e: usl_score[e], reversed=True)[:ceil(ratio * len(usl_list))]
-
-
-class TwoByTwoProximityFilter(AbstractFilter):
-    """Filter based on the (O^k,O^k) indicator"""
-
-    def proportional_filtering(self, query_usl, usl_list, ratio):
-        usl_score = {usl: set_proximity_index(level_mapping[self.level], query_usl, usl) for usl in usl_list}
-        return sorted(usl_score, key=lambda e: usl_score[e], reversed=True)[:ceil(ratio * len(usl_list))]
-
-
-class ConnexityFilter(AbstractFilter):
-    """Filter based on the O^k - O^k indicator"""
-
-    def proportional_filtering(self, query_usl, usl_list, ratio):
-        usl_score = {usl: connexity_index(level_mapping[self.level], query_usl, usl) for usl in usl_list}
+        usl_score = {usl: self.indicator(level_mapping[self.level], query_usl, usl) for usl in usl_list}
         return sorted(usl_score, key=lambda e: usl_score[e], reversed=True)[:ceil(ratio * len(usl_list))]
 
 
