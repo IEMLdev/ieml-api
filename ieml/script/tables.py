@@ -1,7 +1,7 @@
 from ieml.script import AdditiveScript, MultiplicativeScript
 from collections import namedtuple
 import numpy as np
-from models.relations import RelationsConnector
+from models.relations.relations import RelationsConnector
 from ieml.script.tools import factorize
 from ieml.operator import sc
 

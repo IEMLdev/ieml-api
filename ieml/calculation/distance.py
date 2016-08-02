@@ -4,10 +4,9 @@ from ieml.AST.propositions import Word, Sentence, SuperSentence, Morpheme
 from ieml.AST.terms import Term
 from ieml.AST.usl import Text, HyperText
 from ieml.operator import usl, sc
-from ieml.script import CONTAINED_RELATION
 from ieml.script.tables import get_table_rank
 from bidict import bidict
-from models.relations import RelationsConnector, RelationsQueries
+from models.relations.relations import RelationsConnector
 from fractions import Fraction
 
 categories = bidict({Term: 1, Word: 2, Sentence: 3, SuperSentence: 4, Text: 5, HyperText: 6})
