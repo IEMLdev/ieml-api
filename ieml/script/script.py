@@ -255,6 +255,9 @@ class MultiplicativeScript(Script):
         # Replace all the corresponding children to character
         _character = None
         if character is not None:
+            if character == 'E':
+                raise InvalidScript()
+
             _character = character
             if _character in PRIMITVES:
                 _children = []
@@ -456,6 +459,6 @@ for key in REMARKABLE_MULTIPLICATION_SCRIPT:
 # Building the remarkable addition to script
 REMARKABLE_ADDITION_SCRIPT = {}
 for key in REMARKABLE_ADDITION:
-    REMARKABLE_ADDITION_SCRIPT[key] = [MultiplicativeScript(character=c) for c in REMARKABLE_ADDITION[key]]
+    REMARKABLE_ADDITION_SCRIPT[key] = [MultiplicativeScript(character=c) if c != 'E' else NullScript(layer=0) for c in REMARKABLE_ADDITION[key] ]
     for m in REMARKABLE_ADDITION_SCRIPT[key]:
         m.check()

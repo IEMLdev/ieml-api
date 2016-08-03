@@ -5,6 +5,7 @@ import ply.yacc as yacc
 
 from helpers.metaclasses import Singleton
 from ieml.exceptions import CannotParse
+from ieml.script.constants import REMARKABLE_ADDITION
 from ieml.script.script import NullScript
 from .lexer import get_script_lexer, tokens
 from ieml.script import AdditiveScript, MultiplicativeScript
@@ -64,7 +65,7 @@ class ScriptParser(metaclass=Singleton):
                             | REMARKABLE_ADDITION LAYER0_MARK"""
         if p[1] == 'E':
             p[0] = NullScript(layer=0)
-        elif p[1] in 'OMFI':
+        elif p[1] in REMARKABLE_ADDITION:
             p[0] = AdditiveScript(character=p[1])
         else:
             p[0] = MultiplicativeScript(character=p[1])
