@@ -40,6 +40,7 @@ class TestTermParser(unittest.TestCase):
         script = self.parser.parse("E:E:.E:.E:E:E:.-E:E:E:.E:.-E:E:.E:E:E:.-'")
         self.assertTrue(script.empty)
         self.assertEqual(str(script), "E:.-'")
+        self.assertIsInstance(self.parser.parse('E:'), NullScript)
 
     def test_reduction(self):
         script = self.parser.parse("A:U:E:.")
@@ -112,7 +113,10 @@ class TestTermParser(unittest.TestCase):
         s2 = self.parser.parse("U:T:S:+B:. + S:S:+T:B:. + U:+S:S:S:.")
         # print(old_canonical(s1))
         # print(old_canonical(s2))
-        self.assertTrue(s1 < s2)
+
+        self.assertTrue(s1 > s2)
+
+
 # Lot of test to do :
 # - testing invalid script construction
 # - testing redondant element in script addition
