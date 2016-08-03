@@ -2,8 +2,7 @@ from ieml.script import AdditiveScript, MultiplicativeScript
 from collections import namedtuple
 import numpy as np
 from models.relations.relations import RelationsConnector
-from ieml.script.tools import factorize
-from ieml.operator import sc
+from ieml.parsing.script import ScriptParser
 
 Variable = namedtuple('Variable', ['address', 'script'])
 Table = namedtuple('Table', ['headers', 'cells', 'paradigm'])
@@ -252,7 +251,6 @@ def get_table_rank(paradigm):
         """
     rc = RelationsConnector()
     paradigm_rel = rc.get_script(paradigm)
-
     # TODO: Check if the paradigm was found in the database
     if paradigm_rel["TYPE"] == "ROOT_PARADIGM":  # Root paradigms have a rank 1
         return 1
@@ -278,8 +276,10 @@ def _compute_rank(paradigm, root):
     -------
 
     """
+
+    parser = ScriptParser()
     if isinstance(root, dict):
-        root = sc(root["_id"])
+        root = parser.parse(root["_id"])
 
     tbls = _get_tables(root, paradigm.singular_sequences)  # We get the tables that contain our paradigm
     coordinates = _get_seq_coordinates(paradigm.singular_sequences, tbls)
@@ -331,7 +331,8 @@ def _get_seq_coordinates(singular_sequences, tables):
         coords = [np.empty(0, dtype=int) for i in range(3)]
         for seq in singular_sequences:
             if isinstance(seq, str):
-                seq = sc(seq)
+                parser = ScriptParser()
+                seq = parser.parse(seq)
             if seq in table.cells:
                 coord = np.where(table.cells == seq)
                 for i, coordinate in enumerate(coord):
@@ -355,7 +356,8 @@ def _get_tables(root, singular_sequences):
     The root tables that contain the singular sequences of the paradigm for which we're computing the rank
     """
     if isinstance(root, dict):
-        root = sc(root["_id"])
+        parser = ScriptParser()
+        root = parser.parse(root["_id"])
 
     # Intersection of tables of the same paradigm are always empty
     # So candidates contains tables that partition of our singular_sequences

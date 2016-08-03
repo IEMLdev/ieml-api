@@ -1,3 +1,6 @@
+from models.base_queries import DictionaryQueries
+from models.constants import DB_ADDRESS, DB_NAME, PROPOSITION_COLLECTION, TEXT_COLLECTION, HYPERTEXT_COLLECTION
+from models.propositions import PropositionsQueries
 from .helper import *
 import string, random
 from pymongo import MongoClient

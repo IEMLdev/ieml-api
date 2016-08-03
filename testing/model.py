@@ -1,4 +1,5 @@
 import random
+from collections import namedtuple
 from string import ascii_lowercase
 
 import models.base_queries
@@ -18,6 +19,10 @@ from testing.helper import *
 def _tag():
     return {l: ''.join(random.sample(ascii_lowercase, 20)) for l in TAG_LANGUAGES}
 
+Paradigm = namedtuple('Paradigm', ['root', 'paradigms'])
+paradigms = {
+    0: Paradigm(root=sc('F:F:.O:.M:.-'), paradigms={sc('T:M:.O:.M:.-'), sc('F:M:.O:.M:.-'), sc('T:U:.O:.M:.-')})
+}
 
 class TestModel(unittest.TestCase):
     def setUp(self):
@@ -76,26 +81,10 @@ class TestModel(unittest.TestCase):
     def test_remove_root_paradigm(self):
         self._clear()
 
-        root = sc('F:F:.O:.M:.-')
-        paradigms = list(map(sc, ('T:M:.O:.M:.-', 'F:M:.O:.M:.-', 'T:U:.O:.M:.-')))
-        list_terms = [{
-            'AST': s,
-            'ROOT': False,
-            'TAGS': _tag(),
-            'INHIBITS': [],
-            'METADATA': {}
-        } for s in paradigms]
+        paradigm = paradigms[0]
+        self._save_paradigm(paradigm)
 
-        list_terms.append({
-            'AST': root,
-            'ROOT': True,
-            'TAGS': _tag(),
-            'INHIBITS': [],
-            'METADATA': {}
-        })
-        self.terms.save_multiple_terms(list_terms)
-
-        self.terms.remove_term(root, remove_roots_child=True)
+        self.terms.remove_term(paradigm.root, remove_roots_child=True)
         self.assertTrue(self.terms.get_all_terms().count() == 0,
                         msg='Delete of root paradigm have not remove subsequent paradigms.')
 
@@ -134,6 +123,30 @@ class TestModel(unittest.TestCase):
         tag = _tag()
         self.terms.add_term(sc('M:'), tag, [], root=True)
         self.assertTrue(self.terms.search_by_tag(tag['EN'], 'EN').count() == 1)
+
+    def test_rank(self):
+        self._clear()
+        paradigm = paradigms[0]
+        self._save_paradigm(paradigm)
+
+
+    def _save_paradigm(self, paradigm):
+        list_terms = [{
+                          'AST': s,
+                          'ROOT': False,
+                          'TAGS': _tag(),
+                          'INHIBITS': [],
+                          'METADATA': {}
+                      } for s in paradigm.paradigms]
+
+        list_terms.append({
+            'AST': paradigm.root,
+            'ROOT': True,
+            'TAGS': _tag(),
+            'INHIBITS': [],
+            'METADATA': {}
+        })
+        self.terms.save_multiple_terms(list_terms)
 
     def _count(self):
         return self.terms.terms.find().count() + self.relations.relations.find().count()

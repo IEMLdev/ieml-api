@@ -1,7 +1,7 @@
 from models.base_queries import DBConnector
 from models.constants import SCRIPTS_COLLECTION, ROOT_PARADIGM_TYPE, SINGULAR_SEQUENCE_TYPE, PARADIGM_TYPE
 from models.exceptions import NotAParadigm, RootParadigmIntersection, \
-    ParadigmAlreadyExist, RootParadigmMissing, SingularSequenceAlreadyExist, NotASingularSequence
+    ParadigmAlreadyExist, RootParadigmMissing, SingularSequenceAlreadyExist, NotASingularSequence, TermNotFound
 import logging
 
 
@@ -16,7 +16,19 @@ class RelationsConnector(DBConnector):
         :param script: the script to get, str or Script instance.
         :return: the script entry.
         """
-        return self.relations.find_one({"_id": script if isinstance(script, str) else str(script)})
+        entry = self.relations.find_one({"_id": str(script)})
+        if not entry:
+            raise TermNotFound(str(script))
+
+        return entry
+
+    def exists(self, script):
+        try:
+            self.get_script(script)
+        except TermNotFound:
+            return False
+        else:
+            return True
 
     def singular_sequences(self, paradigm=None):
         """
@@ -57,7 +69,7 @@ class RelationsConnector(DBConnector):
         :param script_ast: the script to remove
         :return: None
         """
-        if self.get_script(script_ast) is None:
+        if not self.exists(script_ast):
             logging.warning("Deletion of a non existent script %s from the collection relation." % str(script_ast))
             return
 
@@ -90,7 +102,7 @@ class RelationsConnector(DBConnector):
             raise NotASingularSequence(script_ast)
 
         # check if already exist
-        if self.get_script(str(script_ast)):
+        if self.exists(script_ast):
             raise SingularSequenceAlreadyExist(script_ast)
 
         # get all the singular sequence of the db to see if the singular sequence can be created
@@ -119,8 +131,9 @@ class RelationsConnector(DBConnector):
         """
         # defensive check
 
-        # check if paradigm already saved
-        if self.get_script(str(script_ast)) is not None:
+        # check if paradigm already saved.
+
+        if self.exists(script_ast):
             raise ParadigmAlreadyExist(script_ast)
 
         # get all the singular sequence of the db to avoid intersection
@@ -146,7 +159,7 @@ class RelationsConnector(DBConnector):
         :return: None
         """
         # defensive check
-        if self.get_script(str(script_ast)):
+        if self.exists(script_ast):
             raise ParadigmAlreadyExist(script_ast)
 
         # get all the singular sequence of the db to check if we can create the paradigm

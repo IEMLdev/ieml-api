@@ -24,7 +24,7 @@ class TermsConnector(DBConnector):
         :param script: the script to get.
         :return: the document or None
         """
-        return self.terms.find_one({'_id': script if isinstance(script, str) else str(script)})
+        return self.terms.find_one({'_id': str(script)})
 
     def get_all_terms(self):
         """
@@ -150,7 +150,7 @@ class TermsConnector(DBConnector):
             if inhibits or root:
                 RelationsQueries.update_script(script, self.get_inhibitions(), root, recompute_relations=recompute_relations)
         else:
-            logging.warning("No update performed for script " + script +
+            logging.warning("No update performed for script " + str(script) +
                             ", no argument are matching the update criteria.")
 
     def root_paradigms(self, ieml_only=False):

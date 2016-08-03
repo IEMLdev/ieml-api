@@ -9,6 +9,8 @@ from bidict import bidict
 from models.relations.relations import RelationsConnector
 from fractions import Fraction
 
+from models.relations.relations_queries import RelationsQueries
+
 categories = bidict({Term: 1, Word: 2, Sentence: 3, SuperSentence: 4, Text: 5, HyperText: 6})
 
 
@@ -300,8 +302,8 @@ def get_parents(usl_a, usl_b):
         return frozenset({(elem, arr.count(elem)) for elem in arr})
 
     rc = RelationsConnector()
-    parents_a = {tupleize(flatten_dict(rc.get_script(term.script)['RELATIONS']['FATHER_RELATION'])) for term in stages_A[Term]}
-    parents_b = {tupleize(flatten_dict(rc.get_script(term.script)['RELATIONS']['FATHER_RELATION'])) for term in stages_B[Term]}
+    parents_a = {tupleize(flatten_dict(RelationsQueries.relations(term.script, 'FATHER_RELATION'))) for term in stages_A[Term]}
+    parents_b = {tupleize(flatten_dict(RelationsQueries.relations(term.script, 'FATHER_RELATION'))) for term in stages_B[Term]}
 
     return parents_a, parents_b
 
@@ -319,7 +321,7 @@ def get_paradigms(object_set_a):
     rc = RelationsConnector()
 
     for term in term_list:
-        for paradigm in rc.get_script(term.script)["RELATIONS"]["CONTAINED"]:
+        for paradigm in RelationsQueries.relations(term.script, "CONTAINED"):
             paradigms[get_table_rank(sc(paradigm))].append(paradigm)
 
     return paradigms

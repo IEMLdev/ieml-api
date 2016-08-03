@@ -1,4 +1,3 @@
-from functools import total_ordering
 from ieml.AST.commons import AbstractProposition
 from .tree_metadata import TermMetadata
 from ieml.exceptions import TermComparisonFailed, CannotRetrieveMetadata, IEMLTermNotFoundInDictionnary

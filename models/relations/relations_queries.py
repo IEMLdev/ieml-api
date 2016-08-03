@@ -6,7 +6,9 @@ from ieml.script import CONTAINED_RELATION, CONTAINS_RELATION, RemarkableSibling
     ASSOCIATED_SIBLING_RELATION, CROSSED_SIBLING_RELATION, OPPOSED_SIBLING_RELATION, ATTRIBUTE, SUBSTANCE, MODE, \
     ELEMENTS, FATHER_RELATION, CHILD_RELATION, AdditiveScript, NullScript, Script, SCRIPT_RELATIONS
 from ieml.script.constants import ROOT_RELATION
-from models.exceptions import NotARootParadigm, InvalidScript, CantRemoveNonEmptyRootParadigm, InvalidRelationTitle
+from ieml.script.tables import get_table_rank
+from models.exceptions import NotARootParadigm, InvalidScript, CantRemoveNonEmptyRootParadigm, InvalidRelationTitle, \
+    TermNotFound
 from models.relations.relations import RelationsConnector
 import progressbar
 
@@ -14,6 +16,10 @@ import progressbar
 class RelationsQueries:
     relations_db = RelationsConnector()
     script_parser = ScriptParser()
+
+    @classmethod
+    def rank(cls, script):
+        return cls.relations_db.get_script(script)['RANK']
 
     @classmethod
     def update_script(cls, script, inhibition, root=None, recompute_relations=True):
@@ -169,8 +175,6 @@ class RelationsQueries:
         """
         paradigms = [(cls._to_ast(p['_id']), p['INHIBITS']) for p in paradigms]
 
-
-
         for p in paradigms:
             cls.compute_relations(p[0])
 
@@ -185,8 +189,12 @@ class RelationsQueries:
         :return: None
         """
 
-        paradigm_entry = cls.relations_db.get_script(str(paradigm_ast))
-        if paradigm_entry is None or paradigm_entry['ROOT'] != str(paradigm_ast):
+        try:
+            paradigm_entry = cls.relations_db.get_script(str(paradigm_ast))
+        except TermNotFound:
+            raise NotARootParadigm(paradigm_ast)
+
+        if paradigm_entry['ROOT'] != str(paradigm_ast):
             raise NotARootParadigm(paradigm_ast)
 
         # Compute the list of script in the paradigm
@@ -201,6 +209,8 @@ class RelationsQueries:
         logging.info('Computing local relations for paradigm %s...' % str(paradigm_ast))
         # Compute and save contains and contained (can't be inhibited)
         cls._compute_containing_relations(scripts_ast)
+
+        cls._compute_tables_rank(scripts_ast)
 
         # Compute and save the remarkable siblings
         remarkable_siblings = RemarkableSibling.compute_remarkable_siblings_relations(scripts_ast, regex=False)
@@ -354,6 +364,13 @@ class RelationsQueries:
                 RelationsQueries._merge(dic1[key], dic2[key], inverse_key=inverse_key)
 
     @classmethod
+    def _compute_tables_rank(cls, scripts_ast):
+        for s in scripts_ast:
+            if s.paradigm:
+                cls.relations_db.relations.update({'_id': str(s)},
+                                                  {'$set': {'RANK': get_table_rank(s)}})
+
+    @classmethod
     def _compute_fathers(cls, script_ast):
         """
         Compute the father relationship. For a given script, it is all the sub element attribute, mode, substance for a
@@ -392,7 +409,7 @@ class RelationsQueries:
                 if e not in relations:
                     relations[e] = {}
 
-                if cls.relations_db.get_script(sub_s.children[i]) is not None:
+                if cls.relations_db.exists(sub_s.children[i]):
                     if ELEMENTS not in relations[e]:
                         relations[e][ELEMENTS] = []
 

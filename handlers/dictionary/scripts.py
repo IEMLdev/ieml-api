@@ -1,4 +1,6 @@
 from models.exceptions import DBException
+from models.relations.relations import RelationsConnector
+from models.relations.relations_queries import RelationsQueries
 from ..caching import cached, flush_cache
 from handlers.dictionary.commons import terms_db, script_parser
 from ieml.exceptions import CannotParse
@@ -23,11 +25,11 @@ def all_ieml():
                 "LAYER" : terms_ast.layer,
                 "TAILLE" : terms_ast.cardinal,
                 "CANONICAL" : old_canonical(terms_ast),
-                "ROOT_PARADIGM" : term_db_entry["ROOT"]
+                "ROOT_PARADIGM" : term_db_entry["ROOT"],
+                "RANK": RelationsQueries.rank(term_db_entry["_id"]) if terms_ast.paradigm else 0
                 }
 
     return [_build_old_model_from_term_entry(entry) for entry in terms_db.get_all_terms()]
-
 
 def parse_ieml(iemltext):
     try:
