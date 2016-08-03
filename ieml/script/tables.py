@@ -4,6 +4,7 @@ import numpy as np
 from models.relations.relations import RelationsConnector
 from ieml.parsing.script import ScriptParser
 
+
 Variable = namedtuple('Variable', ['address', 'script'])
 Table = namedtuple('Table', ['headers', 'cells', 'paradigm'])
 

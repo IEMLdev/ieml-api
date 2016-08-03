@@ -131,7 +131,7 @@ class TermsConnector(DBConnector):
             raise TermNotFound(script)
 
         update = {}
-        if tags and Tag.check_tags(tags):
+        if tags and self._check_tags(tags):
             update['TAGS'] = tags
 
         if root:
