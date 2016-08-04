@@ -13,4 +13,4 @@ for t in tc.get_all_terms():
         tc.terms.insert(t)
 
 if modif:
-    tc.recompute_relations()
+    tc.recompute_relations(all_delete=True)
