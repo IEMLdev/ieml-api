@@ -72,8 +72,6 @@ def script_table(iemltext):
             color = 'black'
         elif not header:
             color = class_to_color[ieml.script_class]
-        elif top_header:
-            color = 'grey'
         else:
             color = class_to_header_color[ieml.script_class]
 
@@ -131,7 +129,7 @@ def script_table(iemltext):
                 for i, tab in enumerate(table.headers[2]):
                     tabs.append({
                         'tabTitle': str(tab),
-                        'slice': _slice_array(table, dim=i, tab_header=str(tab))
+                        'slice': _slice_array(table, dim=i, tab_header=tab)
                     })
 
             result.append({
