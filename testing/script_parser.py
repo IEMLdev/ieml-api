@@ -1,3 +1,4 @@
+from ieml.operator import sc
 from testing.helper import *
 from ieml import ScriptParser
 from ieml.script import *
@@ -113,8 +114,10 @@ class TestTermParser(unittest.TestCase):
         s2 = self.parser.parse("U:T:S:+B:. + S:S:+T:B:. + U:+S:S:S:.")
         # print(old_canonical(s1))
         # print(old_canonical(s2))
-
         self.assertTrue(s1 > s2)
+        s1 = sc('o.O:M:.-')
+        s2 = sc('E:O:.T:M:.-')
+        self.assertLess(s2, s1)
 
 
 # Lot of test to do :
