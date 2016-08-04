@@ -43,6 +43,9 @@ class RankComputationTest(unittest.TestCase):
         paradigm = sc("S:M:.e.-M:M:.u.-wa.e.-'+B:M:.e.-M:M:.a.-wa.e.-'+T:M:.e.-M:M:.i.-wa.e.-'")
         self.assertEquals(get_table_rank(paradigm), 2)
 
+    def test_additive_parent_paradigm(self):
+        paradigm = sc("O:M:.M:M:.-")
+        self.assertEquals(get_table_rank(paradigm), 1)
 
 if __name__ == '__main__':
     unittest.main()
