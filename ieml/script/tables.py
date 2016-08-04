@@ -67,8 +67,6 @@ class Table:
         return self.__dimension
 
 
-
-
 def generate_tables(parent_script, ):
     """Generates a paradigm table from a given Script.
        The table is implemented using a named tuple"""
@@ -351,20 +349,24 @@ def _compute_rank(paradigm, root):
     parser = ScriptParser()
     if isinstance(root, dict):
         root = parser.parse(root["_id"])
-
     tbls = _get_tables(root, paradigm.singular_sequences)  # We get the tables that contain our paradigm
-    coordinates = _get_seq_coordinates(paradigm.singular_sequences, tbls)
 
     if len(tbls) == 1:
+        coordinates = _get_seq_coordinates(paradigm.singular_sequences, tbls[0])
         # We are checking if only one header for the root table was used to create the child paradigm
         if tbls[0].paradigm.singular_sequences == paradigm.singular_sequences:
             # We need to check if the new paradigm was created by taking an entire table of an additive parent paradigm
             return 1
-        check_dim = [len(dim_coord) == 1 for dim_coord in coordinates[tbls[0].paradigm]]
+        check_dim = [len(dim_coord) == 1 for dim_coord in coordinates]
     if len(tbls) == 1 and any(check_dim):  # In this case the paradigm has at least a rank of 3
         # now we check if it has, in fact, a rank for 3, or either 4 or 5.
         # We start by getting the header that contain our paradigms singular sequences
-        header = tbls[0].headers[check_dim.index(True)][coordinates[tbls[0].paradigm][check_dim.index(True)][0]]
+        dimension = check_dim.index(True)
+        if tbls[0].dimension == 3 and (dimension == 0 or dimension == 1):
+            tbls[0].split_tabs = True
+            header = tbls[0].headers[dimension][coordinates[2]][coordinates[dimension][0]]
+        else:
+            header = tbls[0].headers[dimension][coordinates[dimension][0]]
         if header.singular_sequences == paradigm.singular_sequences:
             # In this case the header is actually our paradigm and we're done. (It has a rank of 3)
             return 3
@@ -373,8 +375,8 @@ def _compute_rank(paradigm, root):
             # TODO: I don't think we really need to check that condition.
             # We need to build the table associated with the header (which is a paradigm) of rank 3
             tbls = _get_tables(header, paradigm.singular_sequences)
-            coordinates = _get_seq_coordinates(paradigm.singular_sequences, tbls)
-            if len(tbls) == 1 and any(len(dim_coord) == 1 for dim_coord in coordinates[tbls[0].paradigm]):
+            coordinates = _get_seq_coordinates(paradigm.singular_sequences, tbls[0])
+            if len(tbls) == 1 and any(len(dim_coord) == 1 for dim_coord in coordinates):
                 return 5
             else:
                 return 4
@@ -383,60 +385,32 @@ def _compute_rank(paradigm, root):
         return 2
 
 
-def _single_table_rank(paradigm, table):
-
-    check_dim = [len(dim_coord) == 1 for dim_coord in coordinates[table.paradigm]]
-    if any(check_dim):  # In this case the paradigm has at least a rank of 3
-        # now we check if it has, in fact, a rank for 3, or either 4 or 5.
-        # We start by getting the header that contain our paradigms singular sequences
-        header = table.headers[check_dim.index(True)][coordinates[table.paradigm][check_dim.index(True)][0]]
-        if header.singular_sequences == paradigm.singular_sequences:
-            # In this case the header is actually our paradigm and we're done. (It has a rank of 3)
-            return 3
-        # Otherwise, it has a rank of either 4 or 5
-        elif _is_sublist(paradigm.singular_sequences, header.singular_sequences):
-            # TODO: I don't think we really need to check that condition.
-            # We need to build the table associated with the header (which is a paradigm) of rank 3
-            tbls = _get_tables(header, paradigm.singular_sequences)
-            coordinates = _get_seq_coordinates(paradigm.singular_sequences, tbls)
-            if len(tbls) == 1 and any(len(dim_coord) == 1 for dim_coord in coordinates[tbls[0].paradigm]):
-                return 5
-            else:
-                return 4
-
-
-def _get_seq_coordinates(singular_sequences, tables):
+def _get_seq_coordinates(singular_sequences, table):
     """
-
     Parameters
     ----------
     singular_sequences
-    tables
-
+    table
     Returns
     -------
     list: numpy arrays containing the coordinates in the table of all the singular sequences.
-          coords = [array(), array(), array()] where coords[0] and row indices, coords[1] are column indices, coords[2]
+          coords = [array(), array(), array()] where coords[0] are row indices, coords[1] are column indices, coords[2]
           are tab indices.
-
     """
 
-    coordinates = {table.paradigm: [] for table in tables}
+    coords = [np.empty(0, dtype=int) for i in range(3)]
 
-    for table in tables:
-        coords = [np.empty(0, dtype=int) for i in range(3)]
-        for seq in singular_sequences:
-            if isinstance(seq, str):
-                parser = ScriptParser()
-                seq = parser.parse(seq)
-            if seq in table.cells:
-                coord = np.where(table.cells == seq)
-                for i, coordinate in enumerate(coord):
-                    coords[i] = np.append(coords[i], coordinate)
-        # remove the empty index arrays inside coordinates
-        coordinates[table.paradigm] = [np.unique(coord) for coord in coords if len(coord) > 0]
+    for seq in singular_sequences:
+        if isinstance(seq, str):
+            sp = ScriptParser()
+            seq = sp.parse(seq)
+        if seq in table.cells:
+            coord = np.where(table.cells == seq)
+            for i, coordinate in enumerate(coord):
+                coords[i] = np.append(coords[i], coordinate)
 
-    return coordinates
+    # remove the empty index arrays inside coordinates
+    return [np.unique(coord) for coord in coords if len(coord) > 0]
 
 
 def _get_tables(root, singular_sequences):
