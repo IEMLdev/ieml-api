@@ -19,6 +19,7 @@ class Text(TreeStructure):
             raise EmptyTextException()
 
         self.children = propositions
+        self._max_level = None
 
     def _do_precompute_str(self):
         self._str = '{/' + '//'.join(map(str, self.children)) + '/}'
@@ -28,6 +29,14 @@ class Text(TreeStructure):
 
     def __eq__(self, other):
         return self.children == other.children
+
+    @property
+    def max_level(self):
+        """Property that lazily computes the maximum levels of all the propositions contained in the USL"""
+        if self._max_level is None:
+            # computing the maximum level of the propositions contained in the text
+            self._max_level = max([type(child) for child in self.children])
+        return self._max_level
 
     def _do_checking(self):
         for child in self.children:

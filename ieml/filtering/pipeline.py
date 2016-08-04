@@ -1,10 +1,14 @@
+from enum import Enum
 from math import ceil
 
 from ieml.AST.propositions import SuperSentence
 from ieml.AST.usl import HyperText, Text
 
 #
+from ieml.filtering.filters import FilteringLevel, ParadigmaticProximityFilter, IndicatorFilter, BinaryFilter
+
 TOP_USL_TYPES = [SuperSentence, HyperText, Text]
+
 
 class USLSet:
     """A Wrapper object for a USL list"""
@@ -15,18 +19,23 @@ class USLSet:
         self._sort_usl_from_list(usl_list)
 
     def _sort_usl_from_list(self, usl_list):
+        """Sorting USL in a table, by USL filtering level"""
         for usl in usl_list:
-            if type(usl) not in self.usl_table:
-                self.usl_table[type(usl_list)] = list()
-            self.usl_table[type(usl_list)].append(usl)
+            usl_type = FilteringLevel.get_usl_filtering_level(usl)
+            if usl_type not in self.usl_table:
+                self.usl_table[usl_type] = list()
+            self.usl_table[usl_type].append(usl)
 
     def get_usls(self, usl_types=None):
+        """Retrieve all USLs, or only USLs of a certain filtering type"""
         if usl_types is None:
-            for key in self.usl_table:
-                for usl in self.usl_table[key]:
-                    yield usl
+            table_keys = self.usl_table.keys()
         else:
-            pass
+            table_keys = usl_types
+
+        for usl_type in table_keys:
+            for usl in self.usl_table[usl_type]:
+                yield usl
 
     def set_usls(self, usl_list, usl_t=None):
         if usl_t is None:
@@ -78,7 +87,7 @@ class AbtractPipeline:
             raise Exception("Ratios count doesn't match filter count")
 
 
-class SimplePipeline(AbtractPipeline):
+class LinearPipeline(AbtractPipeline):
     """Pipeline for a simple linear F1 -> F2 -> ... schema for the filtering order.
     The Pipeline uses the defined ratios to reach the desired end ratio"""
 
@@ -86,15 +95,32 @@ class SimplePipeline(AbtractPipeline):
         self.filters_list = filters_lists
 
 
-class ComplexPipeline(AbtractPipeline):
+class ConditionalPipeline(AbtractPipeline):
 
     def __init__(self,filters_list, prefixed_filter):
         self.prefixed_filter = prefixed_filter
-        self.inner_pipeline = SimplePipeline(filters_list)
+        self.inner_pipeline = LinearPipeline(filters_list)
 
     def filter(self, usl_set, query, ratios_list=None):
         pass
 
 
-def gen_filtering_pipeline(query_usl, usl_list):
-    pass
+filtering_pipelines_mappings = {
+    FilteringLevel.UNITERM_WORD: LinearPipeline([ParadigmaticProximityFilter(),
+                                                 IndicatorFilter(1)]),
+
+    FilteringLevel.MULTITERM_WORD: ConditionalPipeline([IndicatorFilter(1),
+                                                        ParadigmaticProximityFilter()],
+                                                       BinaryFilter(FilteringLevel.MULTITERM_WORD)),
+
+    FilteringLevel.SENTENCE: ConditionalPipeline([IndicatorFilter(2),
+                                                  IndicatorFilter(1),
+                                                  ParadigmaticProximityFilter()],
+                                                 BinaryFilter(FilteringLevel.SENTENCE)),
+
+    FilteringLevel.SUPERSENTENCE: ConditionalPipeline([IndicatorFilter(3),
+                                                       IndicatorFilter(2),
+                                                       IndicatorFilter(1),
+                                                       ParadigmaticProximityFilter()],
+                                                      BinaryFilter(FilteringLevel.SUPERSENTENCE))
+}
