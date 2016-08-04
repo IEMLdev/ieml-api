@@ -2,18 +2,17 @@ import random
 from collections import namedtuple
 from string import ascii_lowercase
 
-import models.base_queries
+import config
+from testing.models.load_tests import stub_db
 
-models.base_queries.DB_NAME = 'test_db'
+config.DB_NAME = 'test_db'
 
 from models.exceptions import RootParadigmMissing, RootParadigmIntersection, InvalidTags, DuplicateTag
 from ieml.operator import *
 from models.terms.terms import TermsConnector
 from models.relations.relations import RelationsConnector
-from models.base_queries import DBConnector
-from models.constants import TERMS_COLLECTION, SCRIPTS_COLLECTION, TAG_LANGUAGES
-from scripts import load_old_db
-from testing.helper import *
+from models.constants import TAG_LANGUAGES
+from testing.ieml.helper import *
 
 
 def _tag():
@@ -21,11 +20,13 @@ def _tag():
 
 Paradigm = namedtuple('Paradigm', ['root', 'paradigms'])
 paradigms = {
-    0: Paradigm(root=sc('F:F:.O:.M:.-'), paradigms={sc('T:M:.O:.M:.-'), sc('F:M:.O:.M:.-'), sc('T:U:.O:.M:.-')})
+    0: Paradigm(root=sc('F:F:.O:.M:.-'), paradigms={sc('T:M:.O:.M:.-'), sc('F:M:.O:.M:.-'), sc('T:U:.O:.M:.-')}),
+    1: Paradigm(root=sc('O:O:.O:O:.-'), paradigms=set(map(sc, ['O:O:.wo.-', 'wu.O:O:.-', 'wa.O:O:.-', 'wo.O:O:.-', 'O:O:.we.-', 'we.O:O:.-', 'O:O:.wa.-', 'O:O:.wu.-', 'wo.U:O:.-', 'wo.A:O:.-', 'wo.O:U:.-', 'wo.O:A:.-', 'wa.U:O:.-', 'wa.A:O:.-', 'wa.O:U:.-', 'wa.O:A:.-', 'wu.U:O:.-', 'wu.A:O:.-', 'wu.O:U:.-', 'wu.O:A:.-', 'we.U:O:.-', 'we.A:O:.-', 'we.O:U:.-', 'we.O:A:.-', 'U:O:.wo.-', 'A:O:.wo.-', 'O:U:.wo.-', 'O:A:.wo.-', 'U:O:.wa.-', 'A:O:.wa.-', 'O:U:.wa.-', 'O:A:.wa.-', 'U:O:.wu.-', 'A:O:.wu.-', 'O:U:.wu.-', 'O:A:.wu.-', 'U:O:.we.-', 'A:O:.we.-', 'O:U:.we.-', 'O:A:.we.-'])))
 }
 
 class TestModel(unittest.TestCase):
     def setUp(self):
+        stub_db()
         self.terms = TermsConnector()
         self.relations = RelationsConnector()
 
@@ -71,6 +72,7 @@ class TestModel(unittest.TestCase):
         self._clear()
 
     def test_update(self):
+        self._clear()
         s1 = sc('F:')
         self.terms.add_term(s1, {'FR': 'fr', 'EN': 'en'}, [], root=True)
         newt = {'FR': 'fr2', 'EN': 'en2'}
@@ -130,7 +132,7 @@ class TestModel(unittest.TestCase):
         self._save_paradigm(paradigm)
 
 
-    def _save_paradigm(self, paradigm):
+    def _save_paradigm(self, paradigm, recompute_relations=True):
         list_terms = [{
                           'AST': s,
                           'ROOT': False,
@@ -146,7 +148,7 @@ class TestModel(unittest.TestCase):
             'INHIBITS': [],
             'METADATA': {}
         })
-        self.terms.save_multiple_terms(list_terms)
+        self.terms.save_multiple_terms(list_terms, recompute_relations=recompute_relations)
 
     def _count(self):
         return self.terms.terms.find().count() + self.relations.relations.find().count()
