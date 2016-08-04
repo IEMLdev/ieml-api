@@ -6,10 +6,70 @@ from ieml.parsing.script import ScriptParser
 
 
 Variable = namedtuple('Variable', ['address', 'script'])
-Table = namedtuple('Table', ['headers', 'cells', 'paradigm'])
 
 
-def generate_tables(parent_script):
+class Table:
+    def __init__(self, headers, cells, paradigm, split_tabs=False):
+        self.split_tabs = split_tabs
+        self.__headers = headers
+        self.__cells = cells
+        self.__split_cells = []
+        self.__paradigm = paradigm
+        self.__dimension = cells.ndim
+        self.__split_headers = []
+
+    @property
+    def headers(self):
+        if self.__dimension == 3 and self.split_tabs:
+
+            if self.__split_headers:
+                return self.__split_headers
+            else:
+                self.__split_headers = [[], [], []]
+                for var in self.__paradigm[2]:
+                    rows = []
+                    cols = []
+
+                    for row_header in self.__headers[0]:
+                        s = MultiplicativeScript(row_header[0], row_header[1], var)
+                        s.check()
+                        rows.append(s)
+                    for col_header in self.__headers[1]:
+                        s = MultiplicativeScript(col_header[0], col_header[1], var)
+                        s.check()
+                        cols.append(s)
+
+                    self.__split_headers[0].append(rows)
+                    self.__split_headers[1].append(cols)
+
+                self.__split_headers[2] = self.__headers[2]
+                return self.__split_headers
+        else:
+            return self.__headers
+
+    @property
+    def cells(self):
+        if self.__dimension == 3 and self.split_tabs:
+            if not self.__split_cells:
+                self.__split_cells = np.dsplit(self.__cells, self.__cells.shape[2])
+                return self.__split_cells
+            else:
+                return self.__split_cells
+        else:
+            return self.__cells
+
+    @property
+    def paradigm(self):
+        return self.__paradigm
+
+    @property
+    def dimension(self):
+        return self.__dimension
+
+
+
+
+def generate_tables(parent_script, ):
     """Generates a paradigm table from a given Script.
        The table is implemented using a named tuple"""
     table_list = []
@@ -225,21 +285,31 @@ def print_headers(headers, debug=True):
             print(']')
 
 
-def print_cells(cells):
+def print_cells(cells, debug=True):
     """Print table cells for debugging purposes"""
 
     if cells.ndim == 1:
         for i, cell in enumerate(cells):
-            print("cells[" + str(i) + "] = " + "self.parser.parse(\"" + str(cell) + "\")")
+            if debug:
+                print("cells[" + str(i) + "] = " + "self.parser.parse(\"" + str(cell) + "\")")
+            else:
+                print("cells[" + str(i) + "] = " + str(cell))
     elif cells.ndim == 2:
         for i, row in enumerate(cells):
             for j, cell in enumerate(row):
-                print("cells[" + str(i) + "][" + str(j) + "] = " + "self.parser.parse(\"" + str(cell) + "\")")
+                if debug:
+                    print("cells[" + str(i) + "][" + str(j) + "] = " + "self.parser.parse(\"" + str(cell) + "\")")
+                else:
+                    print("cells[" + str(i) + "][" + str(j) + "] = " + str(cell))
     elif cells.ndim == 3:
         for k in range(cells.shape[2]):
             for i, row in enumerate(cells):
                 for j, col in enumerate(row):
-                    print("cells[" + str(i) + "][" + str(j) + "][" + str(k) + "] = " + "self.parser.parse(\"" + str(cells[i][j][k]) + "\")")
+                    if debug:
+                        print("cells[" + str(i) + "][" + str(j) + "][" + str(k) + "] = " +
+                              "self.parser.parse(\"" + str(cells[i][j][k]) + "\")")
+                    else:
+                        print("cells[" + str(i) + "][" + str(j) + "][" + str(k) + "] = " + str(cells[i][j][k]))
             print('\n')
 
 
