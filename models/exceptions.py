@@ -138,3 +138,6 @@ class TermNotFound(ObjectNotFound):
     def __str__(self):
         return self.p
 
+class InvalidRelationCollectionState(DBException):
+    def __str__(self):
+        return 'The relation collection is in an invalid state, the cause is often the adding of some term without calculating the relations. Please recompute the collection.'

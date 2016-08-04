@@ -8,7 +8,7 @@ from ieml.script import CONTAINED_RELATION, CONTAINS_RELATION, RemarkableSibling
 from ieml.script.constants import ROOT_RELATION
 from ieml.script.tables import get_table_rank
 from models.exceptions import NotARootParadigm, InvalidScript, CantRemoveNonEmptyRootParadigm, InvalidRelationTitle, \
-    TermNotFound
+    TermNotFound, InvalidRelationCollectionState
 from models.relations.relations import RelationsConnector
 import progressbar
 
@@ -19,7 +19,10 @@ class RelationsQueries:
 
     @classmethod
     def rank(cls, script):
-        return cls.relations_db.get_script(script)['RANK']
+        entry = cls.relations_db.get_script(script)
+        if 'RANK' not in entry:
+            return InvalidRelationCollectionState()
+        return entry['RANK']
 
     @classmethod
     def update_script(cls, script, inhibition, root=None, recompute_relations=True):
