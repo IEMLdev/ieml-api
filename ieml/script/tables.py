@@ -287,6 +287,9 @@ def _compute_rank(paradigm, root):
 
     if len(tbls) == 1:
         # We are checking if only one header for the root table was used to create the child paradigm
+        if tbls[0].paradigm.singular_sequences == paradigm.singular_sequences:
+            # We need to check if the new paradigm was created by taking an entire table of an additive parent paradigm
+            return 1
         check_dim = [len(dim_coord) == 1 for dim_coord in coordinates[tbls[0].paradigm]]
     if len(tbls) == 1 and any(check_dim):  # In this case the paradigm has at least a rank of 3
         # now we check if it has, in fact, a rank for 3, or either 4 or 5.
@@ -308,6 +311,28 @@ def _compute_rank(paradigm, root):
     else:
         # otherwise if the paradigm is constructed from more than one header then it's of rank 2
         return 2
+
+
+def _single_table_rank(paradigm, table):
+
+    check_dim = [len(dim_coord) == 1 for dim_coord in coordinates[table.paradigm]]
+    if any(check_dim):  # In this case the paradigm has at least a rank of 3
+        # now we check if it has, in fact, a rank for 3, or either 4 or 5.
+        # We start by getting the header that contain our paradigms singular sequences
+        header = table.headers[check_dim.index(True)][coordinates[table.paradigm][check_dim.index(True)][0]]
+        if header.singular_sequences == paradigm.singular_sequences:
+            # In this case the header is actually our paradigm and we're done. (It has a rank of 3)
+            return 3
+        # Otherwise, it has a rank of either 4 or 5
+        elif _is_sublist(paradigm.singular_sequences, header.singular_sequences):
+            # TODO: I don't think we really need to check that condition.
+            # We need to build the table associated with the header (which is a paradigm) of rank 3
+            tbls = _get_tables(header, paradigm.singular_sequences)
+            coordinates = _get_seq_coordinates(paradigm.singular_sequences, tbls)
+            if len(tbls) == 1 and any(len(dim_coord) == 1 for dim_coord in coordinates[tbls[0].paradigm]):
+                return 5
+            else:
+                return 4
 
 
 def _get_seq_coordinates(singular_sequences, tables):
