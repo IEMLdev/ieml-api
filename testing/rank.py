@@ -7,6 +7,8 @@ from ieml.script.tools import factorize
 
 class RankComputationTest(unittest.TestCase):
 
+    # TODO: Tests for paradigms built from 3d tables
+
     def test_rank1_2d(self):
         root_paradigm = sc("O:M:.M:M:.-+M:M:.O:M:.-")
         self.assertTrue(get_table_rank(root_paradigm) == 1, "The rank of a root paradigm is 1")
