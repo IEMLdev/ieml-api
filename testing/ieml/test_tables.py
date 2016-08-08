@@ -7,6 +7,8 @@ import unittest
 
 class TableGenerationTest(unittest.TestCase):
 
+    # TODO: Write tests that checks if the tabs are split correctly
+
     def setUp(self):
         self.parser = ScriptParser()
 
