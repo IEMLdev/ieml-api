@@ -11,6 +11,7 @@ Variable = namedtuple('Variable', ['address', 'script'])
 class Table:
     def __init__(self, headers, cells, paradigm, split_tabs=False):
         self.split_tabs = split_tabs
+
         self.__headers = headers
         self.__cells = cells
         self.__split_cells = []
@@ -26,7 +27,7 @@ class Table:
                 return self.__split_headers
             else:
                 self.__split_headers = [[], [], []]
-                for var in self.__paradigm[2]:
+                for var in self.__paradigm[2].singular_sequences:
                     rows = []
                     cols = []
 
