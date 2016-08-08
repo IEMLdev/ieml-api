@@ -3,7 +3,6 @@ from .tree_metadata import TermMetadata
 from ieml.exceptions import TermComparisonFailed, CannotRetrieveMetadata, IEMLTermNotFoundInDictionnary
 from ieml.parsing.script import ScriptParser
 from ieml.script import Script
-from models.terms.terms import TermsConnector
 
 
 class Term(AbstractProposition):
@@ -47,6 +46,7 @@ class Term(AbstractProposition):
         from models.base_queries import DictionaryQueries
         TermMetadata.set_connector(DictionaryQueries())
 
+        from models.terms.terms import TermsConnector
         term = TermsConnector().get_term(self.script)
         if term is None:
             raise IEMLTermNotFoundInDictionnary(str(self.script))
