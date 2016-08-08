@@ -364,8 +364,12 @@ def _compute_rank(paradigm, root):
         # We start by getting the header that contain our paradigms singular sequences
         dimension = check_dim.index(True)
         if tbls[0].dimension == 3 and (dimension == 0 or dimension == 1):
-            tbls[0].split_tabs = True
-            header = tbls[0].headers[dimension][coordinates[2]][coordinates[dimension][0]]
+            if len(coordinates[2]) == 1:
+                tbls[0].split_tabs = True
+                header = tbls[0].headers[dimension][coordinates[2]][coordinates[dimension][0]]
+            else:
+                tbls[0].split_tabs = False
+                header = tbls[0].headers[dimension][coordinates[dimension][0]]
         else:
             header = tbls[0].headers[dimension][coordinates[dimension][0]]
         if header.singular_sequences == paradigm.singular_sequences:
