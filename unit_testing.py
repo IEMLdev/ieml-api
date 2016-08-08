@@ -1,7 +1,9 @@
-from testing import *
 import unittest
-import logging
-logging.getLogger().setLevel(logging.ERROR)
+# logging.getLogger().setLevel(logging.ERROR)
 
 if __name__ == "__main__":
-    unittest.main()
+    # loader = unittest.TestLoader()
+    # suite = loader.discover('testing')
+    # unittest.TextTestRunner().run(suite)
+    suite = unittest.TestLoader().discover('testing', top_level_dir='.')
+    unittest.TextTestRunner(verbosity=2).run(suite)

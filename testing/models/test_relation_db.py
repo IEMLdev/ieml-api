@@ -1,11 +1,10 @@
-import unittest
-
 from ieml.script.constants import OPPOSED_SIBLING_RELATION
 from models.relations.relations_queries import RelationsQueries
-from testing.models.model import TestModel, paradigms
+from testing.models.stub_db import ModelTestCase
+from testing.models.test_model import paradigms
 
 
-class TestRelationCollection(TestModel, unittest.TestCase):
+class TestRelationCollection(ModelTestCase):
     def setUp(self):
         super().setUp()
         self._clear()
