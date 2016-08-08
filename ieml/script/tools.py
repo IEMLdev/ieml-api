@@ -50,7 +50,7 @@ class RemarkableSibling:
                 except NoRemarkableSiblingForAdditiveScript:
                     cross = None
 
-                for s_trg in script_ast_list[i:]:
+                for s_trg in script_ast_list[i + 1:]:
                     if opposed and opposed.match(str(s_trg)):
                         relations[OPPOSED_SIBLING_RELATION].append((s_src, s_trg))
                         # symetrical
@@ -77,7 +77,7 @@ class RemarkableSibling:
         else:
             # AST based method
             for i, s_src in enumerate(script_ast_list):
-                for s_trg in script_ast_list[i:]:
+                for s_trg in script_ast_list[i + 1:]:
                     if cls.opposed_siblings(s_src, s_trg):
                         relations[OPPOSED_SIBLING_RELATION].append((s_src, s_trg))
                         # symetrical
