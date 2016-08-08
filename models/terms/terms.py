@@ -55,7 +55,7 @@ class TermsConnector(DBConnector):
 
         self._save_term(script_ast, tags, inhibits, root, metadata)
 
-    def save_multiple_terms(self, list_terms):
+    def save_multiple_terms(self, list_terms, recompute_relations=True):
         """
         Save a list of terms, more efficient than multiple call of save_term for multiple term saving. This method avoid
         extra relations computations.
@@ -68,6 +68,7 @@ class TermsConnector(DBConnector):
             'INHIBITS': list of str (the list of relation to inhibit),
             'METADATA': dict
          ]
+         :param recompute_relations: default True, if after adding the terms a recomputation of relation is performed.
         :return:
         """
 
@@ -80,7 +81,8 @@ class TermsConnector(DBConnector):
         for o in other:
             self.add_term(o['AST'], o['TAGS'], root=False, inhibits=o['INHIBITS'], metadata=o['METADATA'], recompute_relations=False)
 
-        self.recompute_relations()
+        if recompute_relations:
+            self.recompute_relations()
 
     def remove_term(self, script_ast, remove_roots_child=True, recompute_relations=True):
         """
@@ -234,7 +236,8 @@ class TermsConnector(DBConnector):
                 [{'AST': self.parser.parse(t['_id']),
                   'ROOT': t['ROOT']} for t in self.get_all_terms()], self.get_inhibitions())
 
-        RelationsQueries.compute_all_relations(paradigms=self.root_paradigms())
+        else:
+            RelationsQueries.compute_all_relations(paradigms=self.root_paradigms())
 
     def _check_tags(self, tags):
         if not Tag.check_tags(tags):
@@ -243,3 +246,5 @@ class TermsConnector(DBConnector):
         for l in tags:
             if self.search_by_tag(tags[l], language=l).count() != 0:
                 raise DuplicateTag(tags[l])
+
+        return True
