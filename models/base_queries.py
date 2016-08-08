@@ -4,7 +4,8 @@ from pymongo import MongoClient
 
 from helpers.metaclasses import Singleton
 from models.constants import TERMS_COLLECTION, TAG_LANGUAGES
-from .constants import DB_ADDRESS, DB_NAME, OLD_DB_NAME, OLD_TERMS_COLLECTION
+from .constants import OLD_TERMS_COLLECTION
+from config import DB_ADDRESS, DB_NAME, OLD_DB_NAME
 
 
 class DBConnector(object, metaclass=Singleton):
