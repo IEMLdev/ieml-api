@@ -1,3 +1,4 @@
+from helpers.metaclasses import Singleton
 from models.base_queries import DBConnector
 from models.constants import SCRIPTS_COLLECTION, ROOT_PARADIGM_TYPE, SINGULAR_SEQUENCE_TYPE, PARADIGM_TYPE
 from models.exceptions import NotAParadigm, RootParadigmIntersection, \
@@ -5,7 +6,7 @@ from models.exceptions import NotAParadigm, RootParadigmIntersection, \
 import logging
 
 
-class RelationsConnector(DBConnector):
+class RelationsConnector(DBConnector, metaclass=Singleton):
     def __init__(self):
         super().__init__()
         self.relations = self.db[SCRIPTS_COLLECTION]
