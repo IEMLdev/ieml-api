@@ -3,7 +3,6 @@ from ieml.AST.terms import Term
 from ieml.AST.usl import HyperText, Text
 from ieml.parsing.script.parser import ScriptParser
 from ieml.script import Script
-from ieml.exceptions import IncompatiblesScriptsLayers
 from ieml.script.script import MultiplicativeScript
 from ieml.parsing.parser import USLParser
 

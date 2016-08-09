@@ -15,20 +15,30 @@ class PathCannotBeEmpty(PropositionPathErrors):
 ### Exception raise by the Script
 
 
-class InvalidScriptForTableCreation(Exception):
-    pass
-
-
-class InvalidScriptCharacter(Exception):
-    pass
+# class InvalidScriptForTableCreation(Exception):
+#     pass
 
 
 class InvalidScript(Exception):
-    pass
+    def __str__(self):
+        return "Invalid arguments to create a script."
 
 
-class IncompatiblesScriptsLayers(Exception):
-    pass
+class InvalidScriptCharacter(InvalidScript):
+    def __init__(self, character):
+        self.character = character
+
+    def __str__(self):
+        return 'Invalid character %s for a script.'%str(self.character)
+
+
+class IncompatiblesScriptsLayers(InvalidScript):
+    def __init__(self, s1, s2):
+        self.s1 = s1
+        self.s2 = s2
+
+    def __str__(self):
+        return 'Unable to add the two scripts %s, %s they have incompatible layers.'%(str(self.s1), str(self.s2))
 
 
 class NoRemarkableSiblingForAdditiveScript(Exception):
@@ -205,4 +215,8 @@ class ParserErrors(Exception):
 
 
 class CannotParse(ParserErrors):
-    pass
+    def __init__(self, s):
+        self.s = s
+
+    def __str__(self):
+        return "Unable to parse the following string %s."%str(self.s)

@@ -34,7 +34,7 @@ class ScriptParser(metaclass=Singleton):
 
             return self.root
         else:
-            raise CannotParse()
+            raise CannotParse(s)
 
     def p_error(self, p):
         if p:
