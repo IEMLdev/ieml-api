@@ -30,7 +30,7 @@ class PropositionsParser(metaclass=Singleton):
             self.root.order()
             return self.root
         else:
-            raise CannotParse()
+            raise CannotParse(s)
 
     # Parsing rules
     def p_ieml_proposition(self, p):
@@ -108,7 +108,7 @@ class USLParser(PropositionsParser):
         """hypertext : usl"""
         literal, hypertext = p[1]
         if literal is not None:
-            raise CannotParse()
+            raise CannotParse(p)
 
         self.root = hypertext
 

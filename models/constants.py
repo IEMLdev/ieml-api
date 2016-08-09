@@ -1,10 +1,6 @@
 """"This module is kind of used as a config file, may be replaced by a configuration file in the future"""
 
 
-DB_ADDRESS = "mongodb://localhost:27017/"
-OLD_DB_NAME = "old_db"
-DB_NAME = "ieml_db"
-
 OLD_TERMS_COLLECTION = "terms"
 OLD_RELATIONSHIPS_COLLECTION = "relationships"
 

@@ -2,15 +2,14 @@ from ieml.AST.tree_metadata import TextMetadata, HypertextMetadata
 from ieml.exceptions import InvalidPathException, EmptyTextException
 from ieml.AST.propositions import ClosedProposition, Word, Sentence, SuperSentence
 from ieml.AST.propositional_graph import HyperTextGraph
-from ieml.AST.commons import PropositionPath, TreeStructure
+from ieml.AST.commons import PropositionPath, TreeStructure, AbstractPropositionMetaclass
 
 
 class Tag:
     def __init__(self, tag_content):
         self.content = tag_content
 
-
-class Text(TreeStructure):
+class Text(TreeStructure, metaclass=AbstractPropositionMetaclass):
     """A text is basically a list of *closed* propositions"""
 
     def __init__(self, propositions):
@@ -28,7 +27,12 @@ class Text(TreeStructure):
         return self.__str__().__hash__()
 
     def __eq__(self, other):
-        return self.children == other.children
+        if isinstance(other, Text):
+            return self.children == other.children
+        elif isinstance(other, HyperText) and other.strate == 0:
+            return self == other.texts[0]
+        else:
+            return False
 
     @property
     def max_level(self):
@@ -79,7 +83,7 @@ class Text(TreeStructure):
                       children_by_level[SuperSentence]
 
 
-class HyperText(TreeStructure):
+class HyperText(TreeStructure, metaclass=AbstractPropositionMetaclass):
     """An hypertext contains a list of texts and an hyperlink table"""
 
     def __init__(self, text):
@@ -88,6 +92,7 @@ class HyperText(TreeStructure):
 
         # we need to ensure that the text is checked to be able to generate the hyperlinks
         text.check()
+        self.strate = None
 
         # the hyperlinks, map (path) => (literal, hypertext)[]
         self._hyperlinks = None
@@ -169,3 +174,18 @@ class HyperText(TreeStructure):
                 # need to recompute the ieml string and redo the checking
                 self._do_checking()
                 self._do_precompute_str()
+
+    def __gt__(self, other):
+        if not isinstance(other, HyperText):
+            return HyperText > other.__class__
+
+        if self.strate != other.strate:
+            return self.strate > other.strate
+
+        if self.texts[0] != other.texts[0]:
+            return self.texts[0] > other.texts[0]
+
+        raise NotImplemented
+
+    def __hash__(self):
+        return self.__str__().__hash__()

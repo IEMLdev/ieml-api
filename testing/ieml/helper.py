@@ -30,3 +30,4 @@ def get_test_sentence():
     sentence = Sentence([clause_b, clause_a, clause_d, clause_c])
     sentence.check()
     return sentence
+

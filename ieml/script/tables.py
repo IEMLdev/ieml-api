@@ -1,15 +1,74 @@
 from ieml.script import AdditiveScript, MultiplicativeScript
 from collections import namedtuple
 import numpy as np
-from models.relations import RelationsConnector
-from ieml.script.tools import factorize
-from ieml.operator import sc
+from models.relations.relations import RelationsConnector
+from ieml.parsing.script import ScriptParser
+
 
 Variable = namedtuple('Variable', ['address', 'script'])
-Table = namedtuple('Table', ['headers', 'cells', 'paradigm'])
 
 
-def generate_tables(parent_script):
+class Table:
+    def __init__(self, headers, cells, paradigm, split_tabs=False):
+        self.split_tabs = split_tabs
+
+        self.__headers = headers
+        self.__cells = cells
+        self.__split_cells = []
+        self.__paradigm = paradigm
+        self.__dimension = cells.ndim
+        self.__split_headers = []
+
+    @property
+    def headers(self):
+        if self.__dimension == 3 and self.split_tabs:
+
+            if self.__split_headers:
+                return self.__split_headers
+            else:
+                self.__split_headers = [[], [], []]
+                for var in self.__paradigm[2].singular_sequences:
+                    rows = []
+                    cols = []
+
+                    for row_header in self.__headers[0]:
+                        s = MultiplicativeScript(row_header[0], row_header[1], var)
+                        s.check()
+                        rows.append(s)
+                    for col_header in self.__headers[1]:
+                        s = MultiplicativeScript(col_header[0], col_header[1], var)
+                        s.check()
+                        cols.append(s)
+
+                    self.__split_headers[0].append(rows)
+                    self.__split_headers[1].append(cols)
+
+                self.__split_headers[2] = self.__headers[2]
+                return self.__split_headers
+        else:
+            return self.__headers
+
+    @property
+    def cells(self):
+        if self.__dimension == 3 and self.split_tabs:
+            if not self.__split_cells:
+                self.__split_cells = np.dsplit(self.__cells, self.__cells.shape[2])
+                return self.__split_cells
+            else:
+                return self.__split_cells
+        else:
+            return self.__cells
+
+    @property
+    def paradigm(self):
+        return self.__paradigm
+
+    @property
+    def dimension(self):
+        return self.__dimension
+
+
+def generate_tables(parent_script, ):
     """Generates a paradigm table from a given Script.
        The table is implemented using a named tuple"""
     table_list = []
@@ -225,21 +284,31 @@ def print_headers(headers, debug=True):
             print(']')
 
 
-def print_cells(cells):
+def print_cells(cells, debug=True):
     """Print table cells for debugging purposes"""
 
     if cells.ndim == 1:
         for i, cell in enumerate(cells):
-            print("cells[" + str(i) + "] = " + "self.parser.parse(\"" + str(cell) + "\")")
+            if debug:
+                print("cells[" + str(i) + "] = " + "self.parser.parse(\"" + str(cell) + "\")")
+            else:
+                print("cells[" + str(i) + "] = " + str(cell))
     elif cells.ndim == 2:
         for i, row in enumerate(cells):
             for j, cell in enumerate(row):
-                print("cells[" + str(i) + "][" + str(j) + "] = " + "self.parser.parse(\"" + str(cell) + "\")")
+                if debug:
+                    print("cells[" + str(i) + "][" + str(j) + "] = " + "self.parser.parse(\"" + str(cell) + "\")")
+                else:
+                    print("cells[" + str(i) + "][" + str(j) + "] = " + str(cell))
     elif cells.ndim == 3:
         for k in range(cells.shape[2]):
             for i, row in enumerate(cells):
                 for j, col in enumerate(row):
-                    print("cells[" + str(i) + "][" + str(j) + "][" + str(k) + "] = " + "self.parser.parse(\"" + str(cells[i][j][k]) + "\")")
+                    if debug:
+                        print("cells[" + str(i) + "][" + str(j) + "][" + str(k) + "] = " +
+                              "self.parser.parse(\"" + str(cells[i][j][k]) + "\")")
+                    else:
+                        print("cells[" + str(i) + "][" + str(j) + "][" + str(k) + "] = " + str(cells[i][j][k]))
             print('\n')
 
 
@@ -252,7 +321,6 @@ def get_table_rank(paradigm):
         """
     rc = RelationsConnector()
     paradigm_rel = rc.get_script(paradigm)
-
     # TODO: Check if the paradigm was found in the database
     if paradigm_rel["TYPE"] == "ROOT_PARADIGM":  # Root paradigms have a rank 1
         return 1
@@ -278,19 +346,32 @@ def _compute_rank(paradigm, root):
     -------
 
     """
-    if isinstance(root, dict):
-        root = sc(root["_id"])
 
+    parser = ScriptParser()
+    if isinstance(root, dict):
+        root = parser.parse(root["_id"])
     tbls = _get_tables(root, paradigm.singular_sequences)  # We get the tables that contain our paradigm
-    coordinates = _get_seq_coordinates(paradigm.singular_sequences, tbls)
 
     if len(tbls) == 1:
+        coordinates = _get_seq_coordinates(paradigm.singular_sequences, tbls[0])
         # We are checking if only one header for the root table was used to create the child paradigm
-        check_dim = [len(dim_coord) == 1 for dim_coord in coordinates[tbls[0].paradigm]]
+        if tbls[0].paradigm.singular_sequences == paradigm.singular_sequences:
+            # We need to check if the new paradigm was created by taking an entire table of an additive parent paradigm
+            return 1
+        check_dim = [len(dim_coord) == 1 for dim_coord in coordinates]
     if len(tbls) == 1 and any(check_dim):  # In this case the paradigm has at least a rank of 3
         # now we check if it has, in fact, a rank for 3, or either 4 or 5.
         # We start by getting the header that contain our paradigms singular sequences
-        header = tbls[0].headers[check_dim.index(True)][coordinates[tbls[0].paradigm][check_dim.index(True)][0]]
+        dimension = check_dim.index(True)
+        if tbls[0].dimension == 3 and (dimension == 0 or dimension == 1):
+            if len(coordinates[2]) == 1:
+                tbls[0].split_tabs = True
+                header = tbls[0].headers[dimension][coordinates[2]][coordinates[dimension][0]]
+            else:
+                tbls[0].split_tabs = False
+                header = tbls[0].headers[dimension][coordinates[dimension][0]]
+        else:
+            header = tbls[0].headers[dimension][coordinates[dimension][0]]
         if header.singular_sequences == paradigm.singular_sequences:
             # In this case the header is actually our paradigm and we're done. (It has a rank of 3)
             return 3
@@ -299,8 +380,8 @@ def _compute_rank(paradigm, root):
             # TODO: I don't think we really need to check that condition.
             # We need to build the table associated with the header (which is a paradigm) of rank 3
             tbls = _get_tables(header, paradigm.singular_sequences)
-            coordinates = _get_seq_coordinates(paradigm.singular_sequences, tbls)
-            if len(tbls) == 1 and any(len(dim_coord) == 1 for dim_coord in coordinates[tbls[0].paradigm]):
+            coordinates = _get_seq_coordinates(paradigm.singular_sequences, tbls[0])
+            if len(tbls) == 1 and any(len(dim_coord) == 1 for dim_coord in coordinates):
                 return 5
             else:
                 return 4
@@ -309,37 +390,32 @@ def _compute_rank(paradigm, root):
         return 2
 
 
-def _get_seq_coordinates(singular_sequences, tables):
+def _get_seq_coordinates(singular_sequences, table):
     """
-
     Parameters
     ----------
     singular_sequences
-    tables
-
+    table
     Returns
     -------
     list: numpy arrays containing the coordinates in the table of all the singular sequences.
-          coords = [array(), array(), array()] where coords[0] and row indices, coords[1] are column indices, coords[2]
+          coords = [array(), array(), array()] where coords[0] are row indices, coords[1] are column indices, coords[2]
           are tab indices.
-
     """
 
-    coordinates = {table.paradigm: [] for table in tables}
+    coords = [np.empty(0, dtype=int) for i in range(3)]
 
-    for table in tables:
-        coords = [np.empty(0, dtype=int) for i in range(3)]
-        for seq in singular_sequences:
-            if isinstance(seq, str):
-                seq = sc(seq)
-            if seq in table.cells:
-                coord = np.where(table.cells == seq)
-                for i, coordinate in enumerate(coord):
-                    coords[i] = np.append(coords[i], coordinate)
-        # remove the empty index arrays inside coordinates
-        coordinates[table.paradigm] = [np.unique(coord) for coord in coords if len(coord) > 0]
+    for seq in singular_sequences:
+        if isinstance(seq, str):
+            sp = ScriptParser()
+            seq = sp.parse(seq)
+        if seq in table.cells:
+            coord = np.where(table.cells == seq)
+            for i, coordinate in enumerate(coord):
+                coords[i] = np.append(coords[i], coordinate)
 
-    return coordinates
+    # remove the empty index arrays inside coordinates
+    return [np.unique(coord) for coord in coords if len(coord) > 0]
 
 
 def _get_tables(root, singular_sequences):
@@ -355,7 +431,8 @@ def _get_tables(root, singular_sequences):
     The root tables that contain the singular sequences of the paradigm for which we're computing the rank
     """
     if isinstance(root, dict):
-        root = sc(root["_id"])
+        parser = ScriptParser()
+        root = parser.parse(root["_id"])
 
     # Intersection of tables of the same paradigm are always empty
     # So candidates contains tables that partition of our singular_sequences

@@ -2,7 +2,7 @@
 import progressbar
 import pprint
 from ieml.parsing import ScriptParser
-from models.relations import RelationsQueries
+from models.relations.relations_queries import RelationsQueries
 from models.relations.relations import RelationsConnector
 from models.terms.terms import TermsConnector
 from ieml.script.constants import OPPOSED_SIBLING_RELATION, ASSOCIATED_SIBLING_RELATION, CROSSED_SIBLING_RELATION, \

@@ -1,6 +1,6 @@
 from pymongo import MongoClient
 import bcrypt
-from models.constants import DB_ADDRESS
+from config import DB_ADDRESS
 
 DB_USERS = 'users'
 COLLECTION_USERS = 'users'

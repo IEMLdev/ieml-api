@@ -1,10 +1,11 @@
 
 """These unit tests are a bit special, they're used against the old database,
  test the output of the new parser/relational DB with the old DB/Parser"""
-from models.base_queries import DictionaryQueries
 from ieml.parsing import ScriptParser
-from testing.helper import *
 from ieml.script.tools import old_canonical
+from models.base_queries import DictionaryQueries
+from testing.ieml.helper import *
+
 
 class BackTestOrdering(unittest.TestCase):
 
