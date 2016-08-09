@@ -25,26 +25,7 @@ class RelationsQueries:
         return entry['RANK']
 
     @classmethod
-    def update_script(cls, script, inhibition, root=None, recompute_relations=True):
-        """
-        Update the term in the term and relation collection.
-        :param script: the script to update.
-        :param inhibition: the inhibitions
-        :param root: optional, the new rootness value of this paradigm.
-        :param recompute_relations: optional, if set recompute the relation after the update.
-        :return: None
-        """
-
-        if root is not None:
-            cls.remove_script(script, inhibition)
-            cls.save_script(script, inhibition, root=bool(root), recompute_relations=recompute_relations)
-        elif inhibition and recompute_relations:
-            cls.compute_relations(script)
-            cls.compute_global_relations()
-            cls.do_inhibition(inhibition)
-
-    @classmethod
-    def save_script(cls, script, inhibition, root=False, recompute_relations=True):
+    def save_script(cls, script, inhibition=None, root=False, recompute_relations=True, verbose=False):
         """
         Save a script in the relation collection.
         :param script: the script to save (str or Script instance)
@@ -57,13 +38,17 @@ class RelationsQueries:
         cls.relations_db.save_script(script_ast, root=root)
 
         if recompute_relations:
+            if inhibition is None:
+                raise ValueError("Can't recompute the relations without an inhibition argument.")
+
             paradigm_ast = cls._to_ast(cls.relations_db.get_script(str(script_ast))['ROOT'])
-            cls.compute_relations(paradigm_ast)
-            cls.compute_global_relations()
-            cls.do_inhibition(inhibition)
+            cls.compute_local_relations(paradigm_ast, verbose=verbose)
+            cls.compute_global_relations(verbose=verbose)
+            cls.do_inhibition(inhibition, verbose=verbose)
+
 
     @classmethod
-    def save_multiple_script(cls, list_script, inhibition):
+    def save_multiple_script(cls, list_script, inhibition, verbose=False):
         """
         Save multiple script in a single transaction. This method doesn't compute the relation multiple times, improving
         the computational speed than multiple call of save_script.
@@ -95,10 +80,10 @@ class RelationsQueries:
         # then compute the relations in each paradigms
         bar_pp = progressbar.ProgressBar(max_value=len(roots))
         for p in bar_pp(roots_paradigms):
-            cls.compute_relations(cls._to_ast(p))
+            cls.compute_local_relations(cls._to_ast(p), verbose=verbose)
 
-        cls.compute_global_relations()
-        cls.do_inhibition(inhibition)
+        cls.compute_global_relations(verbose=verbose)
+        cls.do_inhibition(inhibition, verbose=verbose)
 
     @classmethod
     def check_removable(cls, script):
@@ -115,11 +100,11 @@ class RelationsQueries:
         return True
 
     @classmethod
-    def remove_script(cls, script, inhibition, recompute_relations=True):
+    def remove_script(cls, script, recompute_relations=True, inhibition=None, verbose=False):
         """
         Remove a script in the relation collection. Recompute the relation to keep the coherence of the collection.
         :param script: the script to remove.
-        :param inhibition: list of root paradigm with their inhibition
+        :param inhibition: list of root paradigm with their inhibition, must be specified if recompute_relation is true
         :param recompute_relations: optinonal, if set recompute the relation after the removing.
         :return: None
         """
@@ -134,15 +119,18 @@ class RelationsQueries:
         cls.relations_db.remove_script(script_ast)
 
         if recompute_relations:
+            if inhibition is None:
+                raise ValueError("Can't recompute the relations without an inhibition argument.")
+
             # If we remove a element of a paradigm (not the root paradigm), recompute the relation inside the paradigm
             if script_entry['ROOT'] != str(script_ast):
-                cls.compute_relations(cls._to_ast(script_entry['ROOT']))
+                cls.compute_local_relations(cls._to_ast(script_entry['ROOT']), verbose=verbose)
 
             # Recompute the global relations
-            cls.compute_global_relations()
+            cls.compute_global_relations(verbose=verbose)
 
             # Unset inhibited relations
-            cls.do_inhibition(inhibition)
+            cls.do_inhibition(inhibition, verbose=verbose)
 
     @classmethod
     def root_paradigms(cls, script_list=None):
@@ -170,25 +158,27 @@ class RelationsQueries:
             {'SINGULAR_SEQUENCES': {'$in': [str(seq) for seq in script_ast.singular_sequences]}}))
 
     @classmethod
-    def compute_all_relations(cls, paradigms):
+    def compute_all_relations(cls, inhibition, verbose=False):
         """
         Compute the relations for the given paradigms, and the global and inhibitions.
-        :param paradigms:
+        :param inhibition: the inhibition list
+        :param verbose: if we show progressbar
         :return:
         """
-        paradigms = [(cls._to_ast(p['_id']), p['INHIBITS']) for p in paradigms]
+        paradigms = [(cls._to_ast(p['_id']), p['INHIBITS']) for p in inhibition]
 
         for p in paradigms:
-            cls.compute_relations(p[0])
+            cls.compute_local_relations(p[0], verbose=verbose)
 
-        cls.compute_global_relations()
-        cls.do_inhibition(paradigms)
+        cls.compute_global_relations(verbose=verbose)
+        cls.do_inhibition(paradigms, verbose=verbose)
 
     @classmethod
-    def compute_relations(cls, paradigm_ast):
+    def compute_local_relations(cls, paradigm_ast, verbose=False):
         """
         Compute the relations for a given root paradigm and all the contained scripts.
         :param paradigm_ast: the root paradigm
+        :param verbose: text progressbar
         :return: None
         """
 
@@ -206,7 +196,9 @@ class RelationsQueries:
             {'$set': {'RELATIONS': {}}},
             multi=True
         )
-        logging.info('Computing local relations for paradigm %s...' % str(paradigm_ast))
+        if verbose:
+            logging.info('Computing local relations for paradigm %s...' % str(paradigm_ast))
+
         # Compute and save contains and contained (can't be inhibited)
         cls._compute_containing_relations(scripts_ast)
 
@@ -228,7 +220,7 @@ class RelationsQueries:
                                    [str(trg) for src, trg in remarkable_siblings[relation_type] if src == s])
 
     @classmethod
-    def compute_global_relations(cls):
+    def compute_global_relations(cls, verbose=False):
         """
         Compute all global relations in the relation db. The global relations are inter-paradigms relations (father and
         children). Must be call after each modification of the relations collection.
@@ -240,27 +232,28 @@ class RelationsQueries:
             {},
             {'$unset': {'RELATIONS' + '.' + CHILD_RELATION: 1, 'RELATIONS' + '.' + FATHER_RELATION: 1}})
 
-        logging.info('Computing global relations...')
-        father_bar = progressbar.ProgressBar()
+        if verbose:
+            logging.info('Computing global relations...')
+
+        bar = cls._get_progressbar(verbose)
         # compute and save the fathers relations
-        for s in father_bar(scripts):
+        for s in bar(scripts):
             cls._save_relation(s, FATHER_RELATION, cls._compute_fathers(s))
 
-        children_bar = progressbar.ProgressBar()
+        bar = cls._get_progressbar(verbose)
         # compute and save the children, they need the father to get calculated
-        for s in children_bar(scripts):
+        for s in bar(scripts):
             cls._compute_children(str(s))
 
     @classmethod
-    def do_inhibition(cls, inhibition):
+    def do_inhibition(cls, inhibition, verbose=False):
         """
         Remove the relations for each script that are inhibited in the inhibition list in argument.
         :param inhibition: a list of couple (script <str>, inbition list <list of str>)
         :return: None
         """
-
-        inhibit_bar = progressbar.ProgressBar()
-        for s, i in inhibit_bar(inhibition):
+        bar = cls._get_progressbar(verbose)
+        for s, i in bar(inhibition):
             cls._inhibit_relations(str(s), i)
 
     @staticmethod
@@ -546,3 +539,13 @@ class RelationsQueries:
             {'ROOT': script_str},
             {'$unset': unset}
         )
+
+    @staticmethod
+    def _get_progressbar(verbose):
+        def empty_bar(it):
+            yield from it
+
+        if verbose:
+            return progressbar.ProgressBar()
+        else:
+            return empty_bar

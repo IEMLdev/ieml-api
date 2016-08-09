@@ -67,7 +67,7 @@ def recompute_relations():
     computation = progressbar.ProgressBar(max_value=len(paradigms))
     for i, p in enumerate(paradigms):
         computation.update(i + 1)
-        RelationsQueries.compute_relations(p['_id'])
+        RelationsQueries.compute_local_relations(p['_id'])
 
     RelationsQueries.compute_global_relations()
     RelationsQueries.do_inhibition(TermsConnector().get_inhibitions())

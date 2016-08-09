@@ -51,7 +51,7 @@ class TermsConnector(DBConnector):
         self._check_tags(tags)
 
         # update the relations of the paradigm in the relation collection
-        RelationsQueries.save_script(script_ast, self.get_inhibitions(), root=root, recompute_relations=recompute_relations)
+        RelationsQueries.save_script(script_ast, inhibition=self.get_inhibitions(), root=root, recompute_relations=recompute_relations)
 
         self._save_term(script_ast, tags, inhibits, root, metadata)
 
@@ -112,11 +112,11 @@ class TermsConnector(DBConnector):
             # remove all the paradigm without recomputing the relations
             for p in paradigm:
                 self.terms.remove({'_id': str(p)})
-                RelationsQueries.remove_script(p, self.get_inhibitions(), recompute_relations=False)
+                RelationsQueries.remove_script(p, recompute_relations=False)
 
         # remove the root paradigm
         self.terms.remove({'_id': str(script_ast)})
-        RelationsQueries.remove_script(script_ast, self.get_inhibitions(), recompute_relations=recompute_relations)
+        RelationsQueries.remove_script(script_ast, inhibition=self.get_inhibitions(), recompute_relations=recompute_relations)
 
     def update_term(self, script, tags=None, inhibits=None, root=None, metadata=None, recompute_relations=True):
         """
@@ -152,8 +152,13 @@ class TermsConnector(DBConnector):
             self.terms.update({'_id': str(script)}, {'$set': update})
 
             # the inhibition and rootness impact the relations
-            if inhibits or root:
-                RelationsQueries.update_script(script, self.get_inhibitions(), root, recompute_relations=recompute_relations)
+            if 'ROOT' in update:
+                inhibition = self.get_inhibitions()
+                RelationsQueries.remove_script(script, recompute_relations=False)
+                RelationsQueries.save_script(script, inhibition=inhibition, root=root, recompute_relations=recompute_relations)
+
+            elif 'INHIBITS' in update and recompute_relations:
+                self.recompute_relations()
         else:
             logging.warning("No update performed for script " + str(script) +
                             ", no argument are matching the update criteria.")
@@ -240,7 +245,7 @@ class TermsConnector(DBConnector):
                   'ROOT': t['ROOT']} for t in self.get_all_terms()], self.get_inhibitions())
 
         else:
-            RelationsQueries.compute_all_relations(paradigms=self.root_paradigms())
+            RelationsQueries.compute_all_relations(inhibition=self.root_paradigms())
 
     def _check_tags(self, tags):
         if not Tag.check_tags(tags):
