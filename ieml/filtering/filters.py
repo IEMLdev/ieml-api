@@ -1,3 +1,5 @@
+from enum import Enum
+
 from ieml.calculation.distance import (paradigmatic_equivalence_class_index, set_proximity_index,
                                        object_proximity_index, connexity_index, mutual_inclusion_index)
 from ieml.AST.propositions import Word, Sentence, SuperSentence
@@ -30,6 +32,10 @@ class FilteringLevel(Enum):
                     return cls.MULTITERM_WORD
             return cls.UNITERM_WORD # reached only if all words are monoterm
 
+    @classmethod
+    def get_higher_levels(cls, level):
+        return [cls(index) for index in range(level.value, cls.SUPERSENTENCE.value + 1)]
+
 
 
 class AbstractFilter:
@@ -55,6 +61,7 @@ class ParadigmaticProximityFilter(AbstractFilter):
 
 
 class IndicatorFilter(AbstractFilter):
+    """Filter based on any indicator, parametrized by the indicator function."""
     def __init__(self, indicator_function, **kwargs):
         super().__init__(**kwargs)
         self.indicator = indicator_function
@@ -66,7 +73,8 @@ class IndicatorFilter(AbstractFilter):
 
 class BinaryFilter:
 
-    def __init__(self, mode='word'):
+    def __init__(self, mode=FilteringLevel.MULTITERM_WORD):
+        self.filtering_level = mode
         self.mode = type_mapping[mode]
 
     def filter(self, query_usl, usl_list):
