@@ -1,8 +1,8 @@
 from ieml.operator import sc
-from models.exceptions import DBException, InvalidRelationCollectionState
+from models.exceptions import DBException, InvalidRelationCollectionState, InvalidRelationTitle
 from models.relations.relations_queries import RelationsQueries
 from ..caching import cached, flush_cache
-from handlers.dictionary.commons import terms_db, exception_handler
+from handlers.dictionary.commons import terms_db, exception_handler, relation_name_table
 from ieml.exceptions import CannotParse
 from ieml.script.constants import AUXILIARY_CLASS, VERB_CLASS, NOUN_CLASS
 from ieml.script.script import MultiplicativeScript, NullScript
@@ -188,6 +188,7 @@ def script_table(iemltext):
         pass
 
 
+@exception_handler
 def script_tree(iemltext):
     def _tree_entry(script):
         if script.layer == 0:
@@ -214,17 +215,26 @@ def script_tree(iemltext):
             ]
         }
 
-    try:
-        script = sc(iemltext)
-        return {
-            'level': script.layer,
-            'tree': _tree_entry(script),
-            'taille': script.cardinal,
-            'success': True,
-            'canonical': old_canonical(script)
-        }
-    except CannotParse:
-        pass
+    script = sc(iemltext)
+    return {
+        'level': script.layer,
+        'tree': _tree_entry(script),
+        'taille': script.cardinal,
+        'success': True,
+        'canonical': old_canonical(script)
+    }
+
+
+def _process_inhibits(body):
+    if 'INHIBITS' in body:
+        try:
+            inhibits = [relation_name_table[i] for i in body['INHIBITS']]
+        except KeyError as e:
+            raise InvalidRelationTitle(e.args[0])
+    else:
+        inhibits = []
+
+    return inhibits
 
 
 @need_login
@@ -233,10 +243,11 @@ def script_tree(iemltext):
 def new_ieml_script(body):
     script_ast = sc(body["IEML"])
     terms_db().add_term(script_ast,  # the ieml script's ast
-                      {"FR": body["FR"], "EN": body["EN"]},  # the
-                      [], # no inhibitions at the script's creation
-                      root=body["PARADIGM"] == "1", recompute_relations=False)
-    return { "success" : True, "IEML" : str(script_ast)}
+                        {"FR": body["FR"], "EN": body["EN"]},  # the
+                        inhibits=_process_inhibits(body), # no inhibitions at the script's creation
+                        root=body["PARADIGM"] == "1",
+                        recompute_relations=False)
+    return {"success" : True, "IEML": str(script_ast)}
 
 
 @need_login
@@ -245,6 +256,7 @@ def new_ieml_script(body):
 def remove_ieml_script(body):
     script_ast = sc(body['id'])
     terms_db().remove_term(script_ast, recompute_relations=False)
+    return {'success': True}
 
 
 @need_login
@@ -253,17 +265,22 @@ def remove_ieml_script(body):
 def update_ieml_script(body):
     """Updates an IEML Term's properties (mainly the tags, and the paradigm). If the IEML is changed,
     a new term is created"""
-    script_ast = sc(body["ID"]) # the ID is used to fireu
+    script_ast = sc(body["ID"]) # the ID refer to the script being updated
+
+    inhibits = _process_inhibits(body)
+
     if body["IEML"] == body["ID"]:
+        # no update on the ieml
         terms_db().update_term(script_ast,
                              tags={ "FR" : body["FR"], "EN" : body["EN"]},
-                             root=body["PARADIGM"] == "1", recompute_relations=False)
+                             root=body["PARADIGM"] == "1", inhibits=inhibits, recompute_relations=False)
     else:
-        terms_db().remove_term(script_ast)
+        terms_db().remove_term(script_ast, recompute_relations=False)
         terms_db().add_term(sc(body["IEML"]),  # the ieml script's ast
                           {"FR": body["FR"], "EN": body["EN"]},  # the
-                          root=body["PARADIGM"] == "1", recompute_relations=False)
+                          root=body["PARADIGM"] == "1", inhibits=inhibits, recompute_relations=False)
 
+    return {'success': True}
 
 def ieml_term_exists(ieml_term):
     """Tries to dig a term from the database"""
