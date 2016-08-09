@@ -95,7 +95,7 @@ class TermsConnector(DBConnector):
         """
         # Argument check
         if not isinstance(script_ast, Script):
-            raise InvalidScript()
+            raise InvalidScript(script_ast)
 
         term = self.get_term(script_ast)
         if term is None:
@@ -129,17 +129,20 @@ class TermsConnector(DBConnector):
         :param recompute_relations: if the relation must be recomputed after the update.
         :return: None
         """
-        if not self.get_term(script):
+        term = self.get_term(script)
+
+        if term is None:
             raise TermNotFound(script)
 
         update = {}
-        if tags and self._check_tags(tags):
+        if tags and term['TAGS'] != tags and self._check_tags(tags):
             update['TAGS'] = tags
 
-        if root:
+        if root is not None and root != term['ROOT']:
             update['ROOT'] = bool(root)
 
-        if inhibits and isinstance(inhibits, list) and all(r in INHIBIT_RELATIONS for r in inhibits):
+        if inhibits and isinstance(inhibits, list) and inhibits != term['INHIBITS'] and \
+                all(r in INHIBIT_RELATIONS for r in inhibits):
             update['INHIBITS'] = inhibits
 
         if metadata and isinstance(metadata, dict):
@@ -179,13 +182,13 @@ class TermsConnector(DBConnector):
 
         # Argument check
         if not isinstance(script_ast, Script):
-            raise InvalidScript()
+            raise InvalidScript(script_ast)
 
         if not isinstance(inhibits, list) or any(r not in INHIBIT_RELATIONS for r in inhibits):
-            raise InvalidInhibitArgument()
+            raise InvalidInhibitArgument(inhibits)
 
         if self.get_term(script_ast) is not None:
-            raise TermAlreadyExists()
+            raise TermAlreadyExists(script_ast)
 
         root = bool(root)
 
@@ -241,7 +244,7 @@ class TermsConnector(DBConnector):
 
     def _check_tags(self, tags):
         if not Tag.check_tags(tags):
-            raise InvalidTags()
+            raise InvalidTags(tags)
 
         for l in tags:
             if self.search_by_tag(tags[l], language=l).count() != 0:

@@ -21,7 +21,7 @@ class RelationsQueries:
     def rank(cls, script):
         entry = cls.relations_db.get_script(script)
         if 'RANK' not in entry:
-            return InvalidRelationCollectionState()
+            raise InvalidRelationCollectionState()
         return entry['RANK']
 
     @classmethod
@@ -192,10 +192,7 @@ class RelationsQueries:
         :return: None
         """
 
-        try:
-            paradigm_entry = cls.relations_db.get_script(str(paradigm_ast))
-        except TermNotFound:
-            raise NotARootParadigm(paradigm_ast)
+        paradigm_entry = cls.relations_db.get_script(str(paradigm_ast))
 
         if paradigm_entry['ROOT'] != str(paradigm_ast):
             raise NotARootParadigm(paradigm_ast)
@@ -528,7 +525,7 @@ class RelationsQueries:
         elif isinstance(script, str):
             return RelationsQueries.script_parser.parse(script)
         else:
-            raise InvalidScript()
+            raise InvalidScript(script)
 
     @classmethod
     def _inhibit_relations(cls, script_str, inhibits=None):
