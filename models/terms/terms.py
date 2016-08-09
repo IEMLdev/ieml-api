@@ -230,22 +230,21 @@ class TermsConnector(DBConnector):
 
         return self.terms.find({"TAGS.%s" % language : tag })
 
-    def recompute_relations(self, all_delete=False):
+    def recompute_relations(self, all_delete=False, verbose=False):
         """
         Recompute all the relation in the relation collection.
         :param all_delete: if true, the relation collection is recomputed from the term collection.
         :return: None
         """
         if all_delete:
-            rc = RelationsConnector()
-            rc.relations.drop()
+            RelationsConnector().relations.drop()
 
             RelationsQueries.save_multiple_script(
                 [{'AST': self.parser.parse(t['_id']),
-                  'ROOT': t['ROOT']} for t in self.get_all_terms()], self.get_inhibitions())
+                  'ROOT': t['ROOT']} for t in self.get_all_terms()], self.get_inhibitions(), verbose=verbose)
 
         else:
-            RelationsQueries.compute_all_relations(inhibition=self.root_paradigms())
+            RelationsQueries.compute_all_relations(inhibition=self.root_paradigms(), verbose=verbose)
 
     def _check_tags(self, tags):
         if not Tag.check_tags(tags):

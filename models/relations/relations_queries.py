@@ -65,12 +65,12 @@ class RelationsQueries:
         roots = [s['AST'] for s in list_script if s['ROOT']]
 
         # save the roots first
-        bar_p = progressbar.ProgressBar()
-        for s in bar_p(roots):
+        bar = cls._get_progressbar(verbose)
+        for s in bar(roots):
             cls.relations_db.save_script(s, root=True)
 
         # save the content of each paradigm
-        bar = progressbar.ProgressBar()
+        bar = cls._get_progressbar(verbose)
         for s in bar(non_roots):
             cls.relations_db.save_script(s, root=False)
 
@@ -78,8 +78,8 @@ class RelationsQueries:
         roots_paradigms = set(cls._to_ast(root) for root in cls.root_paradigms(non_roots)).union(set(roots))
 
         # then compute the relations in each paradigms
-        bar_pp = progressbar.ProgressBar(max_value=len(roots))
-        for p in bar_pp(roots_paradigms):
+        bar = cls._get_progressbar(verbose)
+        for p in bar(roots_paradigms):
             cls.compute_local_relations(cls._to_ast(p), verbose=verbose)
 
         cls.compute_global_relations(verbose=verbose)
