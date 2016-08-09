@@ -28,7 +28,7 @@ class FilteringLevel(Enum):
             # all of the USL's elements have to be words, so for each words, we check if the substance's
             # count is 1 and if the mode is empty
             for word in input_usl:
-                if len(word.subst) != 1 or word.mode is not None:
+                if len(word.subst.children) != 1 or word.mode is not None:
                     return cls.MULTITERM_WORD
             return cls.UNITERM_WORD # reached only if all words are monoterm
 

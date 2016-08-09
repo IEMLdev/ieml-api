@@ -1,7 +1,8 @@
 from ieml.AST import promote_to, Term
-from ieml.AST.tools import RandomPropositionGenerator, demote_once
+from ieml.AST.tools import demote_once
+from ieml import RandomPropositionGenerator
 from ieml.exceptions import CannotPromoteToLowerLevel
-from .helper import *
+from testing.ieml.helper import *
 
 
 class TestPromotion(unittest.TestCase):
@@ -64,7 +65,6 @@ class TestRandomGenerator(unittest.TestCase):
         except:
             self.fail("Word checking failed")
         self.assertIs(type(random_word), Word)
-
 
     def test_sentence_gen(self):
         for i in range(20):

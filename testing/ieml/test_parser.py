@@ -1,4 +1,4 @@
-from ieml.AST.tools import RandomPropositionGenerator
+from ieml import RandomPropositionGenerator
 from ieml.parsing import USLParser
 from testing.ieml.helper import *
 
