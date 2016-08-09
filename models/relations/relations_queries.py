@@ -533,11 +533,12 @@ class RelationsQueries:
 
         unset = {}
         for relation in inhibits:
-            unset[relation] = 1
+            unset['RELATIONS.' + relation] = 1
 
         cls.relations_db.relations.update(
             {'ROOT': script_str},
-            {'$unset': unset}
+            {'$unset': unset},
+            multi=True
         )
 
     @staticmethod
