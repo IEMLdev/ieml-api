@@ -57,7 +57,6 @@ class TestModel(ModelTestCase):
 
     def test_tag(self):
         with self.assertRaises(InvalidTags, msg='Term saved with an empty tag.') as e:
-            print(id(e.expected), id(InvalidTags))
             self.terms.add_term(sc('M:'), tags={}, root=True, inhibits=[])
 
         self.assertTrue(self._count() == 0, msg='Term created anyway.')
