@@ -74,9 +74,17 @@ class TestRandomGenerator(unittest.TestCase):
             except Exception as err:
                 self.fail("%s checking failed : %s " % (str(random_sentence), str(err)))
 
+    def test_supersentence_gen(self):
+        for i in range(20):
+            random_supersentence = self.generator.get_random_proposition(SuperSentence)
+            try:
+                random_supersentence.check()
+            except Exception as err:
+                self.fail("%s checking failed : %s " % (str(random_supersentence), str(err)))
+
     def test_proposition_gen(self):
         for prop_type in [Morpheme, Word, Sentence, Clause, SuperSentence, SuperClause]:
-            with self.subTest("Random %s generation failed" % str(prop_type)):
+            with self.subTest():
                 random_proposition = self.generator.get_random_proposition(prop_type)
                 try:
                     random_proposition.check()

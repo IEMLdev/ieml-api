@@ -122,7 +122,7 @@ class PropositionGraph(AbstractGraph):
 
 
 class GraphChecker:
-    """Takes care of checking if a graph describing an IEMl proposition respects the IEML structura
+    """Takes care of checking if a graph describing an IEMl proposition respects the IEML structural
     rules """
 
     def __init__(self, graph):

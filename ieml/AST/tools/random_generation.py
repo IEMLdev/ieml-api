@@ -49,6 +49,11 @@ class RandomPropositionGenerator(metaclass=Singleton):
                              for i in range(random.randint(3, MAX_NODES_IN_SUPERSENTENCE))]
             mode_nodes = [self._make_random_sentence(Sentence) for i in range(len(initial_nodes))]
 
+        #preventing duplicated nodes (happens with sentences and clauses)
+        for node in initial_nodes:
+            node.check()
+        initial_nodes = list(set(initial_nodes))
+
         # then, constructing a tree using a priority queue (current_parents)
         clauses_list = []
         current_parents = [initial_nodes.pop(0)]
