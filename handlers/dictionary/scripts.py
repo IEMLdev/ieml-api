@@ -47,7 +47,7 @@ def parse_ieml(iemltext):
             "success" : True,
             "level" : script_ast.layer,
             "taille" : script_ast.cardinal,
-            "class" : script_ast.script_class, # TODO : change it to the actual value
+            "class" : script_ast.script_class,
             "canonical" : old_canonical(script_ast)
         }
     except CannotParse:
