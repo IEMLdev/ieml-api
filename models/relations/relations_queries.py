@@ -1,11 +1,14 @@
 import logging
+from collections import defaultdict
 
 from ieml.parsing.script import ScriptParser
 from ieml.script import CONTAINED_RELATION, CONTAINS_RELATION, RemarkableSibling, TWIN_SIBLING_RELATION, \
     ASSOCIATED_SIBLING_RELATION, CROSSED_SIBLING_RELATION, OPPOSED_SIBLING_RELATION, ATTRIBUTE, SUBSTANCE, MODE, \
     ELEMENTS, FATHER_RELATION, CHILD_RELATION, AdditiveScript, NullScript, Script, SCRIPT_RELATIONS
-from models.constants import SINGULAR_SEQUENCE_TYPE
-from models.exceptions import NotARootParadigm, InvalidScript, CantRemoveNonEmptyRootParadigm, InvalidRelationTitle
+from ieml.script.constants import ROOT_RELATION
+from ieml.script.tables import get_table_rank
+from models.exceptions import NotARootParadigm, InvalidScript, CantRemoveNonEmptyRootParadigm, InvalidRelationTitle, \
+    TermNotFound, InvalidRelationCollectionState
 from models.relations.relations import RelationsConnector
 import progressbar
 
@@ -15,42 +18,37 @@ class RelationsQueries:
     script_parser = ScriptParser()
 
     @classmethod
-    def update_script(cls, script, inhibition, root=None):
-        """
-        Update the term in the term and relation collection.
-        :param script: the script to update.
-        :param inhibition: the inhibitions
-        :param root: optional, the new rootness value of this paradigm.
-        :return: None
-        """
-
-        if root is not None:
-            cls.remove_script(script, inhibition)
-            cls.save_script(script, inhibition, root=bool(root))
-        elif inhibition:
-            cls.compute_relations(script)
-            cls.compute_global_relations()
-            cls.do_inhibition(inhibition)
+    def rank(cls, script):
+        entry = cls.relations_db.get_script(script)
+        if 'RANK' not in entry:
+            raise InvalidRelationCollectionState()
+        return entry['RANK']
 
     @classmethod
-    def save_script(cls, script, inhibition, root=False):
+    def save_script(cls, script, inhibition=None, root=False, recompute_relations=True, verbose=False):
         """
         Save a script in the relation collection.
         :param script: the script to save (str or Script instance)
         :param root: if the associated term is a root paradigm.
         :param inhibition: the list of root paradigm with their inhibitions.
+        :param recompute_relations: if we must recompute the relations
         :return: None
         """
         script_ast = cls._to_ast(script)
         cls.relations_db.save_script(script_ast, root=root)
 
-        paradigm_ast = cls._to_ast(cls.relations_db.get_script(str(script_ast))['ROOT'])
-        cls.compute_relations(paradigm_ast)
-        cls.compute_global_relations()
-        cls.do_inhibition(inhibition)
+        if recompute_relations:
+            if inhibition is None:
+                raise ValueError("Can't recompute the relations without an inhibition argument.")
+
+            paradigm_ast = cls._to_ast(cls.relations_db.get_script(str(script_ast))['ROOT'])
+            cls.compute_local_relations(paradigm_ast, verbose=verbose)
+            cls.compute_global_relations(verbose=verbose)
+            cls.do_inhibition(inhibition, verbose=verbose)
+
 
     @classmethod
-    def save_multiple_script(cls, list_script, inhibition):
+    def save_multiple_script(cls, list_script, inhibition, verbose=False):
         """
         Save multiple script in a single transaction. This method doesn't compute the relation multiple times, improving
         the computational speed than multiple call of save_script.
@@ -67,12 +65,12 @@ class RelationsQueries:
         roots = [s['AST'] for s in list_script if s['ROOT']]
 
         # save the roots first
-        bar_p = progressbar.ProgressBar()
-        for s in bar_p(roots):
+        bar = cls._get_progressbar(verbose)
+        for s in bar(roots):
             cls.relations_db.save_script(s, root=True)
 
         # save the content of each paradigm
-        bar = progressbar.ProgressBar()
+        bar = cls._get_progressbar(verbose)
         for s in bar(non_roots):
             cls.relations_db.save_script(s, root=False)
 
@@ -80,12 +78,12 @@ class RelationsQueries:
         roots_paradigms = set(cls._to_ast(root) for root in cls.root_paradigms(non_roots)).union(set(roots))
 
         # then compute the relations in each paradigms
-        bar_pp = progressbar.ProgressBar(max_value=len(roots))
-        for p in bar_pp(roots_paradigms):
-            cls.compute_relations(cls._to_ast(p))
+        bar = cls._get_progressbar(verbose)
+        for p in bar(roots_paradigms):
+            cls.compute_local_relations(cls._to_ast(p), verbose=verbose)
 
-        cls.compute_global_relations()
-        cls.do_inhibition(inhibition)
+        cls.compute_global_relations(verbose=verbose)
+        cls.do_inhibition(inhibition, verbose=verbose)
 
     @classmethod
     def check_removable(cls, script):
@@ -102,32 +100,37 @@ class RelationsQueries:
         return True
 
     @classmethod
-    def remove_script(cls, script, inhibition):
+    def remove_script(cls, script, recompute_relations=True, inhibition=None, verbose=False):
         """
         Remove a script in the relation collection. Recompute the relation to keep the coherence of the collection.
         :param script: the script to remove.
-        :param inhibition: list of root paradigm with their inhibition
+        :param inhibition: list of root paradigm with their inhibition, must be specified if recompute_relation is true
+        :param recompute_relations: optinonal, if set recompute the relation after the removing.
         :return: None
         """
         script_ast = cls._to_ast(script)
 
         # Defensive check
         if not cls.check_removable(script_ast):
-            raise CantRemoveNonEmptyRootParadigm()
+            raise CantRemoveNonEmptyRootParadigm(script_ast)
 
         # Remove the script
         script_entry = cls.relations_db.get_script(script_ast)
         cls.relations_db.remove_script(script_ast)
 
-        # If we remove a element of a paradigm (not the root paradigm), recompute the relation inside the paradigm
-        if script_entry['ROOT'] != str(script_ast):
-            cls.compute_relations(cls._to_ast(script_entry['ROOT']))
+        if recompute_relations:
+            if inhibition is None:
+                raise ValueError("Can't recompute the relations without an inhibition argument.")
 
-        # Recompute the global relations
-        cls.compute_global_relations()
+            # If we remove a element of a paradigm (not the root paradigm), recompute the relation inside the paradigm
+            if script_entry['ROOT'] != str(script_ast):
+                cls.compute_local_relations(cls._to_ast(script_entry['ROOT']), verbose=verbose)
 
-        # Unset inhibited relations
-        cls.do_inhibition(inhibition)
+            # Recompute the global relations
+            cls.compute_global_relations(verbose=verbose)
+
+            # Unset inhibited relations
+            cls.do_inhibition(inhibition, verbose=verbose)
 
     @classmethod
     def root_paradigms(cls, script_list=None):
@@ -155,16 +158,34 @@ class RelationsQueries:
             {'SINGULAR_SEQUENCES': {'$in': [str(seq) for seq in script_ast.singular_sequences]}}))
 
     @classmethod
-    def compute_relations(cls, paradigm_ast):
+    def compute_all_relations(cls, inhibition, verbose=False):
+        """
+        Compute the relations for the given paradigms, and the global and inhibitions.
+        :param inhibition: the inhibition list
+        :param verbose: if we show progressbar
+        :return:
+        """
+        paradigms = [(cls._to_ast(p['_id']), p['INHIBITS']) for p in inhibition]
+
+        for p in paradigms:
+            cls.compute_local_relations(p[0], verbose=verbose)
+
+        cls.compute_global_relations(verbose=verbose)
+        cls.do_inhibition(paradigms, verbose=verbose)
+
+    @classmethod
+    def compute_local_relations(cls, paradigm_ast, verbose=False):
         """
         Compute the relations for a given root paradigm and all the contained scripts.
         :param paradigm_ast: the root paradigm
+        :param verbose: text progressbar
         :return: None
         """
 
         paradigm_entry = cls.relations_db.get_script(str(paradigm_ast))
-        if paradigm_entry is None or paradigm_entry['ROOT'] != str(paradigm_ast):
-            raise NotARootParadigm()
+
+        if paradigm_entry['ROOT'] != str(paradigm_ast):
+            raise NotARootParadigm(paradigm_ast)
 
         # Compute the list of script in the paradigm
         scripts_ast = [cls.script_parser.parse(s['_id']) for s in cls.paradigm(paradigm_ast)]
@@ -175,9 +196,13 @@ class RelationsQueries:
             {'$set': {'RELATIONS': {}}},
             multi=True
         )
-        logging.info('Computing local relations for paradigm %s...' % str(paradigm_ast))
+        if verbose:
+            logging.info('Computing local relations for paradigm %s...' % str(paradigm_ast))
+
         # Compute and save contains and contained (can't be inhibited)
         cls._compute_containing_relations(scripts_ast)
+
+        cls._compute_tables_rank(scripts_ast)
 
         # Compute and save the remarkable siblings
         remarkable_siblings = RemarkableSibling.compute_remarkable_siblings_relations(scripts_ast, regex=False)
@@ -195,7 +220,7 @@ class RelationsQueries:
                                    [str(trg) for src, trg in remarkable_siblings[relation_type] if src == s])
 
     @classmethod
-    def compute_global_relations(cls):
+    def compute_global_relations(cls, verbose=False):
         """
         Compute all global relations in the relation db. The global relations are inter-paradigms relations (father and
         children). Must be call after each modification of the relations collection.
@@ -207,32 +232,33 @@ class RelationsQueries:
             {},
             {'$unset': {'RELATIONS' + '.' + CHILD_RELATION: 1, 'RELATIONS' + '.' + FATHER_RELATION: 1}})
 
-        logging.info('Computing global relations...')
-        father_bar = progressbar.ProgressBar()
+        if verbose:
+            logging.info('Computing global relations...')
+
+        bar = cls._get_progressbar(verbose)
         # compute and save the fathers relations
-        for s in father_bar(scripts):
+        for s in bar(scripts):
             cls._save_relation(s, FATHER_RELATION, cls._compute_fathers(s))
 
-        children_bar = progressbar.ProgressBar()
+        bar = cls._get_progressbar(verbose)
         # compute and save the children, they need the father to get calculated
-        for s in children_bar(scripts):
+        for s in bar(scripts):
             cls._compute_children(str(s))
 
     @classmethod
-    def do_inhibition(cls, inhibition):
+    def do_inhibition(cls, inhibition, verbose=False):
         """
         Remove the relations for each script that are inhibited in the inhibition list in argument.
         :param inhibition: a list of couple (script <str>, inbition list <list of str>)
         :return: None
         """
-
-        inhibit_bar = progressbar.ProgressBar()
-        for s, i in inhibit_bar(inhibition):
-            cls._inhibit_relations(s, i)
+        bar = cls._get_progressbar(verbose)
+        for s, i in bar(inhibition):
+            cls._inhibit_relations(str(s), i)
 
     @staticmethod
-    def _format_relations(relations, pack_ancestor=False, max_depth=-1):
-        result = {}
+    def _format_relations(relations, pack_ancestor=False, max_depth_father=-1, max_depth_child=-1):
+        result = defaultdict(lambda: list())
 
         def _accumulation(current_path, dic, max_depth=-1):
             if max_depth == 0:
@@ -241,8 +267,6 @@ class RelationsQueries:
             for key in dic:
                 if pack_ancestor:
                     if key == ELEMENTS:
-                        if current_path not in result:
-                            result[current_path] = []
                         result[current_path] = list(set(result[current_path]).union(dic[ELEMENTS]))
                     else:
                         _accumulation(current_path, dic[key], max_depth=max_depth-1)
@@ -253,12 +277,13 @@ class RelationsQueries:
                         _accumulation(current_path + '.' + key, dic[key], max_depth=max_depth-1)
 
         for r in relations:
-            if r in [FATHER_RELATION, CHILD_RELATION]:
+            if r in (FATHER_RELATION, CHILD_RELATION):
                 for i in (MODE, ATTRIBUTE, SUBSTANCE):
                     if i not in relations[r]:
                         relations[r][i] = []
                     else:
-                        _accumulation(r + '.' + i, relations[r][i], max_depth=max_depth)
+                        _accumulation(r + '.' + i, relations[r][i],
+                                      max_depth=(max_depth_father if r == FATHER_RELATION else max_depth_child))
             else:
                 # list type
                 result[r] = relations[r]
@@ -266,14 +291,15 @@ class RelationsQueries:
         return result
 
     @classmethod
-    def relations(cls, script, relation_title=None, pack_ancestor=False, max_depth=-1):
+    def relations(cls, script, relation_title=None, pack_ancestor=False, max_depth_father=-1, max_depth_child=-1):
         """
         Relation getter, get the relations for the argument script. If relation_title is specified, return the relation
         with the given name. For the relation_title that can be specified, see the list in constant of ieml.
         :param script: the script to get the relation from. (str or Script instance)
         :param relation_title: optional, the name of a particular relation to see.
         :param pack_ancestor: pack the ancestors relations.
-        :param max_depth: the max depth we fetch the ancestors.
+        :param max_depth_father: the max depth we fetch the ancestors.
+        :param max_depth_child: the max depth we fetch the descendant.
         :return: a dict of all relations or a specific relation.
         """
         relations_db_entry = cls.relations_db.relations.find_one(
@@ -282,11 +308,19 @@ class RelationsQueries:
 
         relations = relations_db_entry['RELATIONS']
         if relation_title:
-            return relations[relation_title] # we only return the selected relation
+
+            if relation_title == ROOT_RELATION:
+                return relations_db_entry["ROOT"]
+            elif relation_title in (FATHER_RELATION, CHILD_RELATION):
+                return cls._format_relations((relation_title,), pack_ancestor=pack_ancestor,
+                                             max_depth_father=max_depth_father, max_depth_child=max_depth_child)
+            else:
+                return relations[relation_title] # we only return the selected relation
         else:
-            output_relation_dict = cls._format_relations(relations, pack_ancestor, max_depth=max_depth)
-            output_relation_dict["ROOT"] = relations_db_entry["ROOT"]
-            return output_relation_dict # we output all relations PLUS the root paradigm property
+            result = cls._format_relations(relations, pack_ancestor=pack_ancestor,
+                                           max_depth_father=max_depth_father, max_depth_child=max_depth_child)
+            result["ROOT"] = relations_db_entry["ROOT"]
+            return result # we output all relations PLUS the root paradigm property
 
     @staticmethod
     def _merge(dic1, dic2, inverse_key=None):
@@ -323,13 +357,18 @@ class RelationsQueries:
                 RelationsQueries._merge(dic1[key], dic2[key], inverse_key=inverse_key)
 
     @classmethod
+    def _compute_tables_rank(cls, scripts_ast):
+        for s in scripts_ast:
+            if s.paradigm:
+                cls.relations_db.relations.update({'_id': str(s)},
+                                                  {'$set': {'RANK': get_table_rank(s)}})
+
+    @classmethod
     def _compute_fathers(cls, script_ast):
         """
         Compute the father relationship. For a given script, it is all the sub element attribute, mode, substance for a
         given depth.
         :param script_ast: the script to calculate the relations to.
-        :param max_depth: the max depth of the relation.
-        :param _first: internal use.
         :return: the relation entry in the form of :
         {
             SUBSTANCE: {
@@ -363,7 +402,7 @@ class RelationsQueries:
                 if e not in relations:
                     relations[e] = {}
 
-                if cls.relations_db.get_script(sub_s.children[i]) is not None:
+                if cls.relations_db.exists(sub_s.children[i]):
                     if ELEMENTS not in relations[e]:
                         relations[e][ELEMENTS] = []
 
@@ -428,7 +467,7 @@ class RelationsQueries:
         :return: None
         """
         if relation_title not in SCRIPT_RELATIONS:
-            raise InvalidRelationTitle()
+            raise InvalidRelationTitle(relation_title)
 
         cls.relations_db.relations.update(
             {'_id': script if isinstance(script, str) else str(script)},
@@ -439,7 +478,7 @@ class RelationsQueries:
     def _compute_containing_relations(cls, scripts_ast):
         """
         Compute all the contained relations for this script and save the resulting relations.
-        :param script_ast: the script ast to compute contained relations.
+        :param scripts_ast: the script ast to compute contained relations.
         :return: None
         """
         contains = {}
@@ -479,7 +518,7 @@ class RelationsQueries:
         elif isinstance(script, str):
             return RelationsQueries.script_parser.parse(script)
         else:
-            raise InvalidScript()
+            raise InvalidScript(script)
 
     @classmethod
     def _inhibit_relations(cls, script_str, inhibits=None):
@@ -494,9 +533,20 @@ class RelationsQueries:
 
         unset = {}
         for relation in inhibits:
-            unset[relation] = 1
+            unset['RELATIONS.' + relation] = 1
 
         cls.relations_db.relations.update(
             {'ROOT': script_str},
-            {'$unset': unset}
+            {'$unset': unset},
+            multi=True
         )
+
+    @staticmethod
+    def _get_progressbar(verbose):
+        def empty_bar(it):
+            yield from it
+
+        if verbose:
+            return progressbar.ProgressBar()
+        else:
+            return empty_bar

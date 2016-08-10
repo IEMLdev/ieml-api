@@ -1,10 +1,11 @@
-from testing.helper import *
-from ieml import ScriptParser
-from ieml.script import *
-from models.constants import DB_ADDRESS, TERMS_COLLECTION
-from ieml.script.tools import old_canonical
 from pymongo import MongoClient
 
+from ieml import ScriptParser
+from ieml.operator import sc
+from ieml.script import *
+from models.constants import TERMS_COLLECTION
+from testing.ieml.helper import *
+from config import DB_ADDRESS
 
 class TestTermParser(unittest.TestCase):
     def setUp(self):
@@ -40,6 +41,7 @@ class TestTermParser(unittest.TestCase):
         script = self.parser.parse("E:E:.E:.E:E:E:.-E:E:E:.E:.-E:E:.E:E:E:.-'")
         self.assertTrue(script.empty)
         self.assertEqual(str(script), "E:.-'")
+        self.assertIsInstance(self.parser.parse('E:'), NullScript)
 
     def test_reduction(self):
         script = self.parser.parse("A:U:E:.")
@@ -112,8 +114,13 @@ class TestTermParser(unittest.TestCase):
         s2 = self.parser.parse("U:T:S:+B:. + S:S:+T:B:. + U:+S:S:S:.")
         # print(old_canonical(s1))
         # print(old_canonical(s2))
-        self.assertTrue(s1 < s2)
+        self.assertTrue(s1 > s2)
+        s1 = sc('o.O:M:.-')
+        s2 = sc('E:O:.T:M:.-')
+        self.assertLess(s2, s1)
+
+
 # Lot of test to do :
-# - testing invalid script construction
-# - testing redondant element in script addition
+# - testing invalid ieml construction
+# - testing redondant element in ieml addition
 # -

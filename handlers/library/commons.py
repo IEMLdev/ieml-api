@@ -4,7 +4,7 @@ from ieml.AST import Term, Text, HyperText, Word, Sentence, SuperSentence
 from ieml.AST.tree_metadata import HypertextMetadata, PropositionMetadata, TextMetadata
 from ieml.exceptions import CannotParse
 from ieml.parsing.parser import PropositionsParser
-from models import PropositionsQueries
+from models.propositions import PropositionsQueries
 from models.usl import TextQueries, HyperTextQueries
 from models.interface import SearchRequest
 from .base import propositions_db, hypertexts_db

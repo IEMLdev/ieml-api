@@ -1,9 +1,13 @@
+import config
+
+from models.base_queries import DictionaryQueries
+from models.constants import PROPOSITION_COLLECTION, TEXT_COLLECTION, HYPERTEXT_COLLECTION
+
+from models.propositions import PropositionsQueries
 from .helper import *
 import string, random
 from pymongo import MongoClient
 from pymongo.errors import DuplicateKeyError
-from models import *
-from ieml.AST import Sentence, Word
 
 
 class BaseDBTest(unittest.TestCase):
@@ -44,8 +48,8 @@ class TestDBQueries(BaseDBTest):
 
 class TestUnicityDb(unittest.TestCase):
     def setUp(self):
-        self.client = MongoClient(DB_ADDRESS)  # connecting to the db
-        self.db = self.client[DB_NAME]  # opening a DB
+        self.client = MongoClient(config.DB_ADDRESS)  # connecting to the db
+        self.db = self.client[config.DB_NAME]  # opening a DB
         self.collections = [self.db[PROPOSITION_COLLECTION], self.db[TEXT_COLLECTION], self.db[HYPERTEXT_COLLECTION]]
 
         self.tags = {'EN' : "test unicity unit test", 'FR' : "test de l'unicité unit test"}

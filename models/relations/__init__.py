@@ -1,2 +1,2 @@
-from .relations_queries import RelationsQueries
-from .relations import RelationsConnector
+from .relations import *
+from .relations_queries import *

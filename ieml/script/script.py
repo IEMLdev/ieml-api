@@ -3,7 +3,7 @@ from ieml.script.constants import MAX_LAYER
 from .constants import LAYER_MARKS, PRIMITVES, remarkable_multiplication_lookup_table, REMARKABLE_ADDITION, \
     character_value, AUXILIARY_CLASS, VERB_CLASS, NOUN_CLASS
 import itertools
-from ieml.exceptions import InvalidScriptCharacter, InvalidScript
+from ieml.exceptions import InvalidScriptCharacter, InvalidScript, IncompatiblesScriptsLayers
 
 
 class Script(TreeStructure):
@@ -155,6 +155,8 @@ class AdditiveScript(Script):
         if character in REMARKABLE_ADDITION:
             _character = character
             _children = REMARKABLE_ADDITION_SCRIPT[_character]
+        elif character is not None:
+            raise InvalidScriptCharacter(character)
         else:
             if len(_children) == 0:
                 raise InvalidScript()
@@ -163,7 +165,7 @@ class AdditiveScript(Script):
         l = _children[0].layer
         for c in _children:
             if c.layer != l:
-                raise InvalidScript()
+                raise IncompatiblesScriptsLayers(_children[0], c)
 
         if _children:
             for c in _children:
@@ -255,6 +257,9 @@ class MultiplicativeScript(Script):
         # Replace all the corresponding children to character
         _character = None
         if character is not None:
+            if character == 'E':
+                raise InvalidScript()
+
             _character = character
             if _character in PRIMITVES:
                 _children = []
@@ -263,7 +268,7 @@ class MultiplicativeScript(Script):
                 _children = REMARKABLE_MULTIPLICATION_SCRIPT[_character]
                 layer = 1
             else:
-                raise InvalidScriptCharacter()
+                raise InvalidScriptCharacter(character)
         else:
             layer = _children[0].layer
 
@@ -456,6 +461,6 @@ for key in REMARKABLE_MULTIPLICATION_SCRIPT:
 # Building the remarkable addition to script
 REMARKABLE_ADDITION_SCRIPT = {}
 for key in REMARKABLE_ADDITION:
-    REMARKABLE_ADDITION_SCRIPT[key] = [MultiplicativeScript(character=c) for c in REMARKABLE_ADDITION[key]]
+    REMARKABLE_ADDITION_SCRIPT[key] = [MultiplicativeScript(character=c) if c != 'E' else NullScript(layer=0) for c in REMARKABLE_ADDITION[key] ]
     for m in REMARKABLE_ADDITION_SCRIPT[key]:
         m.check()

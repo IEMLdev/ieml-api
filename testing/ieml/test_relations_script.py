@@ -1,6 +1,6 @@
-from testing.helper import *
 from ieml.parsing.script import ScriptParser
 from ieml.script.tools import RemarkableSibling as rq
+from testing.ieml.helper import *
 
 
 class TestRelationScript(unittest.TestCase):
@@ -15,7 +15,9 @@ class TestRelationScript(unittest.TestCase):
     def test_associated_sibling_regex(self):
         script1 = self.parser.parse("S:M:.e.-M:M:.u.-wa.e.-'")
         regex = rq.associated_sibling_regex(script1)
-        self.assertIsNotNone(regex.match("M:M:.u.-S:M:.e.-wa.h.-'"))
+        self.assertIsNone(regex.match("M:M:.u.-S:M:.e.-wa.h.-'"))
+        self.assertIsNone(regex.match("S:M:.e.-M:M:.u.-wa.e.-'"))
+        self.assertIsNotNone(regex.match("S:M:.e.-M:M:.u.-h.e.-'"))
 
     def test_twin_siblings(self):
         regex = rq.twin_siblings_regex(layer=3)

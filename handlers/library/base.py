@@ -2,7 +2,8 @@ import traceback
 
 from ieml.exceptions import IEMLTermNotFoundInDictionnary, ToolsException, InvalidGraphNode, NoRootNodeFound, \
     SeveralRootNodeFound
-from models import DictionaryQueries, PropositionsQueries
+from models.base_queries import DictionaryQueries
+from models.propositions import PropositionsQueries
 from models.exceptions import DBException
 from models.usl import TextQueries, HyperTextQueries
 

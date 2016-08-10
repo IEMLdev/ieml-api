@@ -5,9 +5,11 @@ import json
 from bson import ObjectId
 from flask import redirect, session
 import pika
+from .Constants import *
 from pymongo import MongoClient
 from time import strftime
 from bson.json_util import *
+from config import *
 
 class JSONEncoder(json.JSONEncoder):
     def default(self, o):
@@ -107,38 +109,71 @@ def twitter_home_timeline():
 
 
 def twitter_update():
+    client = MongoClient()
+    library_db = client.library
+    screen_name = get_screen_name()
+    user_collections = library_db[screen_name+"_collections"]
+    iso_time = datetime.datetime.utcnow().isoformat()
+
+    result = user_collections.insert_one(
+        {
+            "status": "draft",
+            "stage": "init",
+            "created": iso_time
+        }
+    )
     connection = pika.BlockingConnection(pika.ConnectionParameters(
-            'localhost'))
+            RABBITMQ_HOST))
     channel = connection.channel()
 
     user_info = json.loads(session['current_guest'])
-    print("user_info", user_info)
-    channel.basic_publish(exchange='twitter-updater-exchange',
-                          routing_key='twitter-updater',
-                          body=json.dumps(user_info['apis']['twitter']))
-    print("sent update request to the queue'")
+    request_info = user_info['apis']['twitter']
+    request_info["collection_id"] = result.inserted_id
+    request_info[REQUEST_TYPE]=DATASET_UPDATE_REQUEST_TYPE
+    channel.basic_publish(exchange='async-workers-exchange',
+                          routing_key='async-workers',
+                          body=JSONEncoder().encode(request_info))
 
-    return "OK, cool"
+    return {'draft_created': JSONEncoder().encode(result.inserted_id)}
 
+def twitter_similarities():
+    return queue_request(SIMILARITY_COMPUTATION_REQUEST_TYPE)
+
+def queue_request(request_type):
+    connection = pika.BlockingConnection(pika.ConnectionParameters(
+            RABBITMQ_HOST))
+    channel = connection.channel()
+
+    user_info = json.loads(session['current_guest'])
+    request_info = user_info['apis']['twitter']
+    request_info[REQUEST_TYPE]=request_type
+    channel.basic_publish(exchange='async-workers-exchange',
+                          routing_key='async-workers',
+                          body=json.dumps(request_info))
+    return {'message': 'request_sent'}
 
 def test_endpoint():
-    client = MongoClient()
-    library = client.library
     screen_name = get_screen_name()
-    all_resources = library[screen_name].find()
-    usls = {}
-    for doc in all_resources:
-        if doc['expandedUrl'] is None: continue
-        if doc['hashtags'] is not None:
-            for kw in doc['hashtags']:
-                add_keyword(library, doc, usls, kw)
-    all_resources = library.ckemmler_resources.find()
-    for doc in all_resources:
-        if doc['expandedUrl'] is None: continue
-        if doc['keywords'] is not None:
-            for kw in doc['keywords'].split(","):
-                add_keyword(library, doc, usls, kw)
-    return usls
+    user_collections = MongoClient().library[screen_name+"_collections"]
+    user_collection = user_collections.find_one({"_id": ObjectId("5798aafd421aa975bdc2e780")})
+    return user_collection
+    # client = MongoClient()
+    # library = client.library
+    # screen_name = get_screen_name()
+    # all_resources = library[screen_name].find()
+    # usls = {}
+    # for doc in all_resources:
+    #     if doc['expandedUrl'] is None: continue
+    #     if doc['hashtags'] is not None:
+    #         for kw in doc['hashtags']:
+    #             add_keyword(library, doc, usls, kw)
+    # all_resources = library.ckemmler_resources.find()
+    # for doc in all_resources:
+    #     if doc['expandedUrl'] is None: continue
+    #     if doc['keywords'] is not None:
+    #         for kw in doc['keywords'].split(","):
+    #             add_keyword(library, doc, usls, kw)
+    # return usls
 
 def add_keyword(library, doc, usls, kw):
     results = library.usl.find({"KEYWORDS_EN.ORIGINAL": kw})

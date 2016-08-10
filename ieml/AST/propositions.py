@@ -128,7 +128,8 @@ class Morpheme(AbstractAdditiveProposition, NonClosedProposition):
 
     def __init__(self, child_elements):
         super().__init__(child_elements)
-        self.grammatical_class = max(c.script.script_class for c in child_elements)
+
+        self.grammatical_class = max(c.script.script_class for c in self.children)
 
     def _do_precompute_str(self):
         self._str = self.RenderSymbols.left_parent + \
@@ -150,7 +151,8 @@ class Morpheme(AbstractAdditiveProposition, NonClosedProposition):
         if len(self.children) > MAX_TERMS_IN_MORPHEME:
             raise TooManyTermsInMorpheme()
 
-        # TODO : more checking
+
+            # TODO : more checking
         # - term intersection
         # - paradigmatic intersection
 
@@ -171,6 +173,7 @@ class Word(AbstractMultiplicativeProposition, ClosedProposition):
             self.children = (self.subst,)
         else:
             self.children = (self.subst, self.mode)
+
         self.grammatical_class = self.subst.grammatical_class
 
     @property

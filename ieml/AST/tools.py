@@ -6,7 +6,7 @@ from .propositions import Word, Morpheme, Clause, Sentence, SuperSentence, Super
     AbstractAdditiveProposition, AbstractClause, AbstractProposition
 from ieml.AST import Term
 from helpers import Singleton
-from models import DictionaryQueries
+from models.base_queries import DictionaryQueries
 
 terms_level_order = [Term, Morpheme, Word, Clause, Sentence, SuperClause, SuperSentence]
 

@@ -51,7 +51,8 @@ class IemlDb:
     @classmethod
     def store_ast(cls, ast, tags):
         if not cls.check_tag_available(tags):
-            raise InvalidTags()
+            # TODO not the correct exception to raise
+            raise InvalidTags(tags)
 
         if isinstance(ast, (Word, Sentence, SuperSentence)):
             cls.db_propositions.save_closed_proposition(ast, tags)

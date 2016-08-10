@@ -4,8 +4,7 @@ from ieml.AST.tools import RandomPropositionGenerator, NULL_WORD, NULL_SENTENCE,
     NULL_MORPHEME, NULL_SUPERCLAUSE, promote_to
 from ieml.AST.usl import Text, HyperText
 from ieml.exceptions import SeveralRootNodeFound, NodeHasTooMuchParents, NoRootNodeFound
-from testing.helper import *
-from ieml.AST.terms import Term
+from testing.ieml.helper import *
 
 class TestMetaFeatures(unittest.TestCase):
     """Tests inter-class operations and metaclass related features"""

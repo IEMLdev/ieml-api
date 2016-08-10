@@ -1,12 +1,12 @@
+from helpers.metaclasses import Singleton
 from models.base_queries import DBConnector
 from models.constants import SCRIPTS_COLLECTION, ROOT_PARADIGM_TYPE, SINGULAR_SEQUENCE_TYPE, PARADIGM_TYPE
-from models.exceptions import InvalidScript, NotAParadigm, RootParadigmIntersection, \
-    ParadigmAlreadyExist, RootParadigmMissing, SingularSequenceAlreadyExist, NotASingularSequence
-from ieml.script import Script
+from models.exceptions import NotAParadigm, RootParadigmIntersection, \
+    ParadigmAlreadyExist, RootParadigmMissing, SingularSequenceAlreadyExist, NotASingularSequence, TermNotFound
 import logging
 
 
-class RelationsConnector(DBConnector):
+class RelationsConnector(DBConnector, metaclass=Singleton):
     def __init__(self):
         super().__init__()
         self.relations = self.db[SCRIPTS_COLLECTION]
@@ -17,7 +17,19 @@ class RelationsConnector(DBConnector):
         :param script: the script to get, str or Script instance.
         :return: the script entry.
         """
-        return self.relations.find_one({"_id": script if isinstance(script, str) else str(script)})
+        entry = self.relations.find_one({"_id": str(script)})
+        if not entry:
+            raise TermNotFound(str(script))
+
+        return entry
+
+    def exists(self, script):
+        try:
+            self.get_script(script)
+        except TermNotFound:
+            return False
+        else:
+            return True
 
     def singular_sequences(self, paradigm=None):
         """
@@ -58,7 +70,7 @@ class RelationsConnector(DBConnector):
         :param script_ast: the script to remove
         :return: None
         """
-        if self.get_script(script_ast) is None:
+        if not self.exists(script_ast):
             logging.warning("Deletion of a non existent script %s from the collection relation." % str(script_ast))
             return
 
@@ -73,7 +85,7 @@ class RelationsConnector(DBConnector):
         :return: None
         """
         if not script_ast.paradigm:
-            raise NotAParadigm()
+            raise NotAParadigm(script_ast)
 
         if root:
             self._save_root_paradigm(script_ast)
@@ -88,15 +100,15 @@ class RelationsConnector(DBConnector):
         """
         # check if a singular sequence
         if script_ast.cardinal != 1:
-            raise NotASingularSequence()
+            raise NotASingularSequence(script_ast)
 
         # check if already exist
-        if self.get_script(str(script_ast)):
-            raise SingularSequenceAlreadyExist()
+        if self.exists(script_ast):
+            raise SingularSequenceAlreadyExist(script_ast)
 
         # get all the singular sequence of the db to see if the singular sequence can be created
         if str(script_ast) not in self.singular_sequences():
-            raise RootParadigmMissing()
+            raise RootParadigmMissing(script_ast)
 
         # save the singular sequence
         insertion = {
@@ -120,13 +132,15 @@ class RelationsConnector(DBConnector):
         """
         # defensive check
 
-        # check if paradigm already saved
-        if self.get_script(str(script_ast)) is not None:
-            raise ParadigmAlreadyExist()
+        # check if paradigm already saved.
+
+        if self.exists(script_ast):
+            raise ParadigmAlreadyExist(script_ast)
 
         # get all the singular sequence of the db to avoid intersection
         if set.intersection(set(str(seq) for seq in script_ast.singular_sequences), self.singular_sequences()):
-            raise RootParadigmIntersection()
+            raise RootParadigmIntersection(script_ast,
+                                           set(str(seq) for seq in script_ast.singular_sequences) & set(self.singular_sequences()))
 
         # save the root paradigm
         insertion = {
@@ -146,12 +160,12 @@ class RelationsConnector(DBConnector):
         :return: None
         """
         # defensive check
-        if self.get_script(str(script_ast)):
-            raise ParadigmAlreadyExist()
+        if self.exists(script_ast):
+            raise ParadigmAlreadyExist(script_ast)
 
         # get all the singular sequence of the db to check if we can create the paradigm
         if not set(str(seq) for seq in script_ast.singular_sequences).issubset(self.singular_sequences()):
-            raise RootParadigmMissing()
+            raise RootParadigmMissing(script_ast)
 
         insertion = {
             '_id': str(script_ast),
@@ -174,6 +188,6 @@ class RelationsConnector(DBConnector):
             'TYPE': ROOT_PARADIGM_TYPE,
             'SINGULAR_SEQUENCES': {'$all': [str(seq) for seq in script_ast.singular_sequences]}})
         if result is None:
-            raise RootParadigmMissing()
+            raise RootParadigmMissing(script_ast)
 
         return result['_id']
