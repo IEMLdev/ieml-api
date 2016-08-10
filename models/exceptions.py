@@ -54,6 +54,15 @@ class InvalidASTType(DBException):
     pass
 
 
+class CollectionAlreadyLocked(DBException):
+    def __init__(self, pid, role):
+        self.pid = pid
+        self.role = role
+
+    def __str__(self):
+        return 'Unable to lock the collection, process id:%d has already locked it for role:%s.'%(self.pid, self.role)
+
+
 class InvalidScript(DBException):
     def __init__(self, script):
         self.script = script

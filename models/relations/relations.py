@@ -1,15 +1,51 @@
+import os
+import random
+
+from pymongo.errors import DuplicateKeyError
+
 from helpers.metaclasses import Singleton
 from models.base_queries import DBConnector
-from models.constants import SCRIPTS_COLLECTION, ROOT_PARADIGM_TYPE, SINGULAR_SEQUENCE_TYPE, PARADIGM_TYPE
+from models.constants import RELATIONS_COLLECTION, ROOT_PARADIGM_TYPE, SINGULAR_SEQUENCE_TYPE, PARADIGM_TYPE, \
+    RELATIONS_LOCK_COLLECTION
 from models.exceptions import NotAParadigm, RootParadigmIntersection, \
-    ParadigmAlreadyExist, RootParadigmMissing, SingularSequenceAlreadyExist, NotASingularSequence, TermNotFound
+    ParadigmAlreadyExist, RootParadigmMissing, SingularSequenceAlreadyExist, NotASingularSequence, TermNotFound, \
+    CollectionAlreadyLocked
 import logging
 
 
 class RelationsConnector(DBConnector, metaclass=Singleton):
     def __init__(self):
         super().__init__()
-        self.relations = self.db[SCRIPTS_COLLECTION]
+        self.relations = self.db[RELATIONS_COLLECTION]
+        self.relations_lock = self.db[RELATIONS_LOCK_COLLECTION]
+
+    def lock_status(self):
+        return self.relations_lock.find_one({'_id': 0}, {'role': 1, 'pid': 1})
+
+    def set_lock(self, role):
+        pid = os.getpid()
+        try:
+            self.relations_lock.insert({'_id': 0, 'pid': pid, 'role': role})
+        except DuplicateKeyError:
+            status = self.lock_status()
+            if status:
+                raise CollectionAlreadyLocked(status['pid'], status['role'])
+
+    def free_lock(self, force=False):
+        status = self.lock_status()
+        if status is None:
+            return True
+
+        pid = os.getpid()
+        if status['pid'] != pid and not force:
+            logging.error('Error deleting the relations collection, the lock belong to process id:%d for role:%s.'%(status['pid'], status['role']))
+            return False
+        else:
+            request = {'_id': 0}
+            if not force:
+                request['pid'] = pid
+            return self.relations_lock.delete_one(request).deleted_count == 1
+
 
     def get_script(self, script):
         """
