@@ -60,7 +60,7 @@ paths:
           description: |
             The request has been accepted
 
-  /intlekt/collections/{collection_id}/dataset:
+  '/intlekt/collections/{collection_id}/dataset':
     get:
       operationId: handlers.getPreTaggedDataset
       tags:
@@ -315,49 +315,6 @@ paths:
         '200':
           description: Successful response
 
-#  /addRelVisibility:
-#    post:
-#      operationId: handlers.add_relation_visiblity
-#      description: Inhibits relations of a paradigm
-#      parameters:
-#        - name: body
-#          in: body
-#          required: True
-#          schema:
-#            type: object
-#            properties:
-#              ieml:
-#                type: string
-#              relations:
-#                type : array
-#                items:
-#                  type : string
-#              token :
-#                type : string
-#
-#      responses:
-#        '200':
-#          description: Successful response
-#  /remRelVisibility:
-#    post:
-#      operationId: handlers.remove_relation_visibility
-#      description: |
-#        TODO
-#      parameters:
-#        - name: body
-#          in: body
-#          required: True
-#          schema:
-#            type: object
-#            properties:
-#              ieml:
-#                type: string
-#              token:
-#                type: string
-#
-#      responses:
-#        '200':
-#          description: Successful response
   /rels:
     post:
       operationId: handlers.get_relations
@@ -468,7 +425,17 @@ paths:
       responses:
         '200':
           description: Successful response
-  '/remieml':
+
+  /update_status:
+    get:
+      operationId: handlers.computation_status
+      description: |
+        Get the status of the computation.
+      responses:
+        '200':
+          description: Successful response
+
+  /remieml:
     post:
       operationId: handlers.remove_ieml_script
       description: |
@@ -509,6 +476,7 @@ paths:
       responses:
         '200':
           description: Successful response
+
   '/exists/ieml/{ieml_term}':
     get:
       operationId: handlers.ieml_term_exists
