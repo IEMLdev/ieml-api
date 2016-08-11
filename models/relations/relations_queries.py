@@ -7,12 +7,11 @@ from ieml.script import CONTAINED_RELATION, CONTAINS_RELATION, RemarkableSibling
     ELEMENTS, FATHER_RELATION, CHILD_RELATION, AdditiveScript, NullScript, Script, SCRIPT_RELATIONS
 from ieml.script.constants import ROOT_RELATION
 from ieml.script.tables import get_table_rank
-from models.constants import RELATION_COMPUTING
+from models.constants import RELATION_COMPUTING, SCRIPT_INSERTION, SCRIPT_DELETION
 from models.exceptions import NotARootParadigm, InvalidScript, CantRemoveNonEmptyRootParadigm, InvalidRelationTitle, \
     TermNotFound, InvalidRelationCollectionState
-from models.relations.relations import RelationsConnector
+from models.relations.relations import RelationsConnector, safe_execution
 import progressbar
-
 
 class RelationsQueries:
     @classmethod
@@ -23,6 +22,7 @@ class RelationsQueries:
         return entry['RANK']
 
     @classmethod
+    @safe_execution(SCRIPT_INSERTION)
     def save_script(cls, script, root=False, recompute_relations=True, verbose=False):
         """
         Save a script in the relation collection.
@@ -45,6 +45,7 @@ class RelationsQueries:
                 verbose=verbose)
 
     @classmethod
+    @safe_execution(SCRIPT_INSERTION)
     def save_multiple_script(cls, list_script, recompute_relations=True, verbose=False):
         """
         Save multiple script in a single transaction. This method doesn't compute the relation multiple times, improving
@@ -95,6 +96,7 @@ class RelationsQueries:
         return True
 
     @classmethod
+    @safe_execution(SCRIPT_DELETION)
     def remove_script(cls, script, recompute_relations=True, verbose=False):
         """
         Remove a script in the relation collection. Recompute the relation to keep the coherence of the collection.
@@ -151,6 +153,7 @@ class RelationsQueries:
             {'SINGULAR_SEQUENCES': {'$in': [str(seq) for seq in script_ast.singular_sequences]}}))
 
     @classmethod
+    @safe_execution(RELATION_COMPUTING)
     def compute_relations(cls, roots_paradigms=None, globals=True, inhibitions=True, verbose=False):
         """
         Compute the relations collection. Use a lock to forbid another computation to occur in the same time. If
@@ -173,21 +176,16 @@ class RelationsQueries:
         :param verbose: if True, print progressbar to display the progress of the computation.
         :return:
         """
-        try:
-            RelationsConnector().set_lock(RELATION_COMPUTING)
+        if roots_paradigms:
+            for p in roots_paradigms:
+                cls._compute_local_relations(cls._to_ast(p), verbose=verbose)
 
-            if roots_paradigms:
-                for p in roots_paradigms:
-                    cls._compute_local_relations(cls._to_ast(p), verbose=verbose)
+        if globals:
+            cls._compute_global_relations(verbose=verbose)
 
-            if globals:
-                cls._compute_global_relations(verbose=verbose)
+        if inhibitions:
+            cls._do_inhibition(cls._inhibitions(), verbose=verbose)
 
-            if inhibitions:
-                cls._do_inhibition(cls._inhibitions(), verbose=verbose)
-
-        finally:
-            RelationsConnector().free_lock()
 
     @classmethod
     def relations(cls, script, relation_title=None, pack_ancestor=False, max_depth_father=-1, max_depth_child=-1):

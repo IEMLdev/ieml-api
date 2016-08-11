@@ -237,7 +237,7 @@ class TermsConnector(DBConnector):
         :return: None
         """
         if all_delete:
-            RelationsConnector().relations.drop()
+            RelationsConnector().empty_collection()
 
             RelationsQueries.save_multiple_script(
                 [{'AST': self.parser.parse(t['_id']),
