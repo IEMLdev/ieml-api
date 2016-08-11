@@ -2,6 +2,13 @@ import os
 
 from multiprocessing import Process
 
+import sys
+
+import time
+
+import functools
+from IPython.utils.sysinfo import sys_info
+
 from ieml.script.constants import OPPOSED_SIBLING_RELATION
 from models.exceptions import CollectionAlreadyLocked
 from models.relations.relations import RelationsConnector
@@ -57,3 +64,19 @@ class TestRelationCollection(ModelTestCase):
         self.assertIsNone(RelationsConnector().lock_status())
 
 
+    def test_no_multiple_relation_computation(self):
+        def mock_compute(verbose=False):
+            time.sleep(1)
+
+        RelationsQueries._compute_global_relations = mock_compute
+
+        target = functools.partial(RelationsQueries.compute_relations, globals=True)
+        p = Process(target=target)
+        p.start()
+
+        # give time to start
+        time.sleep(0.5)
+        with self.assertRaises(CollectionAlreadyLocked):
+            target()
+
+        p.join()

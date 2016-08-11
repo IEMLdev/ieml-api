@@ -1,7 +1,7 @@
 import os
 import random
 
-from pymongo.errors import DuplicateKeyError
+import pymongo.errors
 
 from helpers.metaclasses import Singleton
 from models.base_queries import DBConnector
@@ -20,32 +20,49 @@ class RelationsConnector(DBConnector, metaclass=Singleton):
         self.relations_lock = self.db[RELATIONS_LOCK_COLLECTION]
 
     def lock_status(self):
+        """
+        Return the status of the lock or None if the lock is free.
+        :return: dict of 'role' : the role the application have given to that lock
+                         'pid'  : the process id of the lock taker.
+        """
         return self.relations_lock.find_one({'_id': 0}, {'role': 1, 'pid': 1})
 
     def set_lock(self, role):
+        """
+        Try to take the lock with the given role. It must be a string explaining why the lock is taken.
+        If we can't take the lock, raise CollectionAlreadyLocked.
+        :param role:
+        :return:
+        """
         pid = os.getpid()
         try:
             self.relations_lock.insert({'_id': 0, 'pid': pid, 'role': role})
-        except DuplicateKeyError:
+        except pymongo.errors.DuplicateKeyError:
             status = self.lock_status()
             if status:
                 raise CollectionAlreadyLocked(status['pid'], status['role'])
 
     def free_lock(self, force=False):
+        """
+        Try to free the lock. If the lock is already free, do nothing. If the lock belongs to another proccess, do
+         nothing and raise a warning.
+        :param force: Force delete the lock, even if the process doesn't own it.
+        :return: The success of the free
+        """
         status = self.lock_status()
         if status is None:
             return True
 
         pid = os.getpid()
         if status['pid'] != pid and not force:
-            logging.error('Error deleting the relations collection, the lock belong to process id:%d for role:%s.'%(status['pid'], status['role']))
+            logging.error('Error deleting the relations collection lock, the lock belong to '
+                          'process id:%d for role:%s.'%(status['pid'], status['role']))
             return False
         else:
             request = {'_id': 0}
             if not force:
                 request['pid'] = pid
             return self.relations_lock.delete_one(request).deleted_count == 1
-
 
     def get_script(self, script):
         """
@@ -155,6 +172,7 @@ class RelationsConnector(DBConnector, metaclass=Singleton):
             'LAYER': script_ast.layer,
             'SINGULAR_SEQUENCES': [str(script_ast)]
         }
+
         self.relations.insert(insertion)
 
     def _save_root_paradigm(self, script_ast):
