@@ -7,6 +7,7 @@ from ieml.script import CONTAINED_RELATION, CONTAINS_RELATION, RemarkableSibling
     ELEMENTS, FATHER_RELATION, CHILD_RELATION, AdditiveScript, NullScript, Script, SCRIPT_RELATIONS
 from ieml.script.constants import ROOT_RELATION
 from ieml.script.tables import get_table_rank
+from models.constants import RELATION_COMPUTING
 from models.exceptions import NotARootParadigm, InvalidScript, CantRemoveNonEmptyRootParadigm, InvalidRelationTitle, \
     TermNotFound, InvalidRelationCollectionState
 from models.relations.relations import RelationsConnector
@@ -173,7 +174,7 @@ class RelationsQueries:
         :return:
         """
         try:
-            RelationsConnector().set_lock('RELATION COMPUTING')
+            RelationsConnector().set_lock(RELATION_COMPUTING)
 
             if roots_paradigms:
                 for p in roots_paradigms:
