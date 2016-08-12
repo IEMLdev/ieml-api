@@ -1,8 +1,9 @@
+from ieml.exceptions import InvalidScript
 from ieml.parsing.script.parser import ScriptParser
 from ieml.script.tools import factorize
 from models.base_queries import DBConnector, Tag
 from models.constants import TERMS_COLLECTION, TAG_LANGUAGES
-from models.exceptions import InvalidInhibitArgument, InvalidScript, InvalidTags, TermAlreadyExists, InvalidMetadata,\
+from models.exceptions import InvalidInhibitArgument, InvalidTags, TermAlreadyExists, InvalidMetadata,\
     CantRemoveNonEmptyRootParadigm, TermNotFound, DuplicateTag
 from ieml.script.constants import INHIBIT_RELATIONS
 from ieml.script import Script
@@ -95,7 +96,7 @@ class TermsConnector(DBConnector):
         """
         # Argument check
         if not isinstance(script_ast, Script):
-            raise InvalidScript(script_ast)
+            raise InvalidScriptArgument(script_ast)
 
         term = self.get_term(script_ast)
         if term is None:
@@ -187,7 +188,7 @@ class TermsConnector(DBConnector):
 
         # Argument check
         if not isinstance(script_ast, Script):
-            raise InvalidScript(script_ast)
+            raise InvalidScriptArgument(script_ast)
 
         if not isinstance(inhibits, list) or any(r not in INHIBIT_RELATIONS for r in inhibits):
             raise InvalidInhibitArgument(inhibits)

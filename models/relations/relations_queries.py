@@ -1,6 +1,7 @@
 import logging
 from collections import defaultdict
 
+from ieml.exceptions import InvalidScript
 from ieml.parsing.script import ScriptParser
 from ieml.script import CONTAINED_RELATION, CONTAINS_RELATION, RemarkableSibling, TWIN_SIBLING_RELATION, \
     ASSOCIATED_SIBLING_RELATION, CROSSED_SIBLING_RELATION, OPPOSED_SIBLING_RELATION, ATTRIBUTE, SUBSTANCE, MODE, \
@@ -8,7 +9,7 @@ from ieml.script import CONTAINED_RELATION, CONTAINS_RELATION, RemarkableSibling
 from ieml.script.constants import ROOT_RELATION
 from ieml.script.tables import get_table_rank
 from models.constants import RELATION_COMPUTING, SCRIPT_INSERTION, SCRIPT_DELETION
-from models.exceptions import NotARootParadigm, InvalidScript, CantRemoveNonEmptyRootParadigm, InvalidRelationTitle, \
+from models.exceptions import NotARootParadigm, CantRemoveNonEmptyRootParadigm, InvalidRelationTitle, \
     TermNotFound, InvalidRelationCollectionState
 from models.relations.relations import RelationsConnector, safe_execution
 import progressbar
@@ -532,7 +533,7 @@ class RelationsQueries:
         elif isinstance(script, str):
             return ScriptParser().parse(script)
         else:
-            raise InvalidScript(script)
+            raise InvalidScriptArgument(script)
 
     @classmethod
     def _inhibit_relations(cls, script_str, inhibits=None):
