@@ -2,9 +2,9 @@ import logging
 
 import numpy as np
 
-from ieml.AST.constants import MAX_NODES_IN_SENTENCE
 from ieml.exceptions import InvalidGraphNode, TooManyNodesInGraph
-from ..exceptions import NodeHasNoParent, NodeHasTooMuchParents, NoRootNodeFound, SeveralRootNodeFound
+from ieml.exceptions import NodeHasNoParent, NodeHasTooMuchParents, NoRootNodeFound, SeveralRootNodeFound
+from ieml.object.constants import MAX_NODES_IN_SENTENCE
 
 class AbstractGraph:
     def __init__(self, transitions_list):

@@ -1,8 +1,10 @@
-from ieml.parsing.script import ScriptParser
-from ieml.script.tables import generate_tables
-from ieml.operator import sc
-import numpy as np
 import unittest
+
+import numpy as np
+
+from ieml.operator import sc
+from ieml.script.parser import ScriptParser
+from ieml.script.tables import generate_tables
 
 
 class TableGenerationTest(unittest.TestCase):

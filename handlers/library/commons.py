@@ -1,12 +1,13 @@
+from ieml.AST import Term, Text, HyperText, Word, Sentence, SuperSentence
+
 from handlers.library.base import texts_db
 from ieml import USLParser
-from ieml.AST import Term, Text, HyperText, Word, Sentence, SuperSentence
-from ieml.AST.tree_metadata import HypertextMetadata, PropositionMetadata, TextMetadata
 from ieml.exceptions import CannotParse
-from ieml.parsing.parser import PropositionsParser
+from ieml.object.parser.parser import PropositionsParser
+from ieml.object.tree_metadata import HypertextMetadata, PropositionMetadata, TextMetadata
+from models.interface import SearchRequest
 from models.propositions import PropositionsQueries
 from models.usl import TextQueries, HyperTextQueries
-from models.interface import SearchRequest
 from .base import propositions_db, hypertexts_db
 
 

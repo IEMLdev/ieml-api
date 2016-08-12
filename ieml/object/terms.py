@@ -1,8 +1,8 @@
-from ieml.AST.commons import AbstractProposition
-from .tree_metadata import TermMetadata
-from ieml.exceptions import TermComparisonFailed, CannotRetrieveMetadata, IEMLTermNotFoundInDictionnary
-from ieml.parsing.script import ScriptParser
+from ieml.exceptions import IEMLTermNotFoundInDictionnary
+from ieml.object.commons import AbstractProposition
+from ieml.object.tree_metadata import TermMetadata
 from ieml.script import Script
+from ieml.script.parser import ScriptParser
 
 
 class Term(AbstractProposition):

@@ -1,14 +1,15 @@
-from ieml.AST.commons import TreeStructure
+import itertools
+
+from ieml.exceptions import InvalidScriptCharacter, InvalidScript, IncompatiblesScriptsLayers
+from ieml.object.commons import TreeStructure
 from ieml.script.constants import MAX_LAYER
 from .constants import LAYER_MARKS, PRIMITVES, remarkable_multiplication_lookup_table, REMARKABLE_ADDITION, \
     character_value, AUXILIARY_CLASS, VERB_CLASS, NOUN_CLASS
-import itertools
-from ieml.exceptions import InvalidScriptCharacter, InvalidScript, IncompatiblesScriptsLayers
 
 
 class Script(TreeStructure):
-    """ A script is defined by a character (PRIMITIVES, REMARKABLE_ADDITION OR REMARKABLE_MULTIPLICATION)
-     or a list of script children. All the element in the children list must be an AdditiveScript or
+    """ A parser is defined by a character (PRIMITIVES, REMARKABLE_ADDITION OR REMARKABLE_MULTIPLICATION)
+     or a list of parser children. All the element in the children list must be an AdditiveScript or
      a MultiplicativeScript."""
     def __init__(self, children=None, character=None):
         super().__init__()
@@ -23,13 +24,13 @@ class Script(TreeStructure):
         else:
             self.character = None
 
-        # Layer of this script
+        # Layer of this parser
         self.layer = None
 
         # If it is a a paradigm
         self.paradigm = None
 
-        # If the script is composed with E
+        # If the parser is composed with E
         self.empty = None
 
         # The number of singular sequence (if paradigm it is one, self)
@@ -41,10 +42,10 @@ class Script(TreeStructure):
         # The contained paradigms (tables)
         self._tables = []
 
-        # The canonical string to compare same layer and cardinal script (__lt__)
+        # The canonical string to compare same layer and cardinal parser (__lt__)
         self.canonical = None
 
-        # class of the script, one of the following : VERB (1), AUXILIARY (0), and NOUN (2)
+        # class of the parser, one of the following : VERB (1), AUXILIARY (0), and NOUN (2)
         self.script_class = None
 
     def __add__(self, other):
@@ -109,7 +110,7 @@ class Script(TreeStructure):
                     else:
                         # not an instance, one is multiplicative, other one is additive
                         # They have the same number of singular sequence so the multiplicative is fewer :
-                        # each variable of the addition have less singular sequence than the multiplication script
+                        # each variable of the addition have less singular sequence than the multiplication parser
                         return isinstance(self, MultiplicativeScript)
                 else:
                     # Layer 0
@@ -297,7 +298,7 @@ class MultiplicativeScript(Script):
 
         super().__init__(children=_children, character=_character)
 
-        # Compute the attributes of this script
+        # Compute the attributes of this parser
         if self.character:
             self.layer = 0 if self.character in PRIMITVES else 1
             self.paradigm = False
@@ -421,7 +422,7 @@ class NullScript(Script):
 
 NULL_SCRIPTS = [NullScript(level) for level in range(0, MAX_LAYER)]
 
-# Building the remarkable multiplication to script
+# Building the remarkable multiplication to parser
 REMARKABLE_MULTIPLICATION_SCRIPT = {
     "wo":[MultiplicativeScript(character='U'), MultiplicativeScript(character='U'), NullScript(layer=0)],
     "wa":[MultiplicativeScript(character='U'), MultiplicativeScript(character='A'), NullScript(layer=0)],
@@ -458,7 +459,7 @@ for key in REMARKABLE_MULTIPLICATION_SCRIPT:
     for e in REMARKABLE_MULTIPLICATION_SCRIPT[key]:
         e.check()
 
-# Building the remarkable addition to script
+# Building the remarkable addition to parser
 REMARKABLE_ADDITION_SCRIPT = {}
 for key in REMARKABLE_ADDITION:
     REMARKABLE_ADDITION_SCRIPT[key] = [MultiplicativeScript(character=c) if c != 'E' else NullScript(layer=0) for c in REMARKABLE_ADDITION[key] ]

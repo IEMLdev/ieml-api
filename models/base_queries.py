@@ -17,7 +17,7 @@ class DBConnector(object, metaclass=Singleton):
         self.db = self.client[DB_NAME] # opening a DB
         self.old_db = self.client[OLD_DB_NAME]
 
-        # TODO : once the old DB has a migration script, this should be in the self.db
+        # TODO : once the old DB has a migration parser, this should be in the self.db
         self.old_terms = self.old_db[OLD_TERMS_COLLECTION]
 
 

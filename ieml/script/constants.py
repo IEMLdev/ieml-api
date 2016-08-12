@@ -42,7 +42,7 @@ LAYER_MARKS = [
 ]
 
 # Name of the relation (in db)
-# if modification, need a db script reload
+# if modification, need a db parser reload
 # remarkable siblings
 OPPOSED_SIBLING_RELATION = 'OPPOSED_SIBLING'
 ASSOCIATED_SIBLING_RELATION = 'ASSOCIATED_SIBLING'

@@ -1,8 +1,8 @@
-from ieml.AST.terms import Term
 from collections import namedtuple
 
+from ieml.object.terms import Term
 
-ScoreNode = namedtuple('ScoreNode', ['script', 'score'])
+ScoreNode = namedtuple('ScoreNode', ['parser', 'score'])
 
 
 def rank_paradigms(paradigms_list, usl_list):

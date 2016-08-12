@@ -1,13 +1,15 @@
-import unittest
 import pprint
+import unittest
+
 from ieml.AST.propositions import Word, Clause, Sentence, SuperSentence, Morpheme, SuperClause
-from ieml.AST.terms import Term
-from ieml.AST.usl import Text, HyperText
-from ieml.operator import usl, sc
+
 from ieml.calculation.distance import (object_proximity_index,
-                                       set_proximity_index, mutual_inclusion_index, connexity, build_graph,
-                                       partition_graph, get_parents, get_grammar_class, get_paradigms, connexity_index,
+                                       set_proximity_index, mutual_inclusion_index, build_graph,
+                                       partition_graph, get_paradigms, connexity_index,
                                        grammatical_class_index, paradigmatic_equivalence_class_index)
+from ieml.object.terms import Term
+from ieml.object.usl import Text, HyperText
+from ieml.operator import sc
 
 
 class DistanceComputationTests(unittest.TestCase):

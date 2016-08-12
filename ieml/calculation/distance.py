@@ -1,14 +1,15 @@
 import itertools as it
 from collections import defaultdict
-from ieml.AST.propositions import Word, Sentence, SuperSentence, Morpheme
-from ieml.AST.terms import Term
-from ieml.AST.usl import Text, HyperText
-from ieml.operator import usl, sc
-from ieml.script.tables import get_table_rank
-from bidict import bidict
-from models.relations.relations import RelationsConnector
 from fractions import Fraction
 
+from bidict import bidict
+from ieml.AST.propositions import Word, Sentence, SuperSentence, Morpheme
+
+from ieml.object.terms import Term
+from ieml.object.usl import Text, HyperText
+from ieml.operator import usl, sc
+from ieml.script.tables import get_table_rank
+from models.relations.relations import RelationsConnector
 from models.relations.relations_queries import RelationsQueries
 
 categories = bidict({Term: 1, Word: 2, Sentence: 3, SuperSentence: 4, Text: 5, HyperText: 6})
@@ -487,8 +488,8 @@ if __name__ == '__main__':
     connexity_index(Word, ht_a, ht_b)
 
     # rc = RelationsConnector()
-    # script = rc.get_script("E:M:.M:O:.-")
-    # d = flatten_dict(script['RELATIONS']['FATHER_RELATION'])
+    # parser = rc.get_script("E:M:.M:O:.-")
+    # d = flatten_dict(parser['RELATIONS']['FATHER_RELATION'])
     # print(d)
     #
     # term1 = Term(sc("T:.E:A:T:.-"))

@@ -5,7 +5,7 @@ from ..caching import cached, flush_cache
 from handlers.dictionary.commons import terms_db, exception_handler, relation_name_table
 from ieml.exceptions import CannotParse
 from ieml.script.constants import AUXILIARY_CLASS, VERB_CLASS, NOUN_CLASS
-from ieml.script.script import MultiplicativeScript, NullScript
+from ieml.script.parser import MultiplicativeScript, NullScript
 from ieml.script.tables import generate_tables
 from ieml.script.tools import old_canonical
 from .client import need_login
@@ -53,7 +53,7 @@ def parse_ieml(iemltext):
         }
     except CannotParse:
         return {"success" : False,
-                "exception" : "Invalid script"}
+                "exception" : "Invalid parser"}
 
 
 def script_table(iemltext):
@@ -243,9 +243,9 @@ def _process_inhibits(body):
 @exception_handler
 def new_ieml_script(body):
     script_ast = sc(body["IEML"])
-    terms_db().add_term(script_ast,  # the ieml script's ast
+    terms_db().add_term(script_ast,  # the ieml parser's ast
                         {"FR": body["FR"], "EN": body["EN"]},  # the
-                        inhibits=_process_inhibits(body), # no inhibitions at the script's creation
+                        inhibits=_process_inhibits(body), # no inhibitions at the parser's creation
                         root=body["PARADIGM"] == "1",
                         recompute_relations=False)
 
@@ -268,7 +268,7 @@ def remove_ieml_script(body):
 def update_ieml_script(body):
     """Updates an IEML Term's properties (mainly the tags, and the paradigm). If the IEML is changed,
     a new term is created"""
-    script_ast = sc(body["ID"]) # the ID refer to the script being updated
+    script_ast = sc(body["ID"]) # the ID refer to the parser being updated
 
     inhibits = _process_inhibits(body)
 
@@ -279,7 +279,7 @@ def update_ieml_script(body):
                              root=body["PARADIGM"] == "1", inhibits=inhibits, recompute_relations=False)
     else:
         terms_db().remove_term(script_ast, recompute_relations=False)
-        terms_db().add_term(sc(body["IEML"]),  # the ieml script's ast
+        terms_db().add_term(sc(body["IEML"]),  # the ieml parser's ast
                           {"FR": body["FR"], "EN": body["EN"]},  # the
                           root=body["PARADIGM"] == "1", inhibits=inhibits, recompute_relations=False)
 

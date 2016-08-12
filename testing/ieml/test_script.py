@@ -2,7 +2,7 @@ import unittest
 
 from ieml.operator import sc
 from ieml.script.constants import AUXILIARY_CLASS, VERB_CLASS, NOUN_CLASS, PRIMITVES
-from ieml.script.script import MultiplicativeScript
+from ieml.script.parser import MultiplicativeScript
 
 scripts = list(map(sc, ["O:.E:M:.-"]))
 

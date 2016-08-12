@@ -1,6 +1,6 @@
 from ieml.AST import promote_to, Term
-from ieml.AST.tools import RandomPropositionGenerator, demote_once
 from ieml.exceptions import CannotPromoteToLowerLevel
+from ieml.object.tools import RandomPropositionGenerator, demote_once
 from .helper import *
 
 

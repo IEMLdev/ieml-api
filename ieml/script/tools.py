@@ -7,7 +7,7 @@ from bidict import bidict
 from ieml.exceptions import NoRemarkableSiblingForAdditiveScript
 from ieml.script.constants import LAYER_MARKS, REMARKABLE_ADDITION, PRIMITVES, OPPOSED_SIBLING_RELATION, \
     ASSOCIATED_SIBLING_RELATION, CROSSED_SIBLING_RELATION, TWIN_SIBLING_RELATION, MAX_LAYER
-from ieml.script.script import MultiplicativeScript, REMARKABLE_MULTIPLICATION_SCRIPT, Script, NullScript, AdditiveScript, remarkable_multiplication_lookup_table
+from ieml.script.parser import MultiplicativeScript, REMARKABLE_MULTIPLICATION_SCRIPT, Script, AdditiveScript, remarkable_multiplication_lookup_table
 
 
 class RemarkableSibling:
@@ -18,8 +18,8 @@ class RemarkableSibling:
         Compute the list of relation for remarkable siblings.
         For the relation associated, opposed and crossed, the list take the form of the tuple: (script_src, script_dest).
         For a tuple (a, b) the symetric (b, a) for a relation is always present in the relation's list.
-        For the relation twin, the list is all the script that are in relation together.
-        :param script_ast_list: the list of script. must all be in the same layer (paradigm)
+        For the relation twin, the list is all the parser that are in relation together.
+        :param script_ast_list: the list of parser. must all be in the same layer (paradigm)
         :param regex: optional, if true, use the regex algorithm, otherwise, use the ast based algorithm.
         :return:
         """
@@ -28,7 +28,7 @@ class RemarkableSibling:
             OPPOSED_SIBLING_RELATION: [],
             ASSOCIATED_SIBLING_RELATION: [],
             CROSSED_SIBLING_RELATION: [],
-            # list of all script that are in relation
+            # list of all parser that are in relation
             TWIN_SIBLING_RELATION: []
         }
 
@@ -268,7 +268,7 @@ def factor(sequences):
     # same but now there is a bijection between the coordinate system and the primitives semes
     primitives = [bidict({i: s for i, s in enumerate(p_set)}) for p_set in primitives]
 
-    # hold the mapping coordinate -> script
+    # hold the mapping coordinate -> parser
     scripts = {tuple(primitives[i].inv[seme] for i, seme in enumerate(s)):s for s in sequences}
 
     # hold the primitive as coodinate described in scripts keys
@@ -341,7 +341,7 @@ def factor(sequences):
 
 def pack_factorisation(facto_list):
     """
-    :param facto_list: list of script or tuple of factorisation
+    :param facto_list: list of parser or tuple of factorisation
     :return:
     """
     _sum = []
@@ -371,7 +371,7 @@ def factorize(script):
     return result
 
 if __name__ == '__main__':
-    from ieml.parsing.script import ScriptParser
+    from ieml.script.parser import ScriptParser
     script = ScriptParser().parse("M:M:.U:M:.-+F:F:.-+F:O:.A:.T:.-")
 
     l = ['S:A:A:.','B:A:A:.','T:A:A:.', 'S:A:B:.', 'B:A:B:.', 'T:A:B:.']

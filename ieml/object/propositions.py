@@ -1,18 +1,17 @@
 from functools import total_ordering
 
-from .terms import Term
-from .commons import PropositionPath, AbstractProposition
-from .constants import MAX_TERMS_IN_MORPHEME
-from ieml.script.constants import AUXILIARY_CLASS, VERB_CLASS, NOUN_CLASS
-from .propositional_graph import PropositionGraph
-from .tree_metadata import ClosedPropositionMetadata, NonClosedPropositionMetadata
 from ieml.exceptions import IndistintiveTermsExist, InvalidConstructorParameter, \
     InvalidClauseComparison, SentenceHasntBeenChecked, TooManyTermsInMorpheme
+from ieml.object.commons import PropositionPath, AbstractProposition
+from ieml.object.tree_metadata import ClosedPropositionMetadata, NonClosedPropositionMetadata
+from .constants import MAX_TERMS_IN_MORPHEME
+from .propositional_graph import PropositionGraph
+from .terms import Term
 
 
 class ClosedProposition:
     """Interface class added to propositions that can be closed to be used in a USL
-    These propositions, even if they're not truly closed in the script, are the only one
+    These propositions, even if they're not truly closed in the parser, are the only one
     that can link to USL's"""
     def __init__(self):
         super().__init__()

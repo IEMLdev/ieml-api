@@ -1,6 +1,8 @@
 from .db import BaseDBTest
-from ieml.AST.tree_metadata import TreeElementMetadata
+
 from ieml import PropositionsParser
+from ieml.object.tree_metadata import TreeElementMetadata
+
 
 class TestMetadata(BaseDBTest):
 

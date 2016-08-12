@@ -21,7 +21,7 @@ class PathCannotBeEmpty(PropositionPathErrors):
 
 class InvalidScript(Exception):
     def __str__(self):
-        return "Invalid arguments to create a script."
+        return "Invalid arguments to create a parser."
 
 
 class InvalidScriptCharacter(InvalidScript):
@@ -29,7 +29,7 @@ class InvalidScriptCharacter(InvalidScript):
         self.character = character
 
     def __str__(self):
-        return 'Invalid character %s for a script.'%str(self.character)
+        return 'Invalid character %s for a parser.'%str(self.character)
 
 
 class IncompatiblesScriptsLayers(InvalidScript):

@@ -1,11 +1,12 @@
 import re
 
-import ieml.AST.terms
+from pymongo.errors import DuplicateKeyError
+
+import ieml.AST
+import ieml.object.terms
 from models.exceptions import PropositionAlreadyExists, ObjectTypeNotStoredinDB, ObjectNotFound
 from .base_queries import DBConnector
 from .constants import PROPOSITION_COLLECTION, TAG_LANGUAGES
-import ieml.AST
-from pymongo.errors import DuplicateKeyError
 
 
 class PropositionsQueries(DBConnector):
@@ -29,7 +30,7 @@ class PropositionsQueries(DBConnector):
 
     def check_proposition_stored(self, proposition):
         """Retrieves the objectid of an IEML primitive"""
-        if isinstance(proposition, ieml.AST.terms.Term):
+        if isinstance(proposition, ieml.object.terms.Term):
             return self.old_terms.find_one({"IEML": proposition.ieml}) is not None
         elif isinstance(proposition, (ieml.AST.Sentence, ieml.AST.Word, ieml.AST.SuperSentence)):
             return self._check_proposition_exist(str(proposition))

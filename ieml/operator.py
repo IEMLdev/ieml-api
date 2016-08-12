@@ -1,10 +1,12 @@
 from ieml.AST.propositions import SuperSentence, Word, Sentence, Morpheme
-from ieml.AST.terms import Term
-from ieml.AST.usl import HyperText, Text
-from ieml.parsing.script.parser import ScriptParser
+
+from ieml.object.parser.parser import USLParser
+from ieml.object.terms import Term
+from ieml.object.usl import HyperText, Text
 from ieml.script import Script
-from ieml.script.script import MultiplicativeScript
-from ieml.parsing.parser import USLParser
+from ieml.script.parser import MultiplicativeScript
+from ieml.script.parser import ScriptParser
+
 
 def m(substance, attribute=None, mode=None):
     children = (substance, attribute, mode)

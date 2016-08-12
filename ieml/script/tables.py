@@ -1,11 +1,11 @@
-from ieml.script import AdditiveScript, MultiplicativeScript
 from collections import namedtuple
+
 import numpy as np
+
+from ieml.script import AdditiveScript, MultiplicativeScript
 from models.relations.relations import RelationsConnector
-from ieml.parsing.script import ScriptParser
 
-
-Variable = namedtuple('Variable', ['address', 'script'])
+Variable = namedtuple('Variable', ['address', 'parser'])
 
 
 class Table:
@@ -82,7 +82,7 @@ def generate_tables(parent_script, ):
                 table_list.extend(generate_tables(child))
             return table_list
     elif isinstance(parent_script, MultiplicativeScript):
-        # Holds the plural vars of the multiplicative script and their position in the script
+        # Holds the plural vars of the multiplicative parser and their position in the parser
         # 0: substance, 1: attribute, 2: mode
         plural_vars = [Variable(i, child) for (i, child) in enumerate(parent_script.children) if child.cardinal > 1]
         if len(plural_vars) == 3:  # We build a 3D table
@@ -458,7 +458,7 @@ def _is_sublist(small_list, big_list):
 
 if __name__ == "__main__":
 
-    from ieml.parsing.script import ScriptParser
+    from ieml.script.parser import ScriptParser
 
     sp = ScriptParser()
     s = sp.parse("m.-M:O:.-'m.-M:O:.-',E:A:S:.-',+E:A:T:.-',E:.-',+E:A:T:.-',+s.o.-m.o.-',_")

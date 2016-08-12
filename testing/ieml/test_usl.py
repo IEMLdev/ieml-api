@@ -1,7 +1,5 @@
-import unittest
-
 from ieml.AST import RandomPropositionGenerator, Sentence, HyperText, Text, Word, PropositionPath
-from ieml.AST.tools import promote_to
+from ieml.object.tools import promote_to
 from .helper import *
 
 

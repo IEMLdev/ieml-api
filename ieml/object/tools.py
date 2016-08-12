@@ -1,11 +1,12 @@
 import random
 
-from ieml.AST.constants import MAX_TERMS_IN_MORPHEME, MAX_NODES_IN_SENTENCE
-from ieml.exceptions import CannotPromoteToLowerLevel, CannotDemoteProposition, PropositionNotIncluded
 from .propositions import Word, Morpheme, Clause, Sentence, SuperSentence, SuperClause, \
     AbstractAdditiveProposition, AbstractClause, AbstractProposition
-from ieml.AST import Term
+
 from helpers import Singleton
+from ieml.AST import Term
+from ieml.exceptions import CannotPromoteToLowerLevel, CannotDemoteProposition
+from ieml.object.constants import MAX_NODES_IN_SENTENCE
 from models.base_queries import DictionaryQueries
 
 terms_level_order = [Term, Morpheme, Word, Clause, Sentence, SuperClause, SuperSentence]

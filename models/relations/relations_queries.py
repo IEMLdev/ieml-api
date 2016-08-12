@@ -1,18 +1,19 @@
 import logging
 from collections import defaultdict
 
-from ieml.exceptions import InvalidScript
-from ieml.parsing.script import ScriptParser
+import progressbar
+
 from ieml.script import CONTAINED_RELATION, CONTAINS_RELATION, RemarkableSibling, TWIN_SIBLING_RELATION, \
     ASSOCIATED_SIBLING_RELATION, CROSSED_SIBLING_RELATION, OPPOSED_SIBLING_RELATION, ATTRIBUTE, SUBSTANCE, MODE, \
     ELEMENTS, FATHER_RELATION, CHILD_RELATION, AdditiveScript, NullScript, Script, SCRIPT_RELATIONS
 from ieml.script.constants import ROOT_RELATION
+from ieml.script.parser import ScriptParser
 from ieml.script.tables import get_table_rank
 from models.constants import RELATION_COMPUTING, SCRIPT_INSERTION, SCRIPT_DELETION
 from models.exceptions import NotARootParadigm, CantRemoveNonEmptyRootParadigm, InvalidRelationTitle, \
-    TermNotFound, InvalidRelationCollectionState
+    InvalidRelationCollectionState
 from models.relations.relations import RelationsConnector, safe_execution
-import progressbar
+
 
 class RelationsQueries:
     @classmethod
@@ -26,8 +27,8 @@ class RelationsQueries:
     @safe_execution(SCRIPT_INSERTION)
     def save_script(cls, script, root=False, recompute_relations=True, verbose=False):
         """
-        Save a script in the relation collection.
-        :param script: the script to save (str or Script instance)
+        Save a parser in the relation collection.
+        :param script: the parser to save (str or Script instance)
         :param root: if the associated term is a root paradigm.
         :param inhibition: the list of roots paradigms with their inhibitions.
         :param recompute_relations: if we must recompute the relations
@@ -49,13 +50,13 @@ class RelationsQueries:
     @safe_execution(SCRIPT_INSERTION)
     def save_multiple_script(cls, list_script, recompute_relations=True, verbose=False):
         """
-        Save multiple script in a single transaction. This method doesn't compute the relation multiple times, improving
+        Save multiple parser in a single transaction. This method doesn't compute the relation multiple times, improving
         the computational speed than multiple call of save_script.
-        :param list_script: the list of script, must be a list with the given pattern :
+        :param list_script: the list of parser, must be a list with the given pattern :
         [ {
-            'AST': Script (the instance of Script for this script),
-            'ROOT': bool (if the script is a root paradigm)
-            } for each script to save, ...
+            'AST': Script (the instance of Script for this parser),
+            'ROOT': bool (if the parser is a root paradigm)
+            } for each parser to save, ...
         ]
         :param inhibition: list of root paradigm with theirs inhibitions.
         :return:
@@ -85,8 +86,8 @@ class RelationsQueries:
     @classmethod
     def check_removable(cls, script):
         """
-        Check that script is removable, if the script is not a non-empty root paradigm.
-        :param script: the script to check if removable.
+        Check that parser is removable, if the parser is not a non-empty root paradigm.
+        :param script: the parser to check if removable.
         :return: None
         """
         script_ast = cls._to_ast(script)
@@ -100,8 +101,8 @@ class RelationsQueries:
     @safe_execution(SCRIPT_DELETION)
     def remove_script(cls, script, recompute_relations=True, verbose=False):
         """
-        Remove a script in the relation collection. Recompute the relation to keep the coherence of the collection.
-        :param script: the script to remove.
+        Remove a parser in the relation collection. Recompute the relation to keep the coherence of the collection.
+        :param script: the parser to remove.
         :param inhibition: list of root paradigm with their inhibition, must be specified if recompute_relation is true
         :param recompute_relations: optinonal, if set recompute the relation after the removing.
         :return: None
@@ -112,7 +113,7 @@ class RelationsQueries:
         if not cls.check_removable(script_ast):
             raise CantRemoveNonEmptyRootParadigm(script_ast)
 
-        # Remove the script
+        # Remove the parser
         script_entry = RelationsConnector().get_script(script_ast)
         RelationsConnector().remove_script(script_ast)
 
@@ -132,7 +133,7 @@ class RelationsQueries:
     def root_paradigms(cls, script_list=None):
         """
         Get a list of all the root paradigm saved in the database.
-        :param script_list: optional, a set of script to get the subset of root paradigms.
+        :param script_list: optional, a set of parser to get the subset of root paradigms.
         :return: a list of the ieml of root paradigms.
         """
         pipeline = []
@@ -145,7 +146,7 @@ class RelationsQueries:
     @classmethod
     def paradigm(cls, script):
         """
-        Get all the script in the paradigm argument plus the script argument.
+        Get all the parser in the paradigm argument plus the parser argument.
         :param script: the paradigm to get.
         :return: list of entries
         """
@@ -164,7 +165,7 @@ class RelationsQueries:
         There is three stages of relations computation, the three positional arguments root_paradigms, inhibitions
         and globals are responsible of each stages.
 
-        This operation is polynomial on the number of script impacted in this collection for the two first stages. All
+        This operation is polynomial on the number of parser impacted in this collection for the two first stages. All
         the scripts in each of the paradigms in roots_paradigms for the local stage, and all the scripts of the collection
         for the global stage. It is linear for the inhibition stage given the size of elements in all the paradigms to
         inhibit. To display a progressbar of the processing, set verbose to True.
@@ -191,9 +192,9 @@ class RelationsQueries:
     @classmethod
     def relations(cls, script, relation_title=None, pack_ancestor=False, max_depth_father=-1, max_depth_child=-1):
         """
-        Relation getter, get the relations for the argument script. If relation_title is specified, return the relation
+        Relation getter, get the relations for the argument parser. If relation_title is specified, return the relation
         with the given name. For the relation_title that can be specified, see the list in constant of ieml.
-        :param script: the script to get the relation from. (str or Script instance)
+        :param script: the parser to get the relation from. (str or Script instance)
         :param relation_title: optional, the name of a particular relation to see.
         :param pack_ancestor: pack the ancestors relations.
         :param max_depth_father: the max depth we fetch the ancestors.
@@ -234,7 +235,7 @@ class RelationsQueries:
         if paradigm_entry['ROOT'] != str(paradigm_ast):
             raise NotARootParadigm(paradigm_ast)
 
-        # Compute the list of script in the paradigm
+        # Compute the list of parser in the paradigm
         scripts_ast = [cls._to_ast(s['_id']) for s in cls.paradigm(paradigm_ast)]
 
         # erase the RELATIONS field
@@ -295,8 +296,8 @@ class RelationsQueries:
     @classmethod
     def _do_inhibition(cls, inhibition, verbose=False):
         """
-        Remove the relations for each script that are inhibited in the inhibition list in argument.
-        :param inhibition: a list of couple (script <str>, inbition list <list of str>)
+        Remove the relations for each parser that are inhibited in the inhibition list in argument.
+        :param inhibition: a list of couple (parser <str>, inbition list <list of str>)
         :return: None
         """
         bar = cls._get_progressbar(verbose)
@@ -381,9 +382,9 @@ class RelationsQueries:
     @classmethod
     def _compute_fathers(cls, script_ast):
         """
-        Compute the father relationship. For a given script, it is all the sub element attribute, mode, substance for a
+        Compute the father relationship. For a given parser, it is all the sub element attribute, mode, substance for a
         given depth.
-        :param script_ast: the script to calculate the relations to.
+        :param script_ast: the parser to calculate the relations to.
         :return: the relation entry in the form of :
         {
             SUBSTANCE: {
@@ -437,7 +438,7 @@ class RelationsQueries:
         """
         Compute the children relations and save it. The relations collection must have already calculated the father
         relationship, otherwise the children relations will be invalid.
-        :param script_str: the script to calculate the relation to.
+        :param script_str: the parser to calculate the relation to.
         :return: None
         """
         script_entry = RelationsConnector().get_script(script_str)
@@ -476,7 +477,7 @@ class RelationsQueries:
     def _save_relation(cls, script, relation_title, relations):
         """
         Save the given relations in the collection.
-        :param script: the script which we had the relation
+        :param script: the parser which we had the relation
         :param relation_title: the relation title
         :param relations: the relation value
         :return: None
@@ -492,8 +493,8 @@ class RelationsQueries:
     @classmethod
     def _compute_containing_relations(cls, scripts_ast):
         """
-        Compute all the contained relations for this script and save the resulting relations.
-        :param scripts_ast: the script ast to compute contained relations.
+        Compute all the contained relations for this parser and save the resulting relations.
+        :param scripts_ast: the parser ast to compute contained relations.
         :return: None
         """
         contains = {}
@@ -538,8 +539,8 @@ class RelationsQueries:
     @classmethod
     def _inhibit_relations(cls, script_str, inhibits=None):
         """
-        Inhibit a script relation given the inhibit dict.
-        :param script_str: the script to inhibit.
+        Inhibit a parser relation given the inhibit dict.
+        :param script_str: the parser to inhibit.
         :param inhibits: the dict of relation to inhibit.
         :return: None
         """

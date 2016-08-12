@@ -8,7 +8,7 @@
 # from .parser import *
 # from .rank import *
 # from .relations_script import *
-# from .script import *
+# from .parser import *
 # from .script_parser import *
 # from .tables import *
 # from .tools import *

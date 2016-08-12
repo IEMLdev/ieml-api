@@ -6,7 +6,7 @@ import ply.yacc as yacc
 from helpers.metaclasses import Singleton
 from ieml.exceptions import CannotParse, InvalidScript
 from ieml.script.constants import REMARKABLE_ADDITION
-from ieml.script.script import NullScript
+from ieml.script.parser import NullScript
 from .lexer import get_script_lexer, tokens
 from ieml.script import AdditiveScript, MultiplicativeScript
 from functools import lru_cache
@@ -148,7 +148,7 @@ class ScriptParser(metaclass=Singleton):
                                             | script_lvl_%d PLUS sum_lvl_%d"""%((layer,)*4)
             result.append(function)
 
-            # additive script rule
+            # additive parser rule
             function = types.FunctionType(_additive.__code__, _additive.__globals__)
             function.__name__ = 'p_additive_script_lvl_%d'%layer
             function.__doc__ = "additive_script_lvl_%d : sum_lvl_%d "%((layer,)*2)

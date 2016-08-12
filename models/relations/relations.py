@@ -90,9 +90,9 @@ class RelationsConnector(DBConnector, metaclass=Singleton):
 
     def get_script(self, script):
         """
-        Get the relations collection entry for the given script.
-        :param script: the script to get, str or Script instance.
-        :return: the script entry.
+        Get the relations collection entry for the given parser.
+        :param script: the parser to get, str or Script instance.
+        :return: the parser entry.
         """
         entry = self.relations.find_one({"_id": str(script)})
         if not entry:
@@ -116,7 +116,7 @@ class RelationsConnector(DBConnector, metaclass=Singleton):
         """
         Get all singular sequences of the all terms or of a given paradigm.
         :param paradigm: optional, the paradigm to get the singular sequence, if not, get all the singular sequence of
-        the saved script.
+        the saved parser.
         :return: a list of singular sequences.
         """
         if paradigm:
@@ -135,21 +135,21 @@ class RelationsConnector(DBConnector, metaclass=Singleton):
 
     def remove_script(self, script_ast):
         """
-        Remove a script from the relations collection.
-        :param script_ast: the script to remove
+        Remove a parser from the relations collection.
+        :param script_ast: the parser to remove
         :return: None
         """
         if not self.exists(script_ast):
-            logging.warning("Deletion of a non existent script %s from the collection relation." % str(script_ast))
+            logging.warning("Deletion of a non existent parser %s from the collection relation." % str(script_ast))
             return
 
         self.relations.remove({'_id': str(script_ast)})
 
     def save_script(self, script_ast, root=False):
         """
-        Save a script in the relation collection.
+        Save a parser in the relation collection.
         :param script_ast: the Script instance to save.
-        :param root: if this script is a root paradigm.
+        :param root: if this parser is a root paradigm.
         :return: None
         """
         if script_ast.paradigm:
@@ -161,7 +161,7 @@ class RelationsConnector(DBConnector, metaclass=Singleton):
         """
         Save a paradigm to the database.
 
-        :param script_ast: the string of the script or an Script object.
+        :param script_ast: the string of the parser or an Script object.
         :param root: true if the paradigm is a root paradigm
         :return: None
         """
@@ -176,7 +176,7 @@ class RelationsConnector(DBConnector, metaclass=Singleton):
     def _save_singular_sequence(self, script_ast):
         """
         Save a singular sequence (not a paradigm)
-        :param script_ast: the script to save
+        :param script_ast: the parser to save
         :return: None
         """
         # check if a singular sequence

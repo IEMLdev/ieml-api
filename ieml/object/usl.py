@@ -1,8 +1,9 @@
-from ieml.AST.tree_metadata import TextMetadata, HypertextMetadata
-from ieml.exceptions import InvalidPathException, EmptyTextException
-from ieml.AST.propositions import ClosedProposition, Word, Sentence, SuperSentence
 from ieml.AST.propositional_graph import HyperTextGraph
-from ieml.AST.commons import PropositionPath, TreeStructure, AbstractPropositionMetaclass
+
+from ieml.exceptions import InvalidPathException, EmptyTextException
+from ieml.object.commons import PropositionPath, TreeStructure, AbstractPropositionMetaclass
+from ieml.object.propositions import ClosedProposition, Word, Sentence, SuperSentence
+from ieml.object.tree_metadata import TextMetadata, HypertextMetadata
 
 
 class Tag:
