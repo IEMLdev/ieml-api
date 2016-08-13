@@ -54,7 +54,16 @@ class InvalidASTType(DBException):
     pass
 
 
-class InvalidScript(DBException):
+class CollectionAlreadyLocked(DBException):
+    def __init__(self, pid, role):
+        self.pid = pid
+        self.role = role
+
+    def __str__(self):
+        return 'Unable to lock the collection, process id:%d has already locked it for role:%s.'%(self.pid, self.role)
+
+
+class InvalidScriptArgument(DBException):
     def __init__(self, script):
         self.script = script
 
@@ -79,7 +88,8 @@ class RootParadigmIntersection(DBException):
             self.intersection = str(' '.join(map(str, self.intersection)))
 
     def __str__(self):
-        return 'Singular sequences intersection detected when adding the root paradigm : %s with the following paradigm : %s'%(str(self.to_add), str(self.intersection))
+        return 'Singular sequences intersection detected when adding the root paradigm : %s with the following ' \
+               'singular sequences : %s'%(str(self.to_add), str(self.intersection))
 
 
 class ParadigmAlreadyExist(DBException):

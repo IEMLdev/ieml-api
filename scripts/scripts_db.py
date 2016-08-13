@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
+import os
+import subprocess
+
 import progressbar
 import pprint
+
+import sys
+
 from ieml.parsing import ScriptParser
 from models.relations.relations_queries import RelationsQueries
 from models.relations.relations import RelationsConnector
@@ -9,27 +15,17 @@ from ieml.script.constants import OPPOSED_SIBLING_RELATION, ASSOCIATED_SIBLING_R
     TWIN_SIBLING_RELATION, FATHER_RELATION, SUBSTANCE, ATTRIBUTE, MODE, CHILD_RELATION, CONTAINED_RELATION, \
     CONTAINS_RELATION,ELEMENTS
 from bidict import bidict
+from handlers.dictionary.commons import relation_name_table
 
 
-inhibits_map_to_relation = bidict({
-    "Crossed siblings": CROSSED_SIBLING_RELATION,
-    "Associated siblings": ASSOCIATED_SIBLING_RELATION,
-    "Twin siblings": TWIN_SIBLING_RELATION,
-    "Opposed siblings": OPPOSED_SIBLING_RELATION,
+def load_db_from_backup(backup='data/terms.tar.gz', compute_relations=True):
+    dir = os.path.dirname(sys.modules[load_db_from_backup.__module__].__file__) + '/..'
+    subprocess.run('cd "%s" && rm -r data/dump/'%dir, shell=True)
+    TermsConnector().terms.drop()
 
-    "Ancestors in mode": FATHER_RELATION + '.' + MODE,
-    "Ancestors in attribute": FATHER_RELATION + '.' + ATTRIBUTE,
-    "Ancestors in substance": FATHER_RELATION + '.' + SUBSTANCE,
+    subprocess.run('cd "%s" && tar xvf "%s" -C data/ && mongorestore data/dump && rm -r data/dump'%(dir, backup), shell=True, check=True)
 
-    "Descendents in mode": CHILD_RELATION + '.' + MODE,
-    "Descendents in attribute": CHILD_RELATION + '.' + ATTRIBUTE,
-    "Descendents in substance": CHILD_RELATION + '.' + SUBSTANCE,
-
-
-    "Contained in": CONTAINED_RELATION,
-    "Belongs to Paradigm": 'ROOT',
-    "Contains": CONTAINS_RELATION
-})
+    TermsConnector().recompute_relations(all_delete=True, verbose=True)
 
 
 def load_old_db():
@@ -43,7 +39,7 @@ def load_old_db():
     relations_inhibits = (scripts.old_db['relviz'].find({}))
     inhibits = {}
     for r in relations_inhibits:
-        inhibits[r['id']] = [inhibits_map_to_relation[k] for k in r['viz']]
+        inhibits[r['id']] = [relation_name_table[k] for k in r['viz']]
 
     terms_list = [{
                 'AST': parser.parse(t['IEML']),
@@ -59,18 +55,6 @@ def load_old_db():
         terms.save_multiple_terms(terms_list)
     print('\n\nDone.', flush=True)
 
-
-def recompute_relations():
-    terms = TermsConnector()
-    paradigms = terms.root_paradigms()
-
-    computation = progressbar.ProgressBar(max_value=len(paradigms))
-    for i, p in enumerate(paradigms):
-        computation.update(i + 1)
-        RelationsQueries.compute_relations(p['_id'])
-
-    RelationsQueries.compute_global_relations()
-    RelationsQueries.do_inhibition(TermsConnector().get_inhibitions())
 
 def check_old_relations():
     terms = TermsConnector()
@@ -126,7 +110,7 @@ def check_old_relations():
                     error(src, r, r['ends'][0], more=True)
                 continue
 
-            type = inhibits_map_to_relation[r['type']]
+            type = relation_name_table[r['type']]
             if type not in script_relations:
                 error(src, r, r['ends'], more=True)
                 continue

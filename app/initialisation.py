@@ -1,10 +1,13 @@
 from flask_socketio import SocketIO
-
+import multiprocessing
 socketio = SocketIO()
 
 def create_app():
     import connexion
     from flask_cors import CORS
+
+    # to start new proccess using the spawn method (start a fresh new python interpretor)
+    multiprocessing.set_start_method('spawn')
 
     # Set this variable to "threading", "eventlet" or "gevent" to test the
     # different async modes, or leave it set to None for the application to choose

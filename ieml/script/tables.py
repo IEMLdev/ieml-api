@@ -366,7 +366,7 @@ def _compute_rank(paradigm, root):
         if tbls[0].dimension == 3 and (dimension == 0 or dimension == 1):
             if len(coordinates[2]) == 1:
                 tbls[0].split_tabs = True
-                header = tbls[0].headers[dimension][coordinates[2]][coordinates[dimension][0]]
+                header = tbls[0].headers[dimension][coordinates[2][0]][coordinates[dimension][0]]
             else:
                 tbls[0].split_tabs = False
                 header = tbls[0].headers[dimension][coordinates[dimension][0]]

@@ -4,7 +4,7 @@ import types
 import ply.yacc as yacc
 
 from helpers.metaclasses import Singleton
-from ieml.exceptions import CannotParse
+from ieml.exceptions import CannotParse, InvalidScript
 from ieml.script.constants import REMARKABLE_ADDITION
 from ieml.script.script import NullScript
 from .lexer import get_script_lexer, tokens
@@ -27,6 +27,7 @@ class ScriptParser(metaclass=Singleton):
     @lru_cache()
     def t_parse(self, s):
         self.root = None
+        self.script = s
         self.parser.parse(s, lexer=self.lexer)
 
         if self.root is not None:
@@ -41,6 +42,7 @@ class ScriptParser(metaclass=Singleton):
             print("Syntax error at '%s' (%d, %d)" % (p.value, p.lineno, p.lexpos))
         else:
             print("Syntax error at EOF")
+        raise CannotParse(self.script)
 
     # Rules
     def p_term(self, p):
