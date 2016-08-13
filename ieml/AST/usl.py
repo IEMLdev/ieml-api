@@ -9,6 +9,7 @@ class Tag:
     def __init__(self, tag_content):
         self.content = tag_content
 
+
 class Text(TreeStructure, metaclass=AbstractPropositionMetaclass):
     """A text is basically a list of *closed* propositions"""
 

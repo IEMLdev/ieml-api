@@ -101,3 +101,8 @@ class RandomPropositionGenerator(metaclass=Singleton):
         else:
             # existent mode
             return Word(self._make_random_morpheme(), self._make_random_morpheme())
+
+
+def gen_random_intersecting_texts(kernel_proposition, random_propositions, count):
+    """Generates random propositions with one proposition in common"""
+    pass

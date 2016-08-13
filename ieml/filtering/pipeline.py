@@ -1,3 +1,4 @@
+import logging
 from math import ceil
 
 from ieml.AST.propositions import SuperSentence
@@ -36,9 +37,11 @@ class USLSet:
         else:
             table_keys = usl_types
 
+        usls = []
         for usl_type in table_keys:
-            for usl in self.usl_table[usl_type]:
-                yield usl
+            usls += self.usl_table[usl_type]
+
+        return usls
 
     def set_usls(self, usl_list, usl_t=None):
         if usl_t is None:
@@ -49,52 +52,24 @@ class USLSet:
         self._sort_usl_from_list(usl_list)
 
 
-class FilteringPipeLine:
-
-    def __init__(self, filters_list, ratios_list):
-        # check if there is an equal number of ratios and filters
-        self._check_ratios_list(filters_list, ratios_list)
-
-    def _check_ratios_list(self, ratios_list, filters_list):
-        if len(ratios_list) == len(filters_list):
-            self.filters = filters_list
-            self.ratios = ratios_list
-            self.couples = zip(filters_list, ratios_list)
-        else:
-            raise Exception("Ratios count doesn't match the filter count")
-
-        if sum(self.ratios) != 1:
-            raise Exception("Ratio sum doesn't sum to 1")
-
-
-    def _apply_single_filter(self, filter, ouput_number, usl_set, query):
-        #returns the filtered set
-        usl_and_score = [(usl, filter.score(query, usl)) for usl in usl_set]
-
-    def filter(self, usl_set, query, ratios_list=None):
-        if ratios_list:
-            self._check_ratios_list(self.filters, ratios_list)
-
-        current_usl_pool = usl_set
-        for filter, ratio in self.couples:
-            outpout__count = ceil(len(current_usl_pool) * ratio)
-            current_usl_pool = self._apply_single_filter(filter, outpout__count, current_usl_pool, query)
-
-
 class AbtractPipeline:
 
     def filter(self, usl_set, query, final_pool_size, ratios_list=None):
         pass
 
-    def _check_ratios_list(self, ratios_list, filters_list):
+    def _check_ratios_list(self, filters_list, ratios_list):
         if len(ratios_list) == len(filters_list):
             self.chained_filters, self.filters_ratios = filters_list, ratios_list
-            self.couples = zip(filters_list, ratios_list)
+            self.couples = list(zip(filters_list, ratios_list))
         else:
             raise Exception("Ratios count doesn't match the filter count")
 
         if sum(ratios_list) != 1:
             raise Exception("Ratio sum doesn't sum to 1")
+
+    @staticmethod
+    def gen_pipeline_from_query(query_usl):
+        return filtering_pipelines_mappings[FilteringLevel.get_usl_filtering_level(query_usl)]
 
 
 class LinearPipeline(AbtractPipeline):
@@ -104,23 +79,47 @@ class LinearPipeline(AbtractPipeline):
     def __init__(self, filters_lists):
         self.filters_list = filters_lists
         self.filters_count = len(self.filters_list)
+        self.scores_list , self.scores_dict= [],{}
+
+    def log_appearance(self, start_pool_size, end_pool_size):
+        logging.debug("Linear Pipeline:")
+        filters_str_reprs = "-->".join("[%s, τ %1.3f]" % (str(filter), ratio) for filter, ratio in self.couples)
+        logging.debug("[%i USL]-->%s-->[%i USL]" % (start_pool_size, filters_str_reprs, end_pool_size))
+
+    def _store_scores(self, filter, score, filtered_usls):
+        filtered_scores = { usl : score[usl] for usl in filtered_usls}
+        self.scores_dict[filter] = filtered_scores
+        self.scores_list.append((filter, filtered_scores))
+
 
     def filter(self, usl_set, query_usl, final_pool_size, ratios_list=None):
         if ratios_list is not None:
             self._check_ratios_list(self.filters_list, ratios_list)
         else:
-            self._check_ratios_list(self.filters_list, [1/self.filters_count] * self.filters_list)
+            self._check_ratios_list(self.filters_list, [1/self.filters_count] * self.filters_count)
 
-        ratio = final_pool_size / len(usl_set)
+        if not isinstance(usl_set, USLSet):
+            # TODO : set the right exception for this case
+            raise Exception("Expecting an USL set object, not an USL List")
+
+        logging.debug("Starting filtering with the following pipeline: ")
         current_usl_pool = usl_set.get_usls()
+        self.log_appearance(len(current_usl_pool), final_pool_size)
+        master_ratio = final_pool_size / len(usl_set)
+
         for filter, ratio_power in self.couples:
             # if there are already not enough elements, let's not uselessly apply the filters
             if len(current_usl_pool) > final_pool_size:
-                current_usl_pool = filter.filter(query_usl, current_usl_pool, pow(ratio, ratio_power))
+                previous_count = len(current_usl_pool)
+                current_usl_pool, scores = filter.filter(query_usl, current_usl_pool, pow(master_ratio, ratio_power))
+                #self._store_scores(filter, scores, current_usl_pool)
+                logging.debug("Removed %i elements at [%s] filter"
+                              % (previous_count - len(current_usl_pool), str(filter)))
             else:
                 break
 
-        return usl_set.set_usls(current_usl_pool)
+        usl_set.set_usls(current_usl_pool)
+        return usl_set
 
 
 class ConditionalPipeline(AbtractPipeline):
