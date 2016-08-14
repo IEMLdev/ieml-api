@@ -39,16 +39,18 @@ class USLSet:
 
         usls = []
         for usl_type in table_keys:
-            usls += self.usl_table[usl_type]
+            if usl_type in self.usl_table:
+                usls += self.usl_table[usl_type]
 
         return usls
 
-    def set_usls(self, usl_list, usl_t=None):
-        if usl_t is None:
+    def set_usls(self, usl_list, usl_types=None):
+        if usl_types is None:
             self.usl_table = {}
         else:
-            for usl_t in usl_t:
-                del self.usl_table[usl_t]
+            for usl_t in usl_types:
+                if usl_t in self.usl_table:
+                    del self.usl_table[usl_t]
         self._sort_usl_from_list(usl_list)
 
 
@@ -62,7 +64,8 @@ class AbtractPipeline:
             self.chained_filters, self.filters_ratios = filters_list, ratios_list
             self.couples = list(zip(filters_list, ratios_list))
         else:
-            raise Exception("Ratios count doesn't match the filter count")
+            raise Exception("Ratios count %i doesn't match the filter count %i" %
+                            (len(ratios_list), len(filters_list)))
 
         if sum(ratios_list) != 1:
             raise Exception("Ratio sum doesn't sum to 1")
@@ -129,21 +132,42 @@ class ConditionalPipeline(AbtractPipeline):
         self.prefixed_filter = prefixed_filter
         self.inner_pipeline = LinearPipeline(filters_list)
 
-    def filter(self, usl_set, query, final_pool_size, ratios_list=None):
-        higher_filtering_levels = FilteringLevel.get_higher_levels(self.prefixed_filter.filtering_level)
+    @property
+    def bf_lvl(self):
+        return self.prefixed_filter.filtering_level
 
+    def log_appearance(self, start_pool_size, end_pool_size):
+        logging.debug("Conditional Pipeline:")
+        prefilter_str_repr = "[%s]" % str(self.prefixed_filter)
+        logging.debug("[%i USL]-->%s-->[UNKNOWN]-->[%i USL]" % (start_pool_size, prefilter_str_repr, end_pool_size))
+
+    def filter(self, usl_set, query, final_pool_size, ratios_list=None):
+        self.log_appearance(len(usl_set.get_usls()), final_pool_size)
+
+        higher_filtering_levels = FilteringLevel.get_higher_levels(self.bf_lvl)
         higher_level_usls = usl_set.get_usls(higher_filtering_levels)
-        pre_filtered_usl_list = self.prefixed_filter.filter(higher_level_usls)
+        pre_filtered_usl_list = self.prefixed_filter.filter(query, higher_level_usls)
         output_list_count = len(pre_filtered_usl_list)
+        logging.debug("Filtered %i of levels %s."
+                      % (len(higher_level_usls) - output_list_count,
+                         str([filt_lvl.name for filt_lvl in higher_filtering_levels])))
         if output_list_count == final_pool_size:
+            logging.debug("Pretty lucky, ended up with the right number of USLs")
             return USLSet(pre_filtered_usl_list)
+
         elif output_list_count > final_pool_size:
             # linear pipeline for higher level USL
+            logging.debug("Still %i too much. Picking a linear pipeline on the remaining USL equal or higher than %s"
+                          % (output_list_count - final_pool_size,
+                             str(self.prefixed_filter.filtering_level.name)))
             linear_pl = LinearPipeline(self.filters_list)
             return linear_pl.filter(USLSet(pre_filtered_usl_list),query, final_pool_size, ratios_list)
+
         else:
             # conditional pipeline on one level lower
-            conditional_pl = filtering_pipelines_mappings[FilteringLevel(higher_filtering_levels.value - 1)]
+            logging.debug("% i too few for objective, picking a conditionnal pipeline for all remaining USLs"
+                          % (final_pool_size - output_list_count))
+            conditional_pl = filtering_pipelines_mappings[FilteringLevel(self.bf_lvl.value - 1)]
             usl_set.set_usls(pre_filtered_usl_list, higher_filtering_levels)
             if ratios_list is None:
                 return conditional_pl.filter(usl_set, query, final_pool_size, ratios_list)

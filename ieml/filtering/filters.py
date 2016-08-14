@@ -97,9 +97,12 @@ class BinaryFilter:
         self.filtering_level = mode
         self.mode = type_mapping[mode]
 
+    def __str__(self):
+        return "BinF(%s)" %  self.mode.__name__
+
     def filter(self, query_usl, usl_list):
         return [usl for usl in usl_list if any(query_obj in usl for query_obj in query_usl.tree_iter()
-                                               if isinstance(query_obj, type_mapping[self.mode]))]
+                                               if isinstance(query_obj, self.mode))]
 
 level_mapping = {
     1: Term,
