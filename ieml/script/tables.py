@@ -2,7 +2,7 @@ from collections import namedtuple
 
 import numpy as np
 
-from ieml.script import AdditiveScript, MultiplicativeScript
+from ieml.script.script import AdditiveScript, MultiplicativeScript
 from models.relations.relations import RelationsConnector
 
 Variable = namedtuple('Variable', ['address', 'parser'])

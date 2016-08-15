@@ -22,6 +22,8 @@ PRIMITVES = {
     'T'
 }
 
+MAX_SINGULAR_SEQUENCES = 360
+
 character_value = {
     'E': 0x1,
     'U': 0x2,
