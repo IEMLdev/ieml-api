@@ -39,13 +39,22 @@ class FilteringLevel(Enum):
             return cls.UNITERM_WORD # reached only if all words are monoterm
 
     @classmethod
+    def get_proposition_filtering_level(cls, proposition):
+        if isinstance(proposition, (Sentence, SuperSentence)):
+            return cls.SENTENCE if isinstance(proposition, Sentence) else cls.SUPERSENTENCE
+        else:
+            if len(proposition.subst.children) != 1 or proposition.mode is not None:
+                return cls.MULTITERM_WORD
+            else:
+                return cls.UNITERM_WORD
+
+    @classmethod
     def get_higher_levels(cls, level):
         return [cls(index) for index in range(level.value, cls.SUPERSENTENCE.value + 1)]
 
 
-
 class AbstractFilter:
-    def __init__(self, level=1, ratio=None):
+    def __init__(self, level=Term, ratio=None):
         self.level = level
         self.ratio = ratio
 
@@ -78,18 +87,19 @@ class IndicatorFilter(AbstractFilter):
         self.indicator = indicator_function
 
     def filter(self, query_usl, usl_list, ratio):
-        usl_score = {usl: self.indicator(level_mapping[self.level], query_usl, usl) for usl in usl_list}
+        usl_score = {usl: self.indicator(self.level, query_usl, usl) for usl in usl_list}
         sorted_by_score = sorted(usl_score, key=lambda e: usl_score[e], reverse=True)
         return sorted_by_score[:ceil(ratio * len(usl_list))], usl_score
 
     def __str__(self):
-        function_to_symbol_mappin = {
+        function_to_symbol_mapping = {
             set_proximity_index : "EO",
             object_proximity_index : "(O,O)",
             connexity_index : "(O-O)",
             mutual_inclusion_index: "(O,o)"
         }
-        return function_to_symbol_mappin[self.indicator] + " lvl %i" % self.level
+        return function_to_symbol_mapping[self.indicator] + " lvl %s" % self.level
+
 
 class BinaryFilter:
 
@@ -100,16 +110,16 @@ class BinaryFilter:
     def __str__(self):
         return "BinF(%s)" %  self.mode.__name__
 
-    def filter(self, query_usl, usl_list):
-        return [usl for usl in usl_list if any(query_obj in usl for query_obj in query_usl.tree_iter()
-                                               if isinstance(query_obj, self.mode))]
+    def _filter_by_lvl(self, propositions_list):
+        return {proposition for proposition in propositions_list
+                if FilteringLevel.get_proposition_filtering_level(proposition) == self.filtering_level}
 
-level_mapping = {
-    1: Term,
-    2: Word,
-    3: Sentence,
-    4: SuperSentence
-}
+    def filter(self, query_usl, usl_list):
+        """Filters out the USL who's propositions of the filter's filteringlevel do not intersect with the queries's
+        proposition of the same filteringlevel"""
+        query_usl_propositions = self._filter_by_lvl(query_usl.texts[0].children)
+        return [usl for usl in usl_list
+                if query_usl_propositions.intersection(self._filter_by_lvl(usl.texts[0].children))]
 
 type_mapping = {
     FilteringLevel.MULTITERM_WORD: Word,

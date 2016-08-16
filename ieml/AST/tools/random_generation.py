@@ -103,6 +103,20 @@ class RandomPropositionGenerator(metaclass=Singleton):
             return Word(self._make_random_morpheme(), self._make_random_morpheme())
 
 
-def gen_random_intersecting_texts(kernel_proposition, random_propositions, count):
-    """Generates random propositions with one proposition in common"""
-    pass
+class BulkUSLGenerator:
+
+    def __init__(self, term_pool_page_size=100):
+        self.page_size = term_pool_page_size
+        self.terms_pool = []
+
+    def _get_random_terms(self, count=1):
+        current_pool_count = self.terms_pool
+        if count >= len(self.terms_pool):
+            # pull more terms from the DB, then shuffle them
+            self.terms_pool += [Term(term_ieml) for term_ieml in get_random_terms(self.page_size)]
+
+        # updating the pool to a slice, and returning the end slice
+        # [----------------that slice we keep--------------|----that slice is return'd----]
+        output_slice = self.terms_pool[current_pool_count - count, current_pool_count]
+        self.terms_pool = self.terms_pool[0:current_pool_count - count]
+        return output_slice
