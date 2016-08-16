@@ -1,56 +1,58 @@
 from ieml.AST.terms import Term
+from ieml.AST.propositions import Word, Sentence, SuperSentence
 from ieml.script.tables import generate_tables
 from ieml.operator import sc
-from collections import namedtuple
+from collections import namedtuple, defaultdict
 from ieml.script.constants import AUXILIARY_CLASS, VERB_CLASS, NOUN_CLASS
 from models.terms import TermsConnector
 import numpy as np
 
 ScoreNode = namedtuple('ScoreNode', ['script', 'score'])
+Cache = namedtuple('Cache', ['source_layer', 'source_class'])
+ParadigmMetadata = namedtuple('ParadigmMetadata', ['score', 'citation_count', 'nouns', 'auxiliary', 'verb'])
 
 
-def rank_paradigms(paradigms_list, usl_list):
+def _build_cache(usl_collection):
+
+    # For every term we associate a vector where each coordinate is the number of citations from a given layer
+    # First coordinate: SuperSentence
+    # Second coordinate: Sentence
+    # Third coordinate: Word
+    source_layer = defaultdict(lambda: [0, 0, 0])
+    source_class = defaultdict(lambda: [0, 0, 0])
+
+    for usl in usl_collection:
+        for elem in usl.tree_iter():
+            terms = [term for term in usl.tree_iter() if isinstance(term, Term)]
+            for t in terms:
+                source_layer[t.script][coordinate[elem.__class__]] += 1
+                source_class[t.script][elem.grammatical_class] += 1
+
+
+    return Cache(source_layer=source_layer, source_class=source_class)
+
+_cache = None
+
+
+def rank_paradigms(paradigm_list, usl_collection):
     """
 
-    :param paradigms_list: list of all the root paradigms in our database
-    :param usl_list: the usl collection we want to analyse
-    :return:the ordered list of the root paradigms the most cited by the usl_list,
-    first element of the list is the most cited root paradigm, and the dictionary of paradigms which associates a list
-    list[0] : score of thr root paradigm, list[1] : number of noun citing the root paradigm
-    list[2] : number of aux citing the root paradigm, list[3] : number of verb citing the root paradigm
+    Parameters
+    ----------
+    paradigm_list
+    usl_collection
+
+    Returns
+    -------
+
     """
-    paradigms = {p:[0,0,0,0] for p in paradigms_list}
-    #paradigms = {p:0 for p in paradigms_list}
-    # value is a list of 4 elements which correspond to :
-    # a- how many times the root paradigm p is cited
-    # b- number of noun citing p
-    # c- number of auxiliary citing p
-    # d- number of verb citing p
-    # so a = b + c + d
 
-    for usl in usl_list:
-        term_list = [term for term in usl.tree_iter() if isinstance(term, Term)]
-        for term in term_list:
-            for paradigm in paradigms_list:
-                p_term = Term(sc(paradigm))
-                if set(term.script.singular_sequences) <= set(p_term.script.singular_sequences):
-                    paradigms[paradigm][0] += 1
-                    # verifify the grammatical of the term citing the root paradigm
-                    if term.grammatical_class == NOUN_CLASS:
-                        paradigms[paradigm][1] += 1
-                    elif term.grammatical_class == AUXILIARY_CLASS:
-                        paradigms[paradigm][2] += 1
-                    elif term.grammatical_class == VERB_CLASS:
-                        paradigms[paradigm][3] += 1
+    global _cache
+    if not _cache:
+        _cache = _build_cache(usl_collection)
 
-
-    # we remove the root paradigms which are not cited by usl_list
-    for p in paradigms_list:
-        if paradigms[p][0] == 0:
-       # if paradigms[p] == 0:
-            del paradigms[p]
-
-    return sorted(paradigms, key= lambda e: paradigms[e][0], reverse=True), paradigms
+    for paradigm in paradigm_list:
+        pass
 
 
 # 3 Pour chaque paradigme-racine, une liste ordonnée des USLs qui le citent le plus
@@ -122,7 +124,6 @@ def rank_usl_single_term(term, usl_collection):
     return sorted(usl_collection, key=lambda e: score_count[usl_id_map[e]], reverse=True)
 
 
-
 def paradigm_usl_distribution(paradigm, usl_collection):
     """
 
@@ -163,6 +164,20 @@ def paradigm_usl_distribution(paradigm, usl_collection):
                     dist_tables[term_loc.table][term_loc.coords[0][0]][term_loc.coords[1][0]][term_loc.coords[2][0]] += 1
 
     return dist_tables
+
+
+coordinate = {
+    SuperSentence: 0,
+    Sentence: 1,
+    Word: 2
+}
+
+
+score = {
+    Word: 1,
+    Sentence: 2,
+    SuperSentence: 3
+}
 
 if __name__ == '__main__':
 
