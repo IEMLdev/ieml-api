@@ -1,4 +1,5 @@
 from collections import defaultdict
+from functools import total_ordering
 
 import numpy
 
@@ -6,9 +7,42 @@ from ieml.commons import TreeStructure
 from ieml.exceptions import NoRootNodeFound, SeveralRootNodeFound, NodeHasNoParent, NodeHasTooMuchParents
 
 
-class IEMLObjects(TreeStructure):
+@total_ordering
+class IEMLType(type):
+    """This metaclass enables the comparison of class times, such as (Sentence > Word) == True"""
+
+    def __gt__(self, other):
+        from ieml.ieml_objects.terms import Term
+        from ieml.ieml_objects.words import Morpheme, Word
+        from ieml.ieml_objects.sentences import Clause, Sentence, SuperClause, SuperSentence
+
+        child_list = [Term, Morpheme, Word, Clause, Sentence, SuperClause, SuperSentence]
+        return child_list.index(self) > child_list.index(other)
+
+    def __lt__(self, other):
+        from ieml.ieml_objects.terms import Term
+        from ieml.ieml_objects.words import Morpheme, Word
+        from ieml.ieml_objects.sentences import Clause, Sentence, SuperClause, SuperSentence
+
+        child_list = [Term, Morpheme, Word, Clause, Sentence, SuperClause, SuperSentence]
+        return child_list.index(self) < child_list.index(other)
+
+
+class IEMLObjects(TreeStructure, metaclass=IEMLType):
     def __init__(self):
         super().__init__()
+
+    def __gt__(self, other):
+        if not isinstance(other, IEMLObjects):
+            raise NotImplemented
+
+        if self.__class__ != other.__class__:
+            return self.__class__ > other.__class__
+
+        return self._do_gt(other)
+
+    def _do_gt(self, other):
+        raise NotImplemented
 
 
 class TreeGraph():
