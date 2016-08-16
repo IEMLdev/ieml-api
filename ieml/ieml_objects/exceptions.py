@@ -6,7 +6,7 @@ class InvalidIEMLObjectArgument(Exception):
         self.msg = msg
 
     def __str__(self):
-        return 'Invalid arguments to create a %s object. %s'%(str(self.type), str(self.msg))
+        return 'Invalid arguments to create a %s object. %s'%(self.type.__name__, str(self.msg))
 
 
 class TermNotFoundInDictionary(InvalidIEMLObjectArgument):
