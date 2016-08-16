@@ -135,6 +135,12 @@ class Script(TreeStructure):
     def _compute_singular_sequences(self):
         pass
 
+    def __contains__(self, item):
+        if not isinstance(item, Script):
+            return False
+
+        return set(item.singular_sequences).issubset(set(self.singular_sequences))
+
     @property
     def singular_sequences(self):
         if self._singular_sequences:
