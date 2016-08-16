@@ -175,6 +175,32 @@ paths:
           description: |
             a list of resources ranked by similarity
 
+  /intlekt/edition/usl_to_json:
+    get:
+      operationId: handlers.usl_to_json
+      tags:
+        - Intlekt
+      description: |
+        Parse and return the json content of an usl ieml script.
+      parameters:
+        - name: usl
+          in: query
+          description: |
+            The usl ieml.
+          required: true
+          type: string
+          description: |
+            The usl to decompose and return the json
+        - name: language
+          in: query
+          description: |
+            The language to get the title in.
+          type: string
+      responses:
+        '200':
+          description: |
+            a nested json displaying the usl construction.
+
   ##############################
   ## FOR THE DICTIONARY'S API ##
   ##############################
