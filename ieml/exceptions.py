@@ -12,55 +12,12 @@ class PropositionPathErrors(CommonsException):
 class PathCannotBeEmpty(PropositionPathErrors):
     pass
 
-### Exception raise by the Script
 
-
-# class InvalidScriptForTableCreation(Exception):
-#     pass
-
-
-class InvalidScript(Exception):
-    def __str__(self):
-        return "Invalid arguments to create a parser."
-
-
-class InvalidScriptCharacter(InvalidScript):
-    def __init__(self, character):
-        self.character = character
-
-    def __str__(self):
-        return 'Invalid character %s for a parser.'%str(self.character)
-
-
-class IncompatiblesScriptsLayers(InvalidScript):
-    def __init__(self, s1, s2):
-        self.s1 = s1
-        self.s2 = s2
-
-    def __str__(self):
-        return 'Unable to add the two scripts %s, %s they have incompatible layers.'%(str(self.s1), str(self.s2))
-
-
-class NoRemarkableSiblingForAdditiveScript(Exception):
-    pass
 ### These exeception are raised by the AST
 
 
 class ASTException(Exception):
     pass
-
-
-class TermException(ASTException):
-
-    def __init__(self, terms_ieml):
-        super().__init__()
-        self.terms_ieml = terms_ieml
-
-
-class IEMLTermNotFoundInDictionnary(TermException):
-
-    def __str__(self):
-        return "Cannot find term %s in the dictionnary" % self.terms_ieml
 
 
 class TermComparisonFailed(TermException):
