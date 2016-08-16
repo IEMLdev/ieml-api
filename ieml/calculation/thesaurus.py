@@ -9,7 +9,7 @@ import numpy as np
 
 ScoreNode = namedtuple('ScoreNode', ['script', 'score'])
 Cache = namedtuple('Cache', ['source_layer', 'source_class'])
-ParadigmMetadata = namedtuple('ParadigmMetadata', ['score', 'citation_count', 'nouns', 'auxiliary', 'verb'])
+ParadigmMetadata = namedtuple('ParadigmMetadata', ['paradigm', 'score', 'nouns', 'auxiliary', 'verb'])
 
 
 def _build_cache(usl_collection):
@@ -27,7 +27,6 @@ def _build_cache(usl_collection):
             for t in terms:
                 source_layer[t.script][coordinate[elem.__class__]] += 1
                 source_class[t.script][elem.grammatical_class] += 1
-
 
     return Cache(source_layer=source_layer, source_class=source_class)
 
@@ -47,12 +46,28 @@ def rank_paradigms(paradigm_list, usl_collection):
 
     """
 
+    result = []
     global _cache
     if not _cache:
         _cache = _build_cache(usl_collection)
 
     for paradigm in paradigm_list:
-        pass
+
+        score = 0
+
+        if _cache.source_layer[paradigm][0]:
+            score = _cache.source_layer[paradigm][0] * layer_weight[SuperSentence]
+        elif _cache.source_layer[paradigm][1]:
+            score = _cache.source_layer[paradigm][1] * layer_weight[Sentence]
+        elif _cache.source_layer[paradigm][2]:
+            score = _cache.source_layer[paradigm][2] * layer_weight[Word]
+
+        result.append(ParadigmMetadata(paradigm=paradigm, score=score,
+                                       nouns=_cache.source_class[paradigm][NOUN_CLASS],
+                                       auxiliary=_cache.source_class[paradigm][AUXILIARY_CLASS],
+                                       verb=_cache.source_class[paradigm][VERB_CLASS]))
+
+    return sorted(result, key=lambda x: x.score, reversed=True)
 
 
 # 3 Pour chaque paradigme-racine, une liste ordonnée des USLs qui le citent le plus
@@ -173,7 +188,7 @@ coordinate = {
 }
 
 
-score = {
+layer_weight = {
     Word: 1,
     Sentence: 2,
     SuperSentence: 3
