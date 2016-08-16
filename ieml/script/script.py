@@ -243,7 +243,7 @@ class AdditiveScript(Script):
 class MultiplicativeScript(Script):
     """ Represent a multiplication of three scripts of the same layer."""
     def __init__(self, substance=None, attribute=None, mode=None, children=None, character=None):
-        if not (substance or attribute or mode or children or character):
+        if not (substance or children or character):
             raise InvalidScript()
 
         # Build children
