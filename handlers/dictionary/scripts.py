@@ -1,8 +1,9 @@
+from handlers.commons import exception_handler
 from ieml.operator import sc
-from models.exceptions import DBException, InvalidRelationCollectionState, InvalidRelationTitle
+from models.exceptions import InvalidRelationCollectionState, InvalidRelationTitle
 from models.relations.relations_queries import RelationsQueries
 from ..caching import cached, flush_cache
-from handlers.dictionary.commons import terms_db, exception_handler, relation_name_table
+from handlers.dictionary.commons import terms_db, relation_name_table
 from ieml.exceptions import CannotParse
 from ieml.script.constants import AUXILIARY_CLASS, VERB_CLASS, NOUN_CLASS
 from ieml.script.script import MultiplicativeScript, NullScript
