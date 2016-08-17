@@ -30,8 +30,8 @@ class Term(IEMLObjects):
     def _do_gt(self, other):
         return self.script > other.script
 
-    def _do_precompute_str(self):
-        self._str = "[" + str(self.script) + "]"
+    def compute_str(self, children_str):
+        return "[" + str(self.script) + "]"
 
     @property
     def empty(self):

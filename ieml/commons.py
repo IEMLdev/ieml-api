@@ -7,6 +7,9 @@ class TreeStructure:
         self.children = None  # will be an iterable (list or tuple)
 
     def __str__(self):
+        if self._str is None:
+            self._do_precompute_str()
+
         return self._str
 
     def __ne__(self, other):

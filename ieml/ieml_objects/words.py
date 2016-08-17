@@ -20,8 +20,8 @@ class Morpheme(IEMLObjects):
             raise InvalidIEMLObjectArgument(Morpheme, "%s do not contain only Term instances."%(str(_children)))
 
         # check singular sequences intersection
-        singular_sequences = [t.script.singular_sequences for t in _children]
-        if sum((len(e) for e in singular_sequences)) != len(set((e for e in singular_sequences))):
+        singular_sequences = [s for t in _children for s in t.script.singular_sequences]
+        if len(singular_sequences) != len(set(singular_sequences)):
             raise InvalidIEMLObjectArgument(Morpheme, "Singular sequences intersection in %s."%
                                             str([str(t) for t in _children]))
 
@@ -34,6 +34,9 @@ class Morpheme(IEMLObjects):
     @property
     def empty(self):
         return len(self.children) == 1 and self.children[0].empty
+
+    def compute_str(self, children_str):
+        return '('+'+'.join(children_str)+')'
 
 
 class Word(IEMLObjects):
@@ -67,3 +70,6 @@ class Word(IEMLObjects):
     @property
     def flexing(self):
         return self.children[1]
+
+    def compute_str(self, children_str):
+        return '['+'*'.join(children_str)+']'

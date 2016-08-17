@@ -16,3 +16,6 @@ class Text(IEMLObjects):
                                                   " must be Word, Sentence or SuperSentence.")
 
         super().__init__(sorted(set(_children)))
+
+    def compute_str(self, children_str):
+        return '/' + '//'.join(children_str) + '/'

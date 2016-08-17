@@ -19,17 +19,6 @@ class PathCannotBeEmpty(PropositionPathErrors):
 class ASTException(Exception):
     pass
 
-
-class TermComparisonFailed(TermException):
-    def __init__(self, terms_ieml, other_terms_ieml):
-        super().__init__(terms_ieml)
-        self.other_term = other_terms_ieml
-
-    def __str__(self):
-        return "Comparison between term %s and %s failed" \
-               % (self.terms_ieml, self.other_term)
-
-
 class PropositionException(ASTException):
     def __init__(self, proposition_ref):
         super().__init__()

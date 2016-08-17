@@ -43,6 +43,9 @@ class AbstractClause(IEMLObjects):
     def grammatical_class(self):
         return self.attribute.grammatical_class
 
+    def compute_str(self, children_str):
+        return '('+'*'.join(children_str)+')'
+
 
 class AbstractSentence(IEMLObjects):
     def __init__(self, subtype, clause_list):
@@ -69,6 +72,9 @@ class AbstractSentence(IEMLObjects):
     @property
     def grammatical_class(self):
         return self.tree_graph.root.grammatical_class
+
+    def compute_str(self, children_str):
+        return '[' + '+'.join(children_str) + ']'
 
 
 class Clause(AbstractClause):

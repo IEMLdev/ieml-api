@@ -5,6 +5,7 @@ import numpy
 
 from ieml.commons import TreeStructure
 from ieml.exceptions import NoRootNodeFound, SeveralRootNodeFound, NodeHasNoParent, NodeHasTooMuchParents
+from ieml.ieml_objects.exceptions import InvalidIEMLObjectArgument
 
 
 @total_ordering
@@ -33,10 +34,23 @@ class IEMLType(type):
 
 
 class IEMLObjects(TreeStructure, metaclass=IEMLType):
-    def __init__(self, children):
+    def __init__(self, children, literals=None):
         super().__init__()
         self.children = tuple(children)
-        self._do_precompute_str()
+        self._str = self._do_precompute_str()
+
+        _literals = []
+        if literals is not None:
+            if isinstance(literals, str):
+                _literals = [literals]
+            else:
+                try:
+                    _literals = tuple(literals)
+                except TypeError:
+                    raise InvalidIEMLObjectArgument(self.__class__, "The literals argument %s must be an iterable of "
+                                                                    "str or a str."%str(literals))
+
+        self.literals = tuple(_literals)
 
     def __gt__(self, other):
         if not isinstance(other, IEMLObjects):
@@ -50,8 +64,22 @@ class IEMLObjects(TreeStructure, metaclass=IEMLType):
     def _do_gt(self, other):
         return self.children > other.children
 
+    def compute_str(self, children_str):
+        return '#'.join(children_str)
 
-class TreeGraph():
+    def __compute_str(self):
+        if self._str is not None:
+            return self._str
+        _literals = ''
+        if self.literals:
+            _literals = '<' + '><'.join(self.literals) + '>'
+        return self.compute_str([e.__compute_str() for e in self.children]) + _literals
+
+    def _do_precompute_str(self):
+        self._str = self.__compute_str()
+
+
+class TreeGraph:
     def __init__(self, list_transitions):
         """
         Transitions list must be the (start, end, data) the data will be stored as the transition tag

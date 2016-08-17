@@ -1,8 +1,11 @@
+from collections import defaultdict
+
 from ieml.exceptions import InvalidGraphNode
 from ieml.ieml_objects.commons import IEMLObjects, TreeGraph
 from ieml.ieml_objects.constants import MAX_NODES_IN_HYPERTEXT, MAX_DEPTH_IN_HYPERTEXT
 from ieml.ieml_objects.exceptions import InvalidIEMLObjectArgument
 from ieml.ieml_objects.sentences import Sentence, SuperSentence
+from ieml.ieml_objects.terms import Term
 from ieml.ieml_objects.texts import Text
 from ieml.ieml_objects.words import Word
 
@@ -10,7 +13,7 @@ from ieml.ieml_objects.words import Word
 class PropositionPath:
     def __init__(self, list_proposition):
         super().__init__()
-        self.path = list_proposition
+        self.path = tuple(list_proposition)
 
     def in_text(self, text):
         current = text
@@ -20,12 +23,22 @@ class PropositionPath:
             current = p
         return True
 
+    def __hash__(self):
+        return hash(self.path)
+
+    def __eq__(self, other):
+        return self.path == tuple(other)
+
     @property
     def end(self):
         return self.path[-1]
 
     def __gt__(self, other):
         raise NotImplemented
+
+    # IEML Object str interface
+    def __compute_str(self):
+        return '/'.join((str(p) for p in self.path))
 
 
 class Hyperlink(IEMLObjects):
@@ -53,6 +66,20 @@ class Hyperlink(IEMLObjects):
 
         super().__init__((substance, attribute, mode))
 
+    @property
+    def start(self):
+        return self.children[0]
+
+    @property
+    def end(self):
+        return self.children[1]
+
+    @property
+    def path(self):
+        return self.children[2]
+
+    def compute_str(self, children_str):
+        return '(' + ','.join(children_str) + ')'
 
 class Hypertext(IEMLObjects):
     def __init__(self, hyperlink_list):
@@ -80,4 +107,23 @@ class Hypertext(IEMLObjects):
                                             %(len(self.tree_graph.stages), MAX_DEPTH_IN_HYPERTEXT))
 
         #TODO sort the children
-        super().__init__(e for stage in self.tree_graph.stages for e in sorted(stage))
+        super().__init__(_children)
+
+    def compute_str(self, children_str):
+        def render_text(text):
+            hyperlinks = defaultdict(lambda: list())
+            for h in [e[2] for e in self.tree_graph.transitions[text]]:
+                hyperlinks[h.path].append(h.end)
+
+            def _render(path, current):
+                _path = path + [str(current)]
+
+                if isinstance(current, Term) or _path not in hyperlinks:
+                    return str(current)
+
+                return current.compute_str([_render(_path, c) for c in current]) +\
+                    ''.join(render_text(t) for t in hyperlinks[_path])
+
+            return '{' + _render([], text) + '}'
+
+        return render_text(self.tree_graph.root)
