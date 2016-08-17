@@ -1,10 +1,8 @@
-import os
 import queue
 
-from bidict import bidict
-
+from handlers.commons import exception_handler
 from handlers.dictionary.client import need_login
-from handlers.dictionary.commons import terms_db, exception_handler, relation_name_table
+from handlers.dictionary.commons import terms_db, relation_name_table
 from ieml.exceptions import CannotParse
 from ieml.operator import sc
 from models.constants import RELATION_COMPUTING

@@ -74,8 +74,8 @@ class PropositionGraph(AbstractGraph):
     """Stores a representation of the graph described in the visual web interface"""
 
     def __init__(self, clause_list):
-        super().__init__([(clause.subst, clause.attr) for clause in clause_list])
-        self.clause_table = {(clause.subst, clause.attr): clause for clause in clause_list}
+        super().__init__([(clause.subst, clause.attr, clause.mode) for clause in clause_list])
+        self.clause_table = {(clause.subst, clause.attr, clause.mode): clause for clause in clause_list}
 
         self.generations_table = None # This'll store the clauses by *generations* upon a method call
 

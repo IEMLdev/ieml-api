@@ -9,19 +9,6 @@ def terms_db():
     return TermsConnector()
 
 
-def exception_handler(func):
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        try:
-            result = func(*args, **kwargs)
-        except Exception as e:
-            return {'success': False, 'message': str(e)}
-        else:
-            return result
-
-    return wrapper
-
-
 relation_name_table = bidict({
     "Crossed siblings": CROSSED_SIBLING_RELATION,
     "Associated siblings": ASSOCIATED_SIBLING_RELATION,
