@@ -98,7 +98,7 @@ class IndicatorFilter(AbstractFilter):
             connexity_index : "(O-O)",
             mutual_inclusion_index: "(O,o)"
         }
-        return function_to_symbol_mapping[self.indicator] + " lvl %s" % self.level
+        return function_to_symbol_mapping[self.indicator] + " lvl %s" % self.level.__name__
 
 
 class BinaryFilter:

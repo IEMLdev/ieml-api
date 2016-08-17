@@ -63,6 +63,7 @@ class LinearPLUnitermExperiment(BasicRandomUslsExperiments):
         query.check()
         return all_usls, query
 
+
 class ConditionalPLMultitermExperiment(BasicRandomUslsExperiments):
 
     def gen_set_and_query(self, **kwargs):
@@ -79,6 +80,38 @@ class ConditionalPLMultitermExperiment(BasicRandomUslsExperiments):
         query = HyperText(Text([words[0]]))
         query.check()
         return all_usls, query
+
+class ParadigmaticInclusionUnitermExperiment(BasePLExperiment):
+
+    def _get_usl_terms(self, usl):
+        return {word.subst[0] for word in usl.texts[0].children}
+
+    def _get_common_terms_count(self, usls, query_sing_terms):
+        output_counts_list = []
+        for usl in usls:
+            output_counts_list.append(
+                len(query_sing_terms.intersection(self._get_usl_terms(usl)))
+            )
+        return output_counts_list
+
+    def process_results(self, filtered_usl_pool, pipeline, **kwargs):
+        # preparing all kinds of stats on the output
+        qry_prdgm_sing_seqs = set(kwargs["query_paradigm"].singular_sequences)
+        filtered_pool_count = len(filtered_usl_pool)
+        filtered_usls_common_terms_count = self._get_common_terms_count(filtered_usl_pool, qry_prdgm_sing_seqs)
+        eliminated_usls = set(kwargs["input_usl_pool"]) - set(filtered_usl_pool)
+        eliminated_usls_common_terms_count = self._get_common_terms_count(eliminated_usls, qry_prdgm_sing_seqs)
+
+        #logging it to the console
+        logging.info("Filtered original USL pool down to %i USL, here are some stats:" % filtered_pool_count)
+        usls_containing_query = [str(usl) for usl in filtered_usl_pool if
+                                 kwargs["query_paradigm"] in usl.texts[0].children]
+        logging.info("%i/%i USL in the filtered pool contain the query word"
+                     % (len(usls_containing_query), filtered_pool_count))
+        logging.info("On average, the USL outputted by the pipeline contain %f singular terms from the query paradigm"
+                     % (sum(filtered_usls_common_terms_count)/len(filtered_usls_common_terms_count)))
+        logging.info("On average, the USL eliminated by the pipeline contain %f singular terms from the query paradigm"
+                     % (sum(eliminated_usls_common_terms_count) / len(eliminated_usls_common_terms_count)))
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
