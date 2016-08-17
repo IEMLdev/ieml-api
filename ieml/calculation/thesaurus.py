@@ -46,6 +46,7 @@ def _build_cache(usl_collection):
 
     return Cache(source_layer=source_layer, source_class=source_class, source_usl=source_usl, usl_index=usl_index)
 
+
 _cache = None
 
 
@@ -71,14 +72,9 @@ def rank_paradigms(paradigm_list, usl_collection):
 
     for paradigm in paradigm_list:
 
-        score = 0
-
-        if _cache.source_layer[paradigm][0]:
-            score = _cache.source_layer[paradigm][0] * layer_weight[SuperSentence]
-        elif _cache.source_layer[paradigm][1]:
-            score = _cache.source_layer[paradigm][1] * layer_weight[Sentence]
-        elif _cache.source_layer[paradigm][2]:
-            score = _cache.source_layer[paradigm][2] * layer_weight[Word]
+        score = (_cache.source_layer[paradigm][0] * layer_weight[SuperSentence] +
+                _cache.source_layer[paradigm][1] * layer_weight[Sentence] +
+                _cache.source_layer[paradigm][2] * layer_weight[Word])
 
         result.append(ParadigmMetadata(paradigm=paradigm, score=score,
                                        nouns=_cache.source_class[paradigm][NOUN_CLASS],
@@ -126,31 +122,29 @@ def paradigm_usl_distribution(paradigm, usl_collection):
     Distribution of number of terms (contained in 'paradigm') cited overlaid on the paradigms table
     """
 
-    TermLocation = namedtuple('TermLocation', ['table', 'coords'])
+    global _cache
+    if not _cache:
+        _cache = _build_cache(usl_collection)
+
     if isinstance(paradigm, str):
         paradigm = sc(paradigm)
 
     tbls = generate_tables(paradigm)
-    term_coordinates = {}
     dist_tables = [np.zeros(table.cells.shape, dtype=int) for table in tbls]
 
-    for term in paradigm.singular_sequences:
-        for i, table in enumerate(tbls):
-            if term in table.paradigm.singular_sequences:
-                table_idx = i
-                coord = np.where(table == term)
-        term_coordinates[term] = TermLocation(table=table_idx, coords=coord)
-
-    for usl in usl_collection:
-        for elem in usl.tree_iter():
-            if isinstance(elem, Term) and elem.script in term_coordinates:
-                term_loc = term_coordinates[elem.script]
-                if dist_tables[term_loc.table].ndim == 1:
-                    dist_tables[term_loc.table][term_loc.coords[0][0]] += 1
-                elif dist_tables[term_loc.table].ndim == 2:
-                    dist_tables[term_loc.table][term_loc.coords[0][0]][term_loc.coords[1][0]] += 1
-                elif dist_tables[term_loc.table].ndim == 3:
-                    dist_tables[term_loc.table][term_loc.coords[0][0]][term_loc.coords[1][0]][term_loc.coords[2][0]] += 1
+    for tbl_idx, table in enumerate(tbls):
+        if table.dimension == 1:
+            for i, cell in enumerate(table.cells):
+                dist_tables[tbl_idx][i] = sum(_cache.source_layer[cell])
+        elif table.dimension == 2:
+            for i, row in enumerate(table.cells):
+                for j, cell in enumerate(row):
+                    dist_tables[tbl_idx][i][j] = sum(_cache.source_layer[cell])
+        elif table.dimension == 3:
+            for k in range(table.cells[2]):
+                for i, row in enumerate(table.cells):
+                    for j, col in enumerate(row):
+                        dist_tables[tbl_idx][i][j][k] = sum(_cache.source_layer[cell])
 
     return dist_tables
 
