@@ -1,6 +1,6 @@
 from enum import Enum
 
-from ieml.AST.usl import HyperText
+from ieml.AST.usl import HyperText, Text
 from ieml.calculation.distance import (paradigmatic_equivalence_class_index, set_proximity_index,
                                        object_proximity_index, connexity_index, mutual_inclusion_index)
 from ieml.AST.propositions import Word, Sentence, SuperSentence
@@ -21,7 +21,7 @@ class FilteringLevel(Enum):
 
         if isinstance(input_usl, HyperText):
             usl = input_usl.texts[0]
-        else:
+        elif isinstance(input_usl, Text):
             usl = input_usl
 
         usl_max_level = usl.max_level
@@ -72,7 +72,7 @@ class ParadigmaticProximityFilter(AbstractFilter):
 
         # TODO: check which paradigm table rank to use and how (i.e. should we take the mean of the indicator over all ranks)
         usl_score = {usl: paradigmatic_equivalence_class_index(query_usl, usl, 1, "OE") for usl in usl_list}
-        sorted_by_score =  sorted(usl_score, key=lambda e: usl_score[e], reverse=True)
+        sorted_by_score = sorted(usl_score, key=lambda e: usl_score[e], reverse=True)
         return sorted_by_score[:ceil(ratio*len(usl_list))], usl_score
 
     def __str__(self):
