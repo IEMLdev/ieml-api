@@ -17,11 +17,6 @@ def usl_to_json(usl, language='EN'):
         if start and len(u.children) == 1:
             return _walk(u.children[0])
 
-        result = {
-            'type': u.__class__.__name__.lower(),
-            'children': []
-        }
-
         def _build_tree(transition, children_tree, supersentence=False):
             result = {
                 'type': 'supersentence-node' if supersentence else 'sentence-node',
@@ -34,7 +29,7 @@ def usl_to_json(usl, language='EN'):
             return result
 
         if isinstance(u, Sentence):
-            result['children'] = {
+            result = {
                 'type': 'sentence-root-node',
                 'node': _walk(u.graph.root_node, start=False),
                 'children': [
@@ -42,7 +37,7 @@ def usl_to_json(usl, language='EN'):
                 ]
             }
         elif isinstance(u, SuperSentence):
-            result['children'] = {
+            result = {
                 'type': 'supersentence-root-node',
                 'node': _walk(u.graph.root_node, start=False),
                 'children': [
@@ -50,7 +45,10 @@ def usl_to_json(usl, language='EN'):
                     ]
             }
         else:
-            result['children'] = [_walk(c, start=False) for c in u]
+            result = {
+                'type': u.__class__.__name__.lower(),
+                'children': [_walk(c, start=False) for c in u]
+            }
 
         return result
 
