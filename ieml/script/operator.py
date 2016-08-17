@@ -13,7 +13,6 @@ def m(substance, attribute=None, mode=None):
 def script(arg):
     if isinstance(arg, str):
         s = ScriptParser().parse(arg)
-        s.check()
         return s
     elif isinstance(arg, Script):
         return arg

@@ -31,8 +31,6 @@ class ScriptParser(metaclass=Singleton):
         self.parser.parse(s, lexer=self.lexer)
 
         if self.root is not None:
-            self.root.check()
-
             return self.root
         else:
             raise CannotParse(s)

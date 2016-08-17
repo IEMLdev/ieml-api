@@ -175,8 +175,6 @@ class AdditiveScript(Script):
                 raise IncompatiblesScriptsLayers(_children[0], c)
 
         if _children:
-            for c in _children:
-                c.check()
 
             to_remove = []
             to_add = []
@@ -297,8 +295,6 @@ class MultiplicativeScript(Script):
             for i in range(len(_children), 3):
                 _children.append(NullScript(layer=layer))
 
-        for c in _children:
-            c.check()
         # Add the character to children corresponding to specific combinaison
         _str_children = self._render_children(_children, _character)
         if _str_children in remarkable_multiplication_lookup_table:
