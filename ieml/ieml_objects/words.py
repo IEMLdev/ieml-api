@@ -1,3 +1,5 @@
+from itertools import zip_longest
+
 from ieml.ieml_objects.commons import IEMLObjects
 from ieml.ieml_objects.constants import MORPHEME_SIZE_LIMIT
 from ieml.ieml_objects.exceptions import InvalidIEMLObjectArgument
@@ -6,8 +8,6 @@ from ieml.ieml_objects.terms import Term
 
 class Morpheme(IEMLObjects):
     def __init__(self, term_list):
-        super().__init__()
-
         try:
             _children = tuple(e for e in term_list)
         except TypeError:
@@ -25,7 +25,7 @@ class Morpheme(IEMLObjects):
             raise InvalidIEMLObjectArgument(Morpheme, "Singular sequences intersection in %s."%
                                             str([str(t) for t in _children]))
 
-        self.children = tuple(sorted(_children))
+        super().__init__(sorted(_children))
 
     @property
     def grammatical_class(self):
@@ -38,7 +38,6 @@ class Morpheme(IEMLObjects):
 
 class Word(IEMLObjects):
     def __init__(self, root, flexing=None):
-        super().__init__()
 
         if not isinstance(root, Morpheme):
             raise InvalidIEMLObjectArgument(Word, "The root %s of a word must be a Morpheme instance."%(str(root)))
@@ -47,16 +46,24 @@ class Word(IEMLObjects):
             if not isinstance(flexing, Morpheme):
                 raise InvalidIEMLObjectArgument(Word,
                                                 "The flexing %s of a word must be a Morpheme instance." % (str(flexing)))
-            self.children = (root, flexing)
+            _children = (root, flexing)
         else:
-            self.children = (root,)
+            _children = (root,)
 
         # the root of a word can't be empty
-        if self.children[0].empty:
-            raise InvalidIEMLObjectArgument(Word, "The root of a Word cannot be empty (%s)."%str(self.children[0]))
+        if _children[0].empty:
+            raise InvalidIEMLObjectArgument(Word, "The root of a Word cannot be empty (%s)."%str(_children[0]))
+
+        super().__init__(_children)
 
     @property
     def grammatical_class(self):
-        return self.children[0].grammatical_class
+        return self.root.grammatical_class
 
+    @property
+    def root(self):
+        return self.children[0]
 
+    @property
+    def flexing(self):
+        return self.children[1]

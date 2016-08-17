@@ -24,10 +24,12 @@ class PropositionPath:
     def end(self):
         return self.path[-1]
 
+    def __gt__(self, other):
+        raise NotImplemented
+
 
 class Hyperlink(IEMLObjects):
     def __init__(self, substance, attribute, mode):
-        super().__init__()
 
         if not isinstance(substance, Text):
             raise InvalidIEMLObjectArgument(Hyperlink, "The substance %s must be a Text instance."%str(substance))
@@ -49,11 +51,11 @@ class Hyperlink(IEMLObjects):
             raise InvalidIEMLObjectArgument(Hyperlink, "The mode %s must be a PropositionPath pointing to a Word, a "
                                                        "Sentence or a SuperSentence."%str(mode))
 
-        self.children = (substance, attribute, mode)
+        super().__init__((substance, attribute, mode))
+
 
 class Hypertext(IEMLObjects):
     def __init__(self, hyperlink_list):
-        super().__init__()
 
         try:
             _children = [e for e in hyperlink_list]
@@ -77,4 +79,5 @@ class Hypertext(IEMLObjects):
             raise InvalidIEMLObjectArgument(Hypertext, "The depth of the tree graph of this hypertext is too big: %d>%d"
                                             %(len(self.tree_graph.stages), MAX_DEPTH_IN_HYPERTEXT))
 
-        self.children = tuple(self.tree_graph.nodes)
+        #TODO sort the children
+        super().__init__(e for stage in self.tree_graph.stages for e in sorted(stage))

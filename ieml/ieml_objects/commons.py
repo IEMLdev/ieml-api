@@ -15,22 +15,28 @@ class IEMLType(type):
         from ieml.ieml_objects.terms import Term
         from ieml.ieml_objects.words import Morpheme, Word
         from ieml.ieml_objects.sentences import Clause, Sentence, SuperClause, SuperSentence
+        from ieml.ieml_objects.texts import Text
+        from ieml.ieml_objects.hypertexts import Hyperlink, Hypertext
 
-        child_list = [Term, Morpheme, Word, Clause, Sentence, SuperClause, SuperSentence]
+        child_list = [Term, Morpheme, Word, Clause, Sentence, SuperClause, SuperSentence, Text, Hyperlink, Hypertext]
         return child_list.index(self) > child_list.index(other)
 
     def __lt__(self, other):
         from ieml.ieml_objects.terms import Term
         from ieml.ieml_objects.words import Morpheme, Word
         from ieml.ieml_objects.sentences import Clause, Sentence, SuperClause, SuperSentence
+        from ieml.ieml_objects.texts import Text
+        from ieml.ieml_objects.hypertexts import Hyperlink, Hypertext
 
-        child_list = [Term, Morpheme, Word, Clause, Sentence, SuperClause, SuperSentence]
+        child_list = [Term, Morpheme, Word, Clause, Sentence, SuperClause, SuperSentence, Text, Hyperlink, Hypertext]
         return child_list.index(self) < child_list.index(other)
 
 
 class IEMLObjects(TreeStructure, metaclass=IEMLType):
-    def __init__(self):
+    def __init__(self, children):
         super().__init__()
+        self.children = tuple(children)
+        self._do_precompute_str()
 
     def __gt__(self, other):
         if not isinstance(other, IEMLObjects):
@@ -42,7 +48,7 @@ class IEMLObjects(TreeStructure, metaclass=IEMLType):
         return self._do_gt(other)
 
     def _do_gt(self, other):
-        raise NotImplemented
+        return self.children > other.children
 
 
 class TreeGraph():

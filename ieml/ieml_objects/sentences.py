@@ -1,3 +1,5 @@
+from itertools import zip_longest
+
 from ieml.exceptions import InvalidGraphNode
 from ieml.ieml_objects.commons import IEMLObjects, TreeGraph
 from ieml.ieml_objects.constants import MAX_NODES_IN_SENTENCE
@@ -7,8 +9,6 @@ from ieml.ieml_objects.words import Word
 
 class AbstractClause(IEMLObjects):
     def __init__(self, subtype, substance=None, attribute=None, mode=None, children=None):
-        super().__init__()
-
         if not (substance or children):
             raise ValueError()
 
@@ -25,7 +25,7 @@ class AbstractClause(IEMLObjects):
             raise InvalidIEMLObjectArgument(self.__class__, "The attribute and the substance (%s) must be distinct."%
                                             (str(children[0])))
 
-        self.children = tuple(children)
+        super().__init__(children)
 
     @property
     def substance(self):
@@ -46,8 +46,6 @@ class AbstractClause(IEMLObjects):
 
 class AbstractSentence(IEMLObjects):
     def __init__(self, subtype, clause_list):
-        super().__init__()
-
         try:
             _children = tuple(e for e in clause_list)
         except TypeError:
@@ -66,7 +64,7 @@ class AbstractSentence(IEMLObjects):
             raise InvalidIEMLObjectArgument(self.__class__, "Too many distinct nodes: %d>%d."%
                                             (len(self.tree_graph.nodes), MAX_NODES_IN_SENTENCE))
 
-        self.children = tuple(e for stage in self.tree_graph.stages for e in sorted(stage))
+        super().__init__(e for stage in self.tree_graph.stages for e in sorted(stage))
 
     @property
     def grammatical_class(self):

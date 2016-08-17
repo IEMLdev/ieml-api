@@ -6,7 +6,6 @@ from ieml.ieml_objects.words import Word
 
 class Text(IEMLObjects):
     def __init__(self, propositions_list):
-        super().__init__()
         try:
             _children = [e for e in propositions_list]
         except TypeError:
@@ -16,4 +15,4 @@ class Text(IEMLObjects):
             raise InvalidIEMLObjectArgument(Text, "Invalid type instance in the list of a text,"
                                                   " must be Word, Sentence or SuperSentence.")
 
-        self.children = tuple(sorted(set(_children)))
+        super().__init__(sorted(set(_children)))

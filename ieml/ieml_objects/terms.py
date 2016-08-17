@@ -5,7 +5,6 @@ from ieml.script.operator import script
 
 class Term(IEMLObjects):
     def __init__(self, s):
-        super().__init__()
         if isinstance(s, str) and s[0] == '[' and s[-1] == ']':
             s = s[1:-1]
 
@@ -18,14 +17,17 @@ class Term(IEMLObjects):
         if term is None:
             raise TermNotFoundInDictionary(str(self.script))
 
+        super().__init__([])
+
     __hash__ = IEMLObjects.__hash__
 
     def __eq__(self, other):
         if not isinstance(other, Term):
             return False
+
         return self.script == other.script
 
-    def __gt__(self, other):
+    def _do_gt(self, other):
         return self.script > other.script
 
     def _do_precompute_str(self):
