@@ -322,7 +322,7 @@ def get_paradigms(object_set_a):
 
     for term in term_list:
         for paradigm in RelationsQueries.relations(term.script, "CONTAINED"):
-            paradigms[get_table_rank(sc(paradigm))].append(paradigm)
+            paradigms[RelationsQueries.rank(paradigm)].append(paradigm)
 
     return paradigms
 

@@ -1,7 +1,8 @@
 from ieml.AST import promote_to, Term
-from ieml.AST.tools import RandomPropositionGenerator, demote_once
+from ieml.AST.tools import demote_once
+from ieml import RandomPropositionGenerator
 from ieml.exceptions import CannotPromoteToLowerLevel
-from .helper import *
+from testing.ieml.helper import *
 
 
 class TestPromotion(unittest.TestCase):
@@ -65,7 +66,6 @@ class TestRandomGenerator(unittest.TestCase):
             self.fail("Word checking failed")
         self.assertIs(type(random_word), Word)
 
-
     def test_sentence_gen(self):
         for i in range(20):
             random_sentence = self.generator.get_random_proposition(Sentence)
@@ -74,9 +74,17 @@ class TestRandomGenerator(unittest.TestCase):
             except Exception as err:
                 self.fail("%s checking failed : %s " % (str(random_sentence), str(err)))
 
+    def test_supersentence_gen(self):
+        for i in range(20):
+            random_supersentence = self.generator.get_random_proposition(SuperSentence)
+            try:
+                random_supersentence.check()
+            except Exception as err:
+                self.fail("%s checking failed : %s " % (str(random_supersentence), str(err)))
+
     def test_proposition_gen(self):
         for prop_type in [Morpheme, Word, Sentence, Clause, SuperSentence, SuperClause]:
-            with self.subTest("Random %s generation failed" % str(prop_type)):
+            with self.subTest():
                 random_proposition = self.generator.get_random_proposition(prop_type)
                 try:
                     random_proposition.check()

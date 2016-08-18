@@ -1,7 +1,8 @@
 import numpy as np
 
-from ieml.AST.tools import RandomPropositionGenerator, NULL_WORD, NULL_SENTENCE, NULL_SUPERSENTENCE, NULL_CLAUSE, \
+from ieml.AST.tools import NULL_WORD, NULL_SENTENCE, NULL_SUPERSENTENCE, NULL_CLAUSE, \
     NULL_MORPHEME, NULL_SUPERCLAUSE, promote_to
+from ieml import RandomPropositionGenerator
 from ieml.AST.usl import Text, HyperText
 from ieml.exceptions import SeveralRootNodeFound, NodeHasTooMuchParents, NoRootNodeFound
 from testing.ieml.helper import *
