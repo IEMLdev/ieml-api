@@ -21,7 +21,7 @@ def usl_to_json(usl, language='EN'):
             result = {
                 'type': 'supersentence-node' if supersentence else 'sentence-node',
                 'mode': _walk(transition[2], start=False),
-                'node': _walk(transition[0], start=False),
+                'node': _walk(transition[1], start=False),
                 'children': []
             }
             if transition[1] in children_tree:
