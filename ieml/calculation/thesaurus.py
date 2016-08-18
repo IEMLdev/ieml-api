@@ -73,8 +73,8 @@ def rank_paradigms(paradigm_list, usl_collection):
     for paradigm in paradigm_list:
 
         score = (_cache.source_layer[paradigm][0] * layer_weight[SuperSentence] +
-                _cache.source_layer[paradigm][1] * layer_weight[Sentence] +
-                _cache.source_layer[paradigm][2] * layer_weight[Word])
+                 _cache.source_layer[paradigm][1] * layer_weight[Sentence] +
+                 _cache.source_layer[paradigm][2] * layer_weight[Word])
 
         result.append(ParadigmMetadata(paradigm=paradigm, score=score,
                                        nouns=_cache.source_class[paradigm][NOUN_CLASS],
