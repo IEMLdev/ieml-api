@@ -176,7 +176,7 @@ paths:
             a list of resources ranked by similarity
 
   /intlekt/edition/usl_to_json:
-    get:
+    post:
       operationId: handlers.usl_to_json
       tags:
         - Intlekt
@@ -184,11 +184,12 @@ paths:
         Parse and return the json content of an usl ieml script.
       parameters:
         - name: usl
-          in: query
+          in: body
+          required: true
           description: |
             The usl ieml.
-          required: true
-          type: string
+          schema:
+            type: object
           description: |
             The usl to decompose and return the json
         - name: language

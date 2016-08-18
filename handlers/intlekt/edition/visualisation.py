@@ -6,7 +6,7 @@ from models.terms.terms import TermsConnector
 
 
 def usl_to_json(usl, language='EN'):
-    u = _usl(usl)
+    u = _usl(usl["usl"])
     def _walk(u, start=True):
         if isinstance(u, Term):
             return {
