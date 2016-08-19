@@ -12,6 +12,7 @@ def usl_to_json(usl, language='EN'):
             return {
                 'type': u.__class__.__name__.lower(),
                 'script': str(u.script),
+                'singular_sequences': [str(s) for s in u.script.singular_sequences],
                 'title': TermsConnector().get_term(u.script)['TAGS'][language]
             }
         if start and len(u.children) == 1:
