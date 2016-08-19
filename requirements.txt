@@ -1,6 +1,7 @@
 flask
 flask_socketio
 flask_cors
+flask_compress
 connexion
 progressbar2
 numpy
