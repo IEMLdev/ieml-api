@@ -33,7 +33,7 @@ def _build_cache(usl_collection):
     # each usl is given a coordinate in the usl_index bidict
     source_usl = defaultdict(lambda: [0 for u in usl_collection])
     # Every usl is given a coordinate for vector representation
-    usl_index = bidict.bidict({u: i for i, u in enumerate(usl_collection)})
+    usl_index = bidict.bidict({i: u for i, u in enumerate(usl_collection)})
 
     for u in usl_collection:
         for elem in usl_elem_generator(u):
@@ -42,9 +42,9 @@ def _build_cache(usl_collection):
                 # TODO: Maybe use string representation of terms so that we don't need to worry about Terms/Script
                 source_layer[t.script][coordinate[elem.__class__]] += 1
                 source_class[t.script][elem.grammatical_class] += 1
-                source_usl[t.script][usl_index[u]] += layer_weight[elem.__class__]
+                source_usl[t.script][usl_index.inv[u]] += layer_weight[elem.__class__]
 
-    return Cache(source_layer=source_layer, source_class=source_class, source_usl=source_usl, usl_index=usl_index)
+    return Cache(source_layer=source_layer, source_class=source_class, source_usl=source_usl, usl_index=usl_index.inv)
 
 
 _cache = None
@@ -81,7 +81,7 @@ def rank_paradigms(paradigm_list, usl_collection):
                                        auxiliary=_cache.source_class[paradigm][AUXILIARY_CLASS],
                                        verb=_cache.source_class[paradigm][VERB_CLASS]))
 
-    return sorted(result, key=lambda x: x.score, reversed=True)
+    return sorted(result, key=lambda x: x.score, reverse=True)
 
 
 def rank_usls(term_list, usl_collection):
@@ -105,7 +105,7 @@ def rank_usls(term_list, usl_collection):
     if not _cache:
         _cache = _build_cache(usl_collection)
 
-    return {term: sorted(usl_collection, key=lambda u: _cache.source_usl[term][_cache.usl_index[u]], reversed=True)
+    return {term: sorted(usl_collection, key=lambda u: _cache.source_usl[term][_cache.usl_index[u]], reverse=True)
             for term in term_list}
 
 
