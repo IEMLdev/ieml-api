@@ -1,11 +1,12 @@
 import unittest
 from ieml.AST.propositions import Word, Sentence, SuperSentence, Morpheme, Clause, SuperClause
 from ieml.AST.terms import Term
-from ieml.operator import sc
+from ieml.operator import sc, usl
 from ieml.calculation.thesaurus import rank_paradigms, rank_usls, paradigm_usl_distribution
+from models.terms import TermsConnector
 
 
-class MyTestCase(unittest.TestCase):
+class ThesaurusTests(unittest.TestCase):
 
     def setUp(self):
 
@@ -99,58 +100,74 @@ class MyTestCase(unittest.TestCase):
         for w in self.words:
             w.check()
 
-        self.sentences = [
-            Sentence([Clause(self.words[1], self.words[2], self.words[5]),
-                      Clause(self.words[1], self.words[4], self.words[7]),
-                      Clause(self.words[1], self.words[6], self.words[9]),
-                      Clause(self.words[2], self.words[3], self.words[7]),
-                      Clause(self.words[2], self.words[8], self.words[5]),
-                      Clause(self.words[6], self.words[10], self.words[5])]),
-            Sentence([Clause(self.words[4], self.words[1], self.words[7]),
-                      Clause(self.words[4], self.words[6], self.words[8]),
-                      Clause(self.words[1], self.words[3], self.words[9]),
-                      Clause(self.words[1], self.words[10], self.words[2]),
-                      Clause(self.words[6], self.words[5], self.words[9])]),
-            Sentence([Clause(self.words[9], self.words[2], self.words[1]),
-                      Clause(self.words[2], self.words[6], self.words[3]),
-                      Clause(self.words[2], self.words[4], self.words[3]),
-                      Clause(self.words[2], self.words[8], self.words[7]),
-                      Clause(self.words[4], self.words[10], self.words[7])]),
-            Sentence([Clause(self.words[8], self.words[7], self.words[1]),
-                      Clause(self.words[7], self.words[6], self.words[2]),
-                      Clause(self.words[6], self.words[4], self.words[3]),
-                      Clause(self.words[6], self.words[5], self.words[9])]),
-            Sentence([Clause(self.words[8], self.words[7], self.words[4]),
-                      Clause(self.words[8], self.words[10], self.words[3])]),
-            Sentence([Clause(self.words[6], self.words[3], self.words[1]),
-                      Clause(self.words[6], self.words[4], self.words[10]),
-                      Clause(self.words[4], self.words[7], self.words[9])])
-        ]
-
-        for s in self.sentences:
-            s.check()
-
-        self.super_sentences = [
-            SuperSentence([SuperClause(self.sentences[1], self.sentences[2], self.sentences[3]),
-                           SuperClause(self.sentences[1], self.sentences[6], self.sentences[4])]),
-            SuperSentence([SuperClause(self.sentences[4], self.sentences[2], self.sentences[5]),
-                           SuperClause(self.sentences[4], self.sentences[1], self.sentences[6]),
-                           SuperClause(self.sentences[4], self.sentences[3], self.sentences[5])]),
-            SuperSentence([SuperClause(self.sentences[6], self.sentences[1], self.sentences[3]),
-                           SuperClause(self.sentences[1], self.sentences[2], self.sentences[4]),
-                           SuperClause(self.sentences[2], self.sentences[5], self.sentences[3])]),
-            SuperSentence([SuperClause(self.sentences[4], self.sentences[2], self.sentences[6]),
-                           SuperClause(self.sentences[4], self.sentences[1], self.sentences[6]),
-                           SuperClause(self.sentences[2], self.sentences[3], self.sentences[6])])
-        ]
-
-        for ss in self.super_sentences:
-            ss.check()
+        # self.sentences = [
+        #     Sentence([Clause(self.words[0], self.words[1], self.words[4]),
+        #               Clause(self.words[0], self.words[3], self.words[6]),
+        #               Clause(self.words[0], self.words[5], self.words[8]),
+        #               Clause(self.words[1], self.words[2], self.words[6]),
+        #               Clause(self.words[1], self.words[7], self.words[4]),
+        #               Clause(self.words[5], self.words[9], self.words[4])]),
+        #     Sentence([Clause(self.words[3], self.words[0], self.words[6]),
+        #               Clause(self.words[3], self.words[5], self.words[7]),
+        #               Clause(self.words[0], self.words[2], self.words[8]),
+        #               Clause(self.words[0], self.words[9], self.words[1]),
+        #               Clause(self.words[5], self.words[4], self.words[8])]),
+        #     Sentence([Clause(self.words[8], self.words[1], self.words[0]),
+        #               Clause(self.words[1], self.words[5], self.words[2]),
+        #               Clause(self.words[1], self.words[3], self.words[2]),
+        #               Clause(self.words[1], self.words[7], self.words[6]),
+        #               Clause(self.words[3], self.words[9], self.words[6])]),
+        #     Sentence([Clause(self.words[7], self.words[6], self.words[0]),
+        #               Clause(self.words[6], self.words[5], self.words[1]),
+        #               Clause(self.words[5], self.words[3], self.words[2]),
+        #               Clause(self.words[5], self.words[4], self.words[8])]),
+        #     Sentence([Clause(self.words[5], self.words[6], self.words[3]),
+        #               Clause(self.words[7], self.words[9], self.words[2])]),
+        #     Sentence([Clause(self.words[5], self.words[2], self.words[0]),
+        #               Clause(self.words[5], self.words[3], self.words[9]),
+        #               Clause(self.words[3], self.words[6], self.words[8])])
+        # ]
+        #
+        # for s in self.sentences:
+        #     s.check()
+        #
+        # self.super_sentences = [
+        #     SuperSentence([SuperClause(self.sentences[0], self.sentences[1], self.sentences[2]),
+        #                    SuperClause(self.sentences[0], self.sentences[5], self.sentences[3])]),
+        #     SuperSentence([SuperClause(self.sentences[3], self.sentences[1], self.sentences[4]),
+        #                    SuperClause(self.sentences[3], self.sentences[0], self.sentences[5]),
+        #                    SuperClause(self.sentences[3], self.sentences[2], self.sentences[4])]),
+        #     SuperSentence([SuperClause(self.sentences[5], self.sentences[0], self.sentences[2]),
+        #                    SuperClause(self.sentences[0], self.sentences[1], self.sentences[3]),
+        #                    SuperClause(self.sentences[1], self.sentences[4], self.sentences[2])]),
+        #     SuperSentence([SuperClause(self.sentences[3], self.sentences[1], self.sentences[5]),
+        #                    SuperClause(self.sentences[3], self.sentences[0], self.sentences[5]),
+        #                    SuperClause(self.sentences[1], self.sentences[2], self.sentences[5])])
+        # ]
+        #
+        # for ss in self.super_sentences:
+        #     ss.check()
 
     def test_paradigm_ranking(self):
         # We are going to test for all terms (root paradigms, paradigms, and singular terms) at once
 
-        pass
+        usl_collection = [
+            usl(Word(Morpheme([self.terms[1], self.terms[4]]), Morpheme([self.terms[3]]))),
+            usl(Word(Morpheme([self.terms[1], self.terms[0]]), Morpheme([self.terms[3]]))),
+            usl(Word(Morpheme([self.terms[3], self.terms[0]]),
+                     Morpheme([self.terms[3], self.terms[1]])))
+        ]
+
+        term_order = [self.term_scripts[3], self.term_scripts[1], self.term_scripts[0], self.term_scripts[4],
+                      self.term_scripts[2]]
+
+        result = rank_paradigms(self.term_scripts[:5], usl_collection)
+
+        res_order = [p.paradigm for p in result]
+
+        self.assertEqual(term_order, res_order)
+
+
 
     def test_usl_ranking(self):
         pass
