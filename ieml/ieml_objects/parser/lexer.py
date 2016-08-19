@@ -12,8 +12,6 @@ tokens = (
    'L_CURLY_BRACKET',
    'R_CURLY_BRACKET',
    'SLASH',
-   'L_ANGLE_BRACKET',
-   'R_ANGLE_BRACKET',
    'LITERAL',
 )
 
@@ -29,7 +27,7 @@ def get_lexer(module=None):
     t_L_CURLY_BRACKET = r'\{'
     t_R_CURLY_BRACKET = r'\}'
     t_SLASH = r'\/'
-    t_LITERAL = r'\<.*\>'
+    t_LITERAL = r'\<[^\>]+\>'
 #    t_USL_TAG = r'([A-Za-z0-9 _\./\\-]+)'
 
     t_ignore  = ' \t\n'
@@ -44,8 +42,8 @@ def get_lexer(module=None):
 
 if __name__ == "__main__":
     # Test it out
-    data = '$/[([a.i.-] + [i.i.-]) * ([E:A:T:.]+[E:S:.wa.-]+[E:S:.o.-])]/' \
-           '/[([a.i.-] + [i.i.-]) * ([E:A:T:.]+[E:S:.wa.-]+[E:S:.o.-])]/<"sup dude">$'
+    data = '{/[([a.i.-] + [i.i.-]) * ([E:A:T:.]+[E:S:.wa.-]+[E:S:.o.-])]/' \
+           '/[([a.i.-] + [i.i.-]) * ([E:A:T:.]+[E:S:.wa.-]+[E:S:.o.-])]/<sup dude>}'
 
     # Give the lexer some input
     lexer = get_lexer()

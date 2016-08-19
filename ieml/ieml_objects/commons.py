@@ -37,7 +37,6 @@ class IEMLObjects(TreeStructure, metaclass=IEMLType):
     def __init__(self, children, literals=None):
         super().__init__()
         self.children = tuple(children)
-        self._str = self._do_precompute_str()
 
         _literals = []
         if literals is not None:
@@ -51,6 +50,7 @@ class IEMLObjects(TreeStructure, metaclass=IEMLType):
                                                                     "str or a str."%str(literals))
 
         self.literals = tuple(_literals)
+        self._do_precompute_str()
 
     def __gt__(self, other):
         if not isinstance(other, IEMLObjects):
@@ -67,16 +67,16 @@ class IEMLObjects(TreeStructure, metaclass=IEMLType):
     def compute_str(self, children_str):
         return '#'.join(children_str)
 
-    def __compute_str(self):
+    def _compute_str(self):
         if self._str is not None:
             return self._str
         _literals = ''
         if self.literals:
             _literals = '<' + '><'.join(self.literals) + '>'
-        return self.compute_str([e.__compute_str() for e in self.children]) + _literals
+        return self.compute_str([e._compute_str() for e in self.children]) + _literals
 
     def _do_precompute_str(self):
-        self._str = self.__compute_str()
+        self._str = self._compute_str()
 
 
 class TreeGraph:
@@ -91,13 +91,13 @@ class TreeGraph:
         for t in list_transitions:
             self.transitions[t[0]].append((t[1], t[2]))
 
-        self.nodes = list({self.transitions} | {e[0] for l in self.transitions.values() for e in l})
+        self.nodes = list(set(self.transitions) | {e[0] for l in self.transitions.values() for e in l})
         self.nodes_index = {n: i for i, n in enumerate(self.nodes)}
         _count = len(self.nodes)
         self.array = numpy.zeros((len(self.nodes), len(self.nodes)), dtype=bool)
 
         for t in self.transitions:
-            for end in t:
+            for end in self.transitions[t]:
                 self.array[self.nodes_index[t]][self.nodes_index[end[0]]] = True
 
         # checking

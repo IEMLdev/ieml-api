@@ -1,6 +1,6 @@
 from ieml.AST.propositions import SuperSentence, Word, Sentence, Morpheme
 
-from ieml.object.parser.parser import USLParser
+from ieml.ieml_objects.parser.parser import USLParser
 from ieml.object.terms import Term
 from ieml.object.usl import HyperText, Text
 from ieml.script import Script

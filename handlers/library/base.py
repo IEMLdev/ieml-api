@@ -1,6 +1,6 @@
 import traceback
 
-from ieml.exceptions import IEMLTermNotFoundInDictionnary, ToolsException, InvalidGraphNode, NoRootNodeFound, \
+from ieml.exceptions import ToolsException, InvalidGraphNode, NoRootNodeFound, \
     SeveralRootNodeFound
 from models.base_queries import DictionaryQueries
 from models.propositions import PropositionsQueries
@@ -54,10 +54,10 @@ class ErrorCatcher:
             return {"ERROR_CODE" : 3,
                     "MESSAGE" : "Incorrect proposition: " + e.message}
 
-        except IEMLTermNotFoundInDictionnary as e:
-            traceback.print_exc()
-            return {"ERROR_CODE" : 4,
-                    "MESSAGE" : str(e)}
+        # except IEMLTermNotFoundInDictionnary as e:
+        #     traceback.print_exc()
+        #     return {"ERROR_CODE" : 4,
+        #             "MESSAGE" : str(e)}
 
         except ToolsException:
             traceback.print_exc()

@@ -7,9 +7,6 @@ class TreeStructure:
         self.children = None  # will be an iterable (list or tuple)
 
     def __str__(self):
-        if self._str is None:
-            self._do_precompute_str()
-
         return self._str
 
     def __ne__(self, other):
@@ -34,6 +31,3 @@ class TreeStructure:
         yield self
         for c in self.children:
             yield from c.tree_iter()
-
-    def _do_precompute_str(self):
-        pass

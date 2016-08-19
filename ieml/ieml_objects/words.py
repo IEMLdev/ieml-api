@@ -40,7 +40,7 @@ class Morpheme(IEMLObjects):
 
 
 class Word(IEMLObjects):
-    def __init__(self, root, flexing=None):
+    def __init__(self, root, flexing=None, literals=None):
 
         if not isinstance(root, Morpheme):
             raise InvalidIEMLObjectArgument(Word, "The root %s of a word must be a Morpheme instance."%(str(root)))
@@ -57,7 +57,7 @@ class Word(IEMLObjects):
         if _children[0].empty:
             raise InvalidIEMLObjectArgument(Word, "The root of a Word cannot be empty (%s)."%str(_children[0]))
 
-        super().__init__(_children)
+        super().__init__(_children, literals=literals)
 
     @property
     def grammatical_class(self):

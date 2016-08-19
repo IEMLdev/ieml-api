@@ -37,7 +37,7 @@ class PropositionPath:
         raise NotImplemented
 
     # IEML Object str interface
-    def __compute_str(self):
+    def _compute_str(self):
         return '/'.join((str(p) for p in self.path))
 
 
@@ -81,6 +81,7 @@ class Hyperlink(IEMLObjects):
     def compute_str(self, children_str):
         return '(' + ','.join(children_str) + ')'
 
+
 class Hypertext(IEMLObjects):
     def __init__(self, hyperlink_list):
 
@@ -94,7 +95,7 @@ class Hypertext(IEMLObjects):
                                             str(_children))
 
         try:
-            self.tree_graph = TreeGraph(((c[0], c[1], c) for c in _children))
+            self.tree_graph = TreeGraph(((c.start, c.end, c) for c in _children))
         except InvalidGraphNode as e:
             raise InvalidIEMLObjectArgument(Hypertext, e.message)
 
@@ -112,18 +113,18 @@ class Hypertext(IEMLObjects):
     def compute_str(self, children_str):
         def render_text(text):
             hyperlinks = defaultdict(lambda: list())
-            for h in [e[2] for e in self.tree_graph.transitions[text]]:
+            for h in [e[1] for e in self.tree_graph.transitions[text]]:
                 hyperlinks[h.path].append(h.end)
 
             def _render(path, current):
                 _path = path + [str(current)]
 
-                if isinstance(current, Term) or _path not in hyperlinks:
+                if isinstance(current, Term) or tuple(_path) not in hyperlinks:
                     return str(current)
 
                 return current.compute_str([_render(_path, c) for c in current]) +\
                     ''.join(render_text(t) for t in hyperlinks[_path])
 
-            return '{' + _render([], text) + '}'
+            return _render([], text)
 
         return render_text(self.tree_graph.root)

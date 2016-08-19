@@ -59,7 +59,7 @@ class Script(TreeStructure):
             return False
 
         if self._str is None or other._str is None:
-            raise NotImplemented()
+            return NotImplemented
 
         return self._str == other._str
 
@@ -69,7 +69,7 @@ class Script(TreeStructure):
 
     def __lt__(self, other):
         if not isinstance(self, Script) or not isinstance(other, Script):
-            raise NotImplemented()
+            return NotImplemented
 
         if self == other:
             return False
@@ -214,6 +214,7 @@ class AdditiveScript(Script):
 
         self.script_class = max(c.script_class for c in self)
 
+        self._do_precompute_str()
         self.__order()
 
     def _do_precompute_str(self):
@@ -338,6 +339,7 @@ class MultiplicativeScript(Script):
         if self.cardinal > MAX_SINGULAR_SEQUENCES:
             raise TooManySingularSequences(self.cardinal)
 
+        self._do_precompute_str()
         self.__order()
 
     def _render_children(self, children=None, character=None):
@@ -452,5 +454,4 @@ REMARKABLE_MULTIPLICATION_SCRIPT = {
 }
 
 # Building the remarkable addition to parser
-REMARKABLE_ADDITION_SCRIPT = {key: MultiplicativeScript(character=c) if c != 'E' else NullScript(layer=0)
-                              for key in REMARKABLE_ADDITION for c in REMARKABLE_ADDITION[key]}
+REMARKABLE_ADDITION_SCRIPT = {key: [MultiplicativeScript(character=c) if c != 'E' else NullScript(layer=0) for c in REMARKABLE_ADDITION[key]] for key in REMARKABLE_ADDITION}

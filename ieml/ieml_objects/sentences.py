@@ -17,6 +17,9 @@ class AbstractClause(IEMLObjects):
             if any(e is None for e in children):
                 raise InvalidIEMLObjectArgument(self.__class__, "Must specify a substance, an attribute and a mode.")
 
+        if len(children) != 3:
+            raise InvalidIEMLObjectArgument(self.__class__, "A clause must have three children (%d provided)."%len(children))
+
         if not all(isinstance(e, subtype) for e in children):
             raise InvalidIEMLObjectArgument(self.__class__, "The children of a %s must be a %s instance."%
                                             (self.__class__.__name__, subtype.__name__))
@@ -48,7 +51,7 @@ class AbstractClause(IEMLObjects):
 
 
 class AbstractSentence(IEMLObjects):
-    def __init__(self, subtype, clause_list):
+    def __init__(self, subtype, clause_list, literals=None):
         try:
             _children = tuple(e for e in clause_list)
         except TypeError:
@@ -67,7 +70,7 @@ class AbstractSentence(IEMLObjects):
             raise InvalidIEMLObjectArgument(self.__class__, "Too many distinct nodes: %d>%d."%
                                             (len(self.tree_graph.nodes), MAX_NODES_IN_SENTENCE))
 
-        super().__init__(e for stage in self.tree_graph.stages for e in sorted(stage))
+        super().__init__((e for stage in self.tree_graph.stages for e in sorted((t[1] for s in stage for t in self.tree_graph.transitions[s]))), literals=literals)
 
     @property
     def grammatical_class(self):
@@ -83,8 +86,8 @@ class Clause(AbstractClause):
 
 
 class Sentence(AbstractSentence):
-    def __init__(self, clause_list):
-        super().__init__(Clause, clause_list=clause_list)
+    def __init__(self, clause_list, literals=None):
+        super().__init__(Clause, clause_list=clause_list, literals=literals)
 
 
 class SuperClause(AbstractClause):
@@ -93,5 +96,5 @@ class SuperClause(AbstractClause):
 
 
 class SuperSentence(AbstractSentence):
-    def __init__(self, clause_list):
-        super().__init__(SuperClause, clause_list=clause_list)
+    def __init__(self, clause_list, literals=None):
+        super().__init__(SuperClause, clause_list=clause_list, literals=literals)

@@ -1,9 +1,8 @@
-from ieml.AST import Term, Text, HyperText, Word, Sentence, SuperSentence
-
 from handlers.library.base import texts_db
 from ieml import USLParser
+from ieml.AST import Term, Text, HyperText, Word, Sentence, SuperSentence
 from ieml.exceptions import CannotParse
-from ieml.object.parser.parser import PropositionsParser
+from ieml.ieml_objects.parser.parser import PropositionsParser
 from ieml.object.tree_metadata import HypertextMetadata, PropositionMetadata, TextMetadata
 from models.interface import SearchRequest
 from models.propositions import PropositionsQueries

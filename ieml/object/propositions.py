@@ -225,7 +225,6 @@ class Word(AbstractMultiplicativeProposition, ClosedProposition):
         return [(PropositionPath(current_path, self), usl_ref) for usl_ref in self.hyperlink]
 
 
-
 @total_ordering
 class AbstractClause(AbstractMultiplicativeProposition, NonClosedProposition):
 
