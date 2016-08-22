@@ -1,7 +1,7 @@
 import unittest
 
 from ieml.operator import sc
-from ieml.script.constants import AUXILIARY_CLASS, VERB_CLASS, NOUN_CLASS
+from ieml.script.constants import AUXILIARY_CLASS, VERB_CLASS, NOUN_CLASS, PRIMITVES
 from ieml.script.script import MultiplicativeScript
 
 scripts = list(map(sc, ["O:.E:M:.-"]))
@@ -22,3 +22,9 @@ class TestScript(unittest.TestCase):
             layer0 = [m for m in s.tree_iter() if m.layer == 0 and isinstance(m, MultiplicativeScript)]
             for m in layer0:
                 self.assertEqual(m.children, [], msg='Script %s have multiplicative node of layer 0 with children'%str(s))
+
+    def test_order_primitive(self):
+        primitives = [sc(p + ':') for p in PRIMITVES]
+        primitives.sort()
+        res = ''.join([str(p)[0:1] for p in primitives])
+        self.assertEqual(res, 'EUASBT', msg='Primitives not correctly sorted.')

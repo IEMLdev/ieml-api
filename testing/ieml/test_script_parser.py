@@ -1,11 +1,13 @@
 from pymongo import MongoClient
 
 from ieml import ScriptParser
+from ieml.exceptions import CannotParse
 from ieml.operator import sc
 from ieml.script import *
 from models.constants import TERMS_COLLECTION
 from testing.ieml.helper import *
 from config import DB_ADDRESS
+
 
 class TestTermParser(unittest.TestCase):
     def setUp(self):
@@ -19,6 +21,10 @@ class TestTermParser(unittest.TestCase):
         self.assertTrue(script.layer == 4)
 
         self.assertEqual(str(script), "s.-S:.U:.-'l.-S:.O:.-'n.-T:.A:.-',+M:.-'M:.-'n.-T:.A:.-',")
+
+    def test_fail(self):
+        with self.assertRaises(CannotParse):
+            ScriptParser().parse('wa:O:.')
 
     def test_layer(self):
         script = self.parser.parse("t.i.-s.i.-'u.T:.-U:.-'O:O:.-',B:.-',_M:.-',_;")

@@ -1,8 +1,9 @@
+from handlers.commons import exception_handler
 from ieml.operator import sc
-from models.exceptions import DBException, InvalidRelationCollectionState, InvalidRelationTitle
+from models.exceptions import InvalidRelationCollectionState, InvalidRelationTitle
 from models.relations.relations_queries import RelationsQueries
 from ..caching import cached, flush_cache
-from handlers.dictionary.commons import terms_db, exception_handler, relation_name_table
+from handlers.dictionary.commons import terms_db, relation_name_table
 from ieml.exceptions import CannotParse
 from ieml.script.constants import AUXILIARY_CLASS, VERB_CLASS, NOUN_CLASS
 from ieml.script.script import MultiplicativeScript, NullScript
@@ -11,31 +12,32 @@ from ieml.script.tools import old_canonical
 from .client import need_login
 
 
+def _build_old_model_from_term_entry(term_db_entry):
+    terms_ast = sc(term_db_entry["_id"])
+    try:
+        rank = RelationsQueries.rank(term_db_entry["_id"]) if terms_ast.paradigm else 0
+    except InvalidRelationCollectionState:
+        rank = 'n/a'
+
+    return {
+        "_id": term_db_entry["_id"],
+        "IEML": term_db_entry["_id"],
+        "CLASS": terms_ast.script_class,
+        "EN": term_db_entry["TAGS"]["EN"],
+        "FR": term_db_entry["TAGS"]["FR"],
+        "PARADIGM": "1" if terms_ast.paradigm else "0",
+        "LAYER": terms_ast.layer,
+        "TAILLE": terms_ast.cardinal,
+        "CANONICAL": old_canonical(terms_ast),
+        "ROOT_PARADIGM": term_db_entry["ROOT"],
+        "RANK": rank
+    }
+
+
 @cached("all_ieml", 60)
 @exception_handler
 def all_ieml():
     """Returns a dump of all the terms contained in the DB, formatted for the JS client"""
-    def _build_old_model_from_term_entry(term_db_entry):
-        terms_ast = sc(term_db_entry["_id"])
-        try:
-            rank = RelationsQueries.rank(term_db_entry["_id"]) if terms_ast.paradigm else 0
-        except InvalidRelationCollectionState:
-            rank = 'n/a'
-
-        return {
-            "_id" : term_db_entry["_id"],
-            "IEML" : term_db_entry["_id"],
-            "CLASS" : terms_ast.script_class,
-            "EN" : term_db_entry["TAGS"]["EN"],
-            "FR" : term_db_entry["TAGS"]["FR"],
-            "PARADIGM" : "1" if terms_ast.paradigm else "0",
-            "LAYER" : terms_ast.layer,
-            "TAILLE" : terms_ast.cardinal,
-            "CANONICAL" : old_canonical(terms_ast),
-            "ROOT_PARADIGM" : term_db_entry["ROOT"],
-            "RANK": rank
-        }
-
     result = [_build_old_model_from_term_entry(entry) for entry in terms_db().get_all_terms()]
     return result
 
@@ -47,7 +49,7 @@ def parse_ieml(iemltext):
             "success" : True,
             "level" : script_ast.layer,
             "taille" : script_ast.cardinal,
-            "class" : script_ast.script_class, # TODO : change it to the actual value
+            "class" : script_ast.script_class,
             "canonical" : old_canonical(script_ast)
         }
     except CannotParse:
@@ -247,7 +249,9 @@ def new_ieml_script(body):
                         inhibits=_process_inhibits(body), # no inhibitions at the script's creation
                         root=body["PARADIGM"] == "1",
                         recompute_relations=False)
-    return {"success" : True, "IEML": str(script_ast)}
+
+    entry = terms_db().get_term(script_ast)
+    return {"success" : True, "added": _build_old_model_from_term_entry(entry)}
 
 
 @need_login
@@ -280,7 +284,9 @@ def update_ieml_script(body):
                           {"FR": body["FR"], "EN": body["EN"]},  # the
                           root=body["PARADIGM"] == "1", inhibits=inhibits, recompute_relations=False)
 
-    return {'success': True}
+    entry = terms_db().get_term(script_ast)
+    return {"success" : True, "modified": _build_old_model_from_term_entry(entry)}
+
 
 def ieml_term_exists(ieml_term):
     """Tries to dig a term from the database"""

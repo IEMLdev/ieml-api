@@ -1,15 +1,92 @@
+import functools
+import os
+import random
+
+import pymongo.errors
+
 from helpers.metaclasses import Singleton
 from models.base_queries import DBConnector
-from models.constants import SCRIPTS_COLLECTION, ROOT_PARADIGM_TYPE, SINGULAR_SEQUENCE_TYPE, PARADIGM_TYPE
+from models.constants import RELATIONS_COLLECTION, ROOT_PARADIGM_TYPE, SINGULAR_SEQUENCE_TYPE, PARADIGM_TYPE, \
+    RELATIONS_LOCK_COLLECTION, DROP_RELATIONS, SCRIPT_INSERTION, SCRIPT_DELETION
 from models.exceptions import NotAParadigm, RootParadigmIntersection, \
-    ParadigmAlreadyExist, RootParadigmMissing, SingularSequenceAlreadyExist, NotASingularSequence, TermNotFound
+    ParadigmAlreadyExist, RootParadigmMissing, SingularSequenceAlreadyExist, NotASingularSequence, TermNotFound, \
+    CollectionAlreadyLocked
 import logging
+
+
+def safe_execution(role):
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*arg, **kwrag):
+            key = os.urandom(10)
+            try:
+                RelationsConnector().set_lock(role, key=key)
+                return func(*arg, **kwrag)
+            finally:
+                RelationsConnector().free_lock(key=key)
+        return wrapper
+    return decorator
 
 
 class RelationsConnector(DBConnector, metaclass=Singleton):
     def __init__(self):
         super().__init__()
-        self.relations = self.db[SCRIPTS_COLLECTION]
+        self.relations = self.db[RELATIONS_COLLECTION]
+        self.relations_lock = self.db[RELATIONS_LOCK_COLLECTION]
+
+    def lock_status(self):
+        """
+        Return the status of the lock or None if the lock is free.
+        :return: dict of 'role' : the role the application have given to that lock
+                         'pid'  : the process id of the lock taker.
+        """
+        return self.relations_lock.find_one({'_id': 0}, {'role': 1, 'pid': 1, 'key': 1})
+
+    def set_lock(self, role, key=None):
+        """
+        Try to take the lock with the given role. It must be a string explaining why the lock is taken.
+        If we can't take the lock, raise CollectionAlreadyLocked.
+        :param role:
+        :return:
+        """
+        pid = os.getpid()
+        try:
+            self.relations_lock.insert({'_id': 0, 'pid': pid, 'role': role, 'key': (key if key is not None else 0)})
+        except pymongo.errors.DuplicateKeyError:
+            status = self.lock_status()
+            if status:
+                if status['pid'] == pid:
+                    #update the role
+                    self.relations_lock.update({'_id': 0}, {'$set' : {'role': role}})
+                    return
+
+                raise CollectionAlreadyLocked(status['pid'], status['role'])
+
+    def free_lock(self, force=False, key=None):
+        """
+        Try to free the lock. If the lock is already free, do nothing. If the lock belongs to another proccess, do
+         nothing and raise a warning.
+        :param force: Force delete the lock, even if the process doesn't own it.
+        :param key: if specified, the lock must have the same id.
+        :return: The success of the free
+        """
+        status = self.lock_status()
+        if status is None:
+            return True
+
+        pid = os.getpid()
+        if status['pid'] != pid and not force:
+            logging.error('Error deleting the relations collection lock, the lock belong to '
+                          'process id:%d for role:%s.'%(status['pid'], status['role']))
+            return False
+        else:
+            if key is not None and status['key'] != key and not force:
+                return False
+
+            request = {'_id': 0}
+            if not force:
+                request['pid'] = pid
+            return self.relations_lock.delete_one(request).deleted_count == 1
 
     def get_script(self, script):
         """
@@ -30,6 +107,10 @@ class RelationsConnector(DBConnector, metaclass=Singleton):
             return False
         else:
             return True
+
+    @safe_execution(DROP_RELATIONS)
+    def empty_collection(self):
+        self.relations.drop()
 
     def singular_sequences(self, paradigm=None):
         """
@@ -52,18 +133,6 @@ class RelationsConnector(DBConnector, metaclass=Singleton):
         else:
             return []
 
-    def save_script(self, script_ast, root=False):
-        """
-        Save a script in the relation collection.
-        :param script_ast: the Script instance to save.
-        :param root: if this script is a root paradigm.
-        :return: None
-        """
-        if script_ast.paradigm:
-            self.save_paradigm(script_ast, root=root)
-        else:
-            self._save_singular_sequence(script_ast)
-
     def remove_script(self, script_ast):
         """
         Remove a script from the relations collection.
@@ -75,6 +144,18 @@ class RelationsConnector(DBConnector, metaclass=Singleton):
             return
 
         self.relations.remove({'_id': str(script_ast)})
+
+    def save_script(self, script_ast, root=False):
+        """
+        Save a script in the relation collection.
+        :param script_ast: the Script instance to save.
+        :param root: if this script is a root paradigm.
+        :return: None
+        """
+        if script_ast.paradigm:
+            self.save_paradigm(script_ast, root=root)
+        else:
+            self._save_singular_sequence(script_ast)
 
     def save_paradigm(self, script_ast, root=False):
         """
@@ -119,6 +200,7 @@ class RelationsConnector(DBConnector, metaclass=Singleton):
             'LAYER': script_ast.layer,
             'SINGULAR_SEQUENCES': [str(script_ast)]
         }
+
         self.relations.insert(insertion)
 
     def _save_root_paradigm(self, script_ast):

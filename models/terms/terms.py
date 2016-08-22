@@ -1,8 +1,9 @@
+from ieml.exceptions import InvalidScript
 from ieml.parsing.script.parser import ScriptParser
 from ieml.script.tools import factorize
 from models.base_queries import DBConnector, Tag
 from models.constants import TERMS_COLLECTION, TAG_LANGUAGES
-from models.exceptions import InvalidInhibitArgument, InvalidScript, InvalidTags, TermAlreadyExists, InvalidMetadata,\
+from models.exceptions import InvalidInhibitArgument, InvalidTags, TermAlreadyExists, InvalidMetadata,\
     CantRemoveNonEmptyRootParadigm, TermNotFound, DuplicateTag
 from ieml.script.constants import INHIBIT_RELATIONS
 from ieml.script import Script
@@ -51,7 +52,7 @@ class TermsConnector(DBConnector):
         self._check_tags(tags)
 
         # update the relations of the paradigm in the relation collection
-        RelationsQueries.save_script(script_ast, inhibition=self.get_inhibitions(), root=root, recompute_relations=recompute_relations)
+        RelationsQueries.save_script(script_ast, root=root, recompute_relations=recompute_relations)
 
         self._save_term(script_ast, tags, inhibits, root, metadata)
 
@@ -95,7 +96,7 @@ class TermsConnector(DBConnector):
         """
         # Argument check
         if not isinstance(script_ast, Script):
-            raise InvalidScript(script_ast)
+            raise InvalidScriptArgument(script_ast)
 
         term = self.get_term(script_ast)
         if term is None:
@@ -116,7 +117,7 @@ class TermsConnector(DBConnector):
 
         # remove the root paradigm
         self.terms.remove({'_id': str(script_ast)})
-        RelationsQueries.remove_script(script_ast, inhibition=self.get_inhibitions(), recompute_relations=recompute_relations)
+        RelationsQueries.remove_script(script_ast, recompute_relations=recompute_relations)
 
     def update_term(self, script, tags=None, inhibits=None, root=None, metadata=None, recompute_relations=True):
         """
@@ -155,7 +156,7 @@ class TermsConnector(DBConnector):
             if 'ROOT' in update:
                 inhibition = self.get_inhibitions()
                 RelationsQueries.remove_script(script, recompute_relations=False)
-                RelationsQueries.save_script(script, inhibition=inhibition, root=root, recompute_relations=recompute_relations)
+                RelationsQueries.save_script(script, root=root, recompute_relations=recompute_relations)
 
             elif 'INHIBITS' in update and recompute_relations:
                 self.recompute_relations()
@@ -187,7 +188,7 @@ class TermsConnector(DBConnector):
 
         # Argument check
         if not isinstance(script_ast, Script):
-            raise InvalidScript(script_ast)
+            raise InvalidScriptArgument(script_ast)
 
         if not isinstance(inhibits, list) or any(r not in INHIBIT_RELATIONS for r in inhibits):
             raise InvalidInhibitArgument(inhibits)
@@ -237,14 +238,18 @@ class TermsConnector(DBConnector):
         :return: None
         """
         if all_delete:
-            RelationsConnector().relations.drop()
+            RelationsConnector().empty_collection()
 
             RelationsQueries.save_multiple_script(
                 [{'AST': self.parser.parse(t['_id']),
-                  'ROOT': t['ROOT']} for t in self.get_all_terms()], self.get_inhibitions(), verbose=verbose)
+                  'ROOT': t['ROOT']} for t in self.get_all_terms()], verbose=verbose)
 
         else:
-            RelationsQueries.compute_all_relations(inhibition=self.root_paradigms(), verbose=verbose)
+            RelationsQueries.compute_relations(
+                roots_paradigms=self.root_paradigms(ieml_only=True),
+                globals=True,
+                inhibitions=True,
+                verbose=verbose)
 
     def _check_tags(self, tags):
         if not Tag.check_tags(tags):

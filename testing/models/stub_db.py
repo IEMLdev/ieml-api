@@ -71,6 +71,7 @@ class ModelTestCase(unittest.TestCase):
     def _clear(self):
         self.terms.terms.drop()
         self.relations.relations.drop()
+        self.relations.relations_lock.drop()
 
     def _save_paradigm(self, paradigm, recompute_relations=True):
         list_terms = [{
