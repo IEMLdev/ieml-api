@@ -51,7 +51,7 @@ class PropositionPath:
 
     @requires_not_empty
     def get_children_subpaths(self, depth=1): # depth indicate how make times the function should go down
-        """Generates the subpaths to the child of a proposition"""
+        """Generates the subpaths to the children of a proposition"""
         if depth == 0:
             return [self]
         else:
