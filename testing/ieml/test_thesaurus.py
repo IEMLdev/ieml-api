@@ -167,10 +167,21 @@ class ThesaurusTests(unittest.TestCase):
 
         self.assertEqual(term_order, res_order)
 
-
-
     def test_usl_ranking(self):
-        pass
+        usl_collection = [
+            usl(Word(Morpheme([self.terms[1], self.terms[3], self.terms[2]]),
+                     Morpheme([self.terms[1], self.terms[3]]))),
+            usl(Word(Morpheme([self.terms[2], self.terms[3]]), Morpheme([self.terms[2]]))),
+            usl(Word(Morpheme([self.terms[3], self.terms[1]])))
+        ]
+
+        result = rank_usls(self.term_scripts[1:4], usl_collection)
+
+        self.assertEqual(len(result), 3)
+        self.assertEqual(result[self.term_scripts[1]], [usl_collection[0], usl_collection[2], usl_collection[1]])
+        self.assertEqual(result[self.term_scripts[2]], [usl_collection[1], usl_collection[0], usl_collection[2]])
+        self.assertEqual(result[self.term_scripts[3]], [usl_collection[0], usl_collection[1], usl_collection[2]])
+
 
     def test_paradigm_citation_dist(self):
         pass
