@@ -28,6 +28,8 @@ def _build_cache(usl_collection):
     # Second coordinate: Sentence
     # Third coordinate: Word
     source_layer = defaultdict(lambda: [0, 0, 0])
+    # For every term we associate a vector where each coordinate
+    # is the number of citations from a given grammatical class
     source_class = defaultdict(lambda: [0, 0, 0])
     # Each term will be mapped to a vector indicating the number of citations from an usl in the usl_collection
     # each usl is given a coordinate in the usl_index bidict
@@ -133,18 +135,28 @@ def paradigm_usl_distribution(paradigm, usl_collection):
     dist_tables = [np.zeros(table.cells.shape, dtype=int) for table in tbls]
 
     for tbl_idx, table in enumerate(tbls):
+        it = np.nditer(table.cells, flags=['multi_index', 'refs_ok'])
+        while not it.finished:
+            # it[0] is the cell element
+            dist_tables[tbl_idx][it.multi_index] += sum(_cache.source_layer[it[0].item()])
+            it.iternext()
+
+        # We also want to count the cell citations coming from the headers
         if table.dimension == 1:
-            for i, cell in enumerate(table.cells):
-                dist_tables[tbl_idx][i] = sum(_cache.source_layer[cell])
+            for i, row_header in enumerate(table.headers[0]):
+                dist_tables[tbl_idx][i] += sum(_cache.source_layer[row_header])
         elif table.dimension == 2:
-            for i, row in enumerate(table.cells):
-                for j, cell in enumerate(row):
-                    dist_tables[tbl_idx][i][j] = sum(_cache.source_layer[cell])
+            for i, row_header in enumerate(table.headers[0]):
+                dist_tables[tbl_idx][i, :] += sum(_cache.source_layer[row_header])
+            for i, col_header in enumerate(table.headers[1]):
+                dist_tables[tbl_idx][:, i] += sum(_cache.source_layer[col_header])
         elif table.dimension == 3:
-            for k in range(table.cells[2]):
-                for i, row in enumerate(table.cells):
-                    for j, col in enumerate(row):
-                        dist_tables[tbl_idx][i][j][k] = sum(_cache.source_layer[cell])
+            for i, row_header in enumerate(table.headers[0]):
+                dist_tables[tbl_idx][i, :, :] += sum(_cache.source_layer[row_header])
+            for i, col_header in enumerate(table.headers[1]):
+                dist_tables[tbl_idx][:, i, :] += sum(_cache.source_layer[col_header])
+            for i, tab_header in enumerate(table.headers[2]):
+                dist_tables[tbl_idx][:, :, i] += sum(_cache.source_layer[tab_header])
 
     return dist_tables
 
