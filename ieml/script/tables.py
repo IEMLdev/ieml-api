@@ -322,8 +322,12 @@ def get_table_rank(paradigm):
     rc = RelationsConnector()
     paradigm_rel = rc.get_script(paradigm)
     # TODO: Check if the paradigm was found in the database
-    if paradigm_rel["TYPE"] == "ROOT_PARADIGM":  # Root paradigms have a rank 1
+    if paradigm_rel["TYPE"] == "ROOT_PARADIGM" and isinstance(paradigm, AdditiveScript):  # Root paradigms have a rank 1
         return 1
+    elif paradigm_rel["TYPE"] == "ROOT_PARADIGM" and isinstance(paradigm, MultiplicativeScript):
+        return 0
+    elif len(paradigm.singular_sequences) == 0:
+        return 6
 
     return _compute_rank(paradigm, rc.get_script(paradigm_rel['ROOT']))
 
