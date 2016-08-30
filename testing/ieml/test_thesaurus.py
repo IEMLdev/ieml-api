@@ -4,6 +4,7 @@ from ieml.AST.terms import Term
 from ieml.operator import sc, usl
 from ieml.calculation.thesaurus import rank_paradigms, rank_usls, paradigm_usl_distribution
 from models.terms import TermsConnector
+import numpy as np
 
 
 class ThesaurusTests(unittest.TestCase):
@@ -182,9 +183,36 @@ class ThesaurusTests(unittest.TestCase):
         self.assertEqual(result[self.term_scripts[2]], [usl_collection[1], usl_collection[0], usl_collection[2]])
         self.assertEqual(result[self.term_scripts[3]], [usl_collection[0], usl_collection[1], usl_collection[2]])
 
-
     def test_paradigm_citation_dist(self):
-        pass
+
+        paradigm = sc("E:O:O:.")
+        cells = [
+            Term("E:U:U:."),
+            Term("E:U:A:."),
+            Term("E:A:U:."),
+            Term("E:A:A:.")
+        ]
+        headers = [Term("E:O:U:."), Term("E:O:A:."), Term("E:U:O:."), Term("E:A:O:.")]
+
+        usl_collection = [
+            usl(Word(Morpheme([cells[0], cells[1]]), Morpheme([cells[3], cells[1], cells[2]]))),
+            usl(Word(Morpheme([cells[0], cells[2]]), Morpheme([cells[3]]))),
+            usl(Word(Morpheme([headers[0], cells[3]]), Morpheme([headers[3], headers[2]]))),
+            usl(Word(Morpheme([cells[1]]), Morpheme([cells[1]])))
+        ]
+
+        result = paradigm_usl_distribution(paradigm, usl_collection)
+        correct_result = np.zeros((2, 2), dtype=np.int32)
+
+        correct_result[0][0] = 4
+        correct_result[0][1] = 5
+        correct_result[1][0] = 4
+        correct_result[1][1] = 4
+
+        self.assertEqual(len(result), 1, "The paradigm has one table so we should have one distribution table")
+        self.assertTrue(np.array_equal(result[0], correct_result))
+
+
 
 
 if __name__ == '__main__':
