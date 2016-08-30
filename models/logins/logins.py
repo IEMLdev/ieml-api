@@ -1,14 +1,16 @@
 from pymongo import MongoClient
 import bcrypt
-from config import DB_ADDRESS
+from config import DB_ADDRESS, DB_USERS, COLLECTION_USERS
 
-DB_USERS = 'users'
-COLLECTION_USERS = 'users'
-
+_login_collection = None
 
 def _get_users_collection():
-    client = MongoClient(DB_ADDRESS)
-    return client[DB_USERS][COLLECTION_USERS]
+    # TODO : put this in singleton
+    global _login_collection
+    if _login_collection is None:
+        client = MongoClient(DB_ADDRESS)
+        _login_collection = client[DB_USERS][COLLECTION_USERS]
+    return _login_collection
 
 
 def is_user(name, password):
