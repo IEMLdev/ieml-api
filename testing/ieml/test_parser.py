@@ -1,6 +1,7 @@
 import unittest
 
 from ieml.ieml_objects.parser.parser import IEMLParser
+from ieml.ieml_objects.sentences import Sentence
 from ieml.ieml_objects.terms import Term
 from ieml.ieml_objects.words import Morpheme, Word
 # from ieml.object.tools import RandomPropositionGenerator
@@ -45,21 +46,18 @@ class TestUSLParser(unittest.TestCase):
         """Weak test of the USL with hyperlink parsing"""
         with open("../../data/example_text.txt") as ieml_file:
             usl_obj = self.parser.parse(ieml_file.read())
-        self.assertEqual(len(usl_obj.texts), 1)
-        self.assertEqual(len(usl_obj.children), 1)
-        self.assertEqual(len(usl_obj.texts[0].children), 2)
-        self.assertEqual(usl_obj.strate, 0)
+        self.assertEqual(len(usl_obj.children), 2)
 
     def test_with_hyperlink(self):
         """Weak test of the USL with hyperlink parsing"""
         with open("../../data/example_usl_one_hyperlink.txt") as ieml_file:
             usl_obj = self.parser.parse(ieml_file.read())
-        self.assertEqual(len(usl_obj.texts), 2)
-        self.assertEqual(len(usl_obj.texts[0].children), 2)
-        self.assertEqual(set(type(child) for child in usl_obj.texts[0].children), {Word, Sentence})
+        self.assertEqual(len(usl_obj.children), 1)
+
+        self.assertEqual(set(type(child) for child in usl_obj.children[0].children[0].children), {Word, Sentence})
 
     def test_with_multiple_hyperlinks(self):
         """Weak test of the USL with hyperlink parsing"""
-        with open("data/example_usl_multiple_hyperlinks.txt") as ieml_file:
+        with open("../../data/example_usl_multiple_hyperlinks.txt") as ieml_file:
             usl_obj = self.parser.parse(ieml_file.read())
-        self.assertEqual(len(usl_obj.texts), 4)
+        self.assertEqual(len(usl_obj.children), 3)
