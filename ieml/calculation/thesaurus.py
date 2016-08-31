@@ -6,6 +6,7 @@ from ieml.operator import sc
 from collections import namedtuple, defaultdict
 from ieml.script.constants import AUXILIARY_CLASS, VERB_CLASS, NOUN_CLASS
 from models.terms import TermsConnector
+from models.relations.relations import RelationsConnector
 import bidict
 import numpy as np
 
@@ -45,6 +46,17 @@ def _build_cache(usl_collection):
                 source_layer[t.script][coordinate[elem.__class__]] += 1
                 source_class[t.script][elem.grammatical_class] += 1
                 source_usl[t.script][usl_index.inv[u]] += layer_weight[elem.__class__]
+
+                # We also count all the contained terms
+                rc = RelationsConnector()
+                term_rel = rc.get_script(t.script)
+                if 'CONTAINS' in term_rel['RELATIONS']:
+                    for child in term_rel['RELATIONS']['CONTAINS']:
+                        child_script = sc(child)
+                        source_layer[child_script][coordinate[elem.__class__]] += 1
+                        source_class[child_script][elem.grammatical_class] += 1
+                        source_usl[child_script][usl_index.inv[u]] += layer_weight[elem.__class__]
+
 
     return Cache(source_layer=source_layer, source_class=source_class, source_usl=source_usl, usl_index=usl_index.inv)
 
@@ -141,22 +153,22 @@ def paradigm_usl_distribution(paradigm, usl_collection):
             dist_tables[tbl_idx][it.multi_index] += sum(_cache.source_layer[it[0].item()])
             it.iternext()
 
-        # We also want to count the cell citations coming from the headers
-        if table.dimension == 1:
-            for i, row_header in enumerate(table.headers[0]):
-                dist_tables[tbl_idx][i] += sum(_cache.source_layer[row_header])
-        elif table.dimension == 2:
-            for i, row_header in enumerate(table.headers[0]):
-                dist_tables[tbl_idx][i, :] += sum(_cache.source_layer[row_header])
-            for i, col_header in enumerate(table.headers[1]):
-                dist_tables[tbl_idx][:, i] += sum(_cache.source_layer[col_header])
-        elif table.dimension == 3:
-            for i, row_header in enumerate(table.headers[0]):
-                dist_tables[tbl_idx][i, :, :] += sum(_cache.source_layer[row_header])
-            for i, col_header in enumerate(table.headers[1]):
-                dist_tables[tbl_idx][:, i, :] += sum(_cache.source_layer[col_header])
-            for i, tab_header in enumerate(table.headers[2]):
-                dist_tables[tbl_idx][:, :, i] += sum(_cache.source_layer[tab_header])
+        # # We also want to count the cell citations coming from the headers
+        # if table.dimension == 1:
+        #     for i, row_header in enumerate(table.headers[0]):
+        #         dist_tables[tbl_idx][i] += sum(_cache.source_layer[row_header])
+        # elif table.dimension == 2:
+        #     for i, row_header in enumerate(table.headers[0]):
+        #         dist_tables[tbl_idx][i, :] += sum(_cache.source_layer[row_header])
+        #     for i, col_header in enumerate(table.headers[1]):
+        #         dist_tables[tbl_idx][:, i] += sum(_cache.source_layer[col_header])
+        # elif table.dimension == 3:
+        #     for i, row_header in enumerate(table.headers[0]):
+        #         dist_tables[tbl_idx][i, :, :] += sum(_cache.source_layer[row_header])
+        #     for i, col_header in enumerate(table.headers[1]):
+        #         dist_tables[tbl_idx][:, i, :] += sum(_cache.source_layer[col_header])
+        #     for i, tab_header in enumerate(table.headers[2]):
+        #         dist_tables[tbl_idx][:, :, i] += sum(_cache.source_layer[tab_header])
 
     return dist_tables
 
