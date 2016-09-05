@@ -3,7 +3,7 @@ from collections import defaultdict
 from ieml.exceptions import InvalidGraphNode
 from ieml.ieml_objects.commons import IEMLObjects, TreeGraph
 from ieml.ieml_objects.constants import MAX_NODES_IN_HYPERTEXT, MAX_DEPTH_IN_HYPERTEXT
-from ieml.ieml_objects.exceptions import InvalidIEMLObjectArgument
+from ieml.ieml_objects.exceptions import InvalidIEMLObjectArgument, InvalidTreeStructure
 from ieml.ieml_objects.sentences import Sentence, SuperSentence
 from ieml.ieml_objects.terms import Term
 from ieml.ieml_objects.texts import Text
@@ -96,7 +96,7 @@ class Hypertext(IEMLObjects):
 
         try:
             self.tree_graph = TreeGraph(((c.start, c.end, c) for c in _children))
-        except InvalidGraphNode as e:
+        except InvalidTreeStructure as e:
             raise InvalidIEMLObjectArgument(Hypertext, e.message)
 
         if len(self.tree_graph.nodes) > MAX_NODES_IN_HYPERTEXT:

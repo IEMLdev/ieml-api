@@ -4,8 +4,7 @@ from functools import total_ordering
 import numpy
 
 from ieml.commons import TreeStructure
-from ieml.exceptions import NoRootNodeFound, SeveralRootNodeFound, NodeHasNoParent, NodeHasTooMuchParents
-from ieml.ieml_objects.exceptions import InvalidIEMLObjectArgument
+from ieml.ieml_objects.exceptions import InvalidIEMLObjectArgument, InvalidTreeStructure
 
 
 @total_ordering
@@ -107,18 +106,18 @@ class TreeGraph:
         roots_count = numpy.count_nonzero(no_parents)
 
         if roots_count == 0:
-            raise NoRootNodeFound()
+            raise InvalidTreeStructure('No root node found, the graph has at least a cycle.')
         elif roots_count > 1:
-            raise SeveralRootNodeFound()
+            raise InvalidTreeStructure('Several root nodes found.')
 
         self.root = self.nodes[no_parents.nonzero()[0][0]]
 
         if (parents_count > 1).any():
-            raise NodeHasTooMuchParents()
+            raise InvalidTreeStructure('A node has several parents.')
 
         def __stage():
             current = [self.root]
-            while current != []:
+            while current:
                 yield current
                 current = [child[0] for parent in current for child in self.transitions[parent]]
 

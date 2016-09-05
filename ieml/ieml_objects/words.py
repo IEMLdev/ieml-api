@@ -8,10 +8,13 @@ from ieml.ieml_objects.terms import Term
 
 class Morpheme(IEMLObjects):
     def __init__(self, term_list):
-        try:
-            _children = tuple(e for e in term_list)
-        except TypeError:
-            raise InvalidIEMLObjectArgument(Morpheme, "The argument %s is not an iterable"%str(term_list))
+        if isinstance(term_list, Term):
+            _children = (term_list,)
+        else:
+            try:
+                _children = tuple(e for e in term_list)
+            except TypeError:
+                raise InvalidIEMLObjectArgument(Morpheme, "The argument %s is not an iterable"%str(term_list))
 
         if not 0 < len(_children) <= MORPHEME_SIZE_LIMIT:
             raise InvalidIEMLObjectArgument(Morpheme, "Invalid terms count %d."%len(_children))

@@ -3,7 +3,7 @@ from itertools import zip_longest
 from ieml.exceptions import InvalidGraphNode
 from ieml.ieml_objects.commons import IEMLObjects, TreeGraph
 from ieml.ieml_objects.constants import MAX_NODES_IN_SENTENCE
-from ieml.ieml_objects.exceptions import InvalidIEMLObjectArgument
+from ieml.ieml_objects.exceptions import InvalidIEMLObjectArgument, InvalidTreeStructure
 from ieml.ieml_objects.words import Word
 
 
@@ -63,8 +63,8 @@ class AbstractSentence(IEMLObjects):
 
         try:
             self.tree_graph = TreeGraph(((c.substance, c.attribute, c) for c in _children))
-        except InvalidGraphNode as e:
-            raise InvalidIEMLObjectArgument(self.__class__, e.message)
+        except InvalidTreeStructure as e:
+            raise InvalidIEMLObjectArgument(self.__class__, e)
 
         if len(self.tree_graph.nodes) > MAX_NODES_IN_SENTENCE:
             raise InvalidIEMLObjectArgument(self.__class__, "Too many distinct nodes: %d>%d."%
