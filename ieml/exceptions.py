@@ -20,9 +20,7 @@ class ASTException(Exception):
     pass
 
 class PropositionException(ASTException):
-    def __init__(self, proposition_ref):
-        super().__init__()
-        self.proposition_ref = proposition_ref
+    pass
 
 
 class AdditiveOrderNotRespected(PropositionException):
@@ -40,10 +38,6 @@ class InvalidClauseComparison(PropositionException):
         self.other_ref = other_ref
 
 
-class SentenceHasntBeenChecked(PropositionException):
-    pass
-
-
 class IndistintiveTermsExist(ASTException):
     pass
 
@@ -54,52 +48,48 @@ class TooManyTermsInMorpheme(ASTException):
 ### These exceptions /errors are graph_related
 
 
-class InvalidPropositionGraph(ASTException):
+class InvalidTree(ASTException):
     pass
 
 
-class TooManyNodesInGraph(InvalidPropositionGraph):
-    message = "Nodes limit in the graph exceeded"
+class TooManyNodesInGraph(InvalidTree):
+    def __init__(self):
+        super().__init__()
+
+    def __str__(self):
+        return "Nodes limit in the graph exceeded"
 
 
-class NoRootNodeFound(InvalidPropositionGraph):
+class NoRootNodeFound(InvalidTree):
     message = "Cannot find a root node for this graph"
 
 
-class SeveralRootNodeFound(InvalidPropositionGraph):
+class SeveralRootNodeFound(InvalidTree):
     message = "Several root nodes exist for this graph"
 
 
-class InvalidGraphNode(InvalidPropositionGraph):
-    message = "%s"
-
-    def __init__(self, node_id):
+class NodeHasNoParent(InvalidTree):
+    def __init__(self):
         super().__init__()
-        self.node_id = node_id
-        self.node_ieml = None
-
-    def set_node_ieml(self, ieml):
-        self.node_ieml = ieml
 
     def __str__(self):
-        if self.node_ieml is not None:
-            return self.message % self.node_ieml
-        else:
-            return self.message % str(self.node_id)
+        return "A node has no parent in the tree described by this object."
 
 
-class NodeHasNoParent(InvalidGraphNode):
-    message = "Node %s has no parent"
+class InvalidNodeIEMLLevel(InvalidTree):
+    def __init__(self):
+        super().__init__()
+
+    def __str__(self):
+        return "A node doesn't have the right level to be used as a primitive for this level."
 
 
-class InvalidNodeIEMLLevel(InvalidGraphNode):
-    message = "Node %s doesn't have the right level to be used as a primitive for this level"
+class NodeHasTooMuchParents(InvalidTree):
+    def __init__(self):
+        super().__init__()
 
-
-class NodeHasTooMuchParents(InvalidGraphNode):
-    message = "Node %s has several parents"
-
-### AST tools related errors
+    def __str__(self):
+        return "A node a several parents in the tree described by this object."
 
 
 class ToolsException(Exception):

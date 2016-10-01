@@ -6,30 +6,42 @@ import numpy
 from ieml.commons import TreeStructure
 from ieml.ieml_objects.exceptions import InvalidIEMLObjectArgument, InvalidTreeStructure
 
-
-@total_ordering
 class IEMLType(type):
     """This metaclass enables the comparison of class times, such as (Sentence > Word) == True"""
 
-    def __gt__(self, other):
-        from ieml.ieml_objects.terms import Term
-        from ieml.ieml_objects.words import Morpheme, Word
-        from ieml.ieml_objects.sentences import Clause, Sentence, SuperClause, SuperSentence
-        from ieml.ieml_objects.texts import Text
-        from ieml.ieml_objects.hypertexts import Hyperlink, Hypertext
+    def __init__(cls, name, bases, dct):
+        child_list = ['Term', 'Morpheme', 'Word', 'Clause', 'Sentence',
+                     'SuperClause', 'SuperSentence', 'Text', 'Hyperlink', 'Hypertext']
+        if name in child_list:
+            cls.__rank = child_list.index(name) + 1
+        else:
+            cls.__rank = 0
 
-        child_list = [Term, Morpheme, Word, Clause, Sentence, SuperClause, SuperSentence, Text, Hyperlink, Hypertext]
-        return child_list.index(self) > child_list.index(other)
+        super(IEMLType, cls).__init__(name, bases, dct)
+
+    def __hash__(self):
+        return self.__rank
+
+    def __eq__(self, other):
+        if isinstance(other, IEMLType):
+            return self.__rank == other.__rank
+        else:
+            return False
+
+    def __ne__(self, other):
+        return not IEMLType.__eq__(self, other)
+
+    def __gt__(self, other):
+        return IEMLType.__ge__(self, other) and self != other
+
+    def __le__(self, other):
+        return IEMLType.__lt__(self, other) and self == other
+
+    def __ge__(self, other):
+        return not IEMLType.__lt__(self, other)
 
     def __lt__(self, other):
-        from ieml.ieml_objects.terms import Term
-        from ieml.ieml_objects.words import Morpheme, Word
-        from ieml.ieml_objects.sentences import Clause, Sentence, SuperClause, SuperSentence
-        from ieml.ieml_objects.texts import Text
-        from ieml.ieml_objects.hypertexts import Hyperlink, Hypertext
-
-        child_list = [Term, Morpheme, Word, Clause, Sentence, SuperClause, SuperSentence, Text, Hyperlink, Hypertext]
-        return child_list.index(self) < child_list.index(other)
+        return self.__rank < other.__rank
 
 
 class IEMLObjects(TreeStructure, metaclass=IEMLType):
@@ -90,7 +102,7 @@ class TreeGraph:
         for t in list_transitions:
             self.transitions[t[0]].append((t[1], t[2]))
 
-        self.nodes = list(set(self.transitions) | {e[0] for l in self.transitions.values() for e in l})
+        self.nodes = sorted(set(self.transitions) | {e[0] for l in self.transitions.values() for e in l})
         self.nodes_index = {n: i for i, n in enumerate(self.nodes)}
         _count = len(self.nodes)
         self.array = numpy.zeros((len(self.nodes), len(self.nodes)), dtype=bool)

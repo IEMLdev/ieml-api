@@ -36,13 +36,13 @@ class IEMLParser(metaclass=Singleton):
 
         # Build the lexer and parser
         self.lexer = get_lexer()
-        self.parser = yacc.yacc(module=self, errorlog=logging, start='proposition', debug=True)
+        self.parser = yacc.yacc(module=self, errorlog=logging, start='proposition')
 
     def parse(self, s):
         """Parses the input string, and returns a reference to the created AST's root"""
         self.root = None
         self.hyperlinks = []
-        self.parser.parse(s, lexer=self.lexer, debug=True)
+        self.parser.parse(s, lexer=self.lexer)
 
         if self.root is not None:
             if self.hyperlinks:

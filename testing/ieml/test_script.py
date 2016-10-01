@@ -33,6 +33,7 @@ class TestScript(unittest.TestCase):
     def test_too_many_singular_sequences(self):
         s = sc('F:F:F:.F:F:F:.')
 
+
     def test_str(self):
         self.assertIsNotNone(MultiplicativeScript(character='A')._str)
         self.assertIsNotNone(AdditiveScript(character='O')._str)
