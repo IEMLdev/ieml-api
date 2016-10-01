@@ -367,7 +367,6 @@ def factorize(script):
         raise ValueError
 
     result = pack_factorisation(factor(seqs))
-    result.check()
     return result
 
 if __name__ == '__main__':

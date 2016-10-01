@@ -2,10 +2,11 @@ from collections import namedtuple
 
 import numpy as np
 
+from ieml.script.parser import ScriptParser
+from ieml.script.operator import m
 from ieml.script.script import AdditiveScript, MultiplicativeScript
-from models.relations.relations import RelationsConnector
 
-Variable = namedtuple('Variable', ['address', 'parser'])
+Variable = namedtuple('Variable', ['address', 'script'])
 
 
 class Table:
@@ -32,12 +33,10 @@ class Table:
                     cols = []
 
                     for row_header in self.__headers[0]:
-                        s = MultiplicativeScript(row_header[0], row_header[1], var)
-                        s.check()
+                        s = m(row_header[0], row_header[1], var)
                         rows.append(s)
                     for col_header in self.__headers[1]:
-                        s = MultiplicativeScript(col_header[0], col_header[1], var)
-                        s.check()
+                        s = m(col_header[0], col_header[1], var)
                         cols.append(s)
 
                     self.__split_headers[0].append(rows)
@@ -113,8 +112,7 @@ def _process_tables(table_list, address, parent_script):
         for table in table_list:
             headers = _distribute_over_headers(table.headers, operands)
             v_dist = np.vectorize(_distribute_over_cells)
-            new_paradigm = MultiplicativeScript(substance=table.paradigm, **operands)
-            new_paradigm.check()
+            new_paradigm = m(substance=table.paradigm, **operands)
             new_tables.append(Table(headers, v_dist(table.cells, operands), new_paradigm))
 
     elif address == 1:  # We need to distribute the multiplication of the substance from the right and mode from the left
@@ -123,8 +121,7 @@ def _process_tables(table_list, address, parent_script):
         for table in table_list:
             headers = _distribute_over_headers(table.headers, operands)
             v_dist = np.vectorize(_distribute_over_cells)
-            new_paradigm = MultiplicativeScript(attribute=table.paradigm, **operands)
-            new_paradigm.check()
+            new_paradigm = m(attribute=table.paradigm, **operands)
             new_tables.append(Table(headers, v_dist(table.cells, operands), new_paradigm))
 
     elif address == 2:  # We need to distribute the multiplication of the substance and the attribute from the right
@@ -133,8 +130,7 @@ def _process_tables(table_list, address, parent_script):
         for table in table_list:
             headers = _distribute_over_headers(table.headers, operands)
             v_dist = np.vectorize(_distribute_over_cells)
-            new_paradigm = MultiplicativeScript(mode=table.paradigm, **operands)
-            new_paradigm.check()
+            new_paradigm = m(mode=table.paradigm, **operands)
             new_tables.append(Table(headers, v_dist(table.cells, operands), new_paradigm))
 
     return new_tables
@@ -149,20 +145,17 @@ def _distribute_over_headers(headers, operands):
         for header in dimension:
             if "substance" not in operands:
                 operands["substance"] = header
-                script = MultiplicativeScript(**operands)
-                script.check()
+                script = m(**operands)
                 dim.append(script)
                 del operands["substance"]
             elif "attribute" not in operands:
                 operands["attribute"] = header
-                script = MultiplicativeScript(**operands)
-                script.check()
+                script = m(**operands)
                 dim.append(script)
                 del operands["attribute"]
             elif "mode" not in operands:
                 operands["mode"] = header
-                script = MultiplicativeScript(**operands)
-                script.check()
+                script = m(**operands)
                 dim.append(script)
                 del operands["mode"]
         new_headers.append(dim)
@@ -176,18 +169,15 @@ def _distribute_over_cells(cell, operands):
 
     if "substance" not in operands:
         operands["substance"] = cell
-        new_cell = MultiplicativeScript(**operands)
-        new_cell.check()
+        new_cell = m(**operands)
         del operands["substance"]
     elif "attribute" not in operands:
         operands["attribute"] = cell
-        new_cell = MultiplicativeScript(**operands)
-        new_cell.check()
+        new_cell = m(**operands)
         del operands["attribute"]
     elif "mode" not in operands:
         operands["mode"] = cell
-        new_cell = MultiplicativeScript(**operands)
-        new_cell.check()
+        new_cell = m(**operands)
         del operands["mode"]
 
     return new_cell
@@ -199,6 +189,7 @@ def _build_table(dimension, parent_script, plural_vars):
     col_headers = []
     tab_headers = []
 
+    cells = None
     if dimension == 1:
         if isinstance(plural_vars, AdditiveScript):
             cells = np.empty(plural_vars.cardinal, dtype=object)
@@ -231,26 +222,21 @@ def _fill_cells(cells, plural_vars, row_headers, col_headers, tab_header):
         for i, child in enumerate(plural_vars[0].script.children):
             # Since it's one dimensional, we only need to check the first (and only) plural variable and expand it.
             operands[plural_vars[0].address] = child
-            cells[i] = MultiplicativeScript(*operands)
-            cells[i].check()
+            cells[i] = m(*operands)
     elif cells.ndim == 2:
         for i, r_header in enumerate(row_headers):
             for j, c_header in enumerate(col_headers):
                 if plural_vars[0].address == 0 and plural_vars[1].address == 1:
-                    cells[i][j] = MultiplicativeScript(substance=r_header[0], attribute=c_header[1], mode=r_header[2])
-                    cells[i][j].check()
+                    cells[i][j] = m(substance=r_header[0], attribute=c_header[1], mode=r_header[2])
                 elif plural_vars[0].address == 1 and plural_vars[1].address == 2:
-                    cells[i][j] = MultiplicativeScript(substance=r_header[0], attribute=r_header[1], mode=c_header[2])
-                    cells[i][j].check()
+                    cells[i][j] = m(substance=r_header[0], attribute=r_header[1], mode=c_header[2])
                 elif plural_vars[0].address == 0 and plural_vars[1].address == 2:
-                    cells[i][j] = MultiplicativeScript(substance=r_header[0], attribute=r_header[1], mode=c_header[2])
-                    cells[i][j].check()
+                    cells[i][j] = m(substance=r_header[0], attribute=r_header[1], mode=c_header[2])
     elif cells.ndim == 3:
         for i, r_header in enumerate(row_headers):
             for j, c_header in enumerate(col_headers):
                 for k, t_header in enumerate(tab_header):
-                    cells[i][j][k] = MultiplicativeScript(substance=r_header[0], attribute=c_header[1], mode=t_header[2])
-                    cells[i][j][k].check()
+                    cells[i][j][k] = m(substance=r_header[0], attribute=c_header[1], mode=t_header[2])
 
 
 def _make_headers(plural_variable, substance, attribute, mode):
@@ -260,8 +246,7 @@ def _make_headers(plural_variable, substance, attribute, mode):
 
     for seq in plural_variable.script.singular_sequences:
         operands[plural_variable.address] = seq
-        script = MultiplicativeScript(*operands)
-        script.check()
+        script = m(*operands)
         headers.append(script)
     return headers
 
@@ -319,6 +304,8 @@ def get_table_rank(paradigm):
         :param paradigm: An IEML paradigm term
         :return: The rank of the table associated with the paradigm as an integer from 1 to 5
         """
+    from models.relations.relations import RelationsConnector
+
     rc = RelationsConnector()
     paradigm_rel = rc.get_script(paradigm)
     # TODO: Check if the paradigm was found in the database
@@ -352,6 +339,8 @@ def _compute_rank(paradigm, root):
         root = parser.parse(root["_id"])
     tbls = _get_tables(root, paradigm.singular_sequences)  # We get the tables that contain our paradigm
 
+    check_dim = None
+    coordinates = None
     if len(tbls) == 1:
         coordinates = _get_seq_coordinates(paradigm.singular_sequences, tbls[0])
         # We are checking if only one header for the root table was used to create the child paradigm
