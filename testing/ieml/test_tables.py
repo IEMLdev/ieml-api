@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from ieml.operator import sc
+from ieml.script.operator import sc
 from ieml.script.parser import ScriptParser
 from ieml.script.tables import generate_tables
 
