@@ -1,5 +1,6 @@
 import unittest
 
+from ieml.script.exceptions import TooManySingularSequences
 from ieml.script.operator import sc
 from ieml.script.constants import AUXILIARY_CLASS, VERB_CLASS, NOUN_CLASS, PRIMITVES
 from ieml.script import MultiplicativeScript
@@ -31,7 +32,8 @@ class TestScript(unittest.TestCase):
         self.assertEqual(res, 'EUASBT', msg='Primitives not correctly sorted.')
 
     def test_too_many_singular_sequences(self):
-        s = sc('F:F:F:.F:F:F:.')
+        with self.assertRaises(TooManySingularSequences):
+            sc('F:F:F:.F:F:F:.-')
 
 
     def test_str(self):
