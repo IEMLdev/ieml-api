@@ -1,10 +1,7 @@
 import random
 
-from .propositions import Word, Morpheme, Clause, Sentence, SuperSentence, SuperClause, \
-    AbstractAdditiveProposition, AbstractClause, AbstractProposition
-
 from helpers import Singleton
-from ieml.AST import Term
+from ieml.ieml_objects import Term, Word, Morpheme, Sentence, Clause, SuperSentence, SuperClause
 from ieml.exceptions import CannotPromoteToLowerLevel, CannotDemoteProposition
 from ieml.object.constants import MAX_NODES_IN_SENTENCE
 from models.base_queries import DictionaryQueries

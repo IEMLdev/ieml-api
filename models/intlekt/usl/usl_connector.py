@@ -5,9 +5,8 @@ from urllib.parse import quote_plus
 import progressbar
 import pymongo
 from bs4 import BeautifulSoup
-from ieml.AST.propositions import Word, Morpheme
+from ieml.ieml_objects import Term, Word, Morpheme
 
-from ieml.object.terms import Term
 from models.intlekt.connector import DemoConnector
 from models.intlekt.constants import COLLECTION_USL
 from models.terms.terms import TermsConnector

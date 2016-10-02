@@ -1,8 +1,7 @@
 from handlers.library.base import texts_db
 from ieml import USLParser
-from ieml.AST import Term, Text, HyperText, Word, Sentence, SuperSentence
+from ieml.ieml_objects import Term, Text, Hypertext, Word, Sentence, SuperSentence, IEMLParser
 from ieml.exceptions import CannotParse
-from ieml.ieml_objects.parser.parser import PropositionsParser
 from ieml.object.tree_metadata import HypertextMetadata, PropositionMetadata, TextMetadata
 from models.interface import SearchRequest
 from models.propositions import PropositionsQueries
@@ -32,7 +31,7 @@ def search_library(query):
         '2': Sentence,
         '3': SuperSentence,
         '4': Text,
-        '5': HyperText
+        '5': Hypertext
     }
 
     categories = {
@@ -89,13 +88,13 @@ def decompose_ieml_element(ieml_string):
         return [_gen_proposition_json(child) for child in children_list]
 
     def _decompose_word(word_ast):
-        return {"substance": _children_list_json(word_ast.subst),
-                "mode": _children_list_json(word_ast.mode)}
+        return {"substance": _children_list_json(word_ast.root),
+                "mode": _children_list_json(word_ast.flexing)}
 
     def _decompose_sentence(sentence_ast):
         """Decomposes and builds the ieml object for a sentence/supersentence"""
-        return [{"substance": _gen_proposition_json(clause.subst),
-                 "attribute": _gen_proposition_json(clause.attr),
+        return [{"substance": _gen_proposition_json(clause.substance),
+                 "attribute": _gen_proposition_json(clause.attribute),
                  "mode": _gen_proposition_json(clause.mode)}
                 for clause in sentence_ast.children]
 
@@ -105,11 +104,11 @@ def decompose_ieml_element(ieml_string):
     def _decompose_hypertext(hypertext_ast):
         output_list = []
 
-        for (starting, ending, path, literal) in hypertext_ast.transitions:
+        for hyperlink in hypertext_ast:
             output_list.append({
-                "substance": str(hypertext_ast.texts[starting]),
-                "mode": {"literal": literal, "path": path.to_ieml_list()},
-                "attribute": str(hypertext_ast.texts[ending]),
+                "substance": str(hyperlink.start),
+                "mode": {"literal": '', "path": str(hyperlink.path)},
+                "attribute": str(hyperlink.end),
             })
 
         return output_list
@@ -127,7 +126,7 @@ def decompose_ieml_element(ieml_string):
             return _decompose_hypertext(ieml_hypertext)
 
     except CannotParse:
-        ieml_proposition = PropositionsParser().parse(ieml_string)
+        ieml_proposition = IEMLParser().parse(ieml_string)
         if isinstance(ieml_proposition, Word):
             return _decompose_word(ieml_proposition)
         elif isinstance(ieml_proposition, (Sentence, SuperSentence)):

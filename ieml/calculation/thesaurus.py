@@ -1,6 +1,6 @@
 from collections import namedtuple
 
-from ieml.object.terms import Term
+from ieml.ieml_objects import Term
 
 ScoreNode = namedtuple('ScoreNode', ['parser', 'score'])
 
