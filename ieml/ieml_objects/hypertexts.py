@@ -26,7 +26,12 @@ class PropositionPath:
         return hash(self.path)
 
     def __eq__(self, other):
-        return self.path == tuple(other)
+        if isinstance(other, PropositionPath):
+            o = other.path
+        else:
+            o = tuple(other)
+
+        return self.path == o
 
     @property
     def end(self):
@@ -35,8 +40,7 @@ class PropositionPath:
     def __gt__(self, other):
         raise NotImplemented
 
-    # IEML Object str interface
-    def _compute_str(self):
+    def __str__(self):
         return '/'.join((str(p) for p in self.path))
 
 
