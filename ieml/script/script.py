@@ -214,8 +214,8 @@ class AdditiveScript(Script):
 
         self.script_class = max(c.script_class for c in self)
 
-        self._do_precompute_str()
         self.__order()
+        self._do_precompute_str()
 
     def _do_precompute_str(self):
         self._str = \
@@ -339,8 +339,8 @@ class MultiplicativeScript(Script):
         if self.cardinal > MAX_SINGULAR_SEQUENCES:
             raise TooManySingularSequences(self.cardinal)
 
-        self._do_precompute_str()
         self.__order()
+        self._do_precompute_str()
 
     def _render_children(self, children=None, character=None):
         if character:
