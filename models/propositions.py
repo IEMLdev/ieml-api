@@ -2,8 +2,6 @@ import re
 
 from pymongo.errors import DuplicateKeyError
 
-import ieml.AST
-import ieml.object.terms
 from models.exceptions import PropositionAlreadyExists, ObjectTypeNotStoredinDB, ObjectNotFound
 from .base_queries import DBConnector
 from .constants import PROPOSITION_COLLECTION, TAG_LANGUAGES
