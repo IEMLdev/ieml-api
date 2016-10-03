@@ -92,4 +92,4 @@ class RandomPoolIEMLObjectGenerator:
 
 if __name__ == '__main__':
     r = RandomPoolIEMLObjectGenerator(Text)
-    print(str(r.text()))
+    print(str(r.sentence()))

@@ -43,6 +43,9 @@ class PropositionPath:
     def __str__(self):
         return '/'.join((str(p) for p in self.path))
 
+    def _compute_str(self):
+        return '/'.join((str(p) for p in self.path))
+
 
 class Hyperlink(IEMLObjects):
     def __init__(self, substance, attribute, mode):
@@ -120,7 +123,7 @@ class Hypertext(IEMLObjects):
                 hyperlinks[h.path].append(h.end)
 
             def _render(path, current):
-                _path = path + [str(current)]
+                _path = path + [current]
 
                 if isinstance(current, Term) or tuple(_path) not in hyperlinks:
                     return str(current)
