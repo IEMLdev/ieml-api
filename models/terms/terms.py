@@ -10,7 +10,6 @@ from ieml.script import Script
 from models.relations.relations_queries import RelationsQueries
 from models.relations.relations import RelationsConnector
 import logging
-import progressbar
 
 
 class TermsConnector(DBConnector):
@@ -96,7 +95,7 @@ class TermsConnector(DBConnector):
         """
         # Argument check
         if not isinstance(script_ast, Script):
-            raise InvalidScriptArgument(script_ast)
+            raise InvalidScript(script_ast)
 
         term = self.get_term(script_ast)
         if term is None:
@@ -188,7 +187,7 @@ class TermsConnector(DBConnector):
 
         # Argument check
         if not isinstance(script_ast, Script):
-            raise InvalidScriptArgument(script_ast)
+            raise InvalidScript(script_ast)
 
         if not isinstance(inhibits, list) or any(r not in INHIBIT_RELATIONS for r in inhibits):
             raise InvalidInhibitArgument(inhibits)
