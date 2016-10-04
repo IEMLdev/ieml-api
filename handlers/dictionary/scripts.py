@@ -1,6 +1,6 @@
 from handlers.commons import exception_handler
 from ieml.operator import sc
-from models.exceptions import InvalidRelationCollectionState, InvalidRelationTitle
+from models.exceptions import InvalidRelationCollectionState, InvalidRelationTitle, TermNotFound
 from models.relations.relations_queries import RelationsQueries
 from ..caching import cached, flush_cache
 from handlers.dictionary.commons import terms_db, relation_name_table
@@ -16,7 +16,7 @@ def _build_old_model_from_term_entry(term_db_entry):
     terms_ast = sc(term_db_entry["_id"])
     try:
         rank = RelationsQueries.rank(term_db_entry["_id"]) if terms_ast.paradigm else 0
-    except InvalidRelationCollectionState:
+    except (InvalidRelationCollectionState, TermNotFound):
         rank = 'n/a'
 
     return {
