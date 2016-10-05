@@ -1,7 +1,6 @@
 from handlers import usl as _usl
 from handlers.commons import exception_handler
-from ieml.AST.propositions import Sentence, SuperSentence
-from ieml.AST.terms import Term
+from ieml.ieml_objects import Term, Sentence, SuperSentence
 from models.terms.terms import TermsConnector
 
 

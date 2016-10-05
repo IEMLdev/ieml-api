@@ -7,7 +7,7 @@ from ieml.calculation.distance import (object_proximity_index,
                                        set_proximity_index, mutual_inclusion_index, build_graph,
                                        partition_graph, get_paradigms, connexity_index,
                                        grammatical_class_index, paradigmatic_equivalence_class_index)
-from ieml.operator import sc
+from ieml.script.operator import sc
 
 
 class DistanceComputationTests(unittest.TestCase):

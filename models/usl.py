@@ -1,7 +1,7 @@
 from .base_queries import DBConnector, Tag
 from .constants import TEXT_COLLECTION, HYPERTEXT_COLLECTION, TAG_LANGUAGES
 from .exceptions import InvalidTags, TextAlreadyExists, HypertextAlreadyExists
-from ieml.AST import HyperText, Text
+from ieml.ieml_objects import Hypertext, Text
 import re
 from pymongo.errors import DuplicateKeyError
 
@@ -123,7 +123,7 @@ class HyperTextQueries(TextQueries):
         query['$or'] = conditions
 
         result = []
-        if levels is None or HyperText in levels:
+        if levels is None or Hypertext in levels:
             result = [self._format_response(entry, False) for entry in self.hypertexts.find(query)]
 
         if levels is None or Text in levels:

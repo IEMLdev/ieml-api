@@ -1,4 +1,4 @@
-from ieml.operator import sc
+from ieml.script.operator import sc
 from ieml.script.tools import factorize
 from models.terms.terms import TermsConnector
 

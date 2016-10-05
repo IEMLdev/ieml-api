@@ -1,5 +1,5 @@
 from handlers.commons import exception_handler
-from ieml.operator import sc
+from ieml.script.operator import sc
 from models.exceptions import InvalidRelationCollectionState, InvalidRelationTitle, TermNotFound, RootParadigmMissing
 from models.relations.relations import RelationsConnector
 from models.relations.relations_queries import RelationsQueries
@@ -7,7 +7,7 @@ from ..caching import cached, flush_cache
 from handlers.dictionary.commons import terms_db, relation_name_table
 from ieml.exceptions import CannotParse
 from ieml.script.constants import AUXILIARY_CLASS, VERB_CLASS, NOUN_CLASS
-from ieml.script.parser import MultiplicativeScript, NullScript
+from ieml.script import MultiplicativeScript, NullScript
 from ieml.script.tables import generate_tables
 from ieml.script.tools import old_canonical, factorize
 from .client import need_login

@@ -7,7 +7,7 @@ from types import ModuleType
 
 import sys
 import config
-from ieml.operator import sc
+from ieml.script.operator import sc
 from models.constants import TAG_LANGUAGES
 from models.relations.relations import RelationsConnector
 from models.terms.terms import TermsConnector

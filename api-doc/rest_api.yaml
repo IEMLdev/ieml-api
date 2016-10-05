@@ -575,202 +575,202 @@ paths:
   #################################
   ## FOR THE USL/PROPOSITION API ##
   #################################
-
-  /search:
-    post:
-      description: Search for propositions or  USLs in the library's database
-      operationId: handlers.search_library
-      parameters:
-        - name: query
-          in: body
-          description: Search filters
-          required: true
-          schema:
-            $ref: '#/definitions/search_filters'
-      responses:
-        200:
-          description: Successful response
-          schema:
-            title: ArrayOfIEMLELements
-            type: array
-            items:
-              $ref: '#/definitions/ieml_element'
-              
-  /tags/check_exists:
-    post:
-      description: Checks if a tag already exists for a proposition or an hypertext
-      operationId: handlers.check_library_tag_exists
-      consumes:
-        - application/x-www-form-urlencoded
-      parameters:
-        - name: tag
-          in: query
-          description: Value of tested tag
-          required: true
-          type: string
-        - name: language
-          in: query
-          description: Language of tag
-          required: true
-          type: string
-      responses:
-        200:
-          description: Successful response
-          schema:
-            $ref: '#/definitions/tag_exists'
-            
-  /word/validate:
-    post:
-      operationId: handlers.validate_word
-      tags:
-        - Propositions
-      description: Checks if a created word is good or not
-      parameters:
-        - name: body
-          in: body
-          description: Search filters
-          required: true
-          schema:
-            $ref: '#/definitions/word_data'
-      responses:
-        200:
-          description: Successful response
-          schema:
-            $ref: '#/definitions/validate_response'
-          
-  /word/save:
-    post:
-      operationId: handlers.save_word
-      tags:
-        - Propositions
-      description: Checks if a created word is good or not, and if good, saves it to the DB
-      parameters:
-        - name: body
-          in: body
-          description: Search filters
-          required: true
-          schema:
-            $ref: '#/definitions/word_data'
-      responses:
-        200:
-          description: Successful response
-          schema:
-            $ref: '#/definitions/validate_response'
-  
-  /tree/validate:
-    post:
-      operationId: handlers.validate_tree
-      tags:
-        - Propositions
-      description: Checks if a created sentence/super sentence graph is good or not, and if good, saves it to the DB
-      parameters:
-        - name: body
-          in: body
-          description: Search filters
-          required: true
-          schema:
-            $ref: '#/definitions/proposition_graph'
-      responses:
-        200:
-          description: Successful response
-          schema:
-            $ref: '#/definitions/validate_response'
-  
-  /tree/save:
-    post:
-      operationId: handlers.save_tree
-      tags:
-        - Propositions
-      description: Checks if a created sentence/super sentence graph is good or not, and if good, saves it to the DB
-      parameters:
-        - name: body
-          in: body
-          description: Search filters
-          required: true
-          schema:
-            $ref: '#/definitions/proposition_graph'
-      responses:
-        200:
-          description: Successful response
-          schema:
-            $ref: '#/definitions/validate_response'
-            
-  /text/validate:
-    post:
-      operationId: handlers.validate_text
-      tags:
-        - USL
-      description: Checks if a text is good or not,  and if good, saves it to the DB.
-      parameters:
-        - name: body
-          in: body
-          description: Text JSON data
-          required: true
-          schema:
-            $ref: '#/definitions/text_data'
-      responses:
-        200:
-          description: Successful response
-          schema:
-            $ref: '#/definitions/validate_response'
-  
-  /hypertext/validate:
-    post:
-      operationId: handlers.validate_hypertext
-      tags:
-        - USL
-      description: Checks if an hypertext graph is good or not, and if good saves it to the DB
-      parameters:
-        - name: body
-          in: body
-          description: Hypertext's graph json data
-          required: true
-          schema:
-            $ref: '#/definitions/hypertext_graph'
-      responses:
-        200:
-          description: Successful response
-          schema:
-            $ref: '#/definitions/validate_response'
-            
-  /text/decompose:
-    post:
-      operationId: handlers.decompose_text
-      tags:
-        - USL
-      description: |
-        Decomposes a text into a list of proposition tree, which details all the closed propositions contained in a proposition, along with their tags and the path need to reach them.
-      parameters:
-        - name: ieml_string
-          in: query
-          description: An IEML text's string value
-          required: true
-          type: string
-      responses:
-        200:
-          description: Successful response
-          schema:
-            type : array
-            items:
-              $ref: '#/definitions/proposition_tree'
-              
-  /element/decompose:
-    post:
-      operationId: handlers.decompose_ieml_element
-      description: Decomposes any IEML element to its children element (eg, a text into propositions, a sentence into a tree of words, or a word into two lists of terms)
-      parameters:
-        - name: ieml_string
-          in: query
-          description: An IEML element's string value
-          required: true
-          type : string
-      responses:
-        200:
-          description: Successful response
-          schema:
-            type : array
-            items:
-              $ref: '#/definitions/decomposed_ieml_element'
+#
+#  /search:
+#    post:
+#      description: Search for propositions or  USLs in the library's database
+#      operationId: handlers.search_library
+#      parameters:
+#        - name: query
+#          in: body
+#          description: Search filters
+#          required: true
+#          schema:
+#            $ref: '#/definitions/search_filters'
+#      responses:
+#        200:
+#          description: Successful response
+#          schema:
+#            title: ArrayOfIEMLELements
+#            type: array
+#            items:
+#              $ref: '#/definitions/ieml_element'
+#
+#  /tags/check_exists:
+#    post:
+#      description: Checks if a tag already exists for a proposition or an hypertext
+#      operationId: handlers.check_library_tag_exists
+#      consumes:
+#        - application/x-www-form-urlencoded
+#      parameters:
+#        - name: tag
+#          in: query
+#          description: Value of tested tag
+#          required: true
+#          type: string
+#        - name: language
+#          in: query
+#          description: Language of tag
+#          required: true
+#          type: string
+#      responses:
+#        200:
+#          description: Successful response
+#          schema:
+#            $ref: '#/definitions/tag_exists'
+#
+#  /word/validate:
+#    post:
+#      operationId: handlers.validate_word
+#      tags:
+#        - Propositions
+#      description: Checks if a created word is good or not
+#      parameters:
+#        - name: body
+#          in: body
+#          description: Search filters
+#          required: true
+#          schema:
+#            $ref: '#/definitions/word_data'
+#      responses:
+#        200:
+#          description: Successful response
+#          schema:
+#            $ref: '#/definitions/validate_response'
+#
+#  /word/save:
+#    post:
+#      operationId: handlers.save_word
+#      tags:
+#        - Propositions
+#      description: Checks if a created word is good or not, and if good, saves it to the DB
+#      parameters:
+#        - name: body
+#          in: body
+#          description: Search filters
+#          required: true
+#          schema:
+#            $ref: '#/definitions/word_data'
+#      responses:
+#        200:
+#          description: Successful response
+#          schema:
+#            $ref: '#/definitions/validate_response'
+#
+#  /tree/validate:
+#    post:
+#      operationId: handlers.validate_tree
+#      tags:
+#        - Propositions
+#      description: Checks if a created sentence/super sentence graph is good or not, and if good, saves it to the DB
+#      parameters:
+#        - name: body
+#          in: body
+#          description: Search filters
+#          required: true
+#          schema:
+#            $ref: '#/definitions/proposition_graph'
+#      responses:
+#        200:
+#          description: Successful response
+#          schema:
+#            $ref: '#/definitions/validate_response'
+#
+#  /tree/save:
+#    post:
+#      operationId: handlers.save_tree
+#      tags:
+#        - Propositions
+#      description: Checks if a created sentence/super sentence graph is good or not, and if good, saves it to the DB
+#      parameters:
+#        - name: body
+#          in: body
+#          description: Search filters
+#          required: true
+#          schema:
+#            $ref: '#/definitions/proposition_graph'
+#      responses:
+#        200:
+#          description: Successful response
+#          schema:
+#            $ref: '#/definitions/validate_response'
+#
+#  /text/validate:
+#    post:
+#      operationId: handlers.validate_text
+#      tags:
+#        - USL
+#      description: Checks if a text is good or not,  and if good, saves it to the DB.
+#      parameters:
+#        - name: body
+#          in: body
+#          description: Text JSON data
+#          required: true
+#          schema:
+#            $ref: '#/definitions/text_data'
+#      responses:
+#        200:
+#          description: Successful response
+#          schema:
+#            $ref: '#/definitions/validate_response'
+#
+#  /hypertext/validate:
+#    post:
+#      operationId: handlers.validate_hypertext
+#      tags:
+#        - USL
+#      description: Checks if an hypertext graph is good or not, and if good saves it to the DB
+#      parameters:
+#        - name: body
+#          in: body
+#          description: Hypertext's graph json data
+#          required: true
+#          schema:
+#            $ref: '#/definitions/hypertext_graph'
+#      responses:
+#        200:
+#          description: Successful response
+#          schema:
+#            $ref: '#/definitions/validate_response'
+#
+#  /text/decompose:
+#    post:
+#      operationId: handlers.decompose_text
+#      tags:
+#        - USL
+#      description: |
+#        Decomposes a text into a list of proposition tree, which details all the closed propositions contained in a proposition, along with their tags and the path need to reach them.
+#      parameters:
+#        - name: ieml_string
+#          in: query
+#          description: An IEML text's string value
+#          required: true
+#          type: string
+#      responses:
+#        200:
+#          description: Successful response
+#          schema:
+#            type : array
+#            items:
+#              $ref: '#/definitions/proposition_tree'
+#
+#  /element/decompose:
+#    post:
+#      operationId: handlers.decompose_ieml_element
+#      description: Decomposes any IEML element to its children element (eg, a text into propositions, a sentence into a tree of words, or a word into two lists of terms)
+#      parameters:
+#        - name: ieml_string
+#          in: query
+#          description: An IEML element's string value
+#          required: true
+#          type : string
+#      responses:
+#        200:
+#          description: Successful response
+#          schema:
+#            type : array
+#            items:
+#              $ref: '#/definitions/decomposed_ieml_element'
 
 
   ##############################
