@@ -1,13 +1,15 @@
+from handlers.commons import exception_handler
 from ieml.operator import sc
-from models.exceptions import DBException, InvalidRelationCollectionState, InvalidRelationTitle
+from models.exceptions import InvalidRelationCollectionState, InvalidRelationTitle, TermNotFound, RootParadigmMissing
+from models.relations.relations import RelationsConnector
 from models.relations.relations_queries import RelationsQueries
 from ..caching import cached, flush_cache
-from handlers.dictionary.commons import terms_db, exception_handler, relation_name_table
+from handlers.dictionary.commons import terms_db, relation_name_table
 from ieml.exceptions import CannotParse
 from ieml.script.constants import AUXILIARY_CLASS, VERB_CLASS, NOUN_CLASS
 from ieml.script.parser import MultiplicativeScript, NullScript
 from ieml.script.tables import generate_tables
-from ieml.script.tools import old_canonical
+from ieml.script.tools import old_canonical, factorize
 from .client import need_login
 
 
@@ -15,7 +17,7 @@ def _build_old_model_from_term_entry(term_db_entry):
     terms_ast = sc(term_db_entry["_id"])
     try:
         rank = RelationsQueries.rank(term_db_entry["_id"]) if terms_ast.paradigm else 0
-    except InvalidRelationCollectionState:
+    except (InvalidRelationCollectionState, TermNotFound):
         rank = 'n/a'
 
     return {
@@ -41,15 +43,25 @@ def all_ieml():
     return result
 
 
+@exception_handler
+def get_term(script):
+    return _build_old_model_from_term_entry(terms_db().get_term(script))
+
+
 def parse_ieml(iemltext):
     try:
         script_ast = sc(iemltext)
         return {
+            "factorization": str(factorize(script_ast)),
             "success" : True,
             "level" : script_ast.layer,
             "taille" : script_ast.cardinal,
             "class" : script_ast.script_class,
-            "canonical" : old_canonical(script_ast)
+            "canonical" : old_canonical(script_ast),
+            "rootIntersections" : RelationsConnector().root_intersections(script_ast),
+            "containsSize": RelationsConnector().relations.
+                find({'_id': {'$ne': str(script_ast)},
+                      'SINGULAR_SEQUENCES': {'$in': [str(seq) for seq in script_ast.singular_sequences]}}).count()
         }
     except CannotParse:
         return {"success" : False,
@@ -289,7 +301,11 @@ def update_ieml_script(body):
 
 def ieml_term_exists(ieml_term):
     """Tries to dig a term from the database"""
-    found_term = terms_db().get_term(ieml_term)
+    try:
+        s = sc(ieml_term)
+    except CannotParse:
+        return []
+    found_term = terms_db().get_term(factorize(s))
     return [found_term] if found_term is not None else []
 
 

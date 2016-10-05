@@ -1,14 +1,12 @@
-import os
 import queue
 
-from bidict import bidict
-
+from handlers.commons import exception_handler
 from handlers.dictionary.client import need_login
-from handlers.dictionary.commons import terms_db, exception_handler, relation_name_table
+from handlers.dictionary.commons import terms_db, relation_name_table
 from ieml.exceptions import CannotParse
 from ieml.operator import sc
 from models.constants import RELATION_COMPUTING
-from models.exceptions import CollectionAlreadyLocked
+from models.exceptions import CollectionAlreadyLocked, DBException
 from models.relations.relations import RelationsConnector
 from models.relations.relations_queries import RelationsQueries
 from multiprocessing import Process, Queue, active_children
@@ -31,7 +29,11 @@ def _compute_relations(q):
             q.put("The relation computation of the database is already performing.")
         else:
             q.put("The relation collection is used by another process, retry later.")
+    except DBException as e:
+        q.put(str(e))
 
+# relation computing process, used by computation_status to get the error message.
+relation_compute_process_queue = None
 
 @need_login
 @exception_handler
@@ -50,6 +52,8 @@ def update_relations(body):
         except queue.Empty:
             lock_status = RelationsConnector().lock_status()
             if lock_status is not None and lock_status['pid'] == p.pid:
+                global relation_compute_process_queue
+                relation_compute_process_queue = q
                 return {'success': True}
 
 @exception_handler
@@ -58,6 +62,17 @@ def computation_status():
     response = {'success': True, 'free': status is None}
     if status is not None:
         response['computing_relations'] = status['role'] == RELATION_COMPUTING
+
+    # get the error message if there is one
+    global relation_compute_process_queue
+    if status is None and relation_compute_process_queue is not None:
+        if not relation_compute_process_queue.empty():
+            try:
+                response['error_message'] = relation_compute_process_queue.get_nowait()
+            except queue.Empty:
+                pass
+
+        relation_compute_process_queue = None
 
     return response
 
@@ -71,10 +86,10 @@ def get_relations(term):
             all_relations.append({
                 "reltype" : relation_name_table.inv[relation_type],
                 "rellist" :
-                    [{"ieml" : rel,
+                    sorted([{"ieml" : rel,
                       "exists": True,
                       "visible": True}
-                     for rel in relations]
+                     for rel in relations], key=lambda s: sc(s['ieml']))
                     if relation_type != "ROOT" else
                     [{"ieml": relations,
                       "exists": True,

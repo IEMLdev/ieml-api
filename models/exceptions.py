@@ -88,8 +88,8 @@ class RootParadigmIntersection(DBException):
             self.intersection = str(' '.join(map(str, self.intersection)))
 
     def __str__(self):
-        return 'Singular sequences intersection detected when adding the root paradigm : %s with the following ' \
-               'singular sequences : %s'%(str(self.to_add), str(self.intersection))
+        return 'Singular sequences intersection detected when adding the following script as a root paradigm : %s ' \
+               'with the following root paradigms : %s'%(str(self.to_add), str(self.intersection))
 
 
 class ParadigmAlreadyExist(DBException):

@@ -20,8 +20,8 @@ class TermsConnector(DBConnector):
 
     def get_term(self, script):
         """
-        Return the document from the term collection associated with this parser.
-        :param script: the parser to get.
+        Return the document from the term collection associated with this script.
+        :param script: the script to get.
         :return: the document or None
         """
         return self.terms.find_one({'_id': str(script)})
@@ -36,7 +36,7 @@ class TermsConnector(DBConnector):
     def add_term(self, script_ast, tags, inhibits, root=False, metadata=None, recompute_relations=True):
         """
         Save a term in the term collection and update the relations collection accordingly.
-        :param script_ast: the parser to save.
+        :param script_ast: the script to save.
         :param tags: the tags of this term.
         :param inhibits: the inhibition of the relations for this term.
         :param root: if this term is a root paradigm.
@@ -61,8 +61,8 @@ class TermsConnector(DBConnector):
         extra relations computations.
         :param list_terms: the list of term to save. The list element must be following the given pattern :
          [ {
-            'AST' : Script (the parser to save),
-            'ROOT': bool (if the parser is a root paradigm),
+            'AST' : Script (the script to save),
+            'ROOT': bool (if the script is a root paradigm),
             'TAGS': {'FR' : str,
                      'EN' : str } (the tags),
             'INHIBITS': list of str (the list of relation to inhibit),
@@ -88,14 +88,14 @@ class TermsConnector(DBConnector):
         """
         Remove the given term from the term and relation collection. Can fail if not possible (can't remove a non-empty
         root paradigm)
-        :param script_ast: the parser to remove.
+        :param script_ast: the script to remove.
         :param remove_roots_child: if we remove a root paradigm, we remove the contained of the root paradigm.
         :param recompute_relations: if the relations have to be recomputed after the removal.
         :return: None
         """
         # Argument check
         if not isinstance(script_ast, Script):
-            raise InvalidScriptArgument(script_ast)
+            raise InvalidScript(script_ast)
 
         term = self.get_term(script_ast)
         if term is None:
@@ -106,7 +106,7 @@ class TermsConnector(DBConnector):
             if not remove_roots_child:
                 raise CantRemoveNonEmptyRootParadigm(script_ast)
 
-            # all the contained parser without the root paradigm.
+            # all the contained script without the root paradigm.
             paradigm = (self.parser.parse(p['_id']) for p in RelationsQueries.paradigm(script_ast) if p['_id'] != str(script_ast))
 
             # remove all the paradigm without recomputing the relations
@@ -121,7 +121,7 @@ class TermsConnector(DBConnector):
     def update_term(self, script, tags=None, inhibits=None, root=None, metadata=None, recompute_relations=True):
         """
         Update the term and relation collection for this term.
-        :param script: the parser to update
+        :param script: the script to update
         :param tags: optional, the tags to update
         :param inhibits: optional, the inhibition to update
         :param root: optional, the rootness to update
@@ -148,19 +148,23 @@ class TermsConnector(DBConnector):
         if metadata and isinstance(metadata, dict):
             update['METADATA'] = metadata
 
-        if len(update) != 0:
+        if update:
+            # the rootness impact the validity of the script, there are constraints.
+            if 'ROOT' in update:
+                try:
+                    RelationsQueries.remove_script(script, recompute_relations=False)
+                except TermNotFound:
+                    pass
+
+                RelationsQueries.save_script(script, root=root, recompute_relations=False)
+
             self.terms.update({'_id': str(script)}, {'$set': update})
 
-            # the inhibition and rootness impact the relations
-            if 'ROOT' in update:
-                inhibition = self.get_inhibitions()
-                RelationsQueries.remove_script(script, recompute_relations=False)
-                RelationsQueries.save_script(script, root=root, recompute_relations=recompute_relations)
-
-            elif 'INHIBITS' in update and recompute_relations:
+            # the inhibition and rootness impact the relations,
+            if ('INHIBITS' in update or 'ROOT' in update) and recompute_relations:
                 self.recompute_relations()
         else:
-            logging.warning("No update performed for parser " + str(script) +
+            logging.warning("No update performed for script " + str(script) +
                             ", no argument are matching the update criteria.")
 
     def root_paradigms(self, ieml_only=False):
@@ -177,17 +181,17 @@ class TermsConnector(DBConnector):
     def _save_term(self, script_ast, tags, inhibits, root=False, metadata=None):
         """
         Save a term, do all coherence checking.
-        :param script_ast: the parser to save
-        :param tags: tags of the parser
+        :param script_ast: the script to save
+        :param tags: tags of the script
         :param inhibits: the inhibition
-        :param root: if this parser is root
+        :param root: if this script is root
         :param metadata: the metadata
         :return: None
         """
 
         # Argument check
         if not isinstance(script_ast, Script):
-            raise InvalidScriptArgument(script_ast)
+            raise InvalidScript(script_ast)
 
         if not isinstance(inhibits, list) or any(r not in INHIBIT_RELATIONS for r in inhibits):
             raise InvalidInhibitArgument(inhibits)

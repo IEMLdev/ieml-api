@@ -1,5 +1,8 @@
 from flask_socketio import SocketIO
 import multiprocessing
+from flask_compress import Compress
+
+
 socketio = SocketIO()
 
 def create_app():
@@ -22,4 +25,5 @@ def create_app():
     app.app.config['SESSION_TYPE'] = 'filesystem'
 
     socketio.init_app(app.app)
+    Compress(app.app)
     return app

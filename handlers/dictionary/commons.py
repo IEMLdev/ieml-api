@@ -9,25 +9,13 @@ def terms_db():
     return TermsConnector()
 
 
-def exception_handler(func):
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        try:
-            result = func(*args, **kwargs)
-        except Exception as e:
-            return {'success': False, 'message': str(e)}
-        else:
-            return result
-
-    return wrapper
-
-
 relation_name_table = bidict({
     "Crossed siblings": CROSSED_SIBLING_RELATION,
     "Associated siblings": ASSOCIATED_SIBLING_RELATION,
     "Twin siblings": TWIN_SIBLING_RELATION,
     "Opposed siblings": OPPOSED_SIBLING_RELATION,
 
+    # ancestor : Etymologie
     "Ancestors in mode": FATHER_RELATION + '.' + MODE,
     "Ancestors in attribute": FATHER_RELATION + '.' + ATTRIBUTE,
     "Ancestors in substance": FATHER_RELATION + '.' + SUBSTANCE,
@@ -36,8 +24,9 @@ relation_name_table = bidict({
     "Descendents in attribute": CHILD_RELATION + '.' + ATTRIBUTE,
     "Descendents in substance": CHILD_RELATION + '.' + SUBSTANCE,
 
-
+    # Hyperonymes
     "Contained in": CONTAINED_RELATION,
     "Belongs to Paradigm": 'ROOT',
+    # Hyponymes
     "Contains": CONTAINS_RELATION
 })

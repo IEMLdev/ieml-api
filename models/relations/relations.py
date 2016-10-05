@@ -15,6 +15,8 @@ import logging
 
 
 def safe_execution(role):
+    """ Decorator to ensure the atomic access at the relation collection
+    must be used for any write operation."""
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*arg, **kwrag):
@@ -122,11 +124,11 @@ class RelationsConnector(DBConnector, metaclass=Singleton):
         if paradigm:
             return self.relations.find({'_id': paradigm})['SINGULAR_SEQUENCES']
 
-        result = list((self.relations.aggregate([
+        result = list(self.relations.aggregate([
             {'$match': {'TYPE': ROOT_PARADIGM_TYPE}},
             {'$unwind': '$SINGULAR_SEQUENCES'},
             {'$group': {'_id': 0, 'RESULT': {'$push': '$SINGULAR_SEQUENCES'}}},
-        ])))
+        ]))
 
         if result:
             return result[0]['RESULT']
@@ -185,17 +187,17 @@ class RelationsConnector(DBConnector, metaclass=Singleton):
 
         # check if already exist
         if self.exists(script_ast):
+            #TODO : merge SingularSequenceAlreadyExsit and ParadigmAlreadyExist into one ScriptAlreadyExist ?
             raise SingularSequenceAlreadyExist(script_ast)
 
         # get all the singular sequence of the db to see if the singular sequence can be created
-        if str(script_ast) not in self.singular_sequences():
-            raise RootParadigmMissing(script_ast)
+        root_paradigm = self.compute_root(script_ast)
 
         # save the singular sequence
         insertion = {
             '_id': str(script_ast),
             'TYPE': SINGULAR_SEQUENCE_TYPE,
-            'ROOT': self._compute_root(script_ast),
+            'ROOT': root_paradigm,
             'RELATIONS': {},
             'LAYER': script_ast.layer,
             'SINGULAR_SEQUENCES': [str(script_ast)]
@@ -220,9 +222,9 @@ class RelationsConnector(DBConnector, metaclass=Singleton):
             raise ParadigmAlreadyExist(script_ast)
 
         # get all the singular sequence of the db to avoid intersection
-        if set.intersection(set(str(seq) for seq in script_ast.singular_sequences), self.singular_sequences()):
-            raise RootParadigmIntersection(script_ast,
-                                           set(str(seq) for seq in script_ast.singular_sequences) & set(self.singular_sequences()))
+        intersection = self.root_intersections(script_ast)
+        if intersection:
+            raise RootParadigmIntersection(script_ast, intersection)
 
         # save the root paradigm
         insertion = {
@@ -246,20 +248,19 @@ class RelationsConnector(DBConnector, metaclass=Singleton):
             raise ParadigmAlreadyExist(script_ast)
 
         # get all the singular sequence of the db to check if we can create the paradigm
-        if not set(str(seq) for seq in script_ast.singular_sequences).issubset(self.singular_sequences()):
-            raise RootParadigmMissing(script_ast)
+        root_paradigm = self.compute_root(script_ast)
 
         insertion = {
             '_id': str(script_ast),
             'TYPE': PARADIGM_TYPE,
-            'ROOT': self._compute_root(script_ast),
+            'ROOT': root_paradigm,
             'RELATIONS': {},
             'LAYER': script_ast.layer,
             'SINGULAR_SEQUENCES': [str(seq) for seq in script_ast.singular_sequences]
         }
         self.relations.insert(insertion)
 
-    def _compute_root(self, script_ast):
+    def compute_root(self, script_ast):
         """
         Prerequisite root exist in the collection.
         :param script_ast:
@@ -273,3 +274,16 @@ class RelationsConnector(DBConnector, metaclass=Singleton):
             raise RootParadigmMissing(script_ast)
 
         return result['_id']
+
+    def root_intersections(self, script_ast):
+        """
+        Return all the root paradigms that have an intersection in theirs singular sequences with the script in
+        parameter.
+        :param script_ast: the script to detect collision
+        :return: a list of str of the script of the root paradigms
+        """
+        result = [e['_id'] for e in self.relations.find({
+            'TYPE': ROOT_PARADIGM_TYPE,
+            'SINGULAR_SEQUENCES': {'$in': [str(seq) for seq in script_ast.singular_sequences]}
+        })]
+        return result

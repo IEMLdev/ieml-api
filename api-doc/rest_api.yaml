@@ -175,6 +175,33 @@ paths:
           description: |
             a list of resources ranked by similarity
 
+  /intlekt/edition/usl_to_json:
+    post:
+      operationId: handlers.usl_to_json
+      tags:
+        - Intlekt
+      description: |
+        Parse and return the json content of an usl ieml script.
+      parameters:
+        - name: usl
+          in: body
+          required: true
+          description: |
+            The usl ieml.
+          schema:
+            type: object
+          description: |
+            The usl to decompose and return the json
+        - name: language
+          in: query
+          description: |
+            The language to get the title in.
+          type: string
+      responses:
+        '200':
+          description: |
+            a nested json displaying the usl construction.
+
   ##############################
   ## FOR THE DICTIONARY'S API ##
   ##############################
@@ -193,6 +220,24 @@ paths:
             type: array
             items:
               $ref: '#/definitions/ieml_term'
+
+  /get_term:
+    get:
+      operationId: handlers.get_term
+      tags:
+        - IEML
+      description: |
+        Return a specific term object.
+      parameters:
+        - name: script
+          in: query
+          type: string
+          required: true
+      responses:
+        '200':
+          description: Successful response
+          schema:
+            $ref: '#/definitions/ieml_term'
 
   /client/authenticate:
     post:
@@ -236,6 +281,8 @@ paths:
             required:
               - success
             properties:
+              factorization:
+                type: string
               level:
                 type : integer
               taille:
@@ -248,6 +295,12 @@ paths:
                 type: array
                 items:
                   type : string
+              rootIntersections:
+                type: array
+                items:
+                  type: string
+              containsSize:
+                type: integer
 
   /scriptparser/tables:
     get:
@@ -335,6 +388,8 @@ paths:
             properties:
               ieml:
                 type: string
+              factorize_descendant:
+                type: boolean
       responses:
         '200':
           description: Successful response

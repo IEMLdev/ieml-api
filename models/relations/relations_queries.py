@@ -534,7 +534,7 @@ class RelationsQueries:
         elif isinstance(script, str):
             return ScriptParser().parse(script)
         else:
-            raise InvalidScriptArgument(script)
+            raise ValueError(script)
 
     @classmethod
     def _inhibit_relations(cls, script_str, inhibits=None):
