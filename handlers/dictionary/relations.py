@@ -86,10 +86,10 @@ def get_relations(term):
             all_relations.append({
                 "reltype" : relation_name_table.inv[relation_type],
                 "rellist" :
-                    [{"ieml" : rel,
+                    sorted([{"ieml" : rel,
                       "exists": True,
                       "visible": True}
-                     for rel in relations]
+                     for rel in relations], key=lambda s: sc(s['ieml']))
                     if relation_type != "ROOT" else
                     [{"ieml": relations,
                       "exists": True,
