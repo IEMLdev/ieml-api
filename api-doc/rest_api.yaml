@@ -380,6 +380,8 @@ paths:
             properties:
               ieml:
                 type: string
+              factorize_descendant:
+                type: boolean
       responses:
         '200':
           description: Successful response
