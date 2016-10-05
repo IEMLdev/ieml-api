@@ -42,6 +42,11 @@ def all_ieml():
     return result
 
 
+@exception_handler
+def get_term(script):
+    return _build_old_model_from_term_entry(terms_db().get_term(script))
+
+
 def parse_ieml(iemltext):
     try:
         script_ast = sc(iemltext)

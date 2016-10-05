@@ -221,6 +221,24 @@ paths:
             items:
               $ref: '#/definitions/ieml_term'
 
+  /get_term:
+    get:
+      operationId: handlers.get_term
+      tags:
+        - IEML
+      description: |
+        Return a specific term object.
+      parameters:
+        - name: script
+          in: query
+          type: string
+          required: true
+      responses:
+        '200':
+          description: Successful response
+          schema:
+            $ref: '#/definitions/ieml_term'
+
   /client/authenticate:
     post:
       operationId: handlers.authenticate
