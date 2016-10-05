@@ -191,7 +191,7 @@ class RelationsConnector(DBConnector, metaclass=Singleton):
             raise SingularSequenceAlreadyExist(script_ast)
 
         # get all the singular sequence of the db to see if the singular sequence can be created
-        root_paradigm = self._compute_root(script_ast)
+        root_paradigm = self.compute_root(script_ast)
 
         # save the singular sequence
         insertion = {
@@ -222,9 +222,9 @@ class RelationsConnector(DBConnector, metaclass=Singleton):
             raise ParadigmAlreadyExist(script_ast)
 
         # get all the singular sequence of the db to avoid intersection
-        if set.intersection(set(str(seq) for seq in script_ast.singular_sequences), self.singular_sequences()):
-            raise RootParadigmIntersection(script_ast,
-                                           set(str(seq) for seq in script_ast.singular_sequences) & set(self.singular_sequences()))
+        intersection = self.root_intersections(script_ast)
+        if intersection:
+            raise RootParadigmIntersection(script_ast, intersection)
 
         # save the root paradigm
         insertion = {
@@ -248,7 +248,7 @@ class RelationsConnector(DBConnector, metaclass=Singleton):
             raise ParadigmAlreadyExist(script_ast)
 
         # get all the singular sequence of the db to check if we can create the paradigm
-        root_paradigm = self._compute_root(script_ast)
+        root_paradigm = self.compute_root(script_ast)
 
         insertion = {
             '_id': str(script_ast),
@@ -260,7 +260,7 @@ class RelationsConnector(DBConnector, metaclass=Singleton):
         }
         self.relations.insert(insertion)
 
-    def _compute_root(self, script_ast):
+    def compute_root(self, script_ast):
         """
         Prerequisite root exist in the collection.
         :param script_ast:
@@ -274,3 +274,16 @@ class RelationsConnector(DBConnector, metaclass=Singleton):
             raise RootParadigmMissing(script_ast)
 
         return result['_id']
+
+    def root_intersections(self, script_ast):
+        """
+        Return all the root paradigms that have an intersection in theirs singular sequences with the script in
+        parameter.
+        :param script_ast: the script to detect collision
+        :return: a list of str of the script of the root paradigms
+        """
+        result = [e['_id'] for e in self.relations.find({
+            'TYPE': ROOT_PARADIGM_TYPE,
+            'SINGULAR_SEQUENCES': {'$in': [str(seq) for seq in script_ast.singular_sequences]}
+        })]
+        return result
