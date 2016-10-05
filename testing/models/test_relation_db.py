@@ -1,4 +1,5 @@
 import os
+from functools import partial
 
 from multiprocessing import Process
 
@@ -43,8 +44,20 @@ class TestRelationCollection(ModelTestCase):
 
     def test_double_lock(self):
         RelationsConnector().set_lock('testing')
-        with self.assertRaises(CollectionAlreadyLocked):
+        try:
             RelationsConnector().set_lock('testing_again')
+        except:
+            self.fail()
+
+        def lock():
+            with self.assertRaises(CollectionAlreadyLocked):
+                RelationsConnector().set_lock('testing_again')
+
+            return
+
+        p = Process(target=lock)
+        p.start()
+        p.join()
 
         # multi free
         RelationsConnector().free_lock()
