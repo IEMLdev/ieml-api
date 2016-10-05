@@ -1,6 +1,7 @@
 from handlers.commons import exception_handler
 from ieml.operator import sc
-from models.exceptions import InvalidRelationCollectionState, InvalidRelationTitle, TermNotFound
+from models.exceptions import InvalidRelationCollectionState, InvalidRelationTitle, TermNotFound, RootParadigmMissing
+from models.relations.relations import RelationsConnector
 from models.relations.relations_queries import RelationsQueries
 from ..caching import cached, flush_cache
 from handlers.dictionary.commons import terms_db, relation_name_table
@@ -55,7 +56,11 @@ def parse_ieml(iemltext):
             "level" : script_ast.layer,
             "taille" : script_ast.cardinal,
             "class" : script_ast.script_class,
-            "canonical" : old_canonical(script_ast)
+            "canonical" : old_canonical(script_ast),
+            "rootIntersections" : RelationsConnector().root_intersections(script_ast),
+            "containsSize": RelationsConnector().relations.
+                find({'_id': {'$ne': str(script_ast)},
+                      'SINGULAR_SEQUENCES': {'$in': [str(seq) for seq in script_ast.singular_sequences]}}).count()
         }
     except CannotParse:
         return {"success" : False,

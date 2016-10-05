@@ -293,6 +293,12 @@ paths:
                 type: array
                 items:
                   type : string
+              rootIntersections:
+                type: array
+                items:
+                  type: string
+              containsSize:
+                type: integer
 
   /scriptparser/tables:
     get:
