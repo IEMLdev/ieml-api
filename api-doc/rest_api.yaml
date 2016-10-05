@@ -281,6 +281,8 @@ paths:
             required:
               - success
             properties:
+              factorization:
+                type: string
               level:
                 type : integer
               taille:

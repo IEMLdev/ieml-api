@@ -9,7 +9,7 @@ from ieml.exceptions import CannotParse
 from ieml.script.constants import AUXILIARY_CLASS, VERB_CLASS, NOUN_CLASS
 from ieml.script.script import MultiplicativeScript, NullScript
 from ieml.script.tables import generate_tables
-from ieml.script.tools import old_canonical
+from ieml.script.tools import old_canonical, factorize
 from .client import need_login
 
 
@@ -52,6 +52,7 @@ def parse_ieml(iemltext):
     try:
         script_ast = sc(iemltext)
         return {
+            "factorization": str(factorize(script_ast)),
             "success" : True,
             "level" : script_ast.layer,
             "taille" : script_ast.cardinal,
@@ -300,7 +301,11 @@ def update_ieml_script(body):
 
 def ieml_term_exists(ieml_term):
     """Tries to dig a term from the database"""
-    found_term = terms_db().get_term(ieml_term)
+    try:
+        s = sc(ieml_term)
+    except CannotParse:
+        return []
+    found_term = terms_db().get_term(factorize(s))
     return [found_term] if found_term is not None else []
 
 
