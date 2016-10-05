@@ -148,16 +148,20 @@ class TermsConnector(DBConnector):
         if metadata and isinstance(metadata, dict):
             update['METADATA'] = metadata
 
-        if len(update) != 0:
+        if update:
+            # the rootness impact the validity of the script, there are constraints.
+            if 'ROOT' in update:
+                try:
+                    RelationsQueries.remove_script(script, recompute_relations=False)
+                except TermNotFound:
+                    pass
+
+                RelationsQueries.save_script(script, root=root, recompute_relations=False)
+
             self.terms.update({'_id': str(script)}, {'$set': update})
 
-            # the inhibition and rootness impact the relations
-            if 'ROOT' in update:
-                inhibition = self.get_inhibitions()
-                RelationsQueries.remove_script(script, recompute_relations=False)
-                RelationsQueries.save_script(script, root=root, recompute_relations=recompute_relations)
-
-            elif 'INHIBITS' in update and recompute_relations:
+            # the inhibition and rootness impact the relations,
+            if ('INHIBITS' in update or 'ROOT' in update) and recompute_relations:
                 self.recompute_relations()
         else:
             logging.warning("No update performed for script " + str(script) +
