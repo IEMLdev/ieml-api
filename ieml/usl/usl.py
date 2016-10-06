@@ -5,4 +5,5 @@ class Usl:
         self.ieml_object = ieml_object
 
     def __str__(self):
-        return '{/' + '/}'
+        return str(self.ieml_object)
+
