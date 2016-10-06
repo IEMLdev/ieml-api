@@ -6,6 +6,7 @@ import numpy
 from ieml.commons import TreeStructure
 from ieml.ieml_objects.exceptions import InvalidIEMLObjectArgument, InvalidTreeStructure
 
+
 class IEMLType(type):
     """This metaclass enables the comparison of class times, such as (Sentence > Word) == True"""
 
@@ -43,6 +44,8 @@ class IEMLType(type):
     def __lt__(self, other):
         return self.__rank < other.__rank
 
+    def rank(self):
+        return self.__rank
 
 class IEMLObjects(TreeStructure, metaclass=IEMLType):
     def __init__(self, children, literals=None):
