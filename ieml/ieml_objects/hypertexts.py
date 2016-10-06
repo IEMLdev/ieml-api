@@ -119,17 +119,17 @@ class Hypertext(IEMLObjects):
     def compute_str(self, children_str):
         def render_text(text):
             hyperlinks = defaultdict(lambda: list())
+            # e[1] is the hyperlink list starting at text
             for h in [e[1] for e in self.tree_graph.transitions[text]]:
                 hyperlinks[h.path].append(h.end)
 
             def _render(path, current):
-                _path = path + [current]
 
-                if isinstance(current, Term) or tuple(_path) not in hyperlinks:
+                if isinstance(current, Term):# or tuple(_path) not in hyperlinks:
                     return str(current)
 
-                return current.compute_str([_render(_path, c) for c in current]) +\
-                    ''.join(render_text(t) for t in hyperlinks[_path])
+                return current.compute_str([_render(path + [c], c) for c in current]) +\
+                    ''.join(render_text(t) for t in hyperlinks[tuple(path)])
 
             return _render([], text)
 

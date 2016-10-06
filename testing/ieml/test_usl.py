@@ -1,5 +1,6 @@
 from ieml.ieml_objects import RandomPoolIEMLObjectGenerator, Sentence, Hypertext, Text, Word, PropositionPath
 from ieml.ieml_objects.hypertexts import Hyperlink
+from ieml.ieml_objects.parser.parser import IEMLParser
 from ieml.ieml_objects.sentences import SuperSentence
 from testing.ieml.helper import *
 
@@ -26,10 +27,14 @@ class TestHypertext(unittest.TestCase):
     def test_addhyperlink(self):
         """Test if adding an hyperlink trigger a valid recompute"""
         pool = RandomPoolIEMLObjectGenerator(level=Sentence)
-        proposition = pool.sentence()
+        proposition = Word(Morpheme([pool.term()]))
+        text2 = Text([Word(Morpheme([pool.term()]))])
         text1 = Text([proposition])
-        text2 = Text([pool.word()])
         hypertext = Hypertext([Hyperlink(text1, text2, PropositionPath([proposition]))])
 
         self.assertNotEqual(str(text1), hypertext._str)
         self.assertNotEqual(str(text2), hypertext._str)
+
+    def test_parse_hypertext(self):
+        hype_str = "{/[([o.wa.-])]{/[([t.i.-s.i.-'])]/}/}"
+        self.assertEqual(str(IEMLParser().parse(hype_str)), hype_str)
