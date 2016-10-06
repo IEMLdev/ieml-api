@@ -8,6 +8,7 @@ from ieml.calculation.distance import (object_proximity_index,
                                        partition_graph, get_paradigms, connexity_index,
                                        grammatical_class_index, paradigmatic_equivalence_class_index)
 from ieml.script.operator import sc
+from ieml.usl import usl
 
 
 class DistanceComputationTests(unittest.TestCase):
@@ -21,10 +22,10 @@ class DistanceComputationTests(unittest.TestCase):
                                      Term(sc("T:.-',S:.-',S:.-'B:.-'n.-S:.U:.-',_"))]))
         self.word_2 = Word(Morpheme([Term(sc("l.-x.-s.y.-'")), Term(sc("e.-u.-we.h.-'"))]),
                            Morpheme([Term(sc("T:.E:A:T:.-")), Term(sc("E:A:.k.-"))]))
-        self.word_3 = Word(Morpheme([Term(sc("E:S:.O:B:.-")), Term(sc("E:S:.O:T:.-")), Term(sc("E:S:.U:M:.-"))]),
+        self.word_3 = Word(Morpheme([Term(sc("E:S:.O:B:.-")), Term(sc("E:S:.O:T:.-"))]),# Term(sc("E:S:.U:M:.-"))]),
                            Morpheme([Term(sc("E:O:.S:M:.-"))]))
         self.word_4 = Word(Morpheme([Term(sc("S:M:.e.-t.u.-'"))]),
-                           Morpheme([Term(sc("B:M:.y.-")), Term(sc("T:M:.y.-")), Term(sc("M:S:.y.-"))]))
+                           Morpheme([Term(sc("B:M:.y.-")), Term(sc("T:M:.y.-")), Term(sc("S:M:.y.-"))]))
         self.word_5 = Word(Morpheme([Term(sc("j.-'F:.-'k.o.-t.o.-',")), Term(sc("h.-'F:.-'k.o.-t.o.-',")),
                                      Term(sc("c.-'F:.-'k.o.-t.o.-',"))]),
                            Morpheme([Term(sc("E:M:.wa.-")), Term(sc("E:M:.wu.-")), Term(sc("E:M:.we.-"))]))
@@ -361,10 +362,9 @@ class DistanceComputationTests(unittest.TestCase):
         s_6 = Sentence([Clause(self.word_6, self.word_3, self.word_1), Clause(self.word_6, self.word_4, self.word_10),
                         Clause(self.word_4, self.word_7, self.word_9)])
 
-        usl_a = HyperText(Text([s_1, s_2, s_6, s_5]))
-        usl_b = HyperText(Text([s_2, s_3, s_6, s_4]))
-        usl_a.check()
-        usl_b.check()
+        usl_a = usl(Text([s_1, s_2, s_6, s_5]))
+        usl_b = usl(Text([s_2, s_3, s_6, s_4]))
+
         index = connexity_index(Sentence, usl_a, usl_b)
         print("Proximity Index for the different USLs: " + str(index))
         self.assertTrue(index != 1 and index != 0, "Different USLs should yield and index that isn't null nor is 1")

@@ -4,6 +4,7 @@ from fractions import Fraction
 
 from bidict import bidict
 from ieml.ieml_objects import Term, Word, Sentence, SuperSentence, Morpheme, Text, Hypertext
+from ieml.ieml_objects.hypertexts import Hyperlink
 from ieml.usl import usl
 from ieml.script.operator import sc
 from ieml.script.tables import get_table_rank
@@ -82,7 +83,7 @@ def connexity_index(stage, uslA, uslB):
     for a, b in it.product(stages_A[stage], stages_B[stage]):
 
         if stage == Sentence or stage == SuperSentence:
-            intersection = a.graph.nodes_set & b.graph.nodes_set
+            intersection = set(a.tree_graph.nodes) & set(b.tree_graph.nodes)
         else:
             intersection = children_A[a] & children_B[b]
 
@@ -129,8 +130,7 @@ def compute_stages(usl):
     """
 
     def usl_iter(usl):
-        for t in usl.texts:
-            yield from t.tree_iter()
+        yield from usl.ieml_object.tree_iter()
 
     stages = {c: set() for c in categories}
 
@@ -149,13 +149,14 @@ def compute_stages(usl):
                 children[e] = set(i for i in e.tree_iter() if isinstance(i, _class))
 
     result = defaultdict(lambda: defaultdict(lambda: 0))
-    stack = [usl]
+    stack = []
     for e in usl_iter(usl):
         if e.__class__ not in categories:
             continue
 
-        while categories[e.__class__] >= categories[stack[-1].__class__]:
-            stack.pop()
+        if stack:
+            while categories[e.__class__] >= categories[stack[-1].__class__]:
+                stack.pop()
 
         for k in stack:
             result[k][e] += 1
@@ -222,15 +223,15 @@ def build_graph(object_set_a, object_set_b, intersection):
         node_pairs = it.combinations(intersection, 2)
 
         for pair in node_pairs:
-            node_1_addr_a = object_set_a.tree_graph.nodes_list.index(pair[0])
-            node_2_addr_a = object_set_a.tree_graph.nodes_list.index(pair[1])
-            node_1_addr_b = object_set_b.graph.nodes_list.index(pair[0])
-            node_2_addr_b = object_set_b.graph.nodes_list.index(pair[1])
+            node_1_addr_a = object_set_a.tree_graph.nodes.index(pair[0])
+            node_2_addr_a = object_set_a.tree_graph.nodes.index(pair[1])
+            node_1_addr_b = object_set_b.tree_graph.nodes.index(pair[0])
+            node_2_addr_b = object_set_b.tree_graph.nodes.index(pair[1])
 
-            if ((object_set_a.tree_graph.adjacency_matrix[node_1_addr_a][node_2_addr_a] or
-                 object_set_a.tree_graph.adjacency_matrix[node_2_addr_a][node_1_addr_a]) and
-                (object_set_b.graph.adjacency_matrix[node_1_addr_b][node_2_addr_b] or
-                 object_set_b.graph.adjacency_matrix[node_2_addr_b][node_1_addr_b])):
+            if ((object_set_a.tree_graph.array[node_1_addr_a][node_2_addr_a] or
+                 object_set_a.tree_graph.array[node_2_addr_a][node_1_addr_a]) and
+                (object_set_b.tree_graph.array[node_1_addr_b][node_2_addr_b] or
+                 object_set_b.tree_graph.array[node_2_addr_b][node_1_addr_b])):
 
                 graph[pair[0]].append(pair[1])
                 graph[pair[1]].append(pair[0])
