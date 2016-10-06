@@ -1,4 +1,4 @@
-from models.base_queries import DBConnector
+from models.commons import DBConnector
 from models.intlekt.constants import DEMO_DB_NAME
 
 

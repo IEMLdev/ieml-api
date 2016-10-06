@@ -5,7 +5,7 @@ import random
 import pymongo.errors
 
 from helpers.metaclasses import Singleton
-from models.base_queries import DBConnector
+from models.commons import DBConnector
 from models.constants import RELATIONS_COLLECTION, ROOT_PARADIGM_TYPE, SINGULAR_SEQUENCE_TYPE, PARADIGM_TYPE, \
     RELATIONS_LOCK_COLLECTION, DROP_RELATIONS, SCRIPT_INSERTION, SCRIPT_DELETION
 from models.exceptions import NotAParadigm, RootParadigmIntersection, \
