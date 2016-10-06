@@ -45,6 +45,9 @@ class RandomPoolIEMLObjectGenerator:
 
         # self.hypertext_pool = set(self.hypertext() for i in range(self.pool_size))
 
+    def term(self):
+        return random.sample(self.terms_pool, 1)[0]
+
     def word(self):
         return Word(Morpheme(random.sample(self.terms_pool, 3)), Morpheme(random.sample(self.terms_pool, 2)))
 
