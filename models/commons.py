@@ -23,3 +23,8 @@ def check_tags(tags):
     return isinstance(tags, dict) and all(lang in tags for lang in TAG_LANGUAGES) \
            and all((tag in TAG_LANGUAGES and tag) for tag in tags) \
            and all(isinstance(tags[tag], str) for tag in tags)
+
+def check_keywords(keywords):
+    return isinstance(keywords, dict) and all((tag in TAG_LANGUAGES) for tag in keywords) \
+           and all(isinstance(keywords[tag], list) for tag in keywords) \
+           and all(isinstance(e, str) for tag in keywords for e in keywords[tag])

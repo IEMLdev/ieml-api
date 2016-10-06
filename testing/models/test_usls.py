@@ -35,7 +35,7 @@ class TestUSLsModel(ModelTestCase):
     def test_remove_usl(self):
         _entry = self.save_random_usl()
 
-        self.usls.remove_usl(_entry['_id'])
+        self.usls.remove_usl(_entry['IEML'])
         self.assertEqual(self.usls.usls.count(), 0)
 
     def test_multi_add(self):
