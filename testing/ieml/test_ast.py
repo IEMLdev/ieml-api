@@ -10,6 +10,17 @@ from ieml.ieml_objects.tools import RandomPoolIEMLObjectGenerator
 from ieml.script.operator import sc
 from testing.ieml.helper import *
 
+
+class TestIEMLType(unittest.TestCase):
+    def test_rank(self):
+        r = RandomPoolIEMLObjectGenerator(level=Text)
+        self.assertEqual(r.term().__class__.rank(), 1)
+        self.assertEqual(r.word().__class__.rank(), 3)
+        self.assertEqual(r.sentence().__class__.rank(), 5)
+        self.assertEqual(r.super_sentence().__class__.rank(), 7)
+        self.assertEqual(r.text().__class__.rank(), 8)
+
+
 class TestMetaFeatures(unittest.TestCase):
     """Tests inter-class operations and metaclass related features"""
 

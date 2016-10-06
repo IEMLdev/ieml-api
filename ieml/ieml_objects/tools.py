@@ -21,6 +21,14 @@ class RandomPoolIEMLObjectGenerator:
 
         self._build_pools()
 
+        self.type_to_method = {
+            Term: self.term,
+            Word: self.word,
+            Sentence: self.sentence,
+            SuperSentence: self.super_sentence,
+            Text: self.text
+        }
+
     def _build_pools(self):
         """
         Slow method, retrieve all the terms from the database.
@@ -92,6 +100,13 @@ class RandomPoolIEMLObjectGenerator:
     #
     #
     #     return Hypertext(self._build_graph_object(text, , SuperSentence))
+
+
+    def from_type(self, type):
+        try:
+            return self.type_to_method[type]()
+        except KeyError:
+            raise ValueError("Can't generate that type or not an IEMLObject : %s"%str(type))
 
 if __name__ == '__main__':
     r = RandomPoolIEMLObjectGenerator(Text)
