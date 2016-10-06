@@ -11,6 +11,7 @@ from ieml.script.operator import sc
 from models.constants import TAG_LANGUAGES
 from models.relations.relations import RelationsConnector
 from models.terms.terms import TermsConnector
+from models.usl.usl import USLConnector
 
 
 def stub_db(module):
@@ -26,8 +27,8 @@ def normal_db(module):
     if isinstance(module, str):
         module = sys.modules[module]
 
-    reload_model_package(module, reloaded=set(), seen=set())
-    print('resetting to normal db (ieml_db).')
+    reloaded = reload_model_package(module, reloaded=set(), seen=set())
+    print('resetting to normal db (ieml_db). module reloaded ')
 
 
 def _dependencies(module):
@@ -50,8 +51,8 @@ def reload_model_package(module, reloaded, seen):
         deps = (_dependencies(module) & to_reload) - ({module.__name__} | reloaded)
 
     importlib.reload(module)
-    print('loading %s'%module.__name__)
     reloaded.add(module.__name__)
+    return reloaded
 
 
 class ModelTestCase(unittest.TestCase):
@@ -66,12 +67,14 @@ class ModelTestCase(unittest.TestCase):
     def setUp(self):
         self.terms = TermsConnector()
         self.relations = RelationsConnector()
+        self.usls = USLConnector()
         self._clear()
 
     def _clear(self):
         self.terms.terms.drop()
         self.relations.relations.drop()
         self.relations.relations_lock.drop()
+        self.usls.usls.drop()
 
     def _save_paradigm(self, paradigm, recompute_relations=True):
         list_terms = [{
