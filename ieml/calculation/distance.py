@@ -243,11 +243,11 @@ def build_graph(object_set_a, object_set_b, intersection):
 
         for combination in combos:
             if combination[0] in object_set_a.root.children and combination[1] in object_set_a.flexing.children and \
-               combination[0] in object_set_b.subst.children and combination[1] in object_set_b.mode.children:
+               combination[0] in object_set_b.root.children and combination[1] in object_set_b.flexing.children:
                 graph[combination[0]].append(combination[1])
                 graph[combination[1]].append(combination[0])
             elif combination[0] in object_set_a.flexing.children and combination[1] in object_set_a.root.children and \
-                 combination[0] in object_set_b.mode.children and combination[1] in object_set_b.subst.children:
+                 combination[0] in object_set_b.flexing.children and combination[1] in object_set_b.root.children:
                 graph[combination[0]].append(combination[1])
                 graph[combination[1]].append(combination[0])
 
