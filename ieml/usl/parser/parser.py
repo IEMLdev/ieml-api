@@ -20,6 +20,7 @@ class USLParser(metaclass=Singleton):
 
     def parse(self, s):
         """Parses the input string, and returns a reference to the created AST's root"""
+        self.usl = s
         self.root = None
         self.parser.parse(s, lexer=self.lexer)
 
@@ -30,8 +31,15 @@ class USLParser(metaclass=Singleton):
 
     # Parsing rules
     def p_usl(self, p):
-        """ usl : L_CURLY_BRACKET IEML_OBJECT R_CURLY_BRACKET"""
-        self.root = Usl(IEMLParser().parse(p[2]))
+        """ usl : IEML_OBJECT """
+        self.root = Usl(IEMLParser().parse(p[1]))
+
+    def p_error(self, p):
+        if p:
+            print("Syntax error at '%s' (%d, %d)" % (p.value, p.lineno, p.lexpos))
+        else:
+            print("Syntax error at EOF")
+        raise CannotParse(self.usl)
 
 if __name__ == '__main__':
     print(str(USLParser().parse('{[wa.]}')))
