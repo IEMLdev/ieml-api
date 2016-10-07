@@ -14,11 +14,11 @@ from ieml.script.constants import OPPOSED_SIBLING_RELATION
 from models.exceptions import CollectionAlreadyLocked
 from models.relations.relations import RelationsConnector
 from models.relations.relations_queries import RelationsQueries
-from testing.models.stub_db import ModelTestCase
+from testing.models.stub_db import ModelTestCase, modelTestCase
 from testing.models.test_model import paradigms
 
 
-class TestRelationCollection(ModelTestCase):
+class TestRelationCollection(modelTestCase('terms')):
     def setUp(self):
         super().setUp()
         self._clear()

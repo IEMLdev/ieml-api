@@ -1,7 +1,9 @@
 import importlib
 import random
+import types
 import unittest
 from collections import namedtuple
+from functools import partial
 from string import ascii_lowercase
 from types import ModuleType
 
@@ -55,7 +57,28 @@ def reload_model_package(module, reloaded, seen):
     return reloaded
 
 
+def modelTestCase(kind=None):
+    connectors = []
+    if kind == 'terms':
+        connectors = [('terms', TermsConnector), ('relations', RelationsConnector)]
+    if kind == 'usl':
+        connectors = [('usls', USLConnector)]
+
+    kind = kind[0].upper() + kind[1:]
+
+    def prepare(ns):
+        ns['connectors'] = connectors
+
+    return types.new_class('ModelTestCase'+kind, (ModelTestCase,), {}, prepare)
+
+
 class ModelTestCase(unittest.TestCase):
+    def __init__(self, test_name=None):
+        if not hasattr(self, 'connectors'):
+            self.connectors = []
+        self.all_connectors = [('terms', TermsConnector), ('relations', RelationsConnector), ('usls', USLConnector)]
+        super().__init__(test_name)
+
     @classmethod
     def setUpClass(cls):
         stub_db(cls.__module__)
@@ -65,16 +88,13 @@ class ModelTestCase(unittest.TestCase):
         normal_db(cls.__module__)
 
     def setUp(self):
-        self.terms = TermsConnector()
-        self.relations = RelationsConnector()
-        self.usls = USLConnector()
+        for attr, connector in self.all_connectors:
+            self.__setattr__(attr, connector())
         self._clear()
 
     def _clear(self):
-        self.terms.terms.drop()
-        self.relations.relations.drop()
-        self.relations.relations_lock.drop()
-        self.usls.usls.drop()
+        for attr, connector in self.connectors:
+            self.__getattribute__(attr).drop()
 
     def _save_paradigm(self, paradigm, recompute_relations=True):
         list_terms = [{
@@ -107,18 +127,25 @@ paradigms = {
     1: Paradigm(root=sc('O:O:.O:O:.-'), paradigms=set(map(sc, ['O:O:.wo.-', 'wu.O:O:.-', 'wa.O:O:.-', 'wo.O:O:.-', 'O:O:.we.-', 'we.O:O:.-', 'O:O:.wa.-', 'O:O:.wu.-', 'wo.U:O:.-', 'wo.A:O:.-', 'wo.O:U:.-', 'wo.O:A:.-', 'wa.U:O:.-', 'wa.A:O:.-', 'wa.O:U:.-', 'wa.O:A:.-', 'wu.U:O:.-', 'wu.A:O:.-', 'wu.O:U:.-', 'wu.O:A:.-', 'we.U:O:.-', 'we.A:O:.-', 'we.O:U:.-', 'we.O:A:.-', 'U:O:.wo.-', 'A:O:.wo.-', 'O:U:.wo.-', 'O:A:.wo.-', 'U:O:.wa.-', 'A:O:.wa.-', 'O:U:.wa.-', 'O:A:.wa.-', 'U:O:.wu.-', 'A:O:.wu.-', 'O:U:.wu.-', 'O:A:.wu.-', 'U:O:.we.-', 'A:O:.we.-', 'O:U:.we.-', 'O:A:.we.-'])))
 }
 
+class TestOO(modelTestCase('jjk')):
+    def __init__(self):
+        super(TestOO, self).__init__()
 
 
 if __name__ == '__main__':
-    import models.relations
-    old = sys.modules['models.base_queries'].__dict__['DB_NAME']
-    print(old)
-    stub_db(sys.modules['models.relations.relations_queries'])
-    # importlib.reload(old)
-    new = sys.modules['models.base_queries'].__dict__['DB_NAME']
-    print(new)
-    print(old is new)
-    importlib.reload(sys.modules['models.relations.relations_queries'])
+    o = modelTestCase()()
+    str(o)
+
+
+    # import models.relations
+    # old = sys.modules['models.base_queries'].__dict__['DB_NAME']
+    # print(old)
+    # stub_db(sys.modules['models.relations.relations_queries'])
+    # # importlib.reload(old)
+    # new = sys.modules['models.base_queries'].__dict__['DB_NAME']
+    # print(new)
+    # print(old is new)
+    # importlib.reload(sys.modules['models.relations.relations_queries'])
 
 
 
