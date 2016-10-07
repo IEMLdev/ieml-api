@@ -1,12 +1,23 @@
+from collections import defaultdict
+
 from handlers.commons import exception_handler
-from ieml import usl
+from ieml.usl import usl
 from models.usl.usl import USLConnector
 
 
 @exception_handler
 def save_usl(body):
     _usl = usl(body['ieml'])
-    USLConnector().save_usl(_usl, tags=body['tags'], keywords=body['keywords'])
+    tags = {'FR': body['fr'], 'EN': body['en']}
+    keywords = None
+    if 'keywords' in body:
+        keywords = defaultdict(lambda : list())
+        if 'fr' in keywords:
+            keywords['FR'] = body['keywords']['fr']
+        if 'en' in keywords:
+            keywords['EN'] = body['keywords']['en']
+
+    USLConnector().save_usl(_usl, tags=tags, keywords=keywords)
     return {'success': True}
 
 
@@ -54,3 +65,8 @@ def query_usl(param):
                 'ieml': e['IEML'],
                 'tags': e['TAGS'],
                 'keywords': e['KEYWORDS']} for e in result]}
+
+
+@exception_handler
+def edit_usl(body):
+    return {'success': True}
