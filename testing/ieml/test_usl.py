@@ -1,7 +1,10 @@
+import re
+
 from ieml.ieml_objects import RandomPoolIEMLObjectGenerator, Sentence, Hypertext, Text, Word, PropositionPath
 from ieml.ieml_objects.hypertexts import Hyperlink
 from ieml.ieml_objects.parser.parser import IEMLParser
 from ieml.ieml_objects.sentences import SuperSentence
+from ieml.usl.tools import random_usl
 from testing.ieml.helper import *
 
 
@@ -38,3 +41,8 @@ class TestHypertext(unittest.TestCase):
     def test_parse_hypertext(self):
         hype_str = "{/[([o.wa.-])]{/[([t.i.-s.i.-'])]/}/}"
         self.assertEqual(str(IEMLParser().parse(hype_str)), hype_str)
+
+class TestUsl(unittest.TestCase):
+    def test_usl_str(self):
+        _usl = random_usl()
+        self.assertRegexpMatches(str(_usl), '^\{/.+/\}$')
