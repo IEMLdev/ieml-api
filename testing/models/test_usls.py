@@ -3,10 +3,10 @@ import string
 
 from ieml.usl import random_usl
 from models.usl.usl import usl_index
-from testing.models.stub_db import ModelTestCase
+from testing.models.stub_db import ModelTestCase, modelTestCase
 
 
-class TestUSLsModel(ModelTestCase):
+class TestUSLsModel(modelTestCase('usl')):
     def save_random_usl(self):
         rand_string = lambda : ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(15))
 
