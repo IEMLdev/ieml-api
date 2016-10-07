@@ -64,3 +64,6 @@ class USLConnector(DBConnector):
                 raise DuplicateTag(tags[l])
 
         return True
+
+    def drop(self):
+        self.usls.drop()

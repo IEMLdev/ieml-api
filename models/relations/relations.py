@@ -287,3 +287,7 @@ class RelationsConnector(DBConnector, metaclass=Singleton):
             'SINGULAR_SEQUENCES': {'$in': [str(seq) for seq in script_ast.singular_sequences]}
         })]
         return result
+
+    def drop(self):
+        self.relations.drop()
+        self.relations_lock.drop()

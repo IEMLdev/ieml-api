@@ -263,3 +263,6 @@ class TermsConnector(DBConnector):
                 raise DuplicateTag(tags[l])
 
         return True
+
+    def drop(self):
+        self.terms.drop()
