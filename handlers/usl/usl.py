@@ -5,16 +5,14 @@ from ieml.usl import usl
 from models.usl.usl import USLConnector
 
 
-@exception_handler
 def save_usl(body):
     _usl = usl(body['ieml'])
     tags = {'FR': body['fr'], 'EN': body['en']}
-    keywords = None
+    keywords = defaultdict(lambda : list())
     if 'keywords' in body:
-        keywords = defaultdict(lambda : list())
-        if 'fr' in keywords:
+        if 'fr' in body['keywords']:
             keywords['FR'] = body['keywords']['fr']
-        if 'en' in keywords:
+        if 'en' in body['keywords']:
             keywords['EN'] = body['keywords']['en']
 
     USLConnector().save_usl(_usl, tags=tags, keywords=keywords)

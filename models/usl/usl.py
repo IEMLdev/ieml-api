@@ -33,7 +33,7 @@ class USLConnector(DBConnector):
 
     def get_usl(self, usl=None, tag=None, language=None):
         if usl:
-            return self.usls.find_one({'_id': str(usl)})
+            return self.usls.find_one({'_id': usl_index(usl)})
 
         if tag and language:
             return self.usls.find_one({'TAGS.%s'%language: tag})
