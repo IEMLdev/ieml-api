@@ -39,7 +39,7 @@ def get_usl(param):
 
 @exception_handler
 def delete_usl(body):
-    USLConnector().remove_usl(body['usl'])
+    USLConnector().remove_usl(body['ieml'])
     return {'success': True}
 
 
