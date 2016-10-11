@@ -2,13 +2,31 @@ import random
 
 import itertools
 
+import functools
+
+from ieml.ieml_objects.exceptions import InvalidIEMLObjectArgument
 from ieml.ieml_objects.terms import Term
 from ieml.script.operator import script
 
-from ieml.ieml_objects.hypertexts import Hypertext
 from ieml.ieml_objects.sentences import Sentence, Clause, SuperSentence, SuperClause
 from ieml.ieml_objects.texts import Text
 from ieml.ieml_objects.words import Word, Morpheme
+from ieml_objects.exceptions import CantGenerateElement
+
+
+def _loop_result(max_try):
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            for i in range(max_try):
+                try:
+                    return func(*args, **kwargs)
+                except InvalidIEMLObjectArgument as e:
+                    continue
+
+            raise CantGenerateElement(str(e))
+        return wrapper
+    return decorator
 
 
 class RandomPoolIEMLObjectGenerator:
@@ -53,9 +71,11 @@ class RandomPoolIEMLObjectGenerator:
 
         # self.hypertext_pool = set(self.hypertext() for i in range(self.pool_size))
 
+    @_loop_result(10)
     def term(self):
         return random.sample(self.terms_pool, 1)[0]
 
+    @_loop_result(10)
     def word(self):
         return Word(Morpheme(random.sample(self.terms_pool, 3)), Morpheme(random.sample(self.terms_pool, 2)))
 
@@ -78,18 +98,21 @@ class RandomPoolIEMLObjectGenerator:
                 break
         return result
 
+    @_loop_result(10)
     def sentence(self):
         def p():
             return random.sample(self.words_pool, 1)[0]
 
         return Sentence(self._build_graph_object(p, p, Clause))
 
+    @_loop_result(10)
     def super_sentence(self):
         def p():
             return random.sample(self.sentences_pool, 1)[0]
 
         return SuperSentence(self._build_graph_object(p, p, SuperClause))
 
+    @_loop_result(10)
     def text(self):
         return Text(random.sample(self.propositions_pool, random.randint(1, 8)))
 
