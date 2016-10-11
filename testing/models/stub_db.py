@@ -13,23 +13,23 @@ from ieml.script.operator import sc
 from models.constants import TAG_LANGUAGES
 from models.relations.relations import RelationsConnector
 from models.terms.terms import TermsConnector
-from models.usl.usl import USLConnector
+from models.usls.usls import USLConnector
 
 
-def stub_db(module):
+def stub_db(module_model, connectors):
     config.DB_NAME = 'test_db'
-    if isinstance(module, str):
-        module = sys.modules[module]
-    reload_model_package(module, reloaded=set(), seen=set())
+    if isinstance(module_model, str):
+        module_model = sys.modules[module_model]
+    reload_model_package(module_model, reloaded=set(), seen=set(), connectors=connectors)
     print('switching to test_db.')
 
 
-def normal_db(module):
+def normal_db(module_model, connectors):
     importlib.reload(config)
-    if isinstance(module, str):
-        module = sys.modules[module]
+    if isinstance(module_model, str):
+        module_model = sys.modules[module_model]
 
-    reloaded = reload_model_package(module, reloaded=set(), seen=set())
+    reload_model_package(module_model, reloaded=set(), seen=set(), connectors=connectors)
     print('resetting to normal db (ieml_db). module reloaded ')
 
 
@@ -38,9 +38,16 @@ def _dependencies(module):
             for g in module.__dict__.values() if isinstance(g, type) or isinstance(g, ModuleType)}
 
 
-def reload_model_package(module, reloaded, seen):
+def reload_model_package(module, reloaded, seen, connectors):
 
-    to_reload = set(m for m in sys.modules.keys() if m.partition('.')[0] == 'models') | {__name__}
+    to_reload = {__name__}
+    for m in sys.modules.keys():
+        p = m.split('.')
+        if len(p) == 1 and p[0] == 'models':
+            to_reload.add(m)
+        if len(p) > 1 and p[1] in connectors:
+            to_reload.add(m)
+
     if module in seen:
         raise ValueError('Circular dependency : %s'%module.__name__)
     seen.add(module)
@@ -49,52 +56,70 @@ def reload_model_package(module, reloaded, seen):
 
     while deps:
         m = next(iter(deps))
-        reload_model_package(sys.modules[m], reloaded=reloaded, seen=seen)
+        reloaded |= (reload_model_package(sys.modules[m], reloaded=reloaded, seen=seen, connectors=connectors))
         deps = (_dependencies(module) & to_reload) - ({module.__name__} | reloaded)
 
     importlib.reload(module)
     reloaded.add(module.__name__)
     return reloaded
 
+model_test_cases = {}
+_index = 0
+
+
+def _get_model_test_cases(connectors):
+    if connectors in model_test_cases:
+        return model_test_cases[connectors]
+
+    global _index
+    test_case = types.new_class('ModelTestCase'+str(_index), (ModelTestCase,), {})
+    _index += 1
+
+    test_case.connectors = connectors
+
+    model_test_cases[connectors] = test_case
+
+    return test_case
+
 
 def modelTestCase(kind=None):
-    connectors = []
+    connectors = ()
     if kind == 'terms':
-        connectors = [('terms', TermsConnector), ('relations', RelationsConnector)]
-    if kind == 'usl':
-        connectors = [('usls', USLConnector)]
+        connectors = ('terms', 'relations')
+    if kind == 'usls':
+        connectors = ('usls',)
 
-    kind = kind[0].upper() + kind[1:]
-
-    def prepare(ns):
-        ns['connectors'] = connectors
-
-    return types.new_class('ModelTestCase'+kind, (ModelTestCase,), {}, prepare)
+    return _get_model_test_cases(connectors)
 
 
 class ModelTestCase(unittest.TestCase):
-    def __init__(self, test_name=None):
-        if not hasattr(self, 'connectors'):
-            self.connectors = []
-        self.all_connectors = [('terms', TermsConnector), ('relations', RelationsConnector), ('usls', USLConnector)]
+    def __init__(self, test_name='runTest'):
+        if not hasattr(self.__class__, 'connectors'):
+            self.__class__.connectors = []
         super().__init__(test_name)
 
     @classmethod
     def setUpClass(cls):
-        stub_db(cls.__module__)
+        stub_db(cls.__module__, cls.connectors)
 
     @classmethod
     def tearDownClass(cls):
-        normal_db(cls.__module__)
+        normal_db(cls.__module__, cls.connectors)
 
     def setUp(self):
-        for attr, connector in self.all_connectors:
-            self.__setattr__(attr, connector())
+        self.terms = TermsConnector()
+        self.relations = RelationsConnector()
+        self.usls = USLConnector()
+
         self._clear()
 
     def _clear(self):
-        for attr, connector in self.connectors:
-            self.__getattribute__(attr).drop()
+        if 'terms' in self.connectors:
+            self.terms.drop()
+        if 'relations' in self.connectors:
+            self.relations.drop()
+        if 'usls' in self.connectors:
+            self.usls.drop()
 
     def _save_paradigm(self, paradigm, recompute_relations=True):
         list_terms = [{
@@ -126,10 +151,6 @@ paradigms = {
     0: Paradigm(root=sc('F:F:.O:.M:.-'), paradigms={sc('T:M:.O:.M:.-'), sc('F:M:.O:.M:.-'), sc('T:U:.O:.M:.-')}),
     1: Paradigm(root=sc('O:O:.O:O:.-'), paradigms=set(map(sc, ['O:O:.wo.-', 'wu.O:O:.-', 'wa.O:O:.-', 'wo.O:O:.-', 'O:O:.we.-', 'we.O:O:.-', 'O:O:.wa.-', 'O:O:.wu.-', 'wo.U:O:.-', 'wo.A:O:.-', 'wo.O:U:.-', 'wo.O:A:.-', 'wa.U:O:.-', 'wa.A:O:.-', 'wa.O:U:.-', 'wa.O:A:.-', 'wu.U:O:.-', 'wu.A:O:.-', 'wu.O:U:.-', 'wu.O:A:.-', 'we.U:O:.-', 'we.A:O:.-', 'we.O:U:.-', 'we.O:A:.-', 'U:O:.wo.-', 'A:O:.wo.-', 'O:U:.wo.-', 'O:A:.wo.-', 'U:O:.wa.-', 'A:O:.wa.-', 'O:U:.wa.-', 'O:A:.wa.-', 'U:O:.wu.-', 'A:O:.wu.-', 'O:U:.wu.-', 'O:A:.wu.-', 'U:O:.we.-', 'A:O:.we.-', 'O:U:.we.-', 'O:A:.we.-'])))
 }
-
-class TestOO(modelTestCase('jjk')):
-    def __init__(self):
-        super(TestOO, self).__init__()
 
 
 if __name__ == '__main__':

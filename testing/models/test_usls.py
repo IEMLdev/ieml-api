@@ -2,7 +2,7 @@ import random
 import string
 
 from ieml.usl import random_usl
-from models.usl.usl import usl_index
+from models.usls.usls import usl_index
 from testing.models.stub_db import ModelTestCase, modelTestCase
 
 

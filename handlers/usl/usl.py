@@ -2,9 +2,9 @@ from collections import defaultdict
 
 from handlers.commons import exception_handler
 from ieml.usl import usl
-from models.usl.usl import USLConnector
+from models.usls.usls import USLConnector
 
-
+@exception_handler
 def save_usl(body):
     _usl = usl(body['ieml'])
     tags = {'FR': body['fr'], 'EN': body['en']}
