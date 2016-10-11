@@ -68,9 +68,9 @@ class IEMLParser(metaclass=Singleton):
                         | LITERAL"""
 
         if len(p) == 3:
-            p[0] = p[1] + [p[2]]
+            p[0] = p[1] + [p[2][1:-1]]
         else:
-            p[0] = [p[1]]
+            p[0] = [p[1][1:-1]]
 
 
     def p_term(self, p):
@@ -141,8 +141,9 @@ class IEMLParser(metaclass=Singleton):
         p[0] = _build(SuperClause(substance=p[2][0], attribute=p[4][0], mode=p[6][0]), p[2], p[4], p[6])
 
     def p_super_sentence(self, p):
-        """supersentence : LBRACKET superclauses_sum RBRACKET"""
-        p[0] = _build(SuperSentence(p[2][0]), p[2])
+        """supersentence : LBRACKET superclauses_sum RBRACKET
+                         | LBRACKET superclauses_sum RBRACKET literal_list"""
+        p[0] = _build(SuperSentence(p[2][0], literals=p[4]), p[2])
 
     def p_closed_proposition(self, p):
         """ closed_proposition : SLASH decorated_word SLASH
