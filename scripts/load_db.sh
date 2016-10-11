@@ -1,4 +1,4 @@
 rm -r data/dump/
 tar xvf data/terms.tar.gz -C data/
-mongorestore data/dump
+mongorestore --drop data/dump
 rm -r data/dump
