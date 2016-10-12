@@ -4,14 +4,15 @@ import unittest
 
 import handlers as h
 from ieml.usl.tools import random_usl
-from testing.models.stub_db import modelTestCase
+from testing.models.stub_db import ModelTestCase
 
 
 def rand_string():
     return ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(15))
 
 
-class TestUslHandler(modelTestCase('usls')):
+class TestUslHandler(ModelTestCase):
+    connectors = ('usls',)
     def _assert_success(self, m):
         if not isinstance(m, dict) or 'success' not in m:
             self.fail("Responses malformed.")

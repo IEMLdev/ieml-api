@@ -1,9 +1,11 @@
-from testing.models.stub_db import ModelTestCase, _tag, paradigms, modelTestCase
+from testing.models.stub_db import ModelTestCase, _tag, paradigms
 from models.exceptions import RootParadigmMissing, RootParadigmIntersection, InvalidTags, DuplicateTag
 from ieml.script.operator import sc
 
 
-class TestModel(modelTestCase('terms')):
+class TestModel(ModelTestCase):
+    connectors = ('terms', 'relations')
+
     def test_insert_term(self):
         script = sc("M:M:M:.U:U:U:.e.-")
         self.terms.add_term(script, {'FR': 'fr', 'EN': 'en'}, [], root=True)

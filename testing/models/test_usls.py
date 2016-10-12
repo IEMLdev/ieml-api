@@ -3,10 +3,13 @@ import string
 
 from ieml.usl import random_usl
 from models.usls.usls import usl_index
-from testing.models.stub_db import ModelTestCase, modelTestCase
+from testing.models.stub_db import ModelTestCase
 
 
-class TestUSLsModel(modelTestCase('usl')):
+class TestUSLsModel(ModelTestCase):
+
+    connectors = ('usls',)
+
     def save_random_usl(self):
         rand_string = lambda : ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(15))
 
@@ -30,7 +33,7 @@ class TestUSLsModel(modelTestCase('usl')):
     def test_get_usl(self):
         _entry = self.save_random_usl()
 
-        self.assertEqual(_entry, self.usls.get_usl(_entry['_id']))
+        self.assertEqual(_entry, self.usls.get_usl(_entry['IEML']))
 
     def test_remove_usl(self):
         _entry = self.save_random_usl()

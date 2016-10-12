@@ -20,8 +20,8 @@ def stub_db(module_model, connectors):
     config.DB_NAME = 'test_db'
     if isinstance(module_model, str):
         module_model = sys.modules[module_model]
-    reload_model_package(module_model, reloaded=set(), seen=set(), connectors=connectors)
-    print('switching to test_db.')
+    reloaded = reload_model_package(module_model, reloaded=set(), seen=set(), connectors=connectors)
+    print('switching to test_db. (' + ', '.join(reloaded)+')')
 
 
 def normal_db(module_model, connectors):
@@ -43,9 +43,15 @@ def reload_model_package(module, reloaded, seen, connectors):
     to_reload = {__name__}
     for m in sys.modules.keys():
         p = m.split('.')
-        if len(p) == 1 and p[0] == 'models':
+        if p[0] != 'models':
+            continue
+        if len(p) == 1:
+            # the model package
             to_reload.add(m)
-        if len(p) > 1 and p[1] in connectors:
+        if len(p) == 2 and not hasattr(sys.modules[m], '__path__'):
+            # direct module in the model package
+            to_reload.add(m)
+        if len(p) >= 2 and p[1] in connectors:
             to_reload.add(m)
 
     if module in seen:
@@ -63,40 +69,15 @@ def reload_model_package(module, reloaded, seen, connectors):
     reloaded.add(module.__name__)
     return reloaded
 
-model_test_cases = {}
-_index = 0
-
-
-def _get_model_test_cases(connectors):
-    if connectors in model_test_cases:
-        return model_test_cases[connectors]
-
-    global _index
-    test_case = types.new_class('ModelTestCase'+str(_index), (ModelTestCase,), {})
-    _index += 1
-
-    test_case.connectors = connectors
-
-    model_test_cases[connectors] = test_case
-
-    return test_case
-
-
-def modelTestCase(kind=None):
-    connectors = ()
-    if kind == 'terms':
-        connectors = ('terms', 'relations')
-    if kind == 'usls':
-        connectors = ('usls',)
-
-    return _get_model_test_cases(connectors)
-
-
 class ModelTestCase(unittest.TestCase):
     def __init__(self, test_name='runTest'):
         if not hasattr(self.__class__, 'connectors'):
             self.__class__.connectors = []
         super().__init__(test_name)
+
+        self.terms = TermsConnector()
+        self.relations = RelationsConnector()
+        self.usls = USLConnector()
 
     @classmethod
     def setUpClass(cls):
@@ -110,7 +91,6 @@ class ModelTestCase(unittest.TestCase):
         self.terms = TermsConnector()
         self.relations = RelationsConnector()
         self.usls = USLConnector()
-
         self._clear()
 
     def _clear(self):
