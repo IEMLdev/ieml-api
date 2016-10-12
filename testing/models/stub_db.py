@@ -1,9 +1,7 @@
 import importlib
 import random
-import types
 import unittest
 from collections import namedtuple
-from functools import partial
 from string import ascii_lowercase
 from types import ModuleType
 
@@ -17,6 +15,17 @@ from models.usls.usls import USLConnector
 
 
 def stub_db(module_model, connectors):
+    """
+    Stub the connectors to the db. The connectors to non stubbed connectors must have been previousely instantiated.
+    After the call to this function, all the connectors instantiated that are in the connectors argument will be
+    stubbed.
+    :param module_model: the module that will use the stubbed connectors.
+    :param connectors: the connectors to stub.
+    :return: None
+    """
+    if not connectors:
+        return
+
     config.DB_NAME = 'test_db'
     if isinstance(module_model, str):
         module_model = sys.modules[module_model]
@@ -25,6 +34,15 @@ def stub_db(module_model, connectors):
 
 
 def normal_db(module_model, connectors):
+    """
+    Restore the connectors to use a normal db. (ieml_db)
+    :param module_model: the stubbed module
+    :param connectors: the connector to restore
+    :return: None
+    """
+    if not connectors:
+        return
+
     importlib.reload(config)
     if isinstance(module_model, str):
         module_model = sys.modules[module_model]
@@ -39,7 +57,14 @@ def _dependencies(module):
 
 
 def reload_model_package(module, reloaded, seen, connectors):
-
+    """
+    Reload the module and all the dependencies in the models package.
+    :param module:
+    :param reloaded:
+    :param seen:
+    :param connectors:
+    :return:
+    """
     to_reload = {__name__}
     for m in sys.modules.keys():
         p = m.split('.')
@@ -69,12 +94,26 @@ def reload_model_package(module, reloaded, seen, connectors):
     reloaded.add(module.__name__)
     return reloaded
 
+
 class ModelTestCase(unittest.TestCase):
+    """
+    The Test case that stub the db before executing the test. The connectors that must be stubbed should be specified
+      as a class attribute connectors:
+
+    connectors = ('terms', 'relations') # stubb the terms and relations connectors
+    """
+
+    # default stub to no class, must override the property in child class
+    connectors = tuple()
+
     def __init__(self, test_name='runTest'):
         if not hasattr(self.__class__, 'connectors'):
             self.__class__.connectors = []
         super().__init__(test_name)
 
+        # init all the connectors (to instantiate all non stubbed connectors, otherwise, if we instanciate for the 1st
+        # time a non stubbed connector after the stubbing of the other connector, it will be stubbed)
+        # because of the stub of the singleton DbConnector in models.commons
         self.terms = TermsConnector()
         self.relations = RelationsConnector()
         self.usls = USLConnector()
@@ -122,6 +161,7 @@ class ModelTestCase(unittest.TestCase):
     def _count(self):
         return self.terms.terms.find().count() + self.relations.relations.find().count()
 
+
 def _tag():
     return {l: ''.join(random.sample(ascii_lowercase, 20)) for l in TAG_LANGUAGES}
 
@@ -131,23 +171,6 @@ paradigms = {
     0: Paradigm(root=sc('F:F:.O:.M:.-'), paradigms={sc('T:M:.O:.M:.-'), sc('F:M:.O:.M:.-'), sc('T:U:.O:.M:.-')}),
     1: Paradigm(root=sc('O:O:.O:O:.-'), paradigms=set(map(sc, ['O:O:.wo.-', 'wu.O:O:.-', 'wa.O:O:.-', 'wo.O:O:.-', 'O:O:.we.-', 'we.O:O:.-', 'O:O:.wa.-', 'O:O:.wu.-', 'wo.U:O:.-', 'wo.A:O:.-', 'wo.O:U:.-', 'wo.O:A:.-', 'wa.U:O:.-', 'wa.A:O:.-', 'wa.O:U:.-', 'wa.O:A:.-', 'wu.U:O:.-', 'wu.A:O:.-', 'wu.O:U:.-', 'wu.O:A:.-', 'we.U:O:.-', 'we.A:O:.-', 'we.O:U:.-', 'we.O:A:.-', 'U:O:.wo.-', 'A:O:.wo.-', 'O:U:.wo.-', 'O:A:.wo.-', 'U:O:.wa.-', 'A:O:.wa.-', 'O:U:.wa.-', 'O:A:.wa.-', 'U:O:.wu.-', 'A:O:.wu.-', 'O:U:.wu.-', 'O:A:.wu.-', 'U:O:.we.-', 'A:O:.we.-', 'O:U:.we.-', 'O:A:.we.-'])))
 }
-
-
-if __name__ == '__main__':
-    o = modelTestCase()()
-    str(o)
-
-
-    # import models.relations
-    # old = sys.modules['models.base_queries'].__dict__['DB_NAME']
-    # print(old)
-    # stub_db(sys.modules['models.relations.relations_queries'])
-    # # importlib.reload(old)
-    # new = sys.modules['models.base_queries'].__dict__['DB_NAME']
-    # print(new)
-    # print(old is new)
-    # importlib.reload(sys.modules['models.relations.relations_queries'])
-
 
 
 
