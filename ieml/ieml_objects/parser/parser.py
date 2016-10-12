@@ -143,7 +143,10 @@ class IEMLParser(metaclass=Singleton):
     def p_super_sentence(self, p):
         """supersentence : LBRACKET superclauses_sum RBRACKET
                          | LBRACKET superclauses_sum RBRACKET literal_list"""
-        p[0] = _build(SuperSentence(p[2][0], literals=p[4]), p[2])
+        if len(p) == 4:
+            p[0] = _build(SuperSentence(p[2][0]), p[2])
+        else:
+            p[0] = _build(SuperSentence(p[2][0], literals=p[4]), p[2])
 
     def p_closed_proposition(self, p):
         """ closed_proposition : SLASH decorated_word SLASH
