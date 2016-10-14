@@ -202,6 +202,52 @@ paths:
           description: |
             a nested json displaying the usl construction.
 
+  /intlekt/edition/recent:
+    get:
+      operationId: handlers.recent_usls
+      tags:
+        - Intlekt
+      description: |
+        Return the n most recent USLs opened by the user
+      parameters:
+        - name: language
+          in: query
+          description: |
+            The language to get the title in.
+          type: string
+        - name: n
+          in: query
+          description: |
+            The desired number of usls.
+          type: number
+      responses:
+        '200':
+          description: |
+            A list of usl/descriptor tuples
+
+  /intlekt/edition/samples:
+    get:
+      operationId: handlers.sample_usls
+      tags:
+        - Intlekt
+      description: |
+        Return n example USLs (or less)
+      parameters:
+        - name: language
+          in: query
+          description: |
+            The language to get the title in.
+          type: string
+        - name: n
+          in: query
+          description: |
+            The desired number of usls.
+          type: number
+      responses:
+        '200':
+          description: |
+            A list of usl/descriptor tuples
+
   ##############################
   ## FOR THE DICTIONARY'S API ##
   ##############################

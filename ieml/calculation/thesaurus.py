@@ -4,6 +4,7 @@ from ieml.script.operator import sc
 from collections import namedtuple, defaultdict
 from ieml.script.constants import AUXILIARY_CLASS, VERB_CLASS, NOUN_CLASS
 from models.terms import TermsConnector
+from models.relations.relations import RelationsConnector
 import bidict
 import numpy as np
 
@@ -26,12 +27,14 @@ def _build_cache(usl_collection):
     # Second coordinate: Sentence
     # Third coordinate: Word
     source_layer = defaultdict(lambda: [0, 0, 0])
+    # For every term we associate a vector where each coordinate
+    # is the number of citations from a given grammatical class
     source_class = defaultdict(lambda: [0, 0, 0])
     # Each term will be mapped to a vector indicating the number of citations from an usl in the usl_collection
     # each usl is given a coordinate in the usl_index bidict
     source_usl = defaultdict(lambda: [0 for u in usl_collection])
     # Every usl is given a coordinate for vector representation
-    usl_index = bidict.bidict({u: i for i, u in enumerate(usl_collection)})
+    usl_index = bidict.bidict({i: u for i, u in enumerate(usl_collection)})
 
     for u in usl_collection:
         for elem in usl_elem_generator(u):
@@ -40,9 +43,20 @@ def _build_cache(usl_collection):
                 # TODO: Maybe use string representation of terms so that we don't need to worry about Terms/Script
                 source_layer[t.script][coordinate[elem.__class__]] += 1
                 source_class[t.script][elem.grammatical_class] += 1
-                source_usl[t.script][usl_index[u]] += layer_weight[elem.__class__]
+                source_usl[t.script][usl_index.inv[u]] += layer_weight[elem.__class__]
 
-    return Cache(source_layer=source_layer, source_class=source_class, source_usl=source_usl, usl_index=usl_index)
+                # We also count all the contained terms
+                rc = RelationsConnector()
+                term_rel = rc.get_script(t.script)
+                if 'CONTAINS' in term_rel['RELATIONS']:
+                    for child in term_rel['RELATIONS']['CONTAINS']:
+                        child_script = sc(child)
+                        source_layer[child_script][coordinate[elem.__class__]] += 1
+                        source_class[child_script][elem.grammatical_class] += 1
+                        source_usl[child_script][usl_index.inv[u]] += layer_weight[elem.__class__]
+
+
+    return Cache(source_layer=source_layer, source_class=source_class, source_usl=source_usl, usl_index=usl_index.inv)
 
 
 _cache = None
@@ -71,15 +85,15 @@ def rank_paradigms(paradigm_list, usl_collection):
     for paradigm in paradigm_list:
 
         score = (_cache.source_layer[paradigm][0] * layer_weight[SuperSentence] +
-                _cache.source_layer[paradigm][1] * layer_weight[Sentence] +
-                _cache.source_layer[paradigm][2] * layer_weight[Word])
+                 _cache.source_layer[paradigm][1] * layer_weight[Sentence] +
+                 _cache.source_layer[paradigm][2] * layer_weight[Word])
 
         result.append(ParadigmMetadata(paradigm=paradigm, score=score,
                                        nouns=_cache.source_class[paradigm][NOUN_CLASS],
                                        auxiliary=_cache.source_class[paradigm][AUXILIARY_CLASS],
                                        verb=_cache.source_class[paradigm][VERB_CLASS]))
 
-    return sorted(result, key=lambda x: x.score, reversed=True)
+    return sorted(result, key=lambda x: x.score, reverse=True)
 
 
 def rank_usls(term_list, usl_collection):
@@ -103,7 +117,7 @@ def rank_usls(term_list, usl_collection):
     if not _cache:
         _cache = _build_cache(usl_collection)
 
-    return {term: sorted(usl_collection, key=lambda u: _cache.source_usl[term][_cache.usl_index[u]], reversed=True)
+    return {term: sorted(usl_collection, key=lambda u: _cache.source_usl[term][_cache.usl_index[u]], reverse=True)
             for term in term_list}
 
 
@@ -131,18 +145,28 @@ def paradigm_usl_distribution(paradigm, usl_collection):
     dist_tables = [np.zeros(table.cells.shape, dtype=int) for table in tbls]
 
     for tbl_idx, table in enumerate(tbls):
-        if table.dimension == 1:
-            for i, cell in enumerate(table.cells):
-                dist_tables[tbl_idx][i] = sum(_cache.source_layer[cell])
-        elif table.dimension == 2:
-            for i, row in enumerate(table.cells):
-                for j, cell in enumerate(row):
-                    dist_tables[tbl_idx][i][j] = sum(_cache.source_layer[cell])
-        elif table.dimension == 3:
-            for k in range(table.cells[2]):
-                for i, row in enumerate(table.cells):
-                    for j, col in enumerate(row):
-                        dist_tables[tbl_idx][i][j][k] = sum(_cache.source_layer[cell])
+        it = np.nditer(table.cells, flags=['multi_index', 'refs_ok'])
+        while not it.finished:
+            # it[0] is the cell element
+            dist_tables[tbl_idx][it.multi_index] += sum(_cache.source_layer[it[0].item()])
+            it.iternext()
+
+        # # We also want to count the cell citations coming from the headers
+        # if table.dimension == 1:
+        #     for i, row_header in enumerate(table.headers[0]):
+        #         dist_tables[tbl_idx][i] += sum(_cache.source_layer[row_header])
+        # elif table.dimension == 2:
+        #     for i, row_header in enumerate(table.headers[0]):
+        #         dist_tables[tbl_idx][i, :] += sum(_cache.source_layer[row_header])
+        #     for i, col_header in enumerate(table.headers[1]):
+        #         dist_tables[tbl_idx][:, i] += sum(_cache.source_layer[col_header])
+        # elif table.dimension == 3:
+        #     for i, row_header in enumerate(table.headers[0]):
+        #         dist_tables[tbl_idx][i, :, :] += sum(_cache.source_layer[row_header])
+        #     for i, col_header in enumerate(table.headers[1]):
+        #         dist_tables[tbl_idx][:, i, :] += sum(_cache.source_layer[col_header])
+        #     for i, tab_header in enumerate(table.headers[2]):
+        #         dist_tables[tbl_idx][:, :, i] += sum(_cache.source_layer[tab_header])
 
     return dist_tables
 
