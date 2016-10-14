@@ -1,11 +1,12 @@
 from unittest.case import TestCase
 
-from ieml_objects.texts import Text
-from ieml_objects.tools import RandomPoolIEMLObjectGenerator
-from intlekt.edition.visualisation import usl_to_json
+from handlers.intlekt.edition.visualisation import json_to_usl
+from handlers import usl_to_json
+from ieml.usl.tools import usl
+from ieml.usl.tools import random_usl
 
 
 class TestUSLsDecomposition(TestCase):
-    def test_usl_to_json(self):
-        r = RandomPoolIEMLObjectGenerator(level=Text)
-        print(usl_to_json({'usl': str(r.text())}))
+    def test_json_to_usl(self):
+        _usl = random_usl()
+        self.assertEqual(usl(json_to_usl({'json': usl_to_json({'usl': _usl})})), _usl)

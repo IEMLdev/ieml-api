@@ -202,6 +202,28 @@ paths:
           description: |
             a nested json displaying the usl construction.
 
+  /intlekt/edition/json_to_usl:
+    post:
+      operationId: handlers.json_to_usl
+      tags:
+        - Intlekt
+      description: |
+        Parse a json describing an usl and return the ieml string.
+      parameters:
+        - name: json
+          in: body
+          required: true
+          description: |
+            The json object.
+          schema:
+            type: object
+          description: |
+            The json to decompose and return the ieml string
+      responses:
+        '200':
+          description: |
+            The ieml string
+
   /intlekt/edition/recent:
     get:
       operationId: handlers.recent_usls
