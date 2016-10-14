@@ -11,7 +11,7 @@ from ieml.script.operator import script
 from ieml.ieml_objects.sentences import Sentence, Clause, SuperSentence, SuperClause
 from ieml.ieml_objects.texts import Text
 from ieml.ieml_objects.words import Word, Morpheme
-from ieml_objects.exceptions import CantGenerateElement
+from ieml.ieml_objects.exceptions import CantGenerateElement
 
 
 def _loop_result(max_try):
