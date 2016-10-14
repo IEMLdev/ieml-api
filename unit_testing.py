@@ -6,4 +6,4 @@ if __name__ == "__main__":
     # suite = loader.discover('testing')
     # unittest.TextTestRunner().run(suite)
     suite = unittest.TestLoader().discover('testing', top_level_dir='.')
-    unittest.TextTestRunner(verbosity=2).run(suite)
+    unittest.TextTestRunner(verbosity=5).run(suite)

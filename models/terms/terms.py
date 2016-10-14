@@ -1,16 +1,15 @@
-from ieml.exceptions import InvalidScript
-from ieml.parsing.script.parser import ScriptParser
+import logging
+
+from ieml.script import Script
+from ieml.script.constants import INHIBIT_RELATIONS
+from ieml.script.parser import ScriptParser
 from ieml.script.tools import factorize
-from models.base_queries import DBConnector, Tag
+from models.commons import DBConnector, check_tags
 from models.constants import TERMS_COLLECTION, TAG_LANGUAGES
 from models.exceptions import InvalidInhibitArgument, InvalidTags, TermAlreadyExists, InvalidMetadata,\
-    CantRemoveNonEmptyRootParadigm, TermNotFound, DuplicateTag
-from ieml.script.constants import INHIBIT_RELATIONS
-from ieml.script import Script
-from models.relations.relations_queries import RelationsQueries
+    CantRemoveNonEmptyRootParadigm, TermNotFound, DuplicateTag, InvalidScriptArgument
 from models.relations.relations import RelationsConnector
-import logging
-import progressbar
+from models.relations.relations_queries import RelationsQueries
 
 
 class TermsConnector(DBConnector):
@@ -149,16 +148,20 @@ class TermsConnector(DBConnector):
         if metadata and isinstance(metadata, dict):
             update['METADATA'] = metadata
 
-        if len(update) != 0:
+        if update:
+            # the rootness impact the validity of the script, there are constraints.
+            if 'ROOT' in update:
+                try:
+                    RelationsQueries.remove_script(script, recompute_relations=False)
+                except TermNotFound:
+                    pass
+
+                RelationsQueries.save_script(script, root=root, recompute_relations=False)
+
             self.terms.update({'_id': str(script)}, {'$set': update})
 
-            # the inhibition and rootness impact the relations
-            if 'ROOT' in update:
-                inhibition = self.get_inhibitions()
-                RelationsQueries.remove_script(script, recompute_relations=False)
-                RelationsQueries.save_script(script, root=root, recompute_relations=recompute_relations)
-
-            elif 'INHIBITS' in update and recompute_relations:
+            # the inhibition and rootness impact the relations,
+            if ('INHIBITS' in update or 'ROOT' in update) and recompute_relations:
                 self.recompute_relations()
         else:
             logging.warning("No update performed for script " + str(script) +
@@ -252,7 +255,7 @@ class TermsConnector(DBConnector):
                 verbose=verbose)
 
     def _check_tags(self, tags):
-        if not Tag.check_tags(tags):
+        if not check_tags(tags):
             raise InvalidTags(tags)
 
         for l in tags:
@@ -260,3 +263,6 @@ class TermsConnector(DBConnector):
                 raise DuplicateTag(tags[l])
 
         return True
+
+    def drop(self):
+        self.terms.drop()

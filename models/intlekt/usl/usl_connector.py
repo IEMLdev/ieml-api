@@ -1,14 +1,15 @@
-from ieml.AST.propositions import Word, Morpheme
-from ieml.AST.terms import Term
-from models.intlekt.connector import DemoConnector
-from models.intlekt.constants import COLLECTION_USL
+import urllib.request
+from collections import defaultdict
+from urllib.parse import quote_plus
+
 import progressbar
 import pymongo
-from models.terms.terms import TermsConnector
-from urllib.parse import urlencode, quote_plus
-import urllib.request
 from bs4 import BeautifulSoup
-from collections import defaultdict
+from ieml.ieml_objects import Term, Word, Morpheme
+
+from models.intlekt.connector import DemoConnector
+from models.intlekt.constants import COLLECTION_USL
+from models.terms.terms import TermsConnector
 
 
 class UslConnector(DemoConnector):

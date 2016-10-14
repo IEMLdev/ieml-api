@@ -1,13 +1,14 @@
-import unittest
 import pprint
-from ieml.AST.propositions import Word, Clause, Sentence, SuperSentence, Morpheme, SuperClause
-from ieml.AST.terms import Term
-from ieml.AST.usl import Text, HyperText
-from ieml.operator import usl, sc
+import unittest
+
+from ieml.ieml_objects import Term, Word, Clause, Sentence, SuperSentence, Morpheme, SuperClause, Text, Hypertext
+
 from ieml.calculation.distance import (object_proximity_index,
-                                       set_proximity_index, mutual_inclusion_index, connexity, build_graph,
-                                       partition_graph, get_parents, get_grammar_class, get_paradigms, connexity_index,
+                                       set_proximity_index, mutual_inclusion_index, build_graph,
+                                       partition_graph, get_paradigms, connexity_index,
                                        grammatical_class_index, paradigmatic_equivalence_class_index)
+from ieml.script.operator import sc
+from ieml.usl import usl
 
 
 class DistanceComputationTests(unittest.TestCase):
@@ -21,10 +22,10 @@ class DistanceComputationTests(unittest.TestCase):
                                      Term(sc("T:.-',S:.-',S:.-'B:.-'n.-S:.U:.-',_"))]))
         self.word_2 = Word(Morpheme([Term(sc("l.-x.-s.y.-'")), Term(sc("e.-u.-we.h.-'"))]),
                            Morpheme([Term(sc("T:.E:A:T:.-")), Term(sc("E:A:.k.-"))]))
-        self.word_3 = Word(Morpheme([Term(sc("E:S:.O:B:.-")), Term(sc("E:S:.O:T:.-")), Term(sc("E:S:.U:M:.-"))]),
+        self.word_3 = Word(Morpheme([Term(sc("E:S:.O:B:.-")), Term(sc("E:S:.O:T:.-"))]),# Term(sc("E:S:.U:M:.-"))]),
                            Morpheme([Term(sc("E:O:.S:M:.-"))]))
         self.word_4 = Word(Morpheme([Term(sc("S:M:.e.-t.u.-'"))]),
-                           Morpheme([Term(sc("B:M:.y.-")), Term(sc("T:M:.y.-")), Term(sc("M:S:.y.-"))]))
+                           Morpheme([Term(sc("B:M:.y.-")), Term(sc("T:M:.y.-")), Term(sc("S:M:.y.-"))]))
         self.word_5 = Word(Morpheme([Term(sc("j.-'F:.-'k.o.-t.o.-',")), Term(sc("h.-'F:.-'k.o.-t.o.-',")),
                                      Term(sc("c.-'F:.-'k.o.-t.o.-',"))]),
                            Morpheme([Term(sc("E:M:.wa.-")), Term(sc("E:M:.wu.-")), Term(sc("E:M:.we.-"))]))
@@ -37,16 +38,6 @@ class DistanceComputationTests(unittest.TestCase):
                             Morpheme([Term(sc("m.a.-M:M:.a.-f.o.-'")), Term(sc("n.a.-M:M:.a.-f.o.-'")),
                                       Term(sc("b.-S:.A:.-'T:.-'T:.-',"))]))
 
-        self.word_1.check()
-        self.word_2.check()
-        self.word_3.check()
-        self.word_4.check()
-        self.word_5.check()
-        self.word_6.check()
-        self.word_7.check()
-        self.word_8.check()
-        self.word_9.check()
-        self.word_10.check()
 
     def test_set_proximity_text(self):
         # TODO: DO IT
@@ -81,10 +72,8 @@ class DistanceComputationTests(unittest.TestCase):
         super_sentence_4 = SuperSentence([SuperClause(s_4, s_2, s_6), SuperClause(s_4, s_1, s_6),
                                           SuperClause(s_2, s_3, s_6)])
 
-        usl_a = HyperText(Text([super_sentence_1, super_sentence_2, super_sentence_3]))
-        usl_b = HyperText(Text([super_sentence_1, super_sentence_2, super_sentence_4]))
-        usl_a.check()
-        usl_b.check()
+        usl_a = usl(Text([super_sentence_1, super_sentence_2, super_sentence_3]))
+        usl_b = usl(Text([super_sentence_1, super_sentence_2, super_sentence_4]))
         index = set_proximity_index(SuperSentence, usl_a, usl_b)
         print("Proximity Index for the different USLs: " + str(index))
         self.assertTrue(index != 1 and index != 0, "Different USLs should yield and index that isn't null nor is 1")
@@ -113,10 +102,9 @@ class DistanceComputationTests(unittest.TestCase):
         s_6 = Sentence([Clause(self.word_6, self.word_3, self.word_1), Clause(self.word_6, self.word_4, self.word_10),
                     Clause(self.word_4, self.word_7, self.word_9)])
 
-        usl_a = HyperText(Text([s_1, s_2, s_6, s_5]))
-        usl_b = HyperText(Text([s_2, s_3, s_6, s_4]))
-        usl_a.check()
-        usl_b.check()
+        usl_a = usl(Text([s_1, s_2, s_6, s_5]))
+        usl_b = usl(Text([s_2, s_3, s_6, s_4]))
+
         index = set_proximity_index(Sentence, usl_a, usl_b)
         print("Proximity Index for the different USLs: " + str(index))
         self.assertTrue(index != 1 and index != 0, "Different USLs should yield and index that isn't null nor is 1")
@@ -127,10 +115,8 @@ class DistanceComputationTests(unittest.TestCase):
 
     def test_set_proximity_word(self):
 
-        usl_a = HyperText(Text([self.word_1, self.word_3, self.word_2]))
-        usl_b = HyperText(Text([self.word_2, self.word_5]))
-        usl_a.check()
-        usl_b.check()
+        usl_a = usl(Text([self.word_1, self.word_3, self.word_2]))
+        usl_b = usl(Text([self.word_2, self.word_5]))
 
         index = set_proximity_index(Word, usl_a, usl_b)
         print("Proximity Index for the different USLs: " + str(index))
@@ -173,10 +159,8 @@ class DistanceComputationTests(unittest.TestCase):
         super_sentence_4 = SuperSentence([SuperClause(s_4, s_2, s_6), SuperClause(s_4, s_1, s_6),
                                           SuperClause(s_2, s_3, s_6)])
 
-        usl_a = HyperText(Text([super_sentence_1, super_sentence_2, super_sentence_3]))
-        usl_b = HyperText(Text([super_sentence_1, super_sentence_2, super_sentence_4]))
-        usl_a.check()
-        usl_b.check()
+        usl_a = usl(Text([super_sentence_1, super_sentence_2, super_sentence_3]))
+        usl_b = usl(Text([super_sentence_1, super_sentence_2, super_sentence_4]))
         index = object_proximity_index(SuperSentence, usl_a, usl_b)
         print("Proximity Index for the different USLs: " + str(index))
         self.assertTrue(index != 1 and index != 0, "Different USLs should yield and index that isn't null nor is 1")
@@ -205,10 +189,9 @@ class DistanceComputationTests(unittest.TestCase):
         s_6 = Sentence([Clause(self.word_6, self.word_3, self.word_1), Clause(self.word_6, self.word_4, self.word_10),
                     Clause(self.word_4, self.word_7, self.word_9)])
 
-        usl_a = HyperText(Text([s_1, s_2, s_6, s_5]))
-        usl_b = HyperText(Text([s_2, s_3, s_6, s_4]))
-        usl_a.check()
-        usl_b.check()
+        usl_a = usl(Text([s_1, s_2, s_6, s_5]))
+        usl_b = usl(Text([s_2, s_3, s_6, s_4]))
+
         index = object_proximity_index(Sentence, usl_a, usl_b)
         print("Proximity Index for the different USLs: " + str(index))
         self.assertTrue(index != 1 and index != 0, "Different USLs should yield and index that isn't null nor is 1")
@@ -218,10 +201,8 @@ class DistanceComputationTests(unittest.TestCase):
         self.assertTrue(index == 1, "Identical USLs should yield and index of 1")
 
     def test_object_proximity_word(self):
-        usl_a = HyperText(Text([self.word_1, self.word_3, self.word_2]))
-        usl_b = HyperText(Text([self.word_2, self.word_5]))
-        usl_a.check()
-        usl_b.check()
+        usl_a = usl(Text([self.word_1, self.word_3, self.word_2]))
+        usl_b = usl(Text([self.word_2, self.word_5]))
 
         index = object_proximity_index(Word, usl_a, usl_b)
         print("Proximity Index for the different USLs: " + str(index))
@@ -264,10 +245,9 @@ class DistanceComputationTests(unittest.TestCase):
         super_sentence_4 = SuperSentence([SuperClause(s_4, s_2, s_6), SuperClause(s_4, s_1, s_6),
                                           SuperClause(s_2, s_3, s_6)])
 
-        usl_a = HyperText(Text([super_sentence_1, super_sentence_2, super_sentence_3]))
-        usl_b = HyperText(Text([super_sentence_1, super_sentence_2, super_sentence_4]))
-        usl_a.check()
-        usl_b.check()
+        usl_a = usl(Text([super_sentence_1, super_sentence_2, super_sentence_3]))
+        usl_b = usl(Text([super_sentence_1, super_sentence_2, super_sentence_4]))
+
         index = mutual_inclusion_index(usl_a, usl_b)
         print("Proximity Index for the different USLs: " + str(index))
         self.assertTrue(index != 1 and index != 0, "Different USLs should yield and index that isn't null nor is 1")
@@ -296,10 +276,9 @@ class DistanceComputationTests(unittest.TestCase):
         s_6 = Sentence([Clause(self.word_6, self.word_3, self.word_1), Clause(self.word_6, self.word_4, self.word_10),
                     Clause(self.word_4, self.word_7, self.word_9)])
 
-        usl_a = HyperText(Text([s_1, s_2, s_6, s_5]))
-        usl_b = HyperText(Text([s_2, s_3, s_6, s_4]))
-        usl_a.check()
-        usl_b.check()
+        usl_a = usl(Text([s_1, s_2, s_6, s_5]))
+        usl_b = usl(Text([s_2, s_3, s_6, s_4]))
+
         index = mutual_inclusion_index(usl_a, usl_b)
         print("Proximity Index for the different USLs: " + str(index))
         self.assertTrue(index != 1 and index != 0, "Different USLs should yield and index that isn't null nor is 1")
@@ -309,10 +288,8 @@ class DistanceComputationTests(unittest.TestCase):
         self.assertTrue(index == 1, "Identical USLs should yield and index of 1")
 
     def test_mutual_inclusion_word(self):
-        usl_a = HyperText(Text([self.word_1, self.word_3, self.word_2]))
-        usl_b = HyperText(Text([self.word_2, self.word_5]))
-        usl_a.check()
-        usl_b.check()
+        usl_a = usl(Text([self.word_1, self.word_3, self.word_2]))
+        usl_b = usl(Text([self.word_2, self.word_5]))
 
         index = mutual_inclusion_index(usl_a, usl_b)
         print("Proximity Index for the different USLs: " + str(index))
@@ -354,10 +331,9 @@ class DistanceComputationTests(unittest.TestCase):
         super_sentence_4 = SuperSentence([SuperClause(s_4, s_2, s_6), SuperClause(s_4, s_1, s_6),
                                           SuperClause(s_2, s_3, s_6)])
 
-        usl_a = HyperText(Text([super_sentence_1, super_sentence_2, super_sentence_3]))
-        usl_b = HyperText(Text([super_sentence_1, super_sentence_2, super_sentence_4]))
-        usl_a.check()
-        usl_b.check()
+        usl_a = usl(Text([super_sentence_1, super_sentence_2, super_sentence_3]))
+        usl_b = usl(Text([super_sentence_1, super_sentence_2, super_sentence_4]))
+
         index = connexity_index(SuperSentence, usl_a, usl_b)
         print("Proximity Index for the different USLs: " + str(index))
         self.assertTrue(index != 1 and index != 0, "Different USLs should yield and index that isn't null nor is 1")
@@ -386,10 +362,9 @@ class DistanceComputationTests(unittest.TestCase):
         s_6 = Sentence([Clause(self.word_6, self.word_3, self.word_1), Clause(self.word_6, self.word_4, self.word_10),
                         Clause(self.word_4, self.word_7, self.word_9)])
 
-        usl_a = HyperText(Text([s_1, s_2, s_6, s_5]))
-        usl_b = HyperText(Text([s_2, s_3, s_6, s_4]))
-        usl_a.check()
-        usl_b.check()
+        usl_a = usl(Text([s_1, s_2, s_6, s_5]))
+        usl_b = usl(Text([s_2, s_3, s_6, s_4]))
+
         index = connexity_index(Sentence, usl_a, usl_b)
         print("Proximity Index for the different USLs: " + str(index))
         self.assertTrue(index != 1 and index != 0, "Different USLs should yield and index that isn't null nor is 1")
@@ -399,10 +374,8 @@ class DistanceComputationTests(unittest.TestCase):
         self.assertTrue(index == 1, "Identical USLs should yield and index of 1")
 
     def test_connexity_index_word(self):
-        usl_a = HyperText(Text([self.word_1, self.word_3, self.word_2]))
-        usl_b = HyperText(Text([self.word_2, self.word_5]))
-        usl_a.check()
-        usl_b.check()
+        usl_a = usl(Text([self.word_1, self.word_3, self.word_2]))
+        usl_b = usl(Text([self.word_2, self.word_5]))
 
         index = connexity_index(Word, usl_a, usl_b)
         print("Proximity Index for the different USLs: " + str(index))
@@ -436,11 +409,9 @@ class DistanceComputationTests(unittest.TestCase):
                                           SuperClause(s_3, s_4, s_6)])
         super_sentence_2 = SuperSentence([SuperClause(s_2, s_1, s_6), SuperClause(s_2, s_3, s_6),
                                           SuperClause(s_3, s_4, s_6)])
-        super_sentence_1.check()
-        super_sentence_2.check()
 
         graph = build_graph(super_sentence_1, super_sentence_2,
-                            super_sentence_1.graph.nodes_set & super_sentence_2.graph.nodes_set)
+                            set(super_sentence_1.tree_graph.nodes) & set(super_sentence_2.tree_graph.nodes))
 
         correct_graph = {
             s_1: [s_2],
@@ -474,10 +445,7 @@ class DistanceComputationTests(unittest.TestCase):
                         Clause(self.word_5, self.word_7, self.word_10), Clause(self.word_5, self.word_8, self.word_10),
                         Clause(self.word_3, self.word_9, self.word_10), Clause(self.word_4, self.word_6, self.word_10)])
 
-        s_1.check()
-        s_2.check()
-
-        intersection = s_1.graph.nodes_set & s_1.graph.nodes_set
+        intersection = set(s_1.tree_graph.nodes) & set(s_1.tree_graph.nodes)
         graph = build_graph(s_1, s_2, intersection)
 
         correct_graph = {
@@ -508,8 +476,8 @@ class DistanceComputationTests(unittest.TestCase):
 
     def test_word_graph(self):
 
-        intersection = set(self.word_1.subst.children + self.word_1.mode.children) & \
-                       set(self.word_2.subst.children + self.word_2.mode.children)
+        intersection = set(self.word_1.root.children + self.word_1.flexing.children) & \
+                       set(self.word_2.root.children + self.word_2.flexing.children)
 
         graph = build_graph(self.word_1, self.word_2, intersection)
 
@@ -517,11 +485,6 @@ class DistanceComputationTests(unittest.TestCase):
         term_2 = Term(sc("E:A:.k.-"))
         term_3 = Term(sc("T:.E:A:T:.-"))
         term_4 = Term(sc("e.-u.-we.h.-'"))
-
-        term_1.check()
-        term_2.check()
-        term_3.check()
-        term_4.check()
 
         correct_graph = {
             term_1: [term_3],
@@ -555,10 +518,7 @@ class DistanceComputationTests(unittest.TestCase):
                     Clause(self.word_5, self.word_7, self.word_10), Clause(self.word_5, self.word_8, self.word_10),
                     Clause(self.word_3, self.word_9, self.word_10), Clause(self.word_4, self.word_6, self.word_10)])
 
-        s_1.check()
-        s_2.check()
-
-        intersection = list(s_1.graph.nodes_set & s_2.graph.nodes_set)
+        intersection = list(set(s_1.tree_graph.nodes) & set(s_2.tree_graph.nodes))
         intersection.sort()
 
         graph = build_graph(s_1, s_2, intersection)
@@ -597,10 +557,8 @@ class DistanceComputationTests(unittest.TestCase):
         s_6 = Sentence([Clause(self.word_6, self.word_3, self.word_1), Clause(self.word_6, self.word_4, self.word_10),
                         Clause(self.word_4, self.word_7, self.word_9)])
 
-        usl_a = HyperText(Text([s_1, s_2, s_6, s_5]))
-        usl_b = HyperText(Text([s_2, s_3, s_6, s_4]))
-        usl_a.check()
-        usl_b.check()
+        usl_a = usl(Text([s_1, s_2, s_6, s_5]))
+        usl_b = usl(Text([s_2, s_3, s_6, s_4]))
 
         eo_index = grammatical_class_index(usl_a, usl_b, 'EO', Sentence)
         oo_index = grammatical_class_index(usl_a, usl_b, 'OO', Sentence)
@@ -640,10 +598,8 @@ class DistanceComputationTests(unittest.TestCase):
         super_sentence_4 = SuperSentence([SuperClause(s_4, s_2, s_6), SuperClause(s_4, s_1, s_6),
                                           SuperClause(s_2, s_3, s_6)])
 
-        usl_a = HyperText(Text([super_sentence_1, super_sentence_2, super_sentence_3]))
-        usl_b = HyperText(Text([super_sentence_1, super_sentence_2, super_sentence_4]))
-        usl_a.check()
-        usl_b.check()
+        usl_a = usl(Text([super_sentence_1, super_sentence_2, super_sentence_3]))
+        usl_b = usl(Text([super_sentence_1, super_sentence_2, super_sentence_4]))
 
         eo_index = grammatical_class_index(usl_a, usl_b, 'EO', SuperSentence)
         oo_index = grammatical_class_index(usl_a, usl_b, 'OO', SuperSentence)
@@ -655,8 +611,7 @@ class DistanceComputationTests(unittest.TestCase):
         self.assertTrue(oo_index != 1, "Two different USLs don't have an EO index of 1")
 
     def test_get_paradigm(self):
-        usl_a = HyperText(Text([self.word_1, self.word_3, self.word_2]))
-        usl_a.check()
+        usl_a = usl(Text([self.word_1, self.word_3, self.word_2]))
 
         paradigms = get_paradigms(self.word_1)
 
@@ -665,10 +620,8 @@ class DistanceComputationTests(unittest.TestCase):
         self.assertTrue(isinstance(paradigms, dict))
 
     def test_grammatical_class_index_words(self):
-        usl_a = HyperText(Text([self.word_1, self.word_3, self.word_2]))
-        usl_b = HyperText(Text([self.word_2, self.word_5]))
-        usl_a.check()
-        usl_b.check()
+        usl_a = usl(Text([self.word_1, self.word_3, self.word_2]))
+        usl_b = usl(Text([self.word_2, self.word_5]))
 
         eo_index = grammatical_class_index(usl_a, usl_b, 'EO', Word)
         oo_index = grammatical_class_index(usl_a, usl_b, 'OO', Word)
@@ -680,10 +633,8 @@ class DistanceComputationTests(unittest.TestCase):
         self.assertTrue(oo_index != 1, "Two different USLs don't have an EO index of 1")
 
     def test_paradigm_class_index_word(self):
-        usl_a = HyperText(Text([self.word_1, self.word_3, self.word_2]))
-        usl_b = HyperText(Text([self.word_2, self.word_5]))
-        usl_a.check()
-        usl_b.check()
+        usl_a = usl(Text([self.word_1, self.word_3, self.word_2]))
+        usl_b = usl(Text([self.word_2, self.word_5]))
 
         eo_index = paradigmatic_equivalence_class_index(usl_a, usl_b, 1, 'EO')
         oo_index = paradigmatic_equivalence_class_index(usl_a, usl_b, 1, 'OO')

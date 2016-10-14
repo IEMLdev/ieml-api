@@ -15,6 +15,7 @@ relation_name_table = bidict({
     "Twin siblings": TWIN_SIBLING_RELATION,
     "Opposed siblings": OPPOSED_SIBLING_RELATION,
 
+    # ancestor : Etymologie
     "Ancestors in mode": FATHER_RELATION + '.' + MODE,
     "Ancestors in attribute": FATHER_RELATION + '.' + ATTRIBUTE,
     "Ancestors in substance": FATHER_RELATION + '.' + SUBSTANCE,
@@ -23,8 +24,9 @@ relation_name_table = bidict({
     "Descendents in attribute": CHILD_RELATION + '.' + ATTRIBUTE,
     "Descendents in substance": CHILD_RELATION + '.' + SUBSTANCE,
 
-
+    # Hyperonymes
     "Contained in": CONTAINED_RELATION,
     "Belongs to Paradigm": 'ROOT',
+    # Hyponymes
     "Contains": CONTAINS_RELATION
 })

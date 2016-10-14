@@ -3,7 +3,7 @@ from collections import defaultdict
 
 from ieml.calculation.distance import distance
 from ieml.exceptions import CannotParse, ASTException
-from ieml.operator import usl
+from ieml import usl
 
 
 def distance_usl_group(body):

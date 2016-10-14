@@ -1,4 +1,4 @@
-from ieml.parsing.script import ScriptParser
+from ieml.script.parser import ScriptParser
 from ieml.script.tools import RemarkableSibling as rq
 from testing.ieml.helper import *
 

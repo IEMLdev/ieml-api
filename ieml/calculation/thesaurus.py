@@ -1,8 +1,6 @@
-from ieml.AST.terms import Term
-from ieml.AST.propositions import Word, Sentence, SuperSentence
-from ieml.AST.usl import Text, HyperText
+from ieml.ieml_objects.terms import Term, Word, Sentence, SuperSentence, Text, HyperText
 from ieml.script.tables import generate_tables
-from ieml.operator import sc
+from ieml.script.operator import sc
 from collections import namedtuple, defaultdict
 from ieml.script.constants import AUXILIARY_CLASS, VERB_CLASS, NOUN_CLASS
 from models.terms import TermsConnector

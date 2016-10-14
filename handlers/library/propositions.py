@@ -3,7 +3,7 @@ import logging
 from handlers.library.base import propositions_db
 from ieml import PropositionsParser
 from ieml.AST import Word, Morpheme, promote_to
-from ieml.AST.tools import SentenceGraph, SuperSentenceGraph
+from ieml.object.tools import SentenceGraph, SuperSentenceGraph
 from .exceptions import EmptyUslChecking
 
 def build_ieml_word_ast(data):
