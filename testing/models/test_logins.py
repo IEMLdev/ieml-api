@@ -3,6 +3,7 @@ from testing.models.stub_db import ModelTestCase
 
 
 class TestLogin(ModelTestCase):
+    connectors = ('logins',)
 
     def test_create_user(self):
         login.save_user('test', 'test')
