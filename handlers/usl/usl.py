@@ -1,6 +1,6 @@
 from collections import defaultdict
 
-from exceptions import USLNotFound
+from models.exceptions import USLNotFound
 from handlers.commons import exception_handler
 from ieml.usl import usl
 from models.usls.usls import USLConnector
