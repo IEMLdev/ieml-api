@@ -1,4 +1,4 @@
-from handlers import usl as _usl
+from ieml.usl.tools import usl as _usl
 from handlers.commons import exception_handler
 from ieml.ieml_objects import Term, Sentence, SuperSentence
 from models.terms.terms import TermsConnector
@@ -32,28 +32,28 @@ def usl_to_json(usl, language='EN'):
         def _build_tree(transition, children_tree, supersentence=False):
             result = {
                 'type': 'supersentence-node' if supersentence else 'sentence-node',
-                'mode': _walk(transition[2], start=False),
-                'node': _walk(transition[1], start=False),
+                'mode': _walk(transition[1].mode, start=False),
+                'node': _walk(transition[0], start=False),
                 'children': []
             }
-            if transition[1] in children_tree:
-                result['children'] = [_build_tree(c, children_tree, supersentence=supersentence) for c in children_tree[transition[1]]]
+            if transition[0] in children_tree:
+                result['children'] = [_build_tree(c, children_tree, supersentence=supersentence) for c in children_tree[transition[0]]]
             return result
 
         if isinstance(u, Sentence):
             result = {
                 'type': 'sentence-root-node',
-                'node': _walk(u.graph.root_node, start=False),
+                'node': _walk(u.tree_graph.root, start=False),
                 'children': [
-                    _build_tree(c, u.graph.parent_nodes) for c in u.graph.parent_nodes[u.graph.root_node]
+                    _build_tree(c, u.tree_graph.transitions) for c in u.tree_graph.transitions[u.tree_graph.root]
                 ]
             }
         elif isinstance(u, SuperSentence):
             result = {
                 'type': 'supersentence-root-node',
-                'node': _walk(u.graph.root_node, start=False),
+                'node': _walk(u.tree_graph.root, start=False),
                 'children': [
-                    _build_tree(c, u.graph.parent_nodes, supersentence=True) for c in u.graph.parent_nodes[u.graph.root_node]
+                    _build_tree(c, u.tree_graph.transitions, supersentence=True) for c in u.tree_graph.transitions[u.tree_graph.root]
                     ]
             }
         else:
@@ -64,4 +64,4 @@ def usl_to_json(usl, language='EN'):
 
         return result
 
-    return _walk(u)
+    return _walk(u.ieml_object)
