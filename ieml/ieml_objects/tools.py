@@ -18,13 +18,15 @@ def _loop_result(max_try):
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
+            ex = None
             for i in range(max_try):
                 try:
                     return func(*args, **kwargs)
                 except InvalidIEMLObjectArgument as e:
+                    ex = e
                     continue
 
-            raise CantGenerateElement(str(e))
+            raise CantGenerateElement(str(ex))
         return wrapper
     return decorator
 
@@ -87,7 +89,7 @@ class RandomPoolIEMLObjectGenerator:
 
         for i in range(random.randint(2, 6)):
             while True:
-                s, a, m = *random.sample(nodes, 1), primitive(), mode()
+                s, a, m = random.sample(nodes, 1)[0], primitive(), mode()
                 if a in nodes or m in nodes or a in modes:
                     continue
 
