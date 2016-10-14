@@ -1,6 +1,7 @@
 import hashlib
 import re
 
+from exceptions import USLNotFound
 from models.commons import DBConnector, check_tags, check_keywords
 from models.constants import USLS_COLLECTION
 from models.exceptions import InvalidTags, DuplicateTag
@@ -55,6 +56,9 @@ class USLConnector(DBConnector):
         if keywords and check_keywords(keywords):
             for l in keywords:
                 update['KEYWORDS.%s'%l] = keywords[l]
+
+        if not self.get(usl):
+            raise USLNotFound(usl)
 
         self.usls.update_one({'_id': usl_index(usl)}, {'$set': update})
 
