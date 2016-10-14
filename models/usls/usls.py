@@ -1,7 +1,7 @@
 import hashlib
 import re
 
-from exceptions import USLNotFound
+from models.exceptions import USLNotFound
 from models.commons import DBConnector, check_tags, check_keywords
 from models.constants import USLS_COLLECTION
 from models.exceptions import InvalidTags, DuplicateTag
