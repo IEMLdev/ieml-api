@@ -27,6 +27,8 @@ def stub_db(module_model, connectors):
         return
 
     config.DB_NAME = 'test_db'
+    config.DB_USERS = 'test_users'
+
     if isinstance(module_model, str):
         module_model = sys.modules[module_model]
     reloaded = reload_model_package(module_model, reloaded=set(), seen=set(), connectors=connectors)
@@ -139,6 +141,9 @@ class ModelTestCase(unittest.TestCase):
             self.relations.drop()
         if 'usls' in self.connectors:
             self.usls.drop()
+        if 'logins' in self.connectors:
+            from models.logins.logins import _get_users_collection
+            _get_users_collection().drop()
 
     def _save_paradigm(self, paradigm, recompute_relations=True):
         list_terms = [{
