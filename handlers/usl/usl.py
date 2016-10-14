@@ -1,5 +1,6 @@
 from collections import defaultdict
 
+from exceptions import USLNotFound
 from handlers.commons import exception_handler
 from ieml.usl import usl
 from models.usls.usls import USLConnector
@@ -8,7 +9,7 @@ from models.usls.usls import USLConnector
 @exception_handler
 def save_usl(body):
     _usl = usl(body['ieml'])
-    tags = {'FR': body['fr'], 'EN': body['en']}
+    tags = {'FR': body['tags']['fr'], 'EN': body['tags']['en']}
     keywords = defaultdict(lambda : list())
     if 'keywords' in body:
         if 'fr' in body['keywords']:
@@ -21,46 +22,39 @@ def save_usl(body):
 
 
 @exception_handler
-def get_usl(param):
-    _usl = None
-    if 'ieml' in param:
-        _usl = USLConnector().get(usl=param['ieml'])
-
-    if 'fr' in param:
-        _usl = USLConnector().get(tag=param['fr'], language='FR')
-
-    if 'en' in param:
-        _usl = USLConnector().get(tag=param['en'], language='EN')
+def get_usl(ieml):
+    _usl = USLConnector().get(usl=ieml)
+    if not _usl:
+        raise USLNotFound(ieml)
 
     return {'success': True,
             'ieml': _usl['IEML'],
             'tags': _usl['TAGS'],
             'keywords': _usl['KEYWORDS']}
 
-
 @exception_handler
-def delete_usl(body):
-    USLConnector().remove(body['ieml'])
+def delete_usl(ieml):
+    USLConnector().remove(ieml)
     return {'success': True}
 
 
 @exception_handler
-def query_usl(param):
+def query_usl(fr=None, en=None, fr_keywords=None, en_keywords=None):
     query = {}
 
-    if 'fr' in param or 'en' in param:
+    if fr or en:
         query['tags'] = {}
-        if 'fr' in param:
-            query['tags']['FR'] = param['fr']
-        if 'en' in param:
-            query['tags']['EN'] = param['en']
+        if fr:
+            query['tags']['FR'] = fr
+        if en:
+            query['tags']['EN'] = en
 
-    if 'keywords' in param:
+    if fr_keywords or en_keywords:
         query['keywords'] = {}
-        if 'fr' in param['keywords']:
-            query['keywords']['FR'] = list(param['keywords']['fr'])
-        if 'en' in param['keywords']:
-            query['keywords']['EN'] = list(param['keywords']['en'])
+        if fr_keywords:
+            query['keywords']['FR'] = list(fr_keywords)
+        if en_keywords:
+            query['keywords']['FR'] = list(en_keywords)
 
     result = USLConnector().query(**query)
 
@@ -72,7 +66,7 @@ def query_usl(param):
 
 
 @exception_handler
-def update_usl(body):
+def update_usl(ieml, body):
     query = {}
     if 'fr' in body or 'en' in body:
         query['tags'] = {}
@@ -88,6 +82,6 @@ def update_usl(body):
         if 'en' in body['keywords']:
             query['keywords']['EN'] = list(body['keywords']['en'])
 
-    USLConnector().update(usl=body['ieml'], **query)
+    USLConnector().update(usl=ieml, **query)
 
     return {'success': True}

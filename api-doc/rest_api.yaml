@@ -602,43 +602,11 @@ paths:
           schema:
             $ref: '#/definitions/distance_group'
 
-  /usl:
-    get:
-      operationId: handlers.get_usl
-      description: Get a specific from the db.
-      parameters:
-        - in: query
-          name: ieml
-          type: string
-        - in: query
-          name: fr
-          type: string
-        - in: query
-          name: en
-          type: string
-      responses:
-        200:
-          description: Successful response
-    delete:
-      operationId: handlers.delete_usl
-      description: Delete an usl from the db.
-      parameters:
-        - in: query
-          name: ieml
-          required: true
-          type: string
-      responses:
-        200:
-          description: Successful response
-
-  /usl/query:
+  /usls:
     get:
       operationId: handlers.query_usl
-      description: Query an usl on text indexes.
+      description: Get a list of usl matching the parameters from the db.
       parameters:
-        - in: query
-          name: ieml
-          type: string
         - in: query
           name: fr
           type: string
@@ -646,20 +614,19 @@ paths:
           name: en
           type: string
         - in: query
-          name: fr-keyword
+          name: fr_keywords
           type: array
           items:
             type: string
         - in: query
-          name: en-keyword
+          name: en_keywords
           type: array
           items:
             type: string
       responses:
         200:
-          description: Successful response.
+          description: Successful response
 
-  /usl/save:
     post:
       operationId: handlers.save_usl
       description: Save an usl to the db.
@@ -700,21 +667,43 @@ paths:
         200:
           description: Successful response
 
-  /usl/edit:
-    post:
-      operationId: handlers.edit_usl
-      description: Edit the tags and keyword of an usl.
+  '/usls/{ieml}':
+    delete:
+      operationId: handlers.delete_usl
+      description: Delete an usl from the db.
       parameters:
+        - in: path
+          name: ieml
+          required: true
+          type: string
+      responses:
+        200:
+          description: Successful response
+    get:
+      operationId: handlers.get_usl
+      description: Get a usl from the db.
+      parameters:
+        - in: path
+          name: ieml
+          required: true
+          type: string
+      responses:
+        200:
+          description: Successful response
+    put:
+      operationId: handlers.update_usl
+      description: Update an exsting usl.
+      parameters:
+        - in: path
+          name: ieml
+          required: true
+          type: string
         - in: body
           name: body
           required: true
           schema:
             type: object
-            required:
-              - ieml
             properties:
-              ieml:
-                type: string
               tags:
                 type: object
                 properties:
@@ -735,8 +724,7 @@ paths:
                       type: string
       responses:
         200:
-          description: Successful responses
-
+          description: Successful response
 
 definitions:
 
