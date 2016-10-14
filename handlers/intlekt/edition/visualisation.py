@@ -17,7 +17,7 @@ def sample_usls(n, language='EN'):
 def recent_usls(n, language='EN'):
     return []
 
-def usl_to_json(usl, language='EN'):
+def usl_to_json(usl):
     u = _usl(usl["usl"])
     def _walk(u, start=True):
         if isinstance(u, Term):
@@ -25,7 +25,8 @@ def usl_to_json(usl, language='EN'):
                 'type': u.__class__.__name__.lower(),
                 'script': str(u.script),
                 'singular_sequences': [str(s) for s in u.script.singular_sequences],
-                'title': TermsConnector().get_term(u.script)['TAGS'][language]
+                'title': {'en':TermsConnector().get_term(u.script)['TAGS']['EN'],
+                          'fr':TermsConnector().get_term(u.script)['TAGS']['FR']}
             }
         if start and len(u.children) == 1:
             return _walk(u.children[0])
