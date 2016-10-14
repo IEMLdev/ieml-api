@@ -1,4 +1,5 @@
 import hashlib
+import re
 
 from models.commons import DBConnector, check_tags, check_keywords
 from models.constants import USLS_COLLECTION
@@ -14,7 +15,7 @@ class USLConnector(DBConnector):
         super().__init__()
         self.usls = self.db[USLS_COLLECTION]
 
-    def save_usl(self, usl, tags, keywords):
+    def save(self, usl, tags, keywords):
 
         if not self._check_tags(tags):
             raise InvalidTags
@@ -31,7 +32,7 @@ class USLConnector(DBConnector):
             }
         })
 
-    def get_usl(self, usl=None, tag=None, language=None):
+    def get(self, usl=None, tag=None, language=None):
         if usl:
             return self.usls.find_one({'_id': usl_index(usl)})
 
@@ -40,27 +41,46 @@ class USLConnector(DBConnector):
 
         raise ValueError()
 
-    def remove_usl(self, usl):
+    def remove(self, usl):
         self.usls.remove({'_id': usl_index(usl)})
 
-    def edit_usl(self, usl, tags=None, keywords=None):
+    def update(self, usl, tags=None, keywords=None):
 
         update = {}
 
-        if tags and self._check_tags(tags):
-            update['TAGS'] = tags
+        if tags and self._check_tags(tags, all_present=False):
+            for l in tags:
+                update['TAGS.%s'%l] = tags[l]
 
         if keywords and check_keywords(keywords):
-            update['KEYWORDS'] = keywords
+            for l in keywords:
+                update['KEYWORDS.%s'%l] = keywords[l]
 
         self.usls.update_one({'_id': usl_index(usl)}, {'$set': update})
 
-    def _check_tags(self, tags):
-        if not check_tags(tags):
+    def query(self, tags=None, keywords=None):
+        query = {}
+        if tags:
+            if 'FR' in tags:
+                query['TAGS.FR'] = re.compile(re.escape(str(tags['FR'])))
+            if 'EN' in tags:
+                query['TAGS.EN'] = re.compile(re.escape(str(tags['EN'])))
+        if keywords:
+            if 'FR' in keywords:
+                if keywords['FR']:
+                    query['KEYWORDS.FR'] = {'$in': [re.compile(re.escape(str(k))) for k in keywords['FR']]}
+            if 'EN' in keywords:
+                if keywords['EN']:
+                    query['KEYWORDS.EN'] = {'$in': [re.compile(re.escape(str(k))) for k in keywords['EN']]}
+
+        return self.usls.find(query)
+
+    def _check_tags(self, tags, all_present=True):
+        if not check_tags(tags, all_present=all_present):
             raise InvalidTags(tags)
 
         for l in tags:
-            if self.get_usl(tag=tags[l], language=l):
+            if self.get(tag=tags[l], language=l):
                 raise DuplicateTag(tags[l])
 
         return True

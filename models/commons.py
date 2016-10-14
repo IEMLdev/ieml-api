@@ -19,8 +19,8 @@ class DBConnector(object, metaclass=Singleton):
         self.old_terms = self.old_db[OLD_TERMS_COLLECTION]
 
 
-def check_tags(tags):
-    return isinstance(tags, dict) and all(lang in tags for lang in TAG_LANGUAGES) \
+def check_tags(tags, all_present=True):
+    return isinstance(tags, dict) and (all(lang in tags for lang in TAG_LANGUAGES) or not all_present) \
            and all((tag in TAG_LANGUAGES and tag) for tag in tags) \
            and all(isinstance(tags[tag], str) for tag in tags)
 
