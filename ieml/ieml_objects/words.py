@@ -7,14 +7,14 @@ from ieml.ieml_objects.terms import Term
 
 
 class Morpheme(IEMLObjects):
-    def __init__(self, term_list):
-        if isinstance(term_list, Term):
-            _children = (term_list,)
+    def __init__(self, children):
+        if isinstance(children, Term):
+            _children = (children,)
         else:
             try:
-                _children = tuple(e for e in term_list)
+                _children = tuple(e for e in children)
             except TypeError:
-                raise InvalidIEMLObjectArgument(Morpheme, "The argument %s is not an iterable"%str(term_list))
+                raise InvalidIEMLObjectArgument(Morpheme, "The argument %s is not an iterable" % str(children))
 
         if not 0 < len(_children) <= MORPHEME_SIZE_LIMIT:
             raise InvalidIEMLObjectArgument(Morpheme, "Invalid terms count %d."%len(_children))
@@ -43,18 +43,17 @@ class Morpheme(IEMLObjects):
 
 
 class Word(IEMLObjects):
-    def __init__(self, root, flexing=None, literals=None):
+    def __init__(self, root=None, flexing=None, literals=None, children=None):
 
-        if not isinstance(root, Morpheme):
-            raise InvalidIEMLObjectArgument(Word, "The root %s of a word must be a Morpheme instance."%(str(root)))
-
-        if flexing is not None:
-            if not isinstance(flexing, Morpheme):
-                raise InvalidIEMLObjectArgument(Word,
-                                                "The flexing %s of a word must be a Morpheme instance." % (str(flexing)))
-            _children = (root, flexing)
+        if root is not None:
+            _children = (root,) + (flexing,) if flexing else ()
         else:
-            _children = (root,)
+            _children = tuple(children)
+
+        for c in _children:
+            if not isinstance(c, Morpheme):
+                raise InvalidIEMLObjectArgument(Word,
+                                            "The children %s of a word must be a Morpheme instance." % (str(c)))
 
         # the root of a word can't be empty
         if _children[0].empty:

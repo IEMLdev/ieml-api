@@ -5,11 +5,11 @@ from ieml.ieml_objects.words import Word
 
 
 class Text(IEMLObjects):
-    def __init__(self, propositions_list):
+    def __init__(self, children):
         try:
-            _children = [e for e in propositions_list]
+            _children = [e for e in children]
         except TypeError:
-            raise InvalidIEMLObjectArgument(Text, "The argument %s is not iterable."%str(propositions_list))
+            raise InvalidIEMLObjectArgument(Text, "The argument %s is not iterable." % str(children))
 
         if not all(isinstance(e, (Word, Sentence, SuperSentence)) for e in _children):
             raise InvalidIEMLObjectArgument(Text, "Invalid type instance in the list of a text,"

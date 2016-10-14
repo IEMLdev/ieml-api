@@ -48,11 +48,11 @@ class AbstractClause(IEMLObjects):
 
 
 class AbstractSentence(IEMLObjects):
-    def __init__(self, subtype, clause_list, literals=None):
+    def __init__(self, subtype, children, literals=None):
         try:
-            _children = tuple(e for e in clause_list)
+            _children = tuple(e for e in children)
         except TypeError:
-            raise InvalidIEMLObjectArgument(self.__class__, "The argument %s is not an iterable" % str(clause_list))
+            raise InvalidIEMLObjectArgument(self.__class__, "The argument %s is not an iterable" % str(children))
 
         if not all(isinstance(e, subtype) for e in _children):
             raise InvalidIEMLObjectArgument(self.__class__, "The children of a %s must be %s instance."%
@@ -83,8 +83,8 @@ class Clause(AbstractClause):
 
 
 class Sentence(AbstractSentence):
-    def __init__(self, clause_list, literals=None):
-        super().__init__(Clause, clause_list=clause_list, literals=literals)
+    def __init__(self, children, literals=None):
+        super().__init__(Clause, children=children, literals=literals)
 
 
 class SuperClause(AbstractClause):
@@ -93,5 +93,5 @@ class SuperClause(AbstractClause):
 
 
 class SuperSentence(AbstractSentence):
-    def __init__(self, clause_list, literals=None):
-        super().__init__(SuperClause, clause_list=clause_list, literals=literals)
+    def __init__(self, children, literals=None):
+        super().__init__(SuperClause, children=children, literals=literals)

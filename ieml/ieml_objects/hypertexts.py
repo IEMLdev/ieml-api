@@ -48,7 +48,10 @@ class PropositionPath:
 
 
 class Hyperlink(IEMLObjects):
-    def __init__(self, substance, attribute, mode):
+    def __init__(self, substance=None, attribute=None, mode=None, children=None):
+
+        if children:
+            raise NotImplemented
 
         if not isinstance(substance, Text):
             raise InvalidIEMLObjectArgument(Hyperlink, "The substance %s must be a Text instance."%str(substance))
@@ -89,12 +92,12 @@ class Hyperlink(IEMLObjects):
 
 
 class Hypertext(IEMLObjects):
-    def __init__(self, hyperlink_list):
+    def __init__(self, children):
 
         try:
-            _children = [e for e in hyperlink_list]
+            _children = [e for e in children]
         except TypeError:
-            raise InvalidIEMLObjectArgument(Hypertext, "The argument %s is not iterable."%str(hyperlink_list))
+            raise InvalidIEMLObjectArgument(Hypertext, "The argument %s is not iterable." % str(children))
 
         if not all(isinstance(e, Hyperlink) for e in _children):
             raise InvalidIEMLObjectArgument(Hypertext, "The argument %s must be a list of Hyperlink instance."%
