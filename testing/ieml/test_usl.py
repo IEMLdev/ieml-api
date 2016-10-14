@@ -5,6 +5,7 @@ from ieml.ieml_objects.hypertexts import Hyperlink
 from ieml.ieml_objects.parser.parser import IEMLParser
 from ieml.ieml_objects.sentences import SuperSentence
 from ieml.usl.tools import random_usl
+from ieml.usl.usl import Usl
 from testing.ieml.helper import *
 
 
@@ -43,6 +44,6 @@ class TestHypertext(unittest.TestCase):
         self.assertEqual(str(IEMLParser().parse(hype_str)), hype_str)
 
 class TestUsl(unittest.TestCase):
-    def test_usl_str(self):
-        _usl = random_usl()
-        self.assertRegexpMatches(str(_usl), '^\{/.+/\}$')
+    def test_equality(self):
+        ieml = RandomPoolIEMLObjectGenerator(level=Text).text()
+        self.assertEqual(Usl(ieml_object=ieml), Usl(ieml_object=ieml))

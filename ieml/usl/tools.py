@@ -11,6 +11,8 @@ from ieml.usl.usl import Usl
 
 
 def usl(arg):
+    if isinstance(arg, Usl):
+        return arg
     if isinstance(arg, IEMLObjects):
         if isinstance(arg, Term):
             return Usl(Word(Morpheme([arg])))
