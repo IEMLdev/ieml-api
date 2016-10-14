@@ -13,6 +13,7 @@ def rand_string():
 
 class TestUslHandler(ModelTestCase):
     connectors = ('usls',)
+
     def _assert_success(self, m):
         if not isinstance(m, dict) or 'success' not in m:
             self.fail("Responses malformed.")
@@ -30,11 +31,13 @@ class TestUslHandler(ModelTestCase):
 
         self.fail("Request is successful, should have failed.")
 
-    def _save_usl(self):
+    def _save_usl(self, fr=None, en=None):
         _usl = random_usl()
-        tags = {'f'}
-        fr = rand_string()
-        en = rand_string()
+        if not fr:
+            fr = rand_string()
+        if not en:
+            en = rand_string()
+
         self._assert_success(h.save_usl({
             'ieml': str(_usl),
             'fr': fr,
@@ -55,6 +58,20 @@ class TestUslHandler(ModelTestCase):
 
         self._assert_fail(h.get_usl({'ieml': str(entry['ieml'])}))
 
-if __name__ == '__main__':
-    suite = unittest.TestLoader().loadTestsFromTestCase(TestUslHandler)
-    unittest.TextTestRunner(verbosity=5).run(suite)
+    def test_update_usl(self):
+        entry = self._save_usl()
+        self._assert_success(h.update_usl({'ieml': str(entry['ieml']), 'fr': 'test', 'en': 'test'}))
+
+        e = self._assert_success(h.query_usl({'fr': 'test'}))
+        self.assertEqual(len(e['match']), 1)
+        self.assertEqual(e['match'][0]['ieml'], str(entry['ieml']))
+
+        e = self._assert_success(h.query_usl({'en': 'test'}))
+        self.assertEqual(len(e['match']), 1)
+        self.assertEqual(e['match'][0]['ieml'], str(entry['ieml']))
+
+    def test_query(self):
+        entry = self._save_usl(fr='query')
+        res = self._assert_success(h.query_usl({'fr': 'query'}))
+        self.assertEqual(len(res['match']), 1)
+        self.assertEqual(res['match'][0]['ieml'], str(entry['ieml']))
