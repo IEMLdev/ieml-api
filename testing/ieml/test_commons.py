@@ -27,6 +27,15 @@ class TestTreeStructure(TestCase):
 
         self.assertEqual(text.path(path), c2)
 
+    def test_equal(self):
+        t = RandomPoolIEMLObjectGenerator(level=Text).text()
+        t2 = Text(children=t.children)
+        self.assertNotEqual(id(t), id(t2))
+        self.assertEqual(t, t2)
+
+        self.assertEqual(t, str(t))
+        self.assertEqual(str(t), t)
+
     def test_replace(self):
         r = RandomPoolIEMLObjectGenerator(level=Text)
         text = r.text()
