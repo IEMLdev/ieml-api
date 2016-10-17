@@ -1,4 +1,5 @@
 import random
+from collections import defaultdict, Counter
 from unittest.case import TestCase
 
 from ieml.exceptions import InvalidPathException
@@ -35,6 +36,13 @@ class TestTreeStructure(TestCase):
 
         self.assertEqual(t, str(t))
         self.assertEqual(str(t), t)
+
+    def test_paths(self):
+        t = RandomPoolIEMLObjectGenerator(level=Text).text()
+
+        self.assertDictEqual(Counter((p[-1] for p in t.paths)),
+                             Counter((p for p in t.tree_iter() if isinstance(p, Term))))
+        self.assertIsNotNone(t._paths)
 
     def test_replace(self):
         r = RandomPoolIEMLObjectGenerator(level=Text)

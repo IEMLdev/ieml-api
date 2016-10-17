@@ -5,6 +5,7 @@ class TreeStructure:
     def __init__(self):
         super().__init__()
         self._str = None
+        self._paths = None
         self.children = None  # will be an iterable (list or tuple)
 
     def __str__(self):
@@ -42,3 +43,11 @@ class TreeStructure:
             return p.path(path[1:])
 
         raise InvalidPathException(self, path)
+
+    @property
+    def paths(self):
+        if not self._paths:
+            self._paths = [[self] + path for child in self.children for path in child.paths] \
+                if self.children else [[self]]
+
+        return self._paths
