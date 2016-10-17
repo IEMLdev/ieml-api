@@ -4,7 +4,8 @@ from unittest.case import TestCase
 from ieml.exceptions import InvalidPathException
 from ieml.ieml_objects.terms import Term
 from ieml.ieml_objects.texts import Text
-from ieml.ieml_objects.tools import RandomPoolIEMLObjectGenerator
+from ieml.ieml_objects.tools import RandomPoolIEMLObjectGenerator, replace_from_paths
+from ieml.script.operator import sc
 
 
 class TestTreeStructure(TestCase):
@@ -22,3 +23,29 @@ class TestTreeStructure(TestCase):
         c2 = Term(c.script)
 
         self.assertEqual(text.path(path), c2)
+
+    def test_replace(self):
+        r = RandomPoolIEMLObjectGenerator(level=Text)
+        text = r.text()
+
+        c0 = r.word()
+        while text.children[0] == c0:
+            c0 = r.word()
+
+        text2 = replace_from_paths(text, [[text.children[0]]], [c0])
+        self.assertTrue(c0 in text2)
+        self.assertNotEqual(text2, text)
+
+        t = Term('wa.')
+        self.assertEqual(replace_from_paths(t, [[sc('wa.')]], [sc('we.')]), t)
+
+        with self.assertRaises(ValueError):
+            replace_from_paths(t, [], [Term])
+
+        t2 = Term('we.')
+        self.assertEqual(t2, replace_from_paths(t, [[]], [t2]))
+
+        #TODO multiple path
+
+    def _get_child(self):
+        pass
