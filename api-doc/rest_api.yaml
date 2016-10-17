@@ -673,30 +673,51 @@ paths:
   /usls:
     get:
       operationId: handlers.query_usl
+      tags:
+        - usl
+        - edition
       description: Get a list of usl matching the parameters from the db.
       parameters:
         - in: query
           name: fr
           type: string
+          description: Get the usls that have their fr tag containing this parameter.
         - in: query
           name: en
           type: string
+          description: Get the usls that have their en tag containing this parameter.
         - in: query
           name: fr_keywords
+          description: Get the usls that have their fr keyword containing one of this parameter.
           type: array
           items:
             type: string
         - in: query
           name: en_keywords
+          description: Get the usls that have their en keyword containing one of this parameter.
           type: array
           items:
             type: string
       responses:
         200:
           description: Successful response
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                description: if the request is successful.
+              match:
+                description: the list of the usls matched.
+                type: array
+                items:
+                  $ref: '#/definitions/usl_entry'
 
     post:
       operationId: handlers.save_usl
+      tags:
+        - usl
+        - edition
       description: Save an usl to the db.
       parameters:
         - in: body
@@ -734,10 +755,18 @@ paths:
       responses:
         200:
           description: Successful response
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
 
   '/usls/{ieml}':
     delete:
       operationId: handlers.delete_usl
+      tags:
+        - usl
+        - edition
       description: Delete an usl from the db.
       parameters:
         - in: path
@@ -747,8 +776,17 @@ paths:
       responses:
         200:
           description: Successful response
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+
     get:
       operationId: handlers.get_usl
+      tags:
+        - usl
+        - edition
       description: Get a usl from the db.
       parameters:
         - in: path
@@ -758,8 +796,14 @@ paths:
       responses:
         200:
           description: Successful response
+          schema:
+            $ref: '#/definitions/usl_entry'
+
     put:
       operationId: handlers.update_usl
+      tags:
+        - usl
+        - edition
       description: Update an exsting usl.
       parameters:
         - in: path
@@ -793,8 +837,38 @@ paths:
       responses:
         200:
           description: Successful response
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+
 
 definitions:
+
+  usl_entry:
+    properties:
+      ieml:
+        type: string
+      tags:
+        type: object
+        properties:
+          fr:
+            type: string
+          en:
+            type: string
+      keywords:
+        type: object
+        properties:
+          fr:
+            type: array
+            items:
+              type: string
+          en:
+            type: array
+            items:
+              type: string
+
 
   distance_group:
     properties:
