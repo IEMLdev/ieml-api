@@ -5,7 +5,10 @@ from ieml.exceptions import InvalidPathException
 from ieml.ieml_objects.terms import Term
 from ieml.ieml_objects.texts import Text
 from ieml.ieml_objects.tools import RandomPoolIEMLObjectGenerator, replace_from_paths
+from ieml.ieml_objects.words import Word
 from ieml.script.operator import sc
+from ieml.usl.tools import random_usl
+from ieml.usl.usl import Usl
 
 
 class TestTreeStructure(TestCase):
@@ -49,3 +52,12 @@ class TestTreeStructure(TestCase):
 
     def _get_child(self):
         pass
+
+
+class TestUslTools(TestCase):
+    def test_random_usl(self):
+        u = random_usl()
+        self.assertIsInstance(u, Usl)
+
+        u = random_usl(rank_type=Word)
+        self.assertIsInstance(u.ieml_object, Word)
