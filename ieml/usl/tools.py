@@ -15,7 +15,7 @@ def usl(arg):
         return arg
     if isinstance(arg, IEMLObjects):
         if isinstance(arg, Term):
-            return Usl(Word(Morpheme([arg])))
+            return Usl(Word(root=Morpheme([arg])))
         return Usl(arg)
     if isinstance(arg, str):
         return USLParser().parse(arg)

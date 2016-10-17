@@ -48,7 +48,7 @@ class Word(IEMLObjects):
     def __init__(self, root=None, flexing=None, literals=None, children=None):
 
         if root is not None:
-            _children = (root,) + (flexing,) if flexing else ()
+            _children = (root,) + ((flexing,) if flexing else ())
         else:
             _children = tuple(children)
 
