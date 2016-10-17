@@ -49,6 +49,8 @@ class IEMLType(type):
 
 
 class IEMLObjects(TreeStructure, metaclass=IEMLType):
+    closable = False
+
     def __init__(self, children, literals=None):
         super().__init__()
         self.children = tuple(children)

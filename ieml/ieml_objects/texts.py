@@ -5,6 +5,8 @@ from ieml.ieml_objects.words import Word
 
 
 class Text(IEMLObjects):
+    closable = True
+
     def __init__(self, children):
         try:
             _children = [e for e in children]

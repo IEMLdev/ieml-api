@@ -158,8 +158,8 @@ def replace_from_paths(ieml_obj, paths, elements):
     if not paths:
         return ieml_obj
 
-    if len(paths) == 1 and paths[0] == []:
-        return elements[0]
+    if [] in paths:
+        return elements[paths.index([])]
 
     if isinstance(ieml_obj, Term):
         return ieml_obj

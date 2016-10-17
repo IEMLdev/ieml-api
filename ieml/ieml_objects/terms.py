@@ -4,6 +4,8 @@ from ieml.script.operator import script
 
 
 class Term(IEMLObjects):
+    closable = True
+
     def __init__(self, s):
         if isinstance(s, str) and s[0] == '[' and s[-1] == ']':
             s = s[1:-1]

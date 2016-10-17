@@ -66,6 +66,20 @@ class TestTreeStructure(TestCase):
         self.assertEqual(t2, replace_from_paths(t, [[]], [t2]))
 
         #TODO multiple path
+        paths = random.sample(text.paths, random.randint(2, len(text.paths)))
+        args = []
+        for p in paths:
+            i = random.randint(0,1)
+            if i:
+                args.append((p, r.term()))
+            else:
+                p = p[:-random.randint(1, len(p) - 2)]
+                if not p[-1].closable:
+                    p = p[:-1]
+                self.assertTrue(p[-1].closable)
+                args.append((p, r.from_type(p[-1].__class__)))
+
+        self.assertNotEqual(text, replace_from_paths(text, *zip(*args)))
 
     def _get_child(self):
         pass

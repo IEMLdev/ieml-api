@@ -47,7 +47,7 @@ class TreeStructure:
     @property
     def paths(self):
         if not self._paths:
-            self._paths = [[self] + path for child in self.children for path in child.paths] \
-                if self.children else [[self]]
+            self._paths = [[child] + path for child in self.children for path in child.paths] \
+                if self.children else [[]]
 
         return self._paths

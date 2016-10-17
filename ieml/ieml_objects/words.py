@@ -43,6 +43,8 @@ class Morpheme(IEMLObjects):
 
 
 class Word(IEMLObjects):
+    closable = True
+
     def __init__(self, root=None, flexing=None, literals=None, children=None):
 
         if root is not None:
