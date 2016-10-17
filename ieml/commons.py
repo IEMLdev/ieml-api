@@ -1,3 +1,4 @@
+from ieml.exceptions import InvalidPathException
 
 
 class TreeStructure:
@@ -31,3 +32,13 @@ class TreeStructure:
         yield self
         for c in self.children:
             yield from c.tree_iter()
+
+    def path(self, path):
+        if len(path) == 0:
+            return self
+
+        p = path[0]
+        if p in self.children:
+            return p.path(path[1:])
+
+        raise InvalidPathException(self, path)
