@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 from ieml.ieml_objects.exceptions import TermNotFoundInDictionary
 from ieml.ieml_objects.commons import IEMLObjects
 from ieml.script.operator import script
@@ -20,6 +22,17 @@ class Term(IEMLObjects):
             raise TermNotFoundInDictionary(str(self.script))
 
         super().__init__([])
+
+        self._relations = {}
+
+    def relations(self, relation_name):
+        if relation_name not in self._relations:
+            from models.relations import RelationsQueries
+            self._relations[relation_name] = \
+                [Term(s) for s in RelationsQueries.relations(self.script, relation_title=relation_name)]
+
+        return self._relations[relation_name]
+
 
     __hash__ = IEMLObjects.__hash__
 
