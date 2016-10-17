@@ -1,7 +1,7 @@
 import unittest
 # We use protected method _compute_rank for dependency injection
 from ieml.script.tables import get_table_rank, _compute_rank, generate_tables
-from ieml.operator import sc
+from ieml.script.operator import sc
 from ieml.script.tools import factorize
 
 

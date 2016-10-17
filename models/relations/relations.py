@@ -5,7 +5,7 @@ import random
 import pymongo.errors
 
 from helpers.metaclasses import Singleton
-from models.base_queries import DBConnector
+from models.commons import DBConnector
 from models.constants import RELATIONS_COLLECTION, ROOT_PARADIGM_TYPE, SINGULAR_SEQUENCE_TYPE, PARADIGM_TYPE, \
     RELATIONS_LOCK_COLLECTION, DROP_RELATIONS, SCRIPT_INSERTION, SCRIPT_DELETION
 from models.exceptions import NotAParadigm, RootParadigmIntersection, \
@@ -15,6 +15,8 @@ import logging
 
 
 def safe_execution(role):
+    """ Decorator to ensure the atomic access at the relation collection
+    must be used for any write operation."""
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*arg, **kwrag):
@@ -90,9 +92,9 @@ class RelationsConnector(DBConnector, metaclass=Singleton):
 
     def get_script(self, script):
         """
-        Get the relations collection entry for the given script.
-        :param script: the script to get, str or Script instance.
-        :return: the script entry.
+        Get the relations collection entry for the given parser.
+        :param script: the parser to get, str or Script instance.
+        :return: the parser entry.
         """
         entry = self.relations.find_one({"_id": str(script)})
         if not entry:
@@ -116,17 +118,17 @@ class RelationsConnector(DBConnector, metaclass=Singleton):
         """
         Get all singular sequences of the all terms or of a given paradigm.
         :param paradigm: optional, the paradigm to get the singular sequence, if not, get all the singular sequence of
-        the saved script.
+        the saved parser.
         :return: a list of singular sequences.
         """
         if paradigm:
             return self.relations.find({'_id': paradigm})['SINGULAR_SEQUENCES']
 
-        result = list((self.relations.aggregate([
+        result = list(self.relations.aggregate([
             {'$match': {'TYPE': ROOT_PARADIGM_TYPE}},
             {'$unwind': '$SINGULAR_SEQUENCES'},
             {'$group': {'_id': 0, 'RESULT': {'$push': '$SINGULAR_SEQUENCES'}}},
-        ])))
+        ]))
 
         if result:
             return result[0]['RESULT']
@@ -135,21 +137,21 @@ class RelationsConnector(DBConnector, metaclass=Singleton):
 
     def remove_script(self, script_ast):
         """
-        Remove a script from the relations collection.
-        :param script_ast: the script to remove
+        Remove a parser from the relations collection.
+        :param script_ast: the parser to remove
         :return: None
         """
         if not self.exists(script_ast):
-            logging.warning("Deletion of a non existent script %s from the collection relation." % str(script_ast))
+            logging.warning("Deletion of a non existent parser %s from the collection relation." % str(script_ast))
             return
 
         self.relations.remove({'_id': str(script_ast)})
 
     def save_script(self, script_ast, root=False):
         """
-        Save a script in the relation collection.
+        Save a parser in the relation collection.
         :param script_ast: the Script instance to save.
-        :param root: if this script is a root paradigm.
+        :param root: if this parser is a root paradigm.
         :return: None
         """
         if script_ast.paradigm:
@@ -161,7 +163,7 @@ class RelationsConnector(DBConnector, metaclass=Singleton):
         """
         Save a paradigm to the database.
 
-        :param script_ast: the string of the script or an Script object.
+        :param script_ast: the string of the parser or an Script object.
         :param root: true if the paradigm is a root paradigm
         :return: None
         """
@@ -176,7 +178,7 @@ class RelationsConnector(DBConnector, metaclass=Singleton):
     def _save_singular_sequence(self, script_ast):
         """
         Save a singular sequence (not a paradigm)
-        :param script_ast: the script to save
+        :param script_ast: the parser to save
         :return: None
         """
         # check if a singular sequence
@@ -185,17 +187,17 @@ class RelationsConnector(DBConnector, metaclass=Singleton):
 
         # check if already exist
         if self.exists(script_ast):
+            #TODO : merge SingularSequenceAlreadyExsit and ParadigmAlreadyExist into one ScriptAlreadyExist ?
             raise SingularSequenceAlreadyExist(script_ast)
 
         # get all the singular sequence of the db to see if the singular sequence can be created
-        if str(script_ast) not in self.singular_sequences():
-            raise RootParadigmMissing(script_ast)
+        root_paradigm = self.compute_root(script_ast)
 
         # save the singular sequence
         insertion = {
             '_id': str(script_ast),
             'TYPE': SINGULAR_SEQUENCE_TYPE,
-            'ROOT': self._compute_root(script_ast),
+            'ROOT': root_paradigm,
             'RELATIONS': {},
             'LAYER': script_ast.layer,
             'SINGULAR_SEQUENCES': [str(script_ast)]
@@ -220,9 +222,9 @@ class RelationsConnector(DBConnector, metaclass=Singleton):
             raise ParadigmAlreadyExist(script_ast)
 
         # get all the singular sequence of the db to avoid intersection
-        if set.intersection(set(str(seq) for seq in script_ast.singular_sequences), self.singular_sequences()):
-            raise RootParadigmIntersection(script_ast,
-                                           set(str(seq) for seq in script_ast.singular_sequences) & set(self.singular_sequences()))
+        intersection = self.root_intersections(script_ast)
+        if intersection:
+            raise RootParadigmIntersection(script_ast, intersection)
 
         # save the root paradigm
         insertion = {
@@ -246,20 +248,19 @@ class RelationsConnector(DBConnector, metaclass=Singleton):
             raise ParadigmAlreadyExist(script_ast)
 
         # get all the singular sequence of the db to check if we can create the paradigm
-        if not set(str(seq) for seq in script_ast.singular_sequences).issubset(self.singular_sequences()):
-            raise RootParadigmMissing(script_ast)
+        root_paradigm = self.compute_root(script_ast)
 
         insertion = {
             '_id': str(script_ast),
             'TYPE': PARADIGM_TYPE,
-            'ROOT': self._compute_root(script_ast),
+            'ROOT': root_paradigm,
             'RELATIONS': {},
             'LAYER': script_ast.layer,
             'SINGULAR_SEQUENCES': [str(seq) for seq in script_ast.singular_sequences]
         }
         self.relations.insert(insertion)
 
-    def _compute_root(self, script_ast):
+    def compute_root(self, script_ast):
         """
         Prerequisite root exist in the collection.
         :param script_ast:
@@ -273,3 +274,20 @@ class RelationsConnector(DBConnector, metaclass=Singleton):
             raise RootParadigmMissing(script_ast)
 
         return result['_id']
+
+    def root_intersections(self, script_ast):
+        """
+        Return all the root paradigms that have an intersection in theirs singular sequences with the script in
+        parameter.
+        :param script_ast: the script to detect collision
+        :return: a list of str of the script of the root paradigms
+        """
+        result = [e['_id'] for e in self.relations.find({
+            'TYPE': ROOT_PARADIGM_TYPE,
+            'SINGULAR_SEQUENCES': {'$in': [str(seq) for seq in script_ast.singular_sequences]}
+        })]
+        return result
+
+    def drop(self):
+        self.relations.drop()
+        self.relations_lock.drop()

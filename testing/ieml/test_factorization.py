@@ -4,7 +4,7 @@ from ieml.script.tools import factorize
 import unittest
 
 from models.terms.terms import TermsConnector
-from ieml.operator import sc
+from ieml.script.operator import sc
 
 class FactorizationTest(unittest.TestCase):
     def setUp(self):

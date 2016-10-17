@@ -1,7 +1,6 @@
-from ieml.parsing.parser import PropositionsParser
-from models.intlekt.usl.usl_connector import UslConnector
-from models.terms.terms import TermsConnector
 from models.intlekt.constants import LANGUAGES
+from models.intlekt.usl.usl_connector import UslConnector
+
 #faire les champs Spanish et portuguese même vide pour ne retourner qu'un seul objet python : JSON
 connector = UslConnector()
 
@@ -22,7 +21,6 @@ for el in usls_ieml:
         'KEYWORDS': keywords
     })
 
-import pprint
 import json
 with open("missing_translations.txt", 'w') as fp:
     json.dump(to_translate, fp=fp, ensure_ascii=False, indent=True)

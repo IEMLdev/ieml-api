@@ -1,9 +1,8 @@
 from pymongo import MongoClient
 
-from ieml import ScriptParser
 from ieml.exceptions import CannotParse
-from ieml.operator import sc
 from ieml.script import *
+from ieml.script.operator import sc
 from models.constants import TERMS_COLLECTION
 from testing.ieml.helper import *
 from config import DB_ADDRESS
@@ -85,7 +84,6 @@ class TestTermParser(unittest.TestCase):
         script = self.parser.parse("M:.-',M:.-',S:.-'B:.-'n.-S:.U:.-',_")
         self.assertIsInstance(script, MultiplicativeScript)
         script = MultiplicativeScript(substance=AdditiveScript(children=[script]))
-        script.check()
         self.assertIsInstance(script.children[0], MultiplicativeScript)
 
     def test_duplicate_addition(self):
@@ -104,7 +102,6 @@ class TestTermParser(unittest.TestCase):
                     )
                 ])
             ])])
-        script.check()
 
         self.assertTrue(all(isinstance(s, MultiplicativeScript) for s in script.children))
 

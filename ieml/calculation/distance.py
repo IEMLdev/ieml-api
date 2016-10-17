@@ -1,22 +1,22 @@
 import itertools as it
 from collections import defaultdict
-from ieml.AST.propositions import Word, Sentence, SuperSentence, Morpheme
-from ieml.AST.terms import Term
-from ieml.AST.usl import Text, HyperText
-from ieml.operator import usl, sc
-from ieml.script.tables import get_table_rank
-from bidict import bidict
-from models.relations.relations import RelationsConnector
 from fractions import Fraction
 
+from bidict import bidict
+from ieml.ieml_objects import Term, Word, Sentence, SuperSentence, Morpheme, Text, Hypertext
+from ieml.ieml_objects.hypertexts import Hyperlink
+from ieml.usl import usl
+from ieml.script.operator import sc
+from ieml.script.tables import get_table_rank
+from models.relations.relations import RelationsConnector
 from models.relations.relations_queries import RelationsQueries
 
-categories = bidict({Term: 1, Word: 2, Sentence: 3, SuperSentence: 4, Text: 5, HyperText: 6})
+categories = bidict({Term: 1, Word: 2, Sentence: 3, SuperSentence: 4, Text: 5, Hypertext: 6})
 
 
 def distance(uslA, uslB, weights):
 
-    eo_total = sum(set_proximity_index(i, uslA, uslB) for i in categories if i != HyperText) / (len(categories) - 1)
+    eo_total = sum(set_proximity_index(i, uslA, uslB) for i in categories if i != Hypertext) / (len(categories) - 1)
     oo_total = sum(object_proximity_index(i, uslA, uslB) for i in categories if i != Term) / (len(categories) - 1)
 
     return (eo_total + oo_total) / 2
@@ -83,7 +83,7 @@ def connexity_index(stage, uslA, uslB):
     for a, b in it.product(stages_A[stage], stages_B[stage]):
 
         if stage == Sentence or stage == SuperSentence:
-            intersection = a.graph.nodes_set & b.graph.nodes_set
+            intersection = set(a.tree_graph.nodes) & set(b.tree_graph.nodes)
         else:
             intersection = children_A[a] & children_B[b]
 
@@ -99,7 +99,7 @@ def mutual_inclusion_index(uslA, uslB):
     stages_A, children_A, children_multi_A = compute_stages(uslA)
     stages_B, children_B, children_multi_B = compute_stages(uslB)
 
-    result = {Word: 0, Sentence: 0, SuperSentence: 0, Text: 0, HyperText: 0}
+    result = {Word: 0, Sentence: 0, SuperSentence: 0, Text: 0, Hypertext: 0}
     for a_st, b_st in it.permutations(categories.keys(), 2):
         size = float(len(stages_A[a_st]) * len(stages_B[b_st]))
         accum = 0.0
@@ -130,8 +130,7 @@ def compute_stages(usl):
     """
 
     def usl_iter(usl):
-        for t in usl.texts:
-            yield from t.tree_iter()
+        yield from usl.ieml_object.tree_iter()
 
     stages = {c: set() for c in categories}
 
@@ -145,26 +144,19 @@ def compute_stages(usl):
                 children[e] = set()
                 continue
 
-            if isinstance(e, (Word, Sentence, SuperSentence)):
+            if isinstance(e, (Word, Sentence, SuperSentence, Text, Hypertext)):
                 _class = categories.inv[categories[e.__class__] - 1]
                 children[e] = set(i for i in e.tree_iter() if isinstance(i, _class))
 
-            if isinstance(e, HyperText):
-                children[e] = set(e.texts)
-                continue
-
-            if isinstance(e, Text):
-                children[e] = set(e.children)
-                continue
-
     result = defaultdict(lambda: defaultdict(lambda: 0))
-    stack = [usl]
+    stack = []
     for e in usl_iter(usl):
         if e.__class__ not in categories:
             continue
 
-        while categories[e.__class__] >= categories[stack[-1].__class__]:
-            stack.pop()
+        if stack:
+            while categories[e.__class__] >= categories[stack[-1].__class__]:
+                stack.pop()
 
         for k in stack:
             result[k][e] += 1
@@ -214,7 +206,7 @@ def build_graph(object_set_a, object_set_b, intersection):
 
     graph = {node: [] for node in intersection}
 
-    if isinstance(object_set_a, (Text, HyperText)):
+    if isinstance(object_set_a, (Text, Hypertext)):
 
         combos = it.combinations(intersection, 2)
         for combination in combos:
@@ -231,15 +223,15 @@ def build_graph(object_set_a, object_set_b, intersection):
         node_pairs = it.combinations(intersection, 2)
 
         for pair in node_pairs:
-            node_1_addr_a = object_set_a.graph.nodes_list.index(pair[0])
-            node_2_addr_a = object_set_a.graph.nodes_list.index(pair[1])
-            node_1_addr_b = object_set_b.graph.nodes_list.index(pair[0])
-            node_2_addr_b = object_set_b.graph.nodes_list.index(pair[1])
+            node_1_addr_a = object_set_a.tree_graph.nodes.index(pair[0])
+            node_2_addr_a = object_set_a.tree_graph.nodes.index(pair[1])
+            node_1_addr_b = object_set_b.tree_graph.nodes.index(pair[0])
+            node_2_addr_b = object_set_b.tree_graph.nodes.index(pair[1])
 
-            if ((object_set_a.graph.adjacency_matrix[node_1_addr_a][node_2_addr_a] or
-                 object_set_a.graph.adjacency_matrix[node_2_addr_a][node_1_addr_a]) and
-                (object_set_b.graph.adjacency_matrix[node_1_addr_b][node_2_addr_b] or
-                 object_set_b.graph.adjacency_matrix[node_2_addr_b][node_1_addr_b])):
+            if ((object_set_a.tree_graph.array[node_1_addr_a][node_2_addr_a] or
+                 object_set_a.tree_graph.array[node_2_addr_a][node_1_addr_a]) and
+                (object_set_b.tree_graph.array[node_1_addr_b][node_2_addr_b] or
+                 object_set_b.tree_graph.array[node_2_addr_b][node_1_addr_b])):
 
                 graph[pair[0]].append(pair[1])
                 graph[pair[1]].append(pair[0])
@@ -250,12 +242,12 @@ def build_graph(object_set_a, object_set_b, intersection):
         combos = it.combinations(intersection, 2)
 
         for combination in combos:
-            if combination[0] in object_set_a.subst.children and combination[1] in object_set_a.mode.children and \
-               combination[0] in object_set_b.subst.children and combination[1] in object_set_b.mode.children:
+            if combination[0] in object_set_a.root.children and combination[1] in object_set_a.flexing.children and \
+               combination[0] in object_set_b.root.children and combination[1] in object_set_b.flexing.children:
                 graph[combination[0]].append(combination[1])
                 graph[combination[1]].append(combination[0])
-            elif combination[0] in object_set_a.mode.children and combination[1] in object_set_a.subst.children and \
-                 combination[0] in object_set_b.mode.children and combination[1] in object_set_b.subst.children:
+            elif combination[0] in object_set_a.flexing.children and combination[1] in object_set_a.root.children and \
+                 combination[0] in object_set_b.flexing.children and combination[1] in object_set_b.root.children:
                 graph[combination[0]].append(combination[1])
                 graph[combination[1]].append(combination[0])
 
@@ -480,15 +472,13 @@ if __name__ == '__main__':
                                            Term(sc("T:.-',S:.-',S:.-'B:.-'n.-S:.U:.-',_"))]))
     word_b = Word(Morpheme([Term(sc("l.-x.-s.y.-'")), Term(sc("e.-u.-we.h.-'"))]), Morpheme([Term(sc("T:.E:A:T:.-"))]))
 
-    ht_a = HyperText(Text([word_a]))
-    ht_b = HyperText(Text([word_b]))
-    ht_a.check()
-    ht_b.check()
+    ht_a = Hypertext(Text([word_a]))
+    ht_b = Hypertext(Text([word_b]))
     connexity_index(Word, ht_a, ht_b)
 
     # rc = RelationsConnector()
-    # script = rc.get_script("E:M:.M:O:.-")
-    # d = flatten_dict(script['RELATIONS']['FATHER_RELATION'])
+    # parser = rc.get_script("E:M:.M:O:.-")
+    # d = flatten_dict(parser['RELATIONS']['FATHER_RELATION'])
     # print(d)
     #
     # term1 = Term(sc("T:.E:A:T:.-"))

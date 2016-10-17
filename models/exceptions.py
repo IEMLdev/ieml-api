@@ -68,7 +68,7 @@ class InvalidScriptArgument(DBException):
         self.script = script
 
     def __str__(self):
-        return 'The script %s provided have not a script compatible type.'%str(self.script)
+        return 'The parser %s provided have not a parser compatible type.'%str(self.script)
 
 
 class NotAParadigm(DBException):
@@ -76,7 +76,7 @@ class NotAParadigm(DBException):
         self.p = str(p)
 
     def __str__(self):
-        return 'The script %s is not a paradigm.'%str(self.p)
+        return 'The parser %s is not a paradigm.'%str(self.p)
 
 
 class RootParadigmIntersection(DBException):
@@ -88,8 +88,8 @@ class RootParadigmIntersection(DBException):
             self.intersection = str(' '.join(map(str, self.intersection)))
 
     def __str__(self):
-        return 'Singular sequences intersection detected when adding the root paradigm : %s with the following ' \
-               'singular sequences : %s'%(str(self.to_add), str(self.intersection))
+        return 'Singular sequences intersection detected when adding the following script as a root paradigm : %s ' \
+               'with the following root paradigms : %s'%(str(self.to_add), str(self.intersection))
 
 
 class ParadigmAlreadyExist(DBException):
@@ -105,7 +105,7 @@ class NotARootParadigm(DBException):
         self.p = str(p)
 
     def __str__(self):
-        return 'Unable to recompute the relations for the following script %s, not a root paradigm.'%str(self.p)
+        return 'Unable to recompute the relations for the following parser %s, not a root paradigm.'%str(self.p)
 
 
 class RootParadigmMissing(DBException):
@@ -113,7 +113,7 @@ class RootParadigmMissing(DBException):
         self.p = str(p)
 
     def __str__(self):
-        return 'The root paradigm for the script %s is missing from the db.'%str(self.p)
+        return 'The root paradigm for the parser %s is missing from the db.'%str(self.p)
 
 
 class SingularSequenceAlreadyExist(DBException):
@@ -129,7 +129,7 @@ class NotASingularSequence(DBException):
         self.p = str(p)
 
     def __str__(self):
-        return 'Unable to save the following script as a singular sequence, it is a paradigm.'%str(self.p)
+        return 'Unable to save the following parser as a singular sequence, it is a paradigm.'%str(self.p)
 
 
 class InvalidInhibitArgument(DBException):
@@ -166,6 +166,14 @@ class TermNotFound(ObjectNotFound):
 
     def __str__(self):
         return "The term %s is not present in db."%str(self.p)
+
+
+class USLNotFound(ObjectNotFound):
+    def __init__(self, p):
+        self.p = str(p)
+
+    def __str__(self):
+        return "The usl %s is not present in db."%str(self.p)
 
 
 class InvalidRelationCollectionState(DBException):

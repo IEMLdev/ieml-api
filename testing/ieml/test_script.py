@@ -1,8 +1,10 @@
 import unittest
 
-from ieml.operator import sc
+from ieml.script.exceptions import TooManySingularSequences
+from ieml.script.operator import sc
 from ieml.script.constants import AUXILIARY_CLASS, VERB_CLASS, NOUN_CLASS, PRIMITVES
-from ieml.script.script import MultiplicativeScript
+from ieml.script import MultiplicativeScript
+from ieml.script.script import AdditiveScript
 
 scripts = list(map(sc, ["O:.E:M:.-"]))
 
@@ -28,3 +30,12 @@ class TestScript(unittest.TestCase):
         primitives.sort()
         res = ''.join([str(p)[0:1] for p in primitives])
         self.assertEqual(res, 'EUASBT', msg='Primitives not correctly sorted.')
+
+    def test_too_many_singular_sequences(self):
+        with self.assertRaises(TooManySingularSequences):
+            sc('F:F:F:.F:F:F:.-')
+
+
+    def test_str(self):
+        self.assertIsNotNone(MultiplicativeScript(character='A')._str)
+        self.assertIsNotNone(AdditiveScript(character='O')._str)

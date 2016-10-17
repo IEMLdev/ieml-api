@@ -4,7 +4,7 @@ from handlers.library.base import propositions_db, hypertexts_db, texts_db
 from ieml import USLParser, PropositionsParser
 from ieml.AST import ClosedPropositionMetadata
 from ieml.AST import Term, Text, Word, Sentence, SuperSentence, PropositionPath
-from ieml.AST.tools import demote_once, promote_to
+from ieml.object.tools import demote_once, promote_to
 from .exceptions import InvalidIEMLReference
 
 

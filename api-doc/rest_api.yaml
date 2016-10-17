@@ -202,6 +202,28 @@ paths:
           description: |
             a nested json displaying the usl construction.
 
+  /intlekt/edition/json_to_usl:
+    post:
+      operationId: handlers.json_to_usl
+      tags:
+        - Intlekt
+      description: |
+        Parse a json describing an usl and return the ieml string.
+      parameters:
+        - name: json
+          in: body
+          required: true
+          description: |
+            The json object.
+          schema:
+            type: object
+          description: |
+            The json to decompose and return the ieml string
+      responses:
+        '200':
+          description: |
+            The ieml string
+
   /intlekt/edition/recent:
     get:
       operationId: handlers.recent_usls
@@ -267,6 +289,24 @@ paths:
             items:
               $ref: '#/definitions/ieml_term'
 
+  /get_term:
+    get:
+      operationId: handlers.get_term
+      tags:
+        - IEML
+      description: |
+        Return a specific term object.
+      parameters:
+        - name: script
+          in: query
+          type: string
+          required: true
+      responses:
+        '200':
+          description: Successful response
+          schema:
+            $ref: '#/definitions/ieml_term'
+
   /client/authenticate:
     post:
       operationId: handlers.authenticate
@@ -309,6 +349,8 @@ paths:
             required:
               - success
             properties:
+              factorization:
+                type: string
               level:
                 type : integer
               taille:
@@ -321,6 +363,12 @@ paths:
                 type: array
                 items:
                   type : string
+              rootIntersections:
+                type: array
+                items:
+                  type: string
+              containsSize:
+                type: integer
 
   /scriptparser/tables:
     get:
@@ -408,6 +456,8 @@ paths:
             properties:
               ieml:
                 type: string
+              factorize_descendant:
+                type: boolean
       responses:
         '200':
           description: Successful response
@@ -594,203 +644,6 @@ paths:
   ## FOR THE USL/PROPOSITION API ##
   #################################
 
-  /search:
-    post:
-      description: Search for propositions or  USLs in the library's database
-      operationId: handlers.search_library
-      parameters:
-        - name: query
-          in: body
-          description: Search filters
-          required: true
-          schema:
-            $ref: '#/definitions/search_filters'
-      responses:
-        200:
-          description: Successful response
-          schema:
-            title: ArrayOfIEMLELements
-            type: array
-            items:
-              $ref: '#/definitions/ieml_element'
-              
-  /tags/check_exists:
-    post:
-      description: Checks if a tag already exists for a proposition or an hypertext
-      operationId: handlers.check_library_tag_exists
-      consumes:
-        - application/x-www-form-urlencoded
-      parameters:
-        - name: tag
-          in: query
-          description: Value of tested tag
-          required: true
-          type: string
-        - name: language
-          in: query
-          description: Language of tag
-          required: true
-          type: string
-      responses:
-        200:
-          description: Successful response
-          schema:
-            $ref: '#/definitions/tag_exists'
-            
-  /word/validate:
-    post:
-      operationId: handlers.validate_word
-      tags:
-        - Propositions
-      description: Checks if a created word is good or not
-      parameters:
-        - name: body
-          in: body
-          description: Search filters
-          required: true
-          schema:
-            $ref: '#/definitions/word_data'
-      responses:
-        200:
-          description: Successful response
-          schema:
-            $ref: '#/definitions/validate_response'
-          
-  /word/save:
-    post:
-      operationId: handlers.save_word
-      tags:
-        - Propositions
-      description: Checks if a created word is good or not, and if good, saves it to the DB
-      parameters:
-        - name: body
-          in: body
-          description: Search filters
-          required: true
-          schema:
-            $ref: '#/definitions/word_data'
-      responses:
-        200:
-          description: Successful response
-          schema:
-            $ref: '#/definitions/validate_response'
-  
-  /tree/validate:
-    post:
-      operationId: handlers.validate_tree
-      tags:
-        - Propositions
-      description: Checks if a created sentence/super sentence graph is good or not, and if good, saves it to the DB
-      parameters:
-        - name: body
-          in: body
-          description: Search filters
-          required: true
-          schema:
-            $ref: '#/definitions/proposition_graph'
-      responses:
-        200:
-          description: Successful response
-          schema:
-            $ref: '#/definitions/validate_response'
-  
-  /tree/save:
-    post:
-      operationId: handlers.save_tree
-      tags:
-        - Propositions
-      description: Checks if a created sentence/super sentence graph is good or not, and if good, saves it to the DB
-      parameters:
-        - name: body
-          in: body
-          description: Search filters
-          required: true
-          schema:
-            $ref: '#/definitions/proposition_graph'
-      responses:
-        200:
-          description: Successful response
-          schema:
-            $ref: '#/definitions/validate_response'
-            
-  /text/validate:
-    post:
-      operationId: handlers.validate_text
-      tags:
-        - USL
-      description: Checks if a text is good or not,  and if good, saves it to the DB.
-      parameters:
-        - name: body
-          in: body
-          description: Text JSON data
-          required: true
-          schema:
-            $ref: '#/definitions/text_data'
-      responses:
-        200:
-          description: Successful response
-          schema:
-            $ref: '#/definitions/validate_response'
-  
-  /hypertext/validate:
-    post:
-      operationId: handlers.validate_hypertext
-      tags:
-        - USL
-      description: Checks if an hypertext graph is good or not, and if good saves it to the DB
-      parameters:
-        - name: body
-          in: body
-          description: Hypertext's graph json data
-          required: true
-          schema:
-            $ref: '#/definitions/hypertext_graph'
-      responses:
-        200:
-          description: Successful response
-          schema:
-            $ref: '#/definitions/validate_response'
-            
-  /text/decompose:
-    post:
-      operationId: handlers.decompose_text
-      tags:
-        - USL
-      description: |
-        Decomposes a text into a list of proposition tree, which details all the closed propositions contained in a proposition, along with their tags and the path need to reach them.
-      parameters:
-        - name: ieml_string
-          in: query
-          description: An IEML text's string value
-          required: true
-          type: string
-      responses:
-        200:
-          description: Successful response
-          schema:
-            type : array
-            items:
-              $ref: '#/definitions/proposition_tree'
-              
-  /element/decompose:
-    post:
-      operationId: handlers.decompose_ieml_element
-      description: Decomposes any IEML element to its children element (eg, a text into propositions, a sentence into a tree of words, or a word into two lists of terms)
-      parameters:
-        - name: ieml_string
-          in: query
-          description: An IEML element's string value
-          required: true
-          type : string
-      responses:
-        200:
-          description: Successful response
-          schema:
-            type : array
-            items:
-              $ref: '#/definitions/decomposed_ieml_element'
-
-
   ##############################
   ## FOR THE
   ##############################
@@ -817,7 +670,205 @@ paths:
           schema:
             $ref: '#/definitions/distance_group'
 
+  /usls:
+    get:
+      operationId: handlers.query_usl
+      tags:
+        - usl
+        - edition
+      description: Get a list of usl matching the parameters from the db.
+      parameters:
+        - in: query
+          name: fr
+          type: string
+          description: Get the usls that have their fr tag containing this parameter.
+        - in: query
+          name: en
+          type: string
+          description: Get the usls that have their en tag containing this parameter.
+        - in: query
+          name: fr_keywords
+          description: Get the usls that have their fr keyword containing one of this parameter.
+          type: array
+          items:
+            type: string
+        - in: query
+          name: en_keywords
+          description: Get the usls that have their en keyword containing one of this parameter.
+          type: array
+          items:
+            type: string
+      responses:
+        200:
+          description: Successful response
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                description: if the request is successful.
+              match:
+                description: the list of the usls matched.
+                type: array
+                items:
+                  $ref: '#/definitions/usl_entry'
+
+    post:
+      operationId: handlers.save_usl
+      tags:
+        - usl
+        - edition
+      description: Save an usl to the db.
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            required:
+              - ieml
+              - tags
+            properties:
+              ieml:
+                type: string
+              tags:
+                type: object
+                required:
+                  - fr
+                  - en
+                properties:
+                  fr:
+                    type: string
+                  en:
+                    type: string
+              keywords:
+                type: object
+                properties:
+                  fr:
+                    type: array
+                    items:
+                      type: string
+                  en:
+                    type: array
+                    items:
+                      type: string
+      responses:
+        200:
+          description: Successful response
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+
+  '/usls/{ieml}':
+    delete:
+      operationId: handlers.delete_usl
+      tags:
+        - usl
+        - edition
+      description: Delete an usl from the db.
+      parameters:
+        - in: path
+          name: ieml
+          required: true
+          type: string
+      responses:
+        200:
+          description: Successful response
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+
+    get:
+      operationId: handlers.get_usl
+      tags:
+        - usl
+        - edition
+      description: Get a usl from the db.
+      parameters:
+        - in: path
+          name: ieml
+          required: true
+          type: string
+      responses:
+        200:
+          description: Successful response
+          schema:
+            $ref: '#/definitions/usl_entry'
+
+    put:
+      operationId: handlers.update_usl
+      tags:
+        - usl
+        - edition
+      description: Update an exsting usl.
+      parameters:
+        - in: path
+          name: ieml
+          required: true
+          type: string
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              tags:
+                type: object
+                properties:
+                  fr:
+                    type: string
+                  en:
+                    type: string
+              keywords:
+                type: object
+                properties:
+                  fr:
+                    type: array
+                    items:
+                      type: string
+                  en:
+                    type: array
+                    items:
+                      type: string
+      responses:
+        200:
+          description: Successful response
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+
+
 definitions:
+
+  usl_entry:
+    properties:
+      ieml:
+        type: string
+      tags:
+        type: object
+        properties:
+          fr:
+            type: string
+          en:
+            type: string
+      keywords:
+        type: object
+        properties:
+          fr:
+            type: array
+            items:
+              type: string
+          en:
+            type: array
+            items:
+              type: string
+
 
   distance_group:
     properties:

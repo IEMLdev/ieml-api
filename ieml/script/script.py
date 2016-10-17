@@ -1,14 +1,15 @@
-from ieml.AST.commons import TreeStructure
-from ieml.script.constants import MAX_LAYER
-from .constants import LAYER_MARKS, PRIMITVES, remarkable_multiplication_lookup_table, REMARKABLE_ADDITION, \
-    character_value, AUXILIARY_CLASS, VERB_CLASS, NOUN_CLASS
 import itertools
-from ieml.exceptions import InvalidScriptCharacter, InvalidScript, IncompatiblesScriptsLayers
+
+from ieml.script.exceptions import InvalidScriptCharacter, InvalidScript, IncompatiblesScriptsLayers, TooManySingularSequences
+from ieml.commons import TreeStructure
+from ieml.script.constants import MAX_LAYER, MAX_SINGULAR_SEQUENCES
+from ieml.script.constants import LAYER_MARKS, PRIMITVES, remarkable_multiplication_lookup_table, REMARKABLE_ADDITION, \
+    character_value, AUXILIARY_CLASS, VERB_CLASS, NOUN_CLASS
 
 
 class Script(TreeStructure):
-    """ A script is defined by a character (PRIMITIVES, REMARKABLE_ADDITION OR REMARKABLE_MULTIPLICATION)
-     or a list of script children. All the element in the children list must be an AdditiveScript or
+    """ A parser is defined by a character (PRIMITIVES, REMARKABLE_ADDITION OR REMARKABLE_MULTIPLICATION)
+     or a list of parser children. All the element in the children list must be an AdditiveScript or
      a MultiplicativeScript."""
     def __init__(self, children=None, character=None):
         super().__init__()
@@ -23,13 +24,13 @@ class Script(TreeStructure):
         else:
             self.character = None
 
-        # Layer of this script
+        # Layer of this parser
         self.layer = None
 
         # If it is a a paradigm
         self.paradigm = None
 
-        # If the script is composed with E
+        # If the parser is composed with E
         self.empty = None
 
         # The number of singular sequence (if paradigm it is one, self)
@@ -41,10 +42,10 @@ class Script(TreeStructure):
         # The contained paradigms (tables)
         self._tables = []
 
-        # The canonical string to compare same layer and cardinal script (__lt__)
+        # The canonical string to compare same layer and cardinal parser (__lt__)
         self.canonical = None
 
-        # class of the script, one of the following : VERB (1), AUXILIARY (0), and NOUN (2)
+        # class of the parser, one of the following : VERB (1), AUXILIARY (0), and NOUN (2)
         self.script_class = None
 
     def __add__(self, other):
@@ -53,13 +54,13 @@ class Script(TreeStructure):
 
         return AdditiveScript(children=[self, other])
 
-
     def __eq__(self, other):
         if not isinstance(other, Script):
             return False
 
         if self._str is None or other._str is None:
-            raise NotImplemented()
+            return NotImplemented
+
         return self._str == other._str
 
     def __hash__(self):
@@ -68,7 +69,7 @@ class Script(TreeStructure):
 
     def __lt__(self, other):
         if not isinstance(self, Script) or not isinstance(other, Script):
-            raise NotImplemented()
+            return NotImplemented
 
         if self == other:
             return False
@@ -109,7 +110,7 @@ class Script(TreeStructure):
                     else:
                         # not an instance, one is multiplicative, other one is additive
                         # They have the same number of singular sequence so the multiplicative is fewer :
-                        # each variable of the addition have less singular sequence than the multiplication script
+                        # each variable of the addition have less singular sequence than the multiplication parser
                         return isinstance(self, MultiplicativeScript)
                 else:
                     # Layer 0
@@ -133,6 +134,12 @@ class Script(TreeStructure):
 
     def _compute_singular_sequences(self):
         pass
+
+    def __contains__(self, item):
+        if not isinstance(item, Script):
+            return False
+
+        return set(item.singular_sequences).issubset(set(self.singular_sequences))
 
     @property
     def singular_sequences(self):
@@ -168,8 +175,6 @@ class AdditiveScript(Script):
                 raise IncompatiblesScriptsLayers(_children[0], c)
 
         if _children:
-            for c in _children:
-                c.check()
 
             to_remove = []
             to_add = []
@@ -185,7 +190,7 @@ class AdditiveScript(Script):
 
         # make a character with the children if possible
         if l == 0:
-            _char_set = set(map(lambda c : str(c)[0], _children))
+            _char_set = set(map(lambda e: str(e)[0], _children))
             for key, value in REMARKABLE_ADDITION.items():
                 if _char_set == value:
                     _character = key
@@ -204,17 +209,20 @@ class AdditiveScript(Script):
             self.paradigm = len(self.children) > 1 or any(child.paradigm for child in self.children)
             self.cardinal = sum((e.cardinal for e in self.children))
 
+        if self.cardinal > MAX_SINGULAR_SEQUENCES:
+            raise TooManySingularSequences(self.cardinal)
+
         self.script_class = max(c.script_class for c in self)
 
-    def _do_checking(self):
-        pass
+        self.__order()
+        self._do_precompute_str()
 
     def _do_precompute_str(self):
         self._str = \
             (self.character + LAYER_MARKS[0]) if self.character is not None \
             else '+'.join([str(child) for child in self.children])
 
-    def _do_ordering(self):
+    def __order(self):
         # Ordering of the children
         self.children.sort()
 
@@ -240,7 +248,7 @@ class AdditiveScript(Script):
 class MultiplicativeScript(Script):
     """ Represent a multiplication of three scripts of the same layer."""
     def __init__(self, substance=None, attribute=None, mode=None, children=None, character=None):
-        if not (substance or attribute or mode or children or character):
+        if not (substance or children or character):
             raise InvalidScript()
 
         # Build children
@@ -288,8 +296,6 @@ class MultiplicativeScript(Script):
             for i in range(len(_children), 3):
                 _children.append(NullScript(layer=layer))
 
-        for c in _children:
-            c.check()
         # Add the character to children corresponding to specific combinaison
         _str_children = self._render_children(_children, _character)
         if _str_children in remarkable_multiplication_lookup_table:
@@ -297,7 +303,7 @@ class MultiplicativeScript(Script):
 
         super().__init__(children=_children, character=_character)
 
-        # Compute the attributes of this script
+        # Compute the attributes of this parser
         if self.character:
             self.layer = 0 if self.character in PRIMITVES else 1
             self.paradigm = False
@@ -317,6 +323,25 @@ class MultiplicativeScript(Script):
         else:
             self.script_class = self.children[0].script_class
 
+        if self.layer != 0:
+            # check number of children
+            if not len(self.children) == 3:
+                raise InvalidScript()
+
+            # check every child of the same layer
+            if not self.children[0].layer == self.children[1].layer == self.children[2].layer:
+                raise InvalidScript()
+
+            # check layer
+            if not self.layer == self.children[0].layer + 1:
+                raise InvalidScript()
+
+        if self.cardinal > MAX_SINGULAR_SEQUENCES:
+            raise TooManySingularSequences(self.cardinal)
+
+        self.__order()
+        self._do_precompute_str()
+
     def _render_children(self, children=None, character=None):
         if character:
             return character
@@ -334,21 +359,7 @@ class MultiplicativeScript(Script):
     def _do_precompute_str(self):
         self._str = self._render_children(self.children, self.character) + LAYER_MARKS[self.layer]
 
-    def _do_checking(self):
-        if self.layer != 0:
-            # check number of children
-            if not len(self.children) == 3:
-                raise InvalidScript()
-
-            # check every child of the same layer
-            if not self.children[0].layer == self.children[1].layer == self.children[2].layer:
-                raise InvalidScript()
-
-            # check layer
-            if not self.layer == self.children[0].layer + 1:
-                raise InvalidScript()
-
-    def _do_ordering(self):
+    def __order(self):
         if self.layer == 0:
             self.canonical = bytes([character_value[self.character]])
         else:
@@ -371,7 +382,6 @@ class MultiplicativeScript(Script):
                     children[tpl[0]] = tpl[1]
 
                 sequence = MultiplicativeScript(children=children)
-                sequence.check()
                 s.append(sequence)
 
             s.sort()
@@ -386,10 +396,6 @@ class NullScript(Script):
         self.empty = True
         self.cardinal = 1
         self.character = 'E'
-
-        # No need to check
-        self._has_been_checked = True
-        self._has_been_ordered = True
 
         self._do_precompute_str()
         self.canonical = bytes([character_value[self.character]] * pow(3, self.layer))
@@ -408,29 +414,22 @@ class NullScript(Script):
 
         self._str = result
 
-    def _do_checking(self):
-        pass
-
-    def _do_ordering(self):
-        pass
-
     def _compute_singular_sequences(self):
         return [self]
 
 
-
 NULL_SCRIPTS = [NullScript(level) for level in range(0, MAX_LAYER)]
 
-# Building the remarkable multiplication to script
+# Building the remarkable multiplication to parser
 REMARKABLE_MULTIPLICATION_SCRIPT = {
-    "wo":[MultiplicativeScript(character='U'), MultiplicativeScript(character='U'), NullScript(layer=0)],
-    "wa":[MultiplicativeScript(character='U'), MultiplicativeScript(character='A'), NullScript(layer=0)],
+    "wo": [MultiplicativeScript(character='U'), MultiplicativeScript(character='U'), NullScript(layer=0)],
+    "wa": [MultiplicativeScript(character='U'), MultiplicativeScript(character='A'), NullScript(layer=0)],
     "y": [MultiplicativeScript(character='U'), MultiplicativeScript(character='S'), NullScript(layer=0)],
     "o": [MultiplicativeScript(character='U'), MultiplicativeScript(character='B'), NullScript(layer=0)],
     "e": [MultiplicativeScript(character='U'), MultiplicativeScript(character='T'), NullScript(layer=0)],
 
-    "wu":[MultiplicativeScript(character='A'), MultiplicativeScript(character='U'), NullScript(layer=0)],
-    "we":[MultiplicativeScript(character='A'), MultiplicativeScript(character='A'), NullScript(layer=0)],
+    "wu": [MultiplicativeScript(character='A'), MultiplicativeScript(character='U'), NullScript(layer=0)],
+    "we": [MultiplicativeScript(character='A'), MultiplicativeScript(character='A'), NullScript(layer=0)],
     "u": [MultiplicativeScript(character='A'), MultiplicativeScript(character='S'), NullScript(layer=0)],
     "a": [MultiplicativeScript(character='A'), MultiplicativeScript(character='B'), NullScript(layer=0)],
     "i": [MultiplicativeScript(character='A'), MultiplicativeScript(character='T'), NullScript(layer=0)],
@@ -454,13 +453,5 @@ REMARKABLE_MULTIPLICATION_SCRIPT = {
     "l": [MultiplicativeScript(character='T'), MultiplicativeScript(character='T'), NullScript(layer=0)]
 }
 
-for key in REMARKABLE_MULTIPLICATION_SCRIPT:
-    for e in REMARKABLE_MULTIPLICATION_SCRIPT[key]:
-        e.check()
-
-# Building the remarkable addition to script
-REMARKABLE_ADDITION_SCRIPT = {}
-for key in REMARKABLE_ADDITION:
-    REMARKABLE_ADDITION_SCRIPT[key] = [MultiplicativeScript(character=c) if c != 'E' else NullScript(layer=0) for c in REMARKABLE_ADDITION[key] ]
-    for m in REMARKABLE_ADDITION_SCRIPT[key]:
-        m.check()
+# Building the remarkable addition to parser
+REMARKABLE_ADDITION_SCRIPT = {key: [MultiplicativeScript(character=c) if c != 'E' else NullScript(layer=0) for c in REMARKABLE_ADDITION[key]] for key in REMARKABLE_ADDITION}

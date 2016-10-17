@@ -1,14 +1,15 @@
 from handlers.commons import exception_handler
-from ieml.operator import sc
-from models.exceptions import InvalidRelationCollectionState, InvalidRelationTitle
+from ieml.script.operator import sc
+from models.exceptions import InvalidRelationCollectionState, InvalidRelationTitle, TermNotFound, RootParadigmMissing
+from models.relations.relations import RelationsConnector
 from models.relations.relations_queries import RelationsQueries
 from ..caching import cached, flush_cache
 from handlers.dictionary.commons import terms_db, relation_name_table
 from ieml.exceptions import CannotParse
 from ieml.script.constants import AUXILIARY_CLASS, VERB_CLASS, NOUN_CLASS
-from ieml.script.script import MultiplicativeScript, NullScript
+from ieml.script import MultiplicativeScript, NullScript
 from ieml.script.tables import generate_tables
-from ieml.script.tools import old_canonical
+from ieml.script.tools import old_canonical, factorize
 from .client import need_login
 
 
@@ -16,7 +17,7 @@ def _build_old_model_from_term_entry(term_db_entry):
     terms_ast = sc(term_db_entry["_id"])
     try:
         rank = RelationsQueries.rank(term_db_entry["_id"]) if terms_ast.paradigm else 0
-    except InvalidRelationCollectionState:
+    except (InvalidRelationCollectionState, TermNotFound):
         rank = 'n/a'
 
     return {
@@ -42,19 +43,29 @@ def all_ieml():
     return result
 
 
+@exception_handler
+def get_term(script):
+    return _build_old_model_from_term_entry(terms_db().get_term(script))
+
+
 def parse_ieml(iemltext):
     try:
         script_ast = sc(iemltext)
         return {
+            "factorization": str(factorize(script_ast)),
             "success" : True,
             "level" : script_ast.layer,
             "taille" : script_ast.cardinal,
             "class" : script_ast.script_class,
-            "canonical" : old_canonical(script_ast)
+            "canonical" : old_canonical(script_ast),
+            "rootIntersections" : RelationsConnector().root_intersections(script_ast),
+            "containsSize": RelationsConnector().relations.
+                find({'_id': {'$ne': str(script_ast)},
+                      'SINGULAR_SEQUENCES': {'$in': [str(seq) for seq in script_ast.singular_sequences]}}).count()
         }
     except CannotParse:
         return {"success" : False,
-                "exception" : "Invalid script"}
+                "exception" : "Invalid parser"}
 
 
 def script_table(iemltext):
@@ -244,9 +255,9 @@ def _process_inhibits(body):
 @exception_handler
 def new_ieml_script(body):
     script_ast = sc(body["IEML"])
-    terms_db().add_term(script_ast,  # the ieml script's ast
+    terms_db().add_term(script_ast,  # the ieml parser's ast
                         {"FR": body["FR"], "EN": body["EN"]},  # the
-                        inhibits=_process_inhibits(body), # no inhibitions at the script's creation
+                        inhibits=_process_inhibits(body), # no inhibitions at the parser's creation
                         root=body["PARADIGM"] == "1",
                         recompute_relations=False)
 
@@ -269,7 +280,7 @@ def remove_ieml_script(body):
 def update_ieml_script(body):
     """Updates an IEML Term's properties (mainly the tags, and the paradigm). If the IEML is changed,
     a new term is created"""
-    script_ast = sc(body["ID"]) # the ID refer to the script being updated
+    script_ast = sc(body["ID"]) # the ID refer to the parser being updated
 
     inhibits = _process_inhibits(body)
 
@@ -280,7 +291,7 @@ def update_ieml_script(body):
                              root=body["PARADIGM"] == "1", inhibits=inhibits, recompute_relations=False)
     else:
         terms_db().remove_term(script_ast, recompute_relations=False)
-        terms_db().add_term(sc(body["IEML"]),  # the ieml script's ast
+        terms_db().add_term(sc(body["IEML"]),  # the ieml parser's ast
                           {"FR": body["FR"], "EN": body["EN"]},  # the
                           root=body["PARADIGM"] == "1", inhibits=inhibits, recompute_relations=False)
 
@@ -290,7 +301,11 @@ def update_ieml_script(body):
 
 def ieml_term_exists(ieml_term):
     """Tries to dig a term from the database"""
-    found_term = terms_db().get_term(ieml_term)
+    try:
+        s = sc(ieml_term)
+    except CannotParse:
+        return []
+    found_term = terms_db().get_term(factorize(s))
     return [found_term] if found_term is not None else []
 
 

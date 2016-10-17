@@ -2,12 +2,9 @@ import os
 
 from multiprocessing import Process
 
-import sys
-
 import time
 
 import functools
-from IPython.utils.sysinfo import sys_info
 
 from ieml.script.constants import OPPOSED_SIBLING_RELATION
 from models.exceptions import CollectionAlreadyLocked
@@ -18,6 +15,7 @@ from testing.models.test_model import paradigms
 
 
 class TestRelationCollection(ModelTestCase):
+    connectors = ('terms', 'relations')
     def setUp(self):
         super().setUp()
         self._clear()
@@ -43,8 +41,20 @@ class TestRelationCollection(ModelTestCase):
 
     def test_double_lock(self):
         RelationsConnector().set_lock('testing')
-        with self.assertRaises(CollectionAlreadyLocked):
+        try:
             RelationsConnector().set_lock('testing_again')
+        except:
+            self.fail()
+
+        def lock():
+            with self.assertRaises(CollectionAlreadyLocked):
+                RelationsConnector().set_lock('testing_again')
+
+            return
+
+        p = Process(target=lock)
+        p.start()
+        p.join()
 
         # multi free
         RelationsConnector().free_lock()

@@ -1,7 +1,12 @@
-from handlers import usl as _usl
+from functools import partial
+
+from ieml.ieml_objects.hypertexts import Hyperlink, Hypertext
+from ieml.ieml_objects.sentences import Clause, SuperClause
+from ieml.ieml_objects.words import Word, Morpheme
+from ieml.usl.tools import usl as _usl, usl
 from handlers.commons import exception_handler
-from ieml.AST.propositions import Sentence, SuperSentence
-from ieml.AST.terms import Term
+from ieml.ieml_objects import Term, Sentence, SuperSentence
+from ieml.ieml_objects.texts import Text
 from models.terms.terms import TermsConnector
 
 word = "{/[([A:O:.wu.-]+[O:U:.wu.-])*([M:O:.f.-]+[M:M:.o.-M:M:.o.-s.u.-'])]/}";
@@ -14,9 +19,11 @@ def sample_usls(n, language='EN'):
         {"ieml" : sentence, "title" : "Exemple de phrase: tribunal amour ridé"}
     ]
 
+
 def recent_usls(n, language='EN'):
     return []
 
+@exception_handler
 def usl_to_json(usl):
     u = _usl(usl["usl"])
     def _walk(u, start=True):
@@ -34,28 +41,28 @@ def usl_to_json(usl):
         def _build_tree(transition, children_tree, supersentence=False):
             result = {
                 'type': 'supersentence-node' if supersentence else 'sentence-node',
-                'mode': _walk(transition[2], start=False),
-                'node': _walk(transition[1], start=False),
+                'mode': _walk(transition[1].mode, start=False),
+                'node': _walk(transition[0], start=False),
                 'children': []
             }
-            if transition[1] in children_tree:
-                result['children'] = [_build_tree(c, children_tree, supersentence=supersentence) for c in children_tree[transition[1]]]
+            if transition[0] in children_tree:
+                result['children'] = [_build_tree(c, children_tree, supersentence=supersentence) for c in children_tree[transition[0]]]
             return result
 
         if isinstance(u, Sentence):
             result = {
                 'type': 'sentence-root-node',
-                'node': _walk(u.graph.root_node, start=False),
+                'node': _walk(u.tree_graph.root, start=False),
                 'children': [
-                    _build_tree(c, u.graph.parent_nodes) for c in u.graph.parent_nodes[u.graph.root_node]
+                    _build_tree(c, u.tree_graph.transitions) for c in u.tree_graph.transitions[u.tree_graph.root]
                 ]
             }
         elif isinstance(u, SuperSentence):
             result = {
                 'type': 'supersentence-root-node',
-                'node': _walk(u.graph.root_node, start=False),
+                'node': _walk(u.tree_graph.root, start=False),
                 'children': [
-                    _build_tree(c, u.graph.parent_nodes, supersentence=True) for c in u.graph.parent_nodes[u.graph.root_node]
+                    _build_tree(c, u.tree_graph.transitions, supersentence=True) for c in u.tree_graph.transitions[u.tree_graph.root]
                     ]
             }
         else:
@@ -66,4 +73,37 @@ def usl_to_json(usl):
 
         return result
 
-    return _walk(u)
+    return _walk(u.ieml_object)
+
+
+def _tree_node(json, constructor):
+    result = []
+    for child in json['children']:
+        result.append(
+            constructor(substance=_json_to_ieml(json['node']),
+                        attribute=_json_to_ieml(child['node']),
+                        mode=_json_to_ieml(child['mode'])))
+        result.extend(_tree_node(child, constructor))
+    return result
+
+
+def _children_list(constructor, json):
+    return constructor(children=list(_json_to_ieml(c) for c in json['children']))
+
+type_to_action = {
+    Term.__name__.lower(): lambda json: Term(json['script']),
+    'sentence-root-node': lambda json: Sentence(_tree_node(json, Clause)),
+    'supersentence-root-node': lambda json: SuperSentence(_tree_node(json, SuperClause)),
+}
+for cls in (Morpheme, Word, Text, Hyperlink, Hypertext):
+    type_to_action[cls.__name__.lower()] = partial(_children_list, cls)
+
+
+def _json_to_ieml(json):
+    return type_to_action[json['type']](json)
+
+
+@exception_handler
+def json_to_usl(json):
+    """Convert a json representation of an usl to the usl object and return the ieml string."""
+    return str(usl(_json_to_ieml(json['json'])))
