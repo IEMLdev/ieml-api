@@ -2,10 +2,10 @@ import itertools
 
 from ieml.ieml_objects.terms import Term
 from ieml.ieml_objects.tools import replace_from_paths
-from ieml.script.constants import CONTAINED_RELATION
+from ieml.script.constants import CONTAINS_RELATION
+from ieml.usl.tools import usl
 from models.commons import DBConnector, generate_tags, check_tags
 from models.constants import TEMPLATES_COLLECTION, TAG_LANGUAGES
-from models.relations import RelationsQueries
 from models.terms import TermsConnector
 from models.usls.usls import usl_index
 
@@ -15,21 +15,24 @@ class TemplatesConnector(DBConnector):
         super().__init__()
         self.templates = self.db[TEMPLATES_COLLECTION]
 
-    def save_template(self, usl, paths, tags_rule=None):
+    def save_template(self, _usl, paths, tags_rule=None):
 
         if not all(isinstance(p[-1], Term) for p in paths):
             raise ValueError("The paths must end on a Term.")
 
+        paths = list(map(tuple, paths))
+
         # path -> [terms]
-        paradigms = {p: list(RelationsQueries.relations(p[-1], CONTAINED_RELATION)) for p in paths}
+        paradigms = {p: p[-1].relations(CONTAINS_RELATION) for p in paths}
 
         # usl -> elements
-        expansion = {replace_from_paths(usl, paths, elements): {'ELEMENTS': elements}
-                     for elements in itertools.product(*paradigms.values())}
+        all_elements = list(itertools.product(*paradigms.values()))
+        expansion = {usl(replace_from_paths(_usl.ieml_object, paths, elements)):
+                         {'ELEMENTS': [str(e) for e in elements]} for elements in all_elements}
 
         # usl -> elements, tags
         if tags_rule and check_tags(tags_rule):
-            terms_tags = {term: TermsConnector().get_term(term)['TAGS']
+            terms_tags = {str(term): TermsConnector().get_term(term)['TAGS']
                           for term in set(itertools.chain.from_iterable(paradigms.values()))}
 
             for u in expansion:
@@ -44,13 +47,13 @@ class TemplatesConnector(DBConnector):
                 expansion[u]['TAGS'] = generate_tags(u)
 
         entry = {
-            '_id': usl_index(usl),
-            'IEML': str(usl),
+            '_id': usl_index(_usl),
+            'IEML': str(_usl),
             'CONTAINED': [{
-                'IEML': u,
+                'IEML': str(u),
                 **expansion[u]
                           } for u in expansion],
-            'PATHS': paths
+            'PATHS': [[str(e) for e in p]for p in paths]
         }
 
         if tags_rule:
@@ -58,5 +61,9 @@ class TemplatesConnector(DBConnector):
 
         self.templates.save(entry)
 
+    def get_template(self, usl):
+        return self.templates.find_one({'_id': usl_index(usl)})
 
+    def drop(self):
+        self.templates.drop()
 

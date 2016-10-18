@@ -10,6 +10,7 @@ import config
 from ieml.script.operator import sc
 from models.constants import TAG_LANGUAGES
 from models.relations.relations import RelationsConnector
+from models.templates.templates import TemplatesConnector
 from models.terms.terms import TermsConnector
 from models.usls.usls import USLConnector
 
@@ -119,6 +120,7 @@ class ModelTestCase(unittest.TestCase):
         self.terms = TermsConnector()
         self.relations = RelationsConnector()
         self.usls = USLConnector()
+        self.templates = TemplatesConnector()
 
     @classmethod
     def setUpClass(cls):
@@ -132,6 +134,7 @@ class ModelTestCase(unittest.TestCase):
         self.terms = TermsConnector()
         self.relations = RelationsConnector()
         self.usls = USLConnector()
+        self.templates = TemplatesConnector()
         self._clear()
 
     def _clear(self):
@@ -144,6 +147,8 @@ class ModelTestCase(unittest.TestCase):
         if 'logins' in self.connectors:
             from models.logins.logins import _get_users_collection
             _get_users_collection().drop()
+        if 'templates' in self.connectors:
+            self.templates.drop()
 
     def _save_paradigm(self, paradigm, recompute_relations=True):
         list_terms = [{
