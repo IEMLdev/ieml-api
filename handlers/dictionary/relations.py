@@ -83,18 +83,20 @@ def get_relations(term):
     all_relations = []
     for relation_type, relations in RelationsQueries.relations(script_ast, pack_ancestor=True, max_depth_child=1).items():
         if relations: # if there aren't any relations, we skip
+            if relation_type != "ROOT":
+                relations_list = sorted([{"ieml" : rel,
+                          "exists": True,
+                          "visible": True}
+                         for rel in relations], key=lambda s: sc(s['ieml']), reverse=True)
+            else:
+                relations_list = [{"ieml": relations,
+                      "exists": True,
+                      "visible": True}]
+
             all_relations.append({
-                "reltype" : relation_name_table.inv[relation_type],
-                "rellist" :
-                    sorted([{"ieml" : rel,
-                      "exists": True,
-                      "visible": True}
-                     for rel in relations], key=lambda s: sc(s['ieml']))
-                    if relation_type != "ROOT" else
-                    [{"ieml": relations,
-                      "exists": True,
-                      "visible": True}],
-                "exists" : True,
-                "visible" : True
+                "reltype": relation_name_table.inv[relation_type],
+                "rellist": relations_list,
+                "exists": True,
+                "visible": True
             })
     return all_relations
