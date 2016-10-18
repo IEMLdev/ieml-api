@@ -147,6 +147,7 @@ def replace_from_paths(ieml_obj, paths, elements):
     :param elements: the new ieml_object to put in ieml_obj
     :return: A new ieml-object if there are replacement, otherwise the same
     """
+
     if not isinstance(ieml_obj, IEMLObjects):
         raise ValueError('The ieml_obj argument must be a ieml_obj or a path is not pointing to an ieml_object '
                          'instance.')
@@ -158,20 +159,25 @@ def replace_from_paths(ieml_obj, paths, elements):
     if not paths:
         return ieml_obj
 
-    if [] in paths:
-        return elements[paths.index([])]
+    if any(len(p) == 0 for p in paths):
+        index = [i for i, v in enumerate(paths) if len(v) == 0]
+        if len(index) > 1:
+            raise ValueError("Multiple paths are pointing to the same elements %s."%str(ieml_obj))
+        return elements[index[0]]
 
     if isinstance(ieml_obj, Term):
         return ieml_obj
 
     def clamp(paths, elems, child):
         # get the paths, elems that are involving this child (paths[0] == child)
-        result = list(zip(*[(p[1:], elems[i]) for i, p in enumerate(paths) if str(p[0]) == str(child)]))
+        result = list(zip(*[[p[1:], elems[i]] for i, p in enumerate(paths) if str(p[0]) == str(child)]))
 
         return result if result else [[], []]
 
-    return ieml_obj.__class__(children=[replace_from_paths(c, *clamp(paths, elements, c)) for c in ieml_obj.children])
-
+    try:
+        return ieml_obj.__class__(children=[replace_from_paths(c, *clamp(paths, elements, c)) for c in ieml_obj.children])
+    except InvalidIEMLObjectArgument as e:
+        raise ValueError('Invalid replacement, the resulting ieml is not valid.') from e
 
 if __name__ == '__main__':
     r = RandomPoolIEMLObjectGenerator(Text)

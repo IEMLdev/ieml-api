@@ -1,7 +1,7 @@
 import unittest
 
 from ieml.ieml_objects.terms import Term
-from ieml.script.constants import CONTAINED_RELATION
+from ieml.script.constants import CONTAINED_RELATION, CONTAINS_RELATION
 from ieml.script.operator import sc
 from models.relations.relations import RelationsConnector
 from models.relations.relations_queries import RelationsQueries
@@ -19,3 +19,7 @@ class TermsTest(unittest.TestCase):
         term = Term('M:M:.O:O:.-')
         self.assertListEqual([t.script for t in term.relations(CONTAINED_RELATION)],
                              RelationsQueries.relations(term.script, CONTAINED_RELATION))
+
+    def test_relations_order(self):
+        term = Term('M:M:.O:O:.-')
+        self.assertListEqual(term.relations(CONTAINS_RELATION), sorted(term.relations(CONTAINS_RELATION)))
