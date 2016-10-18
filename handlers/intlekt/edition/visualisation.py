@@ -94,14 +94,18 @@ type_to_action = {
     Term.__name__.lower(): lambda json: Term(json['script']),
     'sentence-root-node': lambda json: Sentence(_tree_node(json, Clause)),
     'supersentence-root-node': lambda json: SuperSentence(_tree_node(json, SuperClause)),
+    'sentence-node': lambda json: Sentence(_tree_node(json, Clause)),
+    'supersentence-node': lambda json: SuperSentence(_tree_node(json, SuperClause)),
 }
 for cls in (Morpheme, Word, Text, Hyperlink, Hypertext):
     type_to_action[cls.__name__.lower()] = partial(_children_list, cls)
 
 
 def _json_to_ieml(json):
-    return type_to_action[json['type']](json)
-
+    try:
+        return type_to_action[json['type']](json)
+    except KeyError as k:
+        raise ValueError("The node of type %s was unexpected. Invalid json structure."%str(k))
 
 @exception_handler
 def json_to_usl(json):
