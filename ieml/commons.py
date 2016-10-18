@@ -1,9 +1,11 @@
+from ieml.exceptions import InvalidPathException
 
 
 class TreeStructure:
     def __init__(self):
         super().__init__()
         self._str = None
+        self._paths = None
         self.children = None  # will be an iterable (list or tuple)
 
     def __str__(self):
@@ -14,10 +16,10 @@ class TreeStructure:
 
     def __eq__(self, other):
         """Two propositions are equal if their children'list or tuple are equal"""
-        if not isinstance(other, TreeStructure):
+        if not isinstance(other, (TreeStructure, str)):
             return False
 
-        return self._str == other._str
+        return self._str == str(other)
 
     def __hash__(self):
         """Since the IEML string for any proposition AST is supposed to be unique, it can be used as a hash"""
@@ -31,3 +33,21 @@ class TreeStructure:
         yield self
         for c in self.children:
             yield from c.tree_iter()
+
+    def path(self, path):
+        if len(path) == 0:
+            return self
+
+        p = path[0]
+        if p in self.children:
+            return p.path(path[1:])
+
+        raise InvalidPathException(self, path)
+
+    @property
+    def paths(self):
+        if not self._paths:
+            self._paths = [[child] + path for child in self.children for path in child.paths] \
+                if self.children else [[]]
+
+        return self._paths

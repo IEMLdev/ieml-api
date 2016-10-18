@@ -60,7 +60,8 @@ class USLConnector(DBConnector):
         if not self.get(usl):
             raise USLNotFound(usl)
 
-        self.usls.update_one({'_id': usl_index(usl)}, {'$set': update})
+        if update:
+            self.usls.update_one({'_id': usl_index(usl)}, {'$set': update})
 
     def query(self, tags=None, keywords=None):
         query = {}

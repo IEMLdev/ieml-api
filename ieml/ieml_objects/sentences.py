@@ -48,6 +48,8 @@ class AbstractClause(IEMLObjects):
 
 
 class AbstractSentence(IEMLObjects):
+    closable = True
+
     def __init__(self, subtype, children, literals=None):
         try:
             _children = tuple(e for e in children)

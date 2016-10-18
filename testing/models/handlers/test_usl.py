@@ -40,8 +40,8 @@ class TestUslHandler(ModelTestCase):
 
         self._assert_success(h.save_usl({
             'ieml': str(_usl),
-            'fr': fr,
-            'en': en
+            'tags': {'fr': fr,
+            'en': en}
         }))
         return {'ieml': str(_usl),
                 'tags': {'FR': fr, 'EN': en},
@@ -49,29 +49,29 @@ class TestUslHandler(ModelTestCase):
 
     def test_save_usl(self):
         entry = self._save_usl()
-        self.assertDictEqual(self._assert_success(h.get_usl({'ieml': str(entry['ieml'])})),
+        self.assertDictEqual(self._assert_success(h.get_usl(str(entry['ieml']))),
                          {'success': True, **entry})
 
     def test_delete_usl(self):
         entry = self._save_usl()
-        self._assert_success(h.delete_usl({'ieml': str(entry['ieml'])}))
+        self._assert_success(h.delete_usl(str(entry['ieml'])))
 
-        self._assert_fail(h.get_usl({'ieml': str(entry['ieml'])}))
+        self._assert_fail(h.get_usl((entry['ieml'])))
 
     def test_update_usl(self):
         entry = self._save_usl()
-        self._assert_success(h.update_usl({'ieml': str(entry['ieml']), 'fr': 'test', 'en': 'test'}))
+        self._assert_success(h.update_usl(str(entry['ieml']), {'fr': 'test', 'en': 'test'}))
 
-        e = self._assert_success(h.query_usl({'fr': 'test'}))
+        e = self._assert_success(h.query_usl(fr='test'))
         self.assertEqual(len(e['match']), 1)
         self.assertEqual(e['match'][0]['ieml'], str(entry['ieml']))
 
-        e = self._assert_success(h.query_usl({'en': 'test'}))
+        e = self._assert_success(h.query_usl(en='test'))
         self.assertEqual(len(e['match']), 1)
         self.assertEqual(e['match'][0]['ieml'], str(entry['ieml']))
 
     def test_query(self):
         entry = self._save_usl(fr='query')
-        res = self._assert_success(h.query_usl({'fr': 'query'}))
+        res = self._assert_success(h.query_usl(fr='query'))
         self.assertEqual(len(res['match']), 1)
         self.assertEqual(res['match'][0]['ieml'], str(entry['ieml']))

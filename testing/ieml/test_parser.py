@@ -7,9 +7,6 @@ from ieml.ieml_objects.terms import Term
 from ieml.ieml_objects.texts import Text
 from ieml.ieml_objects.tools import RandomPoolIEMLObjectGenerator
 from ieml.ieml_objects.words import Morpheme, Word
-# from ieml.object.tools import RandomPropositionGenerator
-# from testing.ieml.helper import *
-from ieml_objects.sentences import Clause
 
 
 class TestPropositionParser(unittest.TestCase):
