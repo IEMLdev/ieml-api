@@ -1,4 +1,75 @@
+from collections import namedtuple
+from typing import NamedTuple
+
+import itertools
+
 from ieml.exceptions import InvalidPathException
+
+TREE_ROLES = {'m', 'a', 's'}
+
+coord = namedtuple('Coord', ['role', 'branch'])
+tree_op = namedtuple('TreeOp', ['type', 'args'])
+
+
+class TreePath:
+    def __init__(self, arg):
+        self.coordinate = None
+
+        if isinstance(arg, (tree_op, coord)):
+            self.coordinate = arg
+        else:
+            raise ValueError("A tree coordinate can't be instancied with %s"%str(arg))
+
+        # check and make immutable
+        def check(tree):
+            if isinstance(tree, coord):
+                if tree.role not in TREE_ROLES:
+                    raise ValueError("Invalid role for a coordinate %s, must be s, a or m."%str(tree.role))
+
+                if not isinstance(tree.branch, int):
+                    raise ValueError("Invalid branch number for a coordinate %s, must be int."%str(tree.branch))
+
+                return tree
+
+            if isinstance(tree, tree_op):
+                if tree.type not in ('+', '*'):
+                    raise ValueError("Invalid type for a tree operator %s, must be + or *."%str(tree.type))
+
+                try:
+                    arguments = tuple(check(arg) for arg in tree.args)
+                except TypeError:
+                    raise ValueError(
+                        "Invalid argument for a tree operator %s, must be an iterable."%str(tree.args))
+
+                if len(arguments) == 0:
+                    raise ValueError("Invalid argument length for a tree operator %s, must be an iterable."
+                                     % str(tree.args))
+
+                if len(arguments) == 1:
+                    return arguments[0]
+
+                return tree_op(args=arguments, type=tree.type)
+
+            raise ValueError("%s is not a coordinate nor a tree operator object."%str(tree))
+
+        self.coordinate = check(self.coordinate)
+
+        super().__init__()
+
+    def develop(self):
+        def _develop(e):
+            if isinstance(e, coord):
+                return [e]
+            if isinstance(e, tree_op):
+                if e.type == '+':
+                    return list(sum(_develop(k) for k in e.args))
+                else:
+                    return list(itertools.product(_develop(k) for k in e.args))
+
+        return tree_op(type='+', args=[tree_op(type='*', args=product) for product in _develop(self.coordinate)])
+
+
+
 
 
 class TreeStructure:
@@ -36,13 +107,16 @@ class TreeStructure:
 
     def path(self, path):
         if len(path) == 0:
-            return self
+            return [self]
 
         p = path[0]
-        if p in self.children:
-            return p.path(path[1:])
+        for e in self._resolve_coordinates(p):
+            return sum(e.path(path[1:]))
 
         raise InvalidPathException(self, path)
+
+    def _resolve_coordinates(self, path):
+        raise NotImplemented
 
     @property
     def paths(self):

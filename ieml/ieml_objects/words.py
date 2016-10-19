@@ -1,5 +1,6 @@
 from itertools import zip_longest
 
+from ieml.exceptions import InvalidPathException
 from ieml.ieml_objects.commons import IEMLObjects
 from ieml.ieml_objects.constants import MORPHEME_SIZE_LIMIT
 from ieml.ieml_objects.exceptions import InvalidIEMLObjectArgument
@@ -77,3 +78,11 @@ class Word(IEMLObjects):
 
     def compute_str(self, children_str):
         return '['+'*'.join(children_str)+']'
+
+    def _resolve_path(self, path):
+        if path == 'r':
+            return self.root.children
+        elif path == 'f':
+            return self.flexing.children
+
+        raise InvalidPathException(self, path)
