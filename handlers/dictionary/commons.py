@@ -30,3 +30,25 @@ relation_name_table = bidict({
     # Hyponymes
     "Contains": CONTAINS_RELATION
 })
+
+relations_order = {
+    "Crossed siblings": 4,
+    "Associated siblings": 2,
+    "Twin siblings": 3,
+    "Opposed siblings": 1,
+
+    # ancestor : Etymologie
+    "Ancestors in mode": 12,
+    "Ancestors in attribute": 11,
+    "Ancestors in substance": 10,
+
+    "Descendents in mode": 9,
+    "Descendents in attribute": 8,
+    "Descendents in substance": 7,
+
+    # Hyperonymes
+    "Contained in": 6,
+    "Belongs to Paradigm": 0,
+    # Hyponymes
+    "Contains": 5
+}

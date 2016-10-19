@@ -2,7 +2,7 @@ import queue
 
 from handlers.commons import exception_handler
 from handlers.dictionary.client import need_login
-from handlers.dictionary.commons import terms_db, relation_name_table
+from handlers.dictionary.commons import terms_db, relation_name_table, relations_order
 from ieml.exceptions import CannotParse
 from ieml.script.operator import sc
 from models.constants import RELATION_COMPUTING
@@ -56,6 +56,7 @@ def update_relations(body):
                 relation_compute_process_queue = q
                 return {'success': True}
 
+
 @exception_handler
 def computation_status():
     status = RelationsConnector().lock_status()
@@ -99,4 +100,4 @@ def get_relations(term):
                 "exists": True,
                 "visible": True
             })
-    return all_relations
+    return sorted(all_relations, key=lambda rel_entry: relations_order[rel_entry['reltype']])
