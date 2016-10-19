@@ -104,11 +104,16 @@ class TreeGraph:
         """
         # transitions : dict
         #
-        self.transitions = defaultdict(lambda :list())
+        self.transitions = defaultdict(list)
         for t in list_transitions:
             self.transitions[t[0]].append((t[1], t[2]))
 
         self.nodes = sorted(set(self.transitions) | {e[0] for l in self.transitions.values() for e in l})
+
+        # sort the transitions
+        for s in self.transitions:
+            self.transitions[s].sort(key=lambda t: self.nodes.index(t[0]))
+
         self.nodes_index = {n: i for i, n in enumerate(self.nodes)}
         _count = len(self.nodes)
         self.array = numpy.zeros((len(self.nodes), len(self.nodes)), dtype=bool)
