@@ -56,20 +56,54 @@ class TreePath:
 
         super().__init__()
 
-    def develop(self):
-        def _develop(e):
-            if isinstance(e, coord):
-                return [e]
-            if isinstance(e, tree_op):
-                if e.type == '+':
-                    return list(sum(_develop(k) for k in e.args))
+        self._development = None
+
+    def __eq__(self, other):
+        if isinstance(other, TreePath):
+            return self.develop() == other.develop()
+
+        raise NotImplemented
+
+    def __hash__(self):
+        return hash(self.develop())
+
+    def __str__(self):
+        def _render_coord(coords, first=True):
+            if isinstance(coords, tree_op):
+                if coords.type == '*':
+                    result = ''
+                    for i, a in enumerate(coords.args):
+                        result += _render_coord(a) + LAYER_MARKS[i]
+                    return result
                 else:
-                    return list(itertools.product(_develop(k) for k in e.args))
+                    result = coords.type.join(_render_coord(a) for a in coords.args)
+                    if first:
+                        result = '(' + result + ')'
+                    return result
+            else:
+                # coord type
+                return coords.role + str(coords.branch)
 
-        return tree_op(type='+', args=[tree_op(type='*', args=product) for product in _develop(self.coordinate)])
+    def develop(self):
 
+        if not self._development:
+            def _develop(e):
+                if isinstance(e, coord):
+                    return [e]
+                if isinstance(e, tree_op):
+                    if e.type == '+':
+                        res = []
+                        for a in [_develop(k) for k in e.args]:
+                            res += a
 
+                        return res
+                    else:
+                        return list(itertools.product(*(_develop(k) for k in e.args)))
 
+            self._development = tree_op(type='+', args=[tree_op(type='*', args=product)
+                                                        for product in _develop(self.coordinate)])
+
+        return self._development
 
 
 class TreeStructure:
@@ -97,7 +131,7 @@ class TreeStructure:
         return self.__str__().__hash__()
 
     def __iter__(self):
-        """Enables the syntaxic sugar of iterating directly on an element without accessing "children" """
+        """Enables the syntactic sugar of iterating directly on an element without accessing "children" """
         return self.children.__iter__()
 
     def tree_iter(self):
@@ -125,3 +159,14 @@ class TreeStructure:
                 if self.children else [[]]
 
         return self._paths
+
+
+LAYER_MARKS = [
+    ':',
+    '.',
+    '-',
+    '\'',
+    ',',
+    '_',
+    ';'
+]

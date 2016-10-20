@@ -5,8 +5,9 @@ import numpy as np
 from bidict import bidict
 
 from ieml.script.exceptions import NoRemarkableSiblingForAdditiveScript
-from ieml.script.constants import LAYER_MARKS, REMARKABLE_ADDITION, PRIMITVES, OPPOSED_SIBLING_RELATION, \
+from ieml.script.constants import REMARKABLE_ADDITION, PRIMITVES, OPPOSED_SIBLING_RELATION, \
     ASSOCIATED_SIBLING_RELATION, CROSSED_SIBLING_RELATION, TWIN_SIBLING_RELATION, MAX_LAYER
+from ieml.commons import LAYER_MARKS
 from ieml.script.script import MultiplicativeScript, REMARKABLE_MULTIPLICATION_SCRIPT, Script, AdditiveScript, remarkable_multiplication_lookup_table
 
 
