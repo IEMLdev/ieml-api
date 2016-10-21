@@ -73,7 +73,7 @@ class TreePath:
                 if coords.type == '*':
                     result = ''
                     for i, a in enumerate(coords.args):
-                        result += _render_coord(a) + LAYER_MARKS[i]
+                        result += _render_coord(a, first=True) #+ LAYER_MARKS[min(i, len(LAYER_MARKS) - 1)]
                     return result
                 else:
                     result = coords.type.join(_render_coord(a) for a in coords.args)
@@ -83,6 +83,8 @@ class TreePath:
             else:
                 # coord type
                 return coords.role + str(coords.branch)
+
+        return _render_coord(self.coordinate)
 
     def develop(self):
 

@@ -1,4 +1,6 @@
-from ieml.commons import TreePath
+from DistUpgrade.DistUpgradeController import component_ordering_key
+
+from ieml.commons import TreePath, coord
 from ieml.exceptions import InvalidPathException
 from ieml.ieml_objects.commons import IEMLObjects, TreeGraph
 from ieml.ieml_objects.constants import MAX_NODES_IN_SENTENCE
@@ -48,6 +50,8 @@ class AbstractClause(IEMLObjects):
     def compute_str(self, children_str):
         return '('+'*'.join(children_str)+')'
 
+    def __getitem__(self, item):
+        return self.children[item]
 
 class AbstractSentence(IEMLObjects):
     closable = True
@@ -86,37 +90,11 @@ class AbstractSentence(IEMLObjects):
         :param paths: a coordinate object
         :return: list of ieml object of inferior rank - 2
         """
-        result = []
+        return self.tree_graph[paths]
 
-        if not isinstance(paths, TreePath):
-            raise InvalidPathException(self, paths)
-
-        for product in paths.develop():
-            current = self.tree_graph.root
-            if product.args[0].role == 's':
-                break
-
-            end = False
-            for c in product.args:
-                if end:
-                    raise InvalidPathException(self, paths)
-
-                try:
-                    clause = self.tree_graph.transitions[current][c.branch][1]
-                except KeyError:
-                    raise InvalidPathException(self, paths)
-
-                if c.role == 'm':
-                    current = clause.mode
-                    end = True
-                elif c.role == 'a':
-                    current = clause.attribute
-                else:
-                    raise InvalidPathException(self, paths)
-
-            result.append(current)
-        return result
-
+    @property
+    def paths(self):
+        return [(self.tree_graph.path_of_node(node), node) for clause in self for node in clause]
 
 
 

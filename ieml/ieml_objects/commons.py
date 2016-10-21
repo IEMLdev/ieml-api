@@ -1,9 +1,12 @@
 from collections import defaultdict
 from functools import total_ordering
 
+import itertools
 import numpy
+from gi.overrides.Gtk import TreePath
 
-from ieml.commons import TreeStructure
+from ieml.commons import TreeStructure, TreePath, coord, tree_op
+from ieml.exceptions import InvalidPathException
 from ieml.ieml_objects.exceptions import InvalidIEMLObjectArgument, InvalidTreeStructure
 
 
@@ -106,7 +109,7 @@ class TreeGraph:
         #
         self.transitions = defaultdict(list)
         for t in list_transitions:
-            self.transitions[t[0]].append((t[1], t[2]))
+            self.transitions[t[0]].append((t[1], t))
 
         self.nodes = sorted(set(self.transitions) | {e[0] for l in self.transitions.values() for e in l})
 
@@ -145,3 +148,57 @@ class TreeGraph:
                 current = [child[0] for parent in current for child in self.transitions[parent]]
 
         self.stages = list(__stage())
+
+    def __getitem__(self, item):
+        if not isinstance(item, TreePath):
+            raise ValueError('Invalid argument %s, must specify a TreePath object to access node '
+                             'in a TreeGraph.'%str(item))
+        result = []
+
+        for product in item.develop().args:
+            current = self.root
+            if len(product.args) == 1:
+                break
+
+            end = False
+            for c in product.args[1:]:
+                if end:
+                    raise InvalidPathException(self, item)
+
+                try:
+                    current = self.transitions[current][c.branch][1]
+                except KeyError:
+                    raise InvalidPathException(self, item)
+
+                if c.role == 'm':
+                    end = True
+                    current = current[2]
+                elif c.role == 'a':
+                    current = current[1]
+                else:
+                    raise InvalidPathException(self, item)
+
+            result.append(current)
+
+        return result
+
+    def path_of_node(self, node):
+        if node not in self.nodes:
+            # can be a mode
+            nodes = [(c[0], True) for c_list in self.transitions.values() for c in c_list if c[1][2] == node]
+            if not nodes:
+                raise ValueError("Node not in tree graph : %s" % str(node))
+        else:
+            nodes = [(node, False)]
+
+        def _build_coord(node, mode=False):
+            if node == self.root:
+                return [coord(branch=0, role='s')]
+
+            parent = numpy.where(self.array[:, self.nodes_index[node]])[0][0]
+            return _build_coord(parent) + [coord(branch=[c[0] for c in self.transitions[parent]].index(node),
+                                                 role='m' if mode else 'a')]
+
+        return TreePath(tree_op(type='+', args=[
+            tree_op(type='*', args=_build_coord(node, mode)) for node, mode in nodes
+        ]))
