@@ -1,8 +1,6 @@
 import random
 from unittest.case import TestCase
-
-from ieml.commons import TreePath, tree_op, coord
-from ieml.ieml_objects.commons import TreeGraph
+from ieml.ieml_objects.tree_graph import TreeGraph, coord, tree_op, TreePath
 
 
 class TestTreeGraph(TestCase):

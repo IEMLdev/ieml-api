@@ -15,7 +15,7 @@ from ieml.usl.usl import Usl
 class TestTreeStructure(TestCase):
     def test_path(self):
         text = RandomPoolIEMLObjectGenerator(level=Text).text()
-        with self.assertRaises(InvalidPathException):
+        with self.assertRaises(ValueError):
             text.path([Term('wa.')])
 
         path = []

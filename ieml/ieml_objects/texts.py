@@ -1,3 +1,4 @@
+from ieml.ieml_objects.paths import IEMLPath
 from ieml.ieml_objects.commons import IEMLObjects
 from ieml.ieml_objects.exceptions import InvalidIEMLObjectArgument
 from ieml.ieml_objects.sentences import Sentence, SuperSentence
@@ -21,3 +22,9 @@ class Text(IEMLObjects):
 
     def compute_str(self, children_str):
         return '{/' + '//'.join(children_str) + '/}'
+
+    def _paths_children(self):
+        return [(IEMLPath([]), c) for c in self.children]
+
+    def _resolve_coordinates(self, path):
+        return self.children
