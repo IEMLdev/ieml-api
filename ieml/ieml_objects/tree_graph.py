@@ -1,10 +1,12 @@
 import itertools
 from collections import defaultdict, namedtuple
+from itertools import chain
 
 import numpy
 
 from ieml.exceptions import InvalidPathException
 from ieml.ieml_objects.exceptions import InvalidTreeStructure
+from ieml.ieml_objects.paths import IEMLCoordinate
 
 
 class TreeGraph:
@@ -66,6 +68,7 @@ class TreeGraph:
         for product in item.develop().args:
             current = self.root
             if len(product.args) == 1:
+                result.append(current)
                 break
 
             end = False
@@ -91,13 +94,15 @@ class TreeGraph:
         return result
 
     def path_of_node(self, node):
-        if node not in self.nodes:
-            # can be a mode
-            nodes = [(c[0], True) for c_list in self.transitions.values() for c in c_list if c[1][2] == node]
-            if not nodes:
-                raise ValueError("Node not in tree graph : %s" % str(node))
-        else:
+        if node in self.nodes:
             nodes = [(node, False)]
+        else:
+            nodes = []
+
+        # can be a mode
+        nodes += [(c[0], True) for c_list in self.transitions.values() for c in c_list if c[1][2] == node]
+        if not nodes:
+            raise ValueError("Node not in tree graph : %s" % str(node))
 
         def _build_coord(node, mode=False):
             if node == self.root:
@@ -117,7 +122,7 @@ coord = namedtuple('Coord', ['role', 'branch'])
 tree_op = namedtuple('TreeOp', ['type', 'args'])
 
 
-class TreePath:
+class TreePath(IEMLCoordinate):
     def __init__(self, arg):
         self.coordinate = None
 
@@ -196,8 +201,13 @@ class TreePath:
 
         if not self._development:
             def _develop(e):
+                """
+
+                :param e:
+                :return: a list of list : a list of product
+                """
                 if isinstance(e, coord):
-                    return [e]
+                    return [(e,)]
                 if isinstance(e, tree_op):
                     if e.type == '+':
                         res = []
@@ -206,9 +216,13 @@ class TreePath:
 
                         return res
                     else:
-                        return list(itertools.product(*(_develop(k) for k in e.args)))
+                        return [tuple(chain.from_iterable(r))
+                                for r in itertools.product(*(_develop(k) for k in e.args))]
 
-            self._development = tree_op(type='+', args=[tree_op(type='*', args=product)
-                                                        for product in _develop(self.coordinate)])
+            self._development = tree_op(type='+', args=tuple(tree_op(type='*', args=product)
+                                                        for product in _develop(self.coordinate)))
 
         return self._development
+
+    def _do_add(self, other):
+        return TreePath(tree_op(type='+', args=[self.coordinate, other.coordinate]))

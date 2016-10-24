@@ -32,6 +32,7 @@ class TestTreeGraph(TestCase):
                                                     tree_op(type='+', args=tuple(
                                                         coord(role='m', branch=i) for i in range(0, 9)
                                                     ))))))
+
     def test_path_to_node(self):
         tree = self._tree_from_range(10)
 
@@ -42,7 +43,6 @@ class TestTreeGraph(TestCase):
 
         self.assertEqual(tree[tree.path_of_node('data')], ['data' for i in range(10)])
 
-
     def test_str(self):
         tree = self._deep_tree_range(10)
         self.assertEqual(str(tree.path_of_node(10)), 's0a0a0a0a0a0a0a0a0a0a0')
@@ -50,3 +50,19 @@ class TestTreeGraph(TestCase):
                          '(s0m0+s0a0m0+s0a0a0m0+s0a0a0a0m0+s0a0a0a0a0m0+s0a0a0a0a0a0m0+s0a0a0a0a0a0a0m0+'
                          's0a0a0a0a0a0a0a0m0+s0a0a0a0a0a0a0a0a0m0+s0a0a0a0a0a0a0a0a0a0m0)')
 
+    def test_develop(self):
+        p = TreePath(tree_op(type='*', args=(tree_op(type='+', args=[
+            tree_op(type='*', args=[coord(branch=0, role='s'), coord(branch=0, role='a')]),
+            tree_op(type='*', args=[coord(branch=0, role='s'), coord(branch=1, role='a')])]),
+                                             tree_op(type='+', args=[
+                                                 coord(branch=0, role='m'), coord(branch=0, role='a')
+                                             ]))))
+
+        d = tree_op(type='+', args=(
+            tree_op(type='*', args=(coord(branch=0, role='s'), coord(branch=0, role='a'), coord(branch=0, role='m'))),
+            tree_op(type='*', args=(coord(branch=0, role='s'), coord(branch=0, role='a'), coord(branch=0, role='a'))),
+            tree_op(type='*', args=(coord(branch=0, role='s'), coord(branch=1, role='a'), coord(branch=0, role='m'))),
+            tree_op(type='*', args=(coord(branch=0, role='s'), coord(branch=1, role='a'), coord(branch=0, role='a'))),
+        ))
+
+        self.assertEqual(p.develop(), d)
