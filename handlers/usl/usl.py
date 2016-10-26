@@ -17,24 +17,39 @@ def save_usl(body):
         if 'en' in body['keywords']:
             keywords['EN'] = body['keywords']['en']
 
-    USLConnector().save(_usl, tags=tags, keywords=keywords)
-    return {'success': True}
+    _id = USLConnector().save(_usl, tags=tags, keywords=keywords)
+    return {'success': True, 'id': _id}
 
 
 @exception_handler
-def get_usl(ieml):
+def get_usl_ieml(ieml):
     _usl = USLConnector().get(usl=ieml)
     if not _usl:
         raise USLNotFound(ieml)
 
     return {'success': True,
-            'ieml': _usl['IEML'],
+            'id': _usl['_id'],
+            'ieml': _usl['USL']['IEML'],
             'tags': _usl['TAGS'],
             'keywords': _usl['KEYWORDS']}
 
+
 @exception_handler
-def delete_usl(ieml):
-    USLConnector().remove(ieml)
+def get_usl_id(id):
+    _usl = USLConnector().get(id=id)
+    if not _usl:
+        raise USLNotFound(id)
+
+    return {'success': True,
+            'id': _usl['_id'],
+            'ieml': _usl['USL']['IEML'],
+            'tags': _usl['TAGS'],
+            'keywords': _usl['KEYWORDS']}
+
+
+@exception_handler
+def delete_usl(id):
+    USLConnector().remove(id=id)
     return {'success': True}
 
 
@@ -60,14 +75,19 @@ def query_usl(fr=None, en=None, fr_keywords=None, en_keywords=None):
 
     return {'success': True,
             'match': [{
-                'ieml': e['IEML'],
+                'id': e['_id'],
+                'ieml': e['USL']['IEML'],
                 'tags': e['TAGS'],
                 'keywords': e['KEYWORDS']} for e in result]}
 
 
 @exception_handler
-def update_usl(ieml, body):
+def update_usl(id, body):
     query = {}
+
+    if 'ieml' in body:
+        query['usl'] = body['ieml']
+
     if 'fr' in body or 'en' in body:
         query['tags'] = {}
         if 'fr' in body:
@@ -82,6 +102,6 @@ def update_usl(ieml, body):
         if 'en' in body['keywords']:
             query['keywords']['EN'] = list(body['keywords']['en'])
 
-    USLConnector().update(usl=ieml, **query)
+    USLConnector().update(id=id, **query)
 
     return {'success': True}

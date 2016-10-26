@@ -38,40 +38,45 @@ class TestUslHandler(ModelTestCase):
         if not en:
             en = rand_string()
 
-        self._assert_success(h.save_usl({
+        m = self._assert_success(h.save_usl({
             'ieml': str(_usl),
             'tags': {'fr': fr,
             'en': en}
         }))
-        return {'ieml': str(_usl),
+        return {'id': m['id'],
+                'ieml': str(_usl),
                 'tags': {'FR': fr, 'EN': en},
                 'keywords': {'FR': [], 'EN': []}}
 
     def test_save_usl(self):
         entry = self._save_usl()
-        self.assertDictEqual(self._assert_success(h.get_usl(str(entry['ieml']))),
+        self.assertDictEqual(self._assert_success(h.get_usl_ieml(str(entry['ieml']))),
                          {'success': True, **entry})
 
     def test_delete_usl(self):
         entry = self._save_usl()
-        self._assert_success(h.delete_usl(str(entry['ieml'])))
+        self._assert_success(h.delete_usl(entry['id']))
 
-        self._assert_fail(h.get_usl((entry['ieml'])))
+        self._assert_fail(h.get_usl_id(entry['id']))
 
     def test_update_usl(self):
         entry = self._save_usl()
-        self._assert_success(h.update_usl(str(entry['ieml']), {'fr': 'test', 'en': 'test'}))
+        self._assert_success(h.update_usl(entry['id'], {'fr': 'test', 'en': 'test'}))
 
         e = self._assert_success(h.query_usl(fr='test'))
         self.assertEqual(len(e['match']), 1)
         self.assertEqual(e['match'][0]['ieml'], str(entry['ieml']))
+        self.assertEqual(e['match'][0]['id'], entry['id'])
 
         e = self._assert_success(h.query_usl(en='test'))
         self.assertEqual(len(e['match']), 1)
         self.assertEqual(e['match'][0]['ieml'], str(entry['ieml']))
+        self.assertEqual(e['match'][0]['id'], entry['id'])
 
     def test_query(self):
         entry = self._save_usl(fr='query')
         res = self._assert_success(h.query_usl(fr='query'))
         self.assertEqual(len(res['match']), 1)
         self.assertEqual(res['match'][0]['ieml'], str(entry['ieml']))
+        self.assertEqual(res['match'][0]['id'], str(entry['id']))
+

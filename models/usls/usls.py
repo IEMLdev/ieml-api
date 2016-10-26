@@ -1,5 +1,6 @@
 import hashlib
 import re
+import uuid
 
 from pymongo.errors import DuplicateKeyError
 
@@ -25,7 +26,7 @@ class USLConnector(DBConnector):
             create_tags_indexes(self.usls)
 
     def save(self, usl, tags, keywords):
-        if not isinstance(usl, Usl):
+        if not isinstance(usl, (str, Usl)):
             raise ValueError('The usl to save must be an instance of Usl type, not %s.'%str(usl))
 
         if not self._check_tags(tags):
@@ -34,7 +35,7 @@ class USLConnector(DBConnector):
         if not check_keywords(keywords):
             raise ValueError('The keywords are invalid : %s.'%str(keywords))
 
-        usl_id = self.generate_id()
+        usl_id = self._generate_id()
 
         self.usls.insert({
             '_id': usl_id,
@@ -51,21 +52,40 @@ class USLConnector(DBConnector):
             }
         })
 
-    def get(self, usl=None, tag=None, language=None):
-        if usl:
-            return self.usls.find_one({'_id': usl_index(usl)})
+        return usl_id
+
+    def get(self, id=None, usl=None, tag=None, language=None):
+        if id and isinstance(id, str):
+            return self.usls.find_one({'_id': id})
+
+        if usl and isinstance(usl, (str, Usl)):
+            return self.usls.find_one({'USL.INDEX': usl_index(usl)})
 
         if tag and language:
             return self.usls.find_one({'TAGS.%s'%language: tag})
 
-        raise ValueError()
+        raise ValueError("Must specify at least one of the following args : id, usl or (tag and language).")
 
-    def remove(self, usl):
-        self.usls.remove({'_id': usl_index(usl)})
+    def remove(self, id=None, usl=None):
+        if id and isinstance(id, str):
+            self.usls.remove({'_id': id})
+            return
 
-    def update(self, usl, tags=None, keywords=None):
+        if usl and isinstance(usl, (str, Usl)):
+            self.usls.remove({'USL.INDEX': usl_index(usl)})
+            return
+
+        raise ValueError("Must specify a id or an usl to remove.")
+
+    def update(self, id, usl=None, tags=None, keywords=None):
 
         update = {}
+
+        if usl and isinstance(usl, Usl):
+            update['USL'] = {
+                'INDEX': usl_index(usl),
+                'IEML': str(usl)
+            }
 
         if tags and self._check_tags(tags, all_present=False):
             for l in tags:
@@ -75,11 +95,11 @@ class USLConnector(DBConnector):
             for l in keywords:
                 update['KEYWORDS.%s'%l] = keywords[l]
 
-        if not self.get(usl):
-            raise USLNotFound(usl)
+        if not self.get(id=id):
+            raise USLNotFound(id)
 
         if update:
-            self.usls.update_one({'_id': usl_index(usl)}, {'$set': update})
+            self.usls.update_one({'_id': id}, {'$set': update})
 
     def query(self, tags=None, keywords=None):
         query = {}
@@ -110,3 +130,10 @@ class USLConnector(DBConnector):
 
     def drop(self):
         self.usls.drop()
+
+    def _generate_id(self):
+        free = False
+        while not free:
+            _id = uuid.uuid4().hex
+            free = self.usls.find_one({'_id': _id}) is None
+        return _id
