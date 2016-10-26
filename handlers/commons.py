@@ -7,7 +7,7 @@ def exception_handler(func):
         try:
             result = func(*args, **kwargs)
         except Exception as e:
-            return {'success': False, 'message': str(e)}
+            return {'success': False, 'message': e.__class__.__name__ + ': ' + str(e)}
         else:
             return result
 
