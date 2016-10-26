@@ -4,7 +4,7 @@ from ieml.script import Script
 from ieml.script.constants import INHIBIT_RELATIONS
 from ieml.script.parser import ScriptParser
 from ieml.script.tools import factorize
-from models.commons import DBConnector, check_tags
+from models.commons import DBConnector, check_tags, create_tags_indexes
 from models.constants import TERMS_COLLECTION, TAG_LANGUAGES
 from models.exceptions import InvalidInhibitArgument, InvalidTags, TermAlreadyExists, InvalidMetadata,\
     CantRemoveNonEmptyRootParadigm, TermNotFound, DuplicateTag, InvalidScriptArgument
@@ -15,7 +15,12 @@ from models.relations.relations_queries import RelationsQueries
 class TermsConnector(DBConnector):
     def __init__(self):
         super().__init__()
+        collections = self.db.collection_names()
         self.terms = self.db[TERMS_COLLECTION]
+
+        if TERMS_COLLECTION not in collections:
+            create_tags_indexes(self.terms)
+
         self.parser = ScriptParser()
 
     def get_term(self, script):

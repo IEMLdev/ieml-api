@@ -1,8 +1,11 @@
 import hashlib
 import re
 
+from pymongo.errors import DuplicateKeyError
+
+from ieml.usl.usl import Usl
 from models.exceptions import USLNotFound
-from models.commons import DBConnector, check_tags, check_keywords
+from models.commons import DBConnector, check_tags, check_keywords, create_tags_indexes
 from models.constants import USLS_COLLECTION
 from models.exceptions import InvalidTags, DuplicateTag
 
@@ -14,16 +17,31 @@ def usl_index(usl):
 class USLConnector(DBConnector):
     def __init__(self):
         super().__init__()
+        collections = self.db.collection_names()
         self.usls = self.db[USLS_COLLECTION]
 
+        if USLS_COLLECTION not in collections:
+            self.usls.create_index('USL.INDEX', unique=True)
+            create_tags_indexes(self.usls)
+
     def save(self, usl, tags, keywords):
+        if not isinstance(usl, Usl):
+            raise ValueError('The usl to save must be an instance of Usl type, not %s.'%str(usl))
 
         if not self._check_tags(tags):
             raise InvalidTags
 
+        if not check_keywords(keywords):
+            raise ValueError('The keywords are invalid : %s.'%str(keywords))
+
+        usl_id = self.generate_id()
+
         self.usls.insert({
-            '_id': usl_index(usl),
-            'IEML': str(usl),
+            '_id': usl_id,
+            'USL': {
+                'INDEX': usl_index(usl),
+                'IEML': str(usl)
+            },
             'TAGS': {
                 "FR": tags['FR'],
                 "EN": tags['EN']},
