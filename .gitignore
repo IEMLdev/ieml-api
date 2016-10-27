@@ -34,7 +34,7 @@ var/
 .installed.cfg
 *.egg
 include/*
-script/importer/*
+scripts/importer/*
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
