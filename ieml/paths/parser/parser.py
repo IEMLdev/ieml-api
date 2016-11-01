@@ -6,12 +6,12 @@ from helpers.metaclasses import Singleton
 from ieml.exceptions import CannotParse
 from ieml.paths.constants import KIND_TO_RANK
 from ieml.paths.parser.lexer import tokens, get_lexer
-from ieml.paths.paths import Coordinate, Path, AdditivePath, MultiplicativePath
+from ieml.paths.paths import Coordinate, Path, AdditivePath, MultiplicativePath, ContextPath
 
 
 def _coord(kind, index=None):
     if kind in KIND_TO_RANK:
-        return Coordinate(kind, KIND_TO_RANK[kind], index=index)
+        return Coordinate(kind, index=index)
     else:
         #sentence or ss type need context to determine
         return {
@@ -36,6 +36,7 @@ def _mul(rank_list):
     for i, l in enumerate(rank_list):
         if any(isinstance(c, Path) for c in l):
             rank = [c for c in l if isinstance(c, Path)][0].rank + i
+            break
 
     if not rank and len(rank_list) > 1:
         # we have only tree element
@@ -101,17 +102,36 @@ class PathParser(metaclass=Singleton):
         """path : additive_path"""
         self.root = p[1]
 
-    def p_multiplicative_path(self, p):
-        """ multiplicative_path : rank_list"""
-        p[0] = _mul(p[1])
+    def p_additive_path(self, p):
+        """ additive_path : path_sum"""
+        p[0] = AdditivePath(p[1])
 
-    def p_rank_list(self, p):
-        """ rank_list : product
-                     | rank_list COLON product"""
+    def p_path_sum(self, p):
+        """ path_sum : ctx_path
+                  | path_sum PLUS ctx_path"""
         if len(p) == 2:
             p[0] = [p[1]]
         else:
             p[0] = p[1] + [p[3]]
+
+    def p_ctx_path(self, p):
+        """ ctx_path : ctx_coords"""
+        if len(p[1]) == 1:
+            p[0] = p[1][0]
+        else:
+            p[0] = ContextPath(p[1])
+
+    def p_ctx_coords(self, p):
+        """ ctx_coords : multiplicative_path
+                        | ctx_coords COLON multiplicative_path"""
+        if len(p) == 2:
+            p[0] = [p[1]]
+        else:
+            p[0] = p[1] + [p[3]]
+
+    def p_multiplicative_path(self, p):
+        """ multiplicative_path : product"""
+        p[0] = MultiplicativePath(p[1])
 
     def p_product(self, p):
         """ product : additive_path_p
@@ -127,30 +147,14 @@ class PathParser(metaclass=Singleton):
         """ additive_path_p : LPAREN additive_path RPAREN"""
         p[0] = p[2]
 
-    def p_additive_path(self, p):
-        """ additive_path : path_sum"""
-        p[0] = _plus(p[1])
-
-    def p_path_sum(self, p):
-        """ path_sum : mul_coord
-                  | additive_path PLUS mul_coord"""
-        if len(p) == 2:
-            p[0] = [p[1]]
-        else:
-            p[0] = p[1] + [p[3]]
-
-    def p_mul_coord(self, p):
-        """ mul_coord : multiplicative_path """
-        p[0] = p[1]
-
     def p_coordinate(self, p):
         """ coordinate : COORD_KIND
                         | COORD_KIND COORD_INDEX"""
 
         if len(p) == 2:
-            p[0] = _coord(p[1])
+            p[0] = Coordinate(p[1])
         else:
-            p[0] = _coord(p[1], int(p[2]))
+            p[0] = Coordinate(p[1], int(p[2]))
 
     def p_error(self, p):
         if p:

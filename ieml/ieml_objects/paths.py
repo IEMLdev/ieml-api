@@ -1,7 +1,5 @@
 from itertools import groupby
 
-from _pytest.python import NoneType
-
 
 
 
@@ -96,13 +94,13 @@ class IEMLCoordinate:
     def __hash__(self):
         return hash(self.values)
 
-    def __contains__(self, item):
-        if isinstance(item, IEMLCoordinate):
-            return all(v[0] in self.elements and
-                       (isinstance(self.elements[v[0]], NoneType) or v[1] in self.elements[v[0]])
-                       for v in item.values)
-
-        raise NotImplemented
+    # def __contains__(self, item):
+    #     if isinstance(item, IEMLCoordinate):
+    #         return all(v[0] in self.elements and
+    #                    (isinstance(self.elements[v[0]], NoneType) or v[1] in self.elements[v[0]])
+    #                    for v in item.values)
+    #
+    #     raise NotImplemented
 
     def __str__(self):
         if len(self.values) > 1:
