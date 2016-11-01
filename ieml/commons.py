@@ -12,7 +12,6 @@ class TreeStructure:
         return not self.__eq__(other)
 
     def __eq__(self, other):
-        """Two propositions are equal if their children'list or tuple are equal"""
         if not isinstance(other, (TreeStructure, str)):
             return False
 
