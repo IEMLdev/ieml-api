@@ -70,4 +70,7 @@ handlers/cache
 
 
 man/
-scripts/diff.txt
+data/usl.json
+flask_session/
+ieml/ieml_objects/parser/parser.out
+ieml/usl/parser/parser.out
