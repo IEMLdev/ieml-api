@@ -158,7 +158,14 @@ class ContextPath(Path):
         self._resolve_context()
 
     def __str__(self):
-        return ':'.join(map(str, self.children))
+        result = []
+        for c in self.children:
+            if isinstance(c, AdditivePath):
+                result.append('(%s)'%str(c))
+            else:
+                result.append(str(c))
+
+        return ':'.join(result)
 
     def _develop(self):
         return tuple(ContextPath(p) for p in product(*[c.develop() for c in self.children]))
@@ -193,7 +200,14 @@ class MultiplicativePath(Path):
         self._resolve_context()
 
     def __str__(self):
-        return ''.join(map(str, self.children))
+        result = ''
+        for c in self.children:
+            if isinstance(c, AdditivePath):
+                result += '(%s)'%str(c)
+            else:
+                result += str(c)
+
+        return result
 
     def _develop(self):
         return tuple(MultiplicativePath(p) for p in product(*[c.develop() for c in self.children]))
