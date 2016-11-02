@@ -1,13 +1,12 @@
 
 
 class InvalidPathException(Exception):
-    def __init__(self, tree_elem, path):
-        self.tree_elem = tree_elem
+    def __init__(self, element, path):
+        self.element = element
         self.path = path
 
     def __str__(self):
-        return "Can't access %s in %s children, the path is invalid : %s"%(str(self.path[0]), str(self.tree_elem),
-                                                                           str(self.path))
+        return "Can't access %s in %s, the path is invalid."%(str(self.path), str(self.element))
 
 
 class ParserErrors(Exception):

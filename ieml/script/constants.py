@@ -33,15 +33,6 @@ character_value = {
     'T': 0x20
 
 }
-LAYER_MARKS = [
-    ':',
-    '.',
-    '-',
-    '\'',
-    ',',
-    '_',
-    ';'
-]
 
 # Name of the relation (in db)
 # if modification, need a db parser reload

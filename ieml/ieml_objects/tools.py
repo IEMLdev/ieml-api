@@ -82,13 +82,16 @@ class RandomPoolIEMLObjectGenerator:
     def word(self):
         return Word(Morpheme(random.sample(self.terms_pool, 3)), Morpheme(random.sample(self.terms_pool, 2)))
 
-    def _build_graph_object(self, primitive, mode, object):
+    def _build_graph_object(self, primitive, mode, object, max_nodes=6):
         nodes = {primitive()}
         modes = set()
 
+        if max_nodes < 2:
+            raise ValueError('Max nodes >= 2.')
+
         result = set()
 
-        for i in range(random.randint(2, 6)):
+        for i in range(random.randint(2, max_nodes)):
             while True:
                 s, a, m = random.sample(nodes, 1)[0], primitive(), mode()
                 if a in nodes or m in nodes or a in modes:
@@ -102,11 +105,11 @@ class RandomPoolIEMLObjectGenerator:
         return result
 
     @_loop_result(10)
-    def sentence(self):
+    def sentence(self, max_clause=6):
         def p():
             return random.sample(self.words_pool, 1)[0]
 
-        return Sentence(self._build_graph_object(p, p, Clause))
+        return Sentence(self._build_graph_object(p, p, Clause, max_nodes=max_clause))
 
     @_loop_result(10)
     def super_sentence(self):

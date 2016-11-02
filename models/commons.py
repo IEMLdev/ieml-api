@@ -20,6 +20,11 @@ class DBConnector(object, metaclass=Singleton):
         self.old_terms = self.old_db[OLD_TERMS_COLLECTION]
 
 
+def create_tags_indexes(collection):
+    for language in TAG_LANGUAGES:
+        collection.create_index('TAGS.%s'%language, unique=True)
+
+
 def check_tags(tags, all_present=True):
     return isinstance(tags, dict) and (all(lang in tags for lang in TAG_LANGUAGES) or not all_present) \
            and all((tag in TAG_LANGUAGES and tag) for tag in tags) \

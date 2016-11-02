@@ -760,8 +760,10 @@ paths:
             properties:
               success:
                 type: boolean
+              id:
+                type: string
 
-  '/usls/{ieml}':
+  '/usls/{id}':
     delete:
       operationId: handlers.delete_usl
       tags:
@@ -770,7 +772,7 @@ paths:
       description: Delete an usl from the db.
       parameters:
         - in: path
-          name: ieml
+          name: id
           required: true
           type: string
       responses:
@@ -783,14 +785,14 @@ paths:
                 type: boolean
 
     get:
-      operationId: handlers.get_usl
+      operationId: handlers.get_usl_id
       tags:
         - usl
         - edition
       description: Get a usl from the db.
       parameters:
         - in: path
-          name: ieml
+          name: id
           required: true
           type: string
       responses:
@@ -807,7 +809,7 @@ paths:
       description: Update an exsting usl.
       parameters:
         - in: path
-          name: ieml
+          name: id
           required: true
           type: string
         - in: body
@@ -816,6 +818,8 @@ paths:
           schema:
             type: object
             properties:
+              ieml:
+                type: string
               tags:
                 type: object
                 properties:
@@ -843,11 +847,11 @@ paths:
               success:
                 type: boolean
 
-
 definitions:
-
   usl_entry:
     properties:
+      id:
+        type: string
       ieml:
         type: string
       tags:

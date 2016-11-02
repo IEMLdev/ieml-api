@@ -1,4 +1,6 @@
-from ieml.ieml_objects.commons import IEMLObjects, TreeGraph
+from ieml.ieml_objects.paths import IEMLPath
+from ieml.ieml_objects.commons import IEMLObjects
+from ieml.ieml_objects.tree_graph import TreeGraph
 from ieml.ieml_objects.constants import MAX_NODES_IN_SENTENCE
 from ieml.ieml_objects.exceptions import InvalidIEMLObjectArgument, InvalidTreeStructure
 from ieml.ieml_objects.words import Word
@@ -46,6 +48,9 @@ class AbstractClause(IEMLObjects):
     def compute_str(self, children_str):
         return '('+'*'.join(children_str)+')'
 
+    def __getitem__(self, item):
+        return self.children[item]
+
 
 class AbstractSentence(IEMLObjects):
     closable = True
@@ -61,7 +66,7 @@ class AbstractSentence(IEMLObjects):
                                             (self.__class__.__name__, subtype.__name__))
 
         try:
-            self.tree_graph = TreeGraph(((c.substance, c.attribute, c) for c in _children))
+            self.tree_graph = TreeGraph(_children)
         except InvalidTreeStructure as e:
             raise InvalidIEMLObjectArgument(self.__class__, e)
 
@@ -69,7 +74,9 @@ class AbstractSentence(IEMLObjects):
             raise InvalidIEMLObjectArgument(self.__class__, "Too many distinct nodes: %d>%d."%
                                             (len(self.tree_graph.nodes), MAX_NODES_IN_SENTENCE))
 
-        super().__init__((e for stage in self.tree_graph.stages for e in sorted((t[1] for s in stage for t in self.tree_graph.transitions[s]))), literals=literals)
+        super().__init__((e for stage in self.tree_graph.stages
+                          for e in sorted((t[1] for s in stage for t in self.tree_graph.transitions[s]))),
+                         literals=literals)
 
     @property
     def grammatical_class(self):
@@ -77,6 +84,17 @@ class AbstractSentence(IEMLObjects):
 
     def compute_str(self, children_str):
         return '[' + '+'.join(children_str) + ']'
+
+    def _resolve_coordinates(self, paths):
+        """
+        Return the list of all sub-element (sentence or word) that are pointing by coordinate in the tree_graph
+        :param paths: a coordinate object
+        :return: list of ieml object of inferior rank - 2
+        """
+        return self.tree_graph[paths]
+
+    def _coordinates_children(self):
+        return [(self.tree_graph.path_of_node(node), node) for clause in self for node in clause]
 
 
 class Clause(AbstractClause):

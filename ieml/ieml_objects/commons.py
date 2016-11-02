@@ -1,10 +1,9 @@
 from collections import defaultdict
-from functools import total_ordering
-
-import numpy
+from itertools import chain
 
 from ieml.commons import TreeStructure
-from ieml.ieml_objects.exceptions import InvalidIEMLObjectArgument, InvalidTreeStructure
+from ieml.ieml_objects.exceptions import InvalidIEMLObjectArgument
+from ieml.ieml_objects.paths import IEMLPath
 
 
 class IEMLType(type):
@@ -95,48 +94,45 @@ class IEMLObjects(TreeStructure, metaclass=IEMLType):
     def _do_precompute_str(self):
         self._str = self._compute_str()
 
+    def path(self, path):
+        """:return a list of IEMLObject at that path"""
+        if not isinstance(path, IEMLPath):
+            raise ValueError("Can't deference a non IEMLPath object %s." % str(path))
 
-class TreeGraph:
-    def __init__(self, list_transitions):
-        """
-        Transitions list must be the (start, end, data) the data will be stored as the transition tag
-        :param list_transitions:
-        """
-        # transitions : dict
-        #
-        self.transitions = defaultdict(lambda :list())
-        for t in list_transitions:
-            self.transitions[t[0]].append((t[1], t[2]))
+        if path.empty:
+            return [self]
 
-        self.nodes = sorted(set(self.transitions) | {e[0] for l in self.transitions.values() for e in l})
-        self.nodes_index = {n: i for i, n in enumerate(self.nodes)}
-        _count = len(self.nodes)
-        self.array = numpy.zeros((len(self.nodes), len(self.nodes)), dtype=bool)
+        res = []
+        for p in path:
+            res += list(chain.from_iterable(c.path(IEMLPath([p[1:]])) for c in self._resolve_coordinates(p[0])))
+        return res
+        # raise InvalidPathException(self, path)
 
-        for t in self.transitions:
-            for end in self.transitions[t]:
-                self.array[self.nodes_index[t]][self.nodes_index[end[0]]] = True
+    def _resolve_coordinates(self, coordinate):
+        """:return a list of elements IEMLObject"""
+        raise NotImplemented
 
-        # checking
-        # root checking, no_parent hold True for each index where the node has no parent
-        parents_count = numpy.dot(self.array.transpose().astype(dtype=int), numpy.ones((_count,), dtype=int))
-        no_parents = parents_count == 0
-        roots_count = numpy.count_nonzero(no_parents)
+    def _coordinates_children(self):
+        """The returned elements must be (coordinate, child)"""
+        raise NotImplemented
 
-        if roots_count == 0:
-            raise InvalidTreeStructure('No root node found, the graph has at least a cycle.')
-        elif roots_count > 1:
-            raise InvalidTreeStructure('Several root nodes found.')
+    @property
+    def paths(self):
+        """:return a list of (IEMLPath, Term) for each term in this object"""
+        if not self._paths:
+            if not self.children:
+                return [(IEMLPath([]), self)]
 
-        self.root = self.nodes[no_parents.nonzero()[0][0]]
+            result = {}
+            for coord, child in self._coordinates_children():
+                for path, term in child.paths:
+                    term_path = IEMLPath([(coord,) + p for p in path.coordinates_sum])
+                    if term not in result:
+                        result[term] = term_path
+                    else:
+                        result[term] = term_path + result[term]
 
-        if (parents_count > 1).any():
-            raise InvalidTreeStructure('A node has several parents.')
+            self._paths = [(result[t], t) for t in result]
 
-        def __stage():
-            current = [self.root]
-            while current:
-                yield current
-                current = [child[0] for parent in current for child in self.transitions[parent]]
+        return self._paths
 
-        self.stages = list(__stage())

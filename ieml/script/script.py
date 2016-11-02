@@ -1,9 +1,9 @@
 import itertools
 
 from ieml.script.exceptions import InvalidScriptCharacter, InvalidScript, IncompatiblesScriptsLayers, TooManySingularSequences
-from ieml.commons import TreeStructure
+from ieml.commons import TreeStructure, LAYER_MARKS
 from ieml.script.constants import MAX_LAYER, MAX_SINGULAR_SEQUENCES
-from ieml.script.constants import LAYER_MARKS, PRIMITVES, remarkable_multiplication_lookup_table, REMARKABLE_ADDITION, \
+from ieml.script.constants import PRIMITVES, remarkable_multiplication_lookup_table, REMARKABLE_ADDITION, \
     character_value, AUXILIARY_CLASS, VERB_CLASS, NOUN_CLASS
 
 

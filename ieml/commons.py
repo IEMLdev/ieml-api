@@ -1,6 +1,3 @@
-from ieml.exceptions import InvalidPathException
-
-
 class TreeStructure:
     def __init__(self):
         super().__init__()
@@ -26,7 +23,7 @@ class TreeStructure:
         return self.__str__().__hash__()
 
     def __iter__(self):
-        """Enables the syntaxic sugar of iterating directly on an element without accessing "children" """
+        """Enables the syntactic sugar of iterating directly on an element without accessing "children" """
         return self.children.__iter__()
 
     def tree_iter(self):
@@ -34,20 +31,12 @@ class TreeStructure:
         for c in self.children:
             yield from c.tree_iter()
 
-    def path(self, path):
-        if len(path) == 0:
-            return self
-
-        p = path[0]
-        if p in self.children:
-            return p.path(path[1:])
-
-        raise InvalidPathException(self, path)
-
-    @property
-    def paths(self):
-        if not self._paths:
-            self._paths = [[child] + path for child in self.children for path in child.paths] \
-                if self.children else [[]]
-
-        return self._paths
+LAYER_MARKS = [
+    ':',
+    '.',
+    '-',
+    '\'',
+    ',',
+    '_',
+    ';'
+]

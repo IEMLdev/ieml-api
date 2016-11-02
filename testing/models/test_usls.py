@@ -17,11 +17,14 @@ class TestUSLsModel(ModelTestCase):
         if not tags:
             tags = {'FR': rand_string(), 'EN': rand_string()}
         keywords = {'FR': [rand_string() for i in range(random.randint(1, 5))], 'EN': [rand_string() for i in range(random.randint(1, 5))]}
-        self.usls.save(_usl, tags=tags, keywords=keywords)
+        _id = self.usls.save(_usl, tags=tags, keywords=keywords)
 
         return {
-            '_id': usl_index(_usl),
-            'IEML': str(_usl),
+            '_id': _id,
+            'USL': {
+                'INDEX': usl_index(_usl),
+                'IEML': str(_usl)
+            },
             'TAGS': tags,
             'KEYWORDS': keywords
         }
@@ -34,12 +37,17 @@ class TestUSLsModel(ModelTestCase):
     def test_get_usl(self):
         _entry = self.save_random_usl()
 
-        self.assertEqual(_entry, self.usls.get(_entry['IEML']))
+        self.assertEqual(_entry, self.usls.get(usl=_entry['USL']['IEML']))
+        self.assertEqual(_entry, self.usls.get(id=_entry['_id']))
+        self.assertEqual(_entry, self.usls.get(tag=_entry['TAGS']['EN'], language='EN'))
 
     def test_remove_usl(self):
         _entry = self.save_random_usl()
+        self.usls.remove(usl=_entry['USL']['IEML'])
+        self.assertEqual(self.usls.usls.count(), 0)
 
-        self.usls.remove(_entry['IEML'])
+        _entry = self.save_random_usl()
+        self.usls.remove(id=_entry['_id'])
         self.assertEqual(self.usls.usls.count(), 0)
 
     def test_multi_add(self):
@@ -76,14 +84,14 @@ class TestUSLsModel(ModelTestCase):
         entry = self.save_random_usl()
 
         tags = {'FR': 'test', 'EN': 'test'}
-        self.usls.update(str(entry['IEML']), tags=tags)
+        self.usls.update(entry['_id'], tags=tags)
         self.assertEqual(self.usls.query(tags=tags).count(), 1)
 
         tags = {'FR': 'test', 'EN': 'popoposadopsdoapasdasderw984'}
-        self.usls.update(str(entry['IEML']), tags={'EN': tags['EN']})
+        self.usls.update(entry['_id'], tags={'EN': tags['EN']})
         self.assertEqual(self.usls.query(tags=tags).count(), 1)
 
         keywords = {'FR': ['test'], 'EN': []}
-        self.usls.update(str(entry['IEML']), keywords=keywords)
+        self.usls.update(entry['_id'], keywords=keywords)
         self.assertEqual(self.usls.query(keywords=keywords).count(), 1)
 

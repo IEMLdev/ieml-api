@@ -1,6 +1,7 @@
 from collections import defaultdict
 
-from ieml.ieml_objects.commons import IEMLObjects, TreeGraph
+from ieml.ieml_objects.commons import IEMLObjects
+from ieml.ieml_objects.tree_graph import TreeGraph
 from ieml.ieml_objects.constants import MAX_NODES_IN_HYPERTEXT, MAX_DEPTH_IN_HYPERTEXT
 from ieml.ieml_objects.exceptions import InvalidIEMLObjectArgument, InvalidTreeStructure
 from ieml.ieml_objects.sentences import Sentence, SuperSentence
