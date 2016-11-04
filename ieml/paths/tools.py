@@ -147,9 +147,10 @@ def _enumerate_paths(ieml_obj, level):
             for p, e in _enumerate_paths(t, level=level):
                 yield [path('r%d'%i)] + p, e
 
-        for i, t in enumerate(ieml_obj.flexing.children):
-            for p, e in _enumerate_paths(t, level=level):
-                yield [path('f%d' % i)] + p, e
+        if ieml_obj.flexing:
+            for i, t in enumerate(ieml_obj.flexing.children):
+                for p, e in _enumerate_paths(t, level=level):
+                    yield [path('f%d' % i)] + p, e
 
     raise StopIteration
 
@@ -188,7 +189,7 @@ def enumerate_paths(ieml_obj, level=Term):
 def _build_deps_tree_graph(rules):
     def _node():
         return {
-            'resolve': defaultdict(_node),
+            'resolve': defaultdict(_node),  # the indexed coordinate
             'context': [],
             'rules': defaultdict(_node)
         }
@@ -220,16 +221,21 @@ def _build_deps_tree_graph(rules):
         if actual_P[0].kind == 's' and actual_P[0].index == 0:
             actual_P[0] = s
 
-        for c in actual_P[:-1]:
+        first = True
+        for c in actual_P:
             if c.index is not None:
                 categorie = 'resolve'
             else:
                 categorie = 'rules'
 
-            current_node = current_node[str(c)][categorie]
+            if first:
+                current_node = current_node[c]
+                first = False
+            else:
+                current_node = current_node[categorie][c]
 
         # the nodes with ctx_P is None will be instanciate
-        current_node[str(actual_P[-1])]['context'].append((ctx_P, e))
+        current_node['context'].append((ctx_P, e))
 
     result = []
 
@@ -244,19 +250,19 @@ def _build_deps_tree_graph(rules):
         # merge ctx
         n0['context'] += n1['context']
 
+    coord_a = Coordinate('a')
+    coord_m = Coordinate('m')
+
     # apply the rules on the tree starting from s
     def _apply_rule(node, mode=False):
         # we add the globals rules to its own
-        _merge_nodes(node['rules']['a'], roots['a'])
-        _merge_nodes(node['rules']['m'], roots['m'])
+        _merge_nodes(node['rules'][coord_a], roots[coord_a])
+        _merge_nodes(node['rules'][coord_m], roots[coord_m])
 
         obj = _resolve_ctx(node['context'])
 
-        if mode:
+        if mode or not node['resolve']:
             return obj
-
-        if not node['resolve']:
-            raise ValueError("No node to instanciate.")
 
         # resolve the children
         max_i = max(n.index for n in node['resolve'])
@@ -267,7 +273,7 @@ def _build_deps_tree_graph(rules):
         }
 
         for r in ('a', 'm'):
-            indexed = {k.index: k for k in node['resolve'] if k.kind == r}
+            indexed = {k.index: node['resolve'][k] for k in node['resolve'] if k.kind == r}
             rules = [k for k in node['rules'] if k.kind == r]
 
             if max(indexed) + 1 > len(indexed) + (1 if rules else 0):
@@ -290,9 +296,9 @@ def _build_deps_tree_graph(rules):
     # 'context' attribute is now the sub element
     # generating the triplet from the root s
 
-    _apply_rule(roots['s'])
+    _apply_rule(roots[s])
 
-    return reversed(result)
+    return result[::-1]
 
 
 def _build_deps_text(rules):
@@ -447,12 +453,12 @@ def _resolve_ctx(rules):
         if type == Sentence:
             clauses = []
             for s, a, m in deps:
-                clauses.append(Clause(a, s, m))
+                clauses.append(Clause(s, a, m))
             return Sentence(clauses)
         else:
             clauses = []
             for s, a, m in deps:
-                clauses.append(SuperClause(a, s, m))
+                clauses.append(SuperClause(s, a, m))
             return SuperSentence(clauses)
 
     raise ValueError("Invalid type inferred %s"%type.__name__)
@@ -460,6 +466,6 @@ def _resolve_ctx(rules):
 
 def resolve_ieml_object(paths, elements=None):
     if elements is None:
-        return _resolve_ctx(list(paths))
+        return _resolve_ctx([(d, e) for p, e in paths for d in p.develop()])
     return _resolve_ctx([(d, e) for e, p in zip(elements, paths) for d in p.develop()])
 

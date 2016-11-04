@@ -85,7 +85,9 @@ class Word(IEMLObjects):
 
     @property
     def flexing(self):
-        return self.children[1]
+        if len(self.children) > 1:
+            return self.children[1]
+        return None
 
     def compute_str(self, children_str):
         return '['+'*'.join(children_str)+']'
