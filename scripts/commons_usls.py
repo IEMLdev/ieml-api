@@ -13,6 +13,17 @@ root = Word(Morpheme([Term("i.i.-"),  # fabriquer
 
 objects = [
     {
+        'usl': usl(root),
+        'tags': {
+            'FR': "Nous avons l'intention de fabriquer et de vendre beaucoup",
+            'EN': "We intend to manufacture and sell a lot"
+        },
+        'keywords': {
+            'FR': [],
+            'EN': []
+        }
+    },
+    {
         'usl': usl(Sentence([Clause(
             root,
             Word(Morpheme([Term("t.i.-s.i.-'u.T:.-U:.-'wo.-',B:.-',_M:.-',_;")])),  # véhicule a roue sans conducteur

@@ -9,14 +9,16 @@ from ieml.ieml_objects import Term, Sentence, SuperSentence
 from ieml.ieml_objects.texts import Text
 from models.terms.terms import TermsConnector
 
-word = "[([o.wa.-]+[x.t.-]+[t.a.-k.a.-'])*([c.b.-]+[t.o.-d.o.-s.u.-'])]"
-sentence = "[([([E:A:.wu.-]+[o.h.-]+[b.u.-])*([c.b.-]+[t.e.-m.u.-'])]*[([wo.s.-]+[x.t.-]+[t.i.-s.i.-'])*([e.-o.-we.h.-']+[d.i.-m.i.-t.u.-'])]*[([S:M:.]+[x.t.-]+[t.o.-d.o.-s.u.-'])*([wo.s.-]+[n.j.-])])+([([wo.s.-]+[x.t.-]+[t.i.-s.i.-'])*([e.-o.-we.h.-']+[d.i.-m.i.-t.u.-'])]*[([M:O:.j.-]+[e.-o.-we.h.-']+[t.o.-d.o.-s.u.-'])*([c.b.-]+[t.e.-m.u.-'])]*[([b.u.-]+[n.j.-]+[b.e.-s.u.-'])*([t.o.-d.o.-s.u.-']+[n.o.-d.o.-'])])]"
+word = "[([a.i.-]+[i.i.-])*([E:A:T:.]+[E:S:.wa.-]+[E:S:.o.-])]"
+sentence = "[([([a.i.-]+[i.i.-])*([E:A:T:.]+[E:S:.wa.-]+[E:S:.o.-])]*[([S:.-'B:.-'n.-S:.U:.-',])]*[([E:T:.f.-])])+([([a.i.-]+[i.i.-])*([E:A:T:.]+[E:S:.wa.-]+[E:S:.o.-])]*[([t.i.-s.i.-'u.T:.-U:.-'wo.-',B:.-',_M:.-',_;])]*[([E:E:T:.])])]"
 
 
 def sample_usls(n, language='EN'):
     return [
-        {"ieml" : word, "title" : "Exemple de mot: concept abstrait"},
-        {"ieml" : sentence, "title" : "Exemple de phrase: tribunal amour ridé"}
+        {"ieml" : word, "title" : { 'fr' : "Nous avons l'intention de fabriquer et de vendre beaucoup",
+                                    'en' : "We intend to make and sell a lot" }},
+        {"ieml" : sentence, "title" : { 'fr': "Nous avons l'intention de fabriquer et de vendre beaucoup de nos véhicules à roues sans conducteurs en Europe",
+                                        'en': "We intend to make and sell a lot of driverless vehicles in Europe"}}
     ]
 
 
