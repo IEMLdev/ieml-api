@@ -25,7 +25,7 @@ def usl(arg):
 
     try:
         parser = IEMLParser()
-        rules = [(path(r[0]), parser.parse(r[1])) for r in arg]
+        rules = [(path(r[0]), r[1] if not isinstance(r, str) else parser.parse(r[1])) for r in arg]
         return Usl(resolve_ieml_object(rules))
     except TypeError:
         pass

@@ -378,7 +378,7 @@ def _build_deps_word(rules):
             result[k] = []
             continue
 
-        if max(indexes) + 1 > len(indexes) + len(generals):
+        if max(indexes, default=-1) + 1 > len(indexes) + len(generals):
             # if there is more than one missing
             raise ValueError("Index missing on word (%s) definition."%k)
 

@@ -116,6 +116,6 @@ def json_to_usl(json):
     return str(usl(_json_to_ieml(json['json'])))
 
 
-@exception_handler
+# @exception_handler
 def rules_to_usl(rules):
-    return str(usl(rules))
+    return str(usl([(r[0], Term(r[1])) for r in rules]))
