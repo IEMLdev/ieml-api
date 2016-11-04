@@ -1,4 +1,6 @@
-import itertools
+from itertools import groupby
+
+
 
 
 class IEMLPath:
@@ -48,20 +50,66 @@ class IEMLPath:
         return len(self.coordinates_sum) == 1 and not self.coordinates_sum[0]
 
 
-class IEMLCoordinate(tuple):
-    def __new__(cls, *args, **kwargs):
-        return super().__new__(cls, ())
+class IEMLCoordinate:
+    def __init__(self, rank, elements):
+        """
 
-    def _do_add(self, other):
-        raise NotImplemented
+        :param rank:
+        :param elements: (type, instanciation|None)
+        """
+        if not isinstance(rank, int):
+            raise ValueError('Not a valid rank %s.'%str(rank))
+
+        self.rank = rank
+
+        try:
+            self.elements = sorted(((e[0], e[1]) for e in elements), key=lambda e: e[0])
+        except Exception:
+            raise ValueError("Must be an iterable.")
+
+        if any(not isinstance(e[0], str) or not isinstance(e[1], int) for e in self.elements):
+            raise ValueError("Not valid coordinates.")
+
+        self.elements = {t: instances if None not in instances else None
+                         for t, instances in groupby(self.elements, key=lambda e: e[0])}
+
+        self.values = tuple((t, v) for t in sorted(self.elements)
+                            for v in (sorted(self.elements[t]) if self.elements[t] else (None,)))
 
     def __add__(self, other):
         if isinstance(other, self.__class__):
-            return self._do_add(other)
+            if self.rank != other.rank:
+                raise ValueError("Can't add two coordinates of differents ranks.")
+
+            return IEMLCoordinate(self.rank, self.values + other.values)
+
         raise NotImplemented
 
     def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self.rank == other.rank and self.values == other.values
+
         raise NotImplemented
 
     def __hash__(self):
+        return hash(self.values)
+
+    # def __contains__(self, item):
+    #     if isinstance(item, IEMLCoordinate):
+    #         return all(v[0] in self.elements and
+    #                    (isinstance(self.elements[v[0]], NoneType) or v[1] in self.elements[v[0]])
+    #                    for v in item.values)
+    #
+    #     raise NotImplemented
+
+    def __str__(self):
+        if len(self.values) > 1:
+            return '(' + '+'.join(str(v[0]) + (str(v[1]) if v[1] else '') for v in self.values)
+        v = self.values[0]
+        return str(v[0]) + (str(v[1]) if v[1] else '')
+
+    def __mul__(self, other):
+        if isinstance(other, IEMLCoordinate):
+            return IEMLPath([self, other])
+
         raise NotImplemented

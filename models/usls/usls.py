@@ -101,7 +101,7 @@ class USLConnector(DBConnector):
         if update:
             self.usls.update_one({'_id': id}, {'$set': update})
 
-    def query(self, tags=None, keywords=None):
+    def query(self, tags=None, keywords=None, union=False):
         query = {}
         if tags:
             if 'FR' in tags:
@@ -115,6 +115,9 @@ class USLConnector(DBConnector):
             if 'EN' in keywords:
                 if keywords['EN']:
                     query['KEYWORDS.EN'] = {'$in': [re.compile(re.escape(str(k))) for k in keywords['EN']]}
+
+        if union:
+            query = {'$or': [{k: query[k]} for k in query]}
 
         return self.usls.find(query)
 

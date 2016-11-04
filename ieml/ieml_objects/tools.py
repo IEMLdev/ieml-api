@@ -6,6 +6,7 @@ import functools
 
 from ieml.ieml_objects.commons import IEMLObjects
 from ieml.ieml_objects.exceptions import InvalidIEMLObjectArgument
+from ieml.ieml_objects.paths import IEMLPath
 from ieml.ieml_objects.terms import Term
 from ieml.script.operator import script
 
@@ -181,6 +182,12 @@ def replace_from_paths(ieml_obj, paths, elements):
         return ieml_obj.__class__(children=[replace_from_paths(c, *clamp(paths, elements, c)) for c in ieml_obj.children])
     except InvalidIEMLObjectArgument as e:
         raise ValueError('Invalid replacement, the resulting ieml is not valid.') from e
+
+def build_paths(paths):
+    if not isinstance(paths, IEMLPath):
+        raise ValueError("Paths must be an IEMLPath instances.")
+
+
 
 if __name__ == '__main__':
     r = RandomPoolIEMLObjectGenerator(Text)

@@ -73,6 +73,8 @@ class TestUSLsModel(ModelTestCase):
         self.assertEqual(self.usls.query(tags={'FR': '0', 'EN': 'FR'}).count(), 1)
         self.assertEqual(self.usls.query(tags={'FR': '0', 'EN': '1'}).count(), 0)
 
+        self.assertEqual(self.usls.query(tags={'FR': '0', 'EN': '1'}, union=True).count(), 4)
+
         query_keywords = {'FR': [k['KEYWORDS']['FR'][0] for k in random.sample(entries0, 4)],
                           'EN': [k['KEYWORDS']['EN'][0] for k in entries0]}
 

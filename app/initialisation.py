@@ -2,6 +2,7 @@ from flask_socketio import SocketIO
 import multiprocessing
 from flask_compress import Compress
 
+from scripts.commons_usls import init_dev_db
 
 socketio = SocketIO()
 
@@ -16,6 +17,10 @@ def create_app():
     # different async modes, or leave it set to None for the application to choose
     # the best option based on installed packages.
     async_mode = None
+
+
+    ## init the usl db for dev
+    # init_dev_db()
 
     app = connexion.App(__name__, specification_dir='../api-doc/')
     app.add_api('rest_api.yaml')
