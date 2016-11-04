@@ -109,7 +109,13 @@ def _json_to_ieml(json):
     except KeyError as k:
         raise ValueError("The node of type %s was unexpected. Invalid json structure."%str(k))
 
+
 @exception_handler
 def json_to_usl(json):
     """Convert a json representation of an usl to the usl object and return the ieml string."""
     return str(usl(_json_to_ieml(json['json'])))
+
+
+@exception_handler
+def rules_to_usl(rules):
+    return str(usl(rules))
