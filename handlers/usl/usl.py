@@ -95,12 +95,13 @@ def update_usl(id, body):
     if 'ieml' in body:
         query['usl'] = body['ieml']
 
-    if 'fr' in body or 'en' in body:
-        query['tags'] = {}
-        if 'fr' in body:
-            query['tags']['FR'] = body['fr']
-        if 'en' in body:
-            query['tags']['EN'] = body['en']
+    if 'tags' in body:
+        if 'fr' in body['tags'] or 'en' in body['tags']:
+            query['tags'] = {}
+            if 'fr' in body['tags']:
+                query['tags']['FR'] = body['tags']['fr']
+            if 'en' in body['tags']:
+                query['tags']['EN'] = body['tags']['en']
 
     if 'keywords' in body:
         query['keywords'] = {}

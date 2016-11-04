@@ -69,7 +69,7 @@ class TestUslHandler(ModelTestCase):
 
     def test_update_usl(self):
         entry = self._save_usl()
-        self._assert_success(h.update_usl(entry['id'], {'fr': 'test', 'en': 'test'}))
+        self._assert_success(h.update_usl(entry['id'], {'tags': {'fr': 'test', 'en': 'test'}}))
 
         e = self._assert_success(h.query_usl(fr='test'))
         self.assertEqual(len(e['match']), 1)
