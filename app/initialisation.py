@@ -20,7 +20,7 @@ def create_app():
 
 
     ## init the usl db for dev
-    init_dev_db()
+    # init_dev_db()
 
     app = connexion.App(__name__, specification_dir='../api-doc/')
     app.add_api('rest_api.yaml')
