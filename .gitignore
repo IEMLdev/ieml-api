@@ -34,6 +34,7 @@ var/
 .installed.cfg
 *.egg
 include/*
+scripts/importer
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -69,4 +70,7 @@ handlers/cache
 
 
 man/
-scripts/diff.txt
+data/usl.json
+flask_session/
+ieml/ieml_objects/parser/parser.out
+ieml/usl/parser/parser.out
