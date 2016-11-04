@@ -143,6 +143,26 @@ class Path:
 
         self.context = Context(accept=accept, conserve=conserve, switch=dict(switch))
 
+    def __mul__(self, other):
+        if isinstance(other, str):
+            from .tools import path
+            other = path(other)
+
+        if isinstance(other, Path):
+            return ContextPath([self, other])
+
+        raise NotImplemented
+
+    def __add__(self, other):
+        if isinstance(other, str):
+            from .tools import path
+            other = path(other)
+
+        if isinstance(other, Path):
+            return AdditivePath([self, other])
+
+        raise NotImplemented
+
 
 class ContextPath(Path):
     def __init__(self, children):
