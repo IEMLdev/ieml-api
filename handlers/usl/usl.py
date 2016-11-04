@@ -93,7 +93,7 @@ def update_usl(id, body):
     query = {}
 
     if 'ieml' in body:
-        query['usl'] = body['ieml']
+        query['usl'] = usl(body['ieml'])
 
     if 'tags' in body:
         if 'fr' in body['tags'] or 'en' in body['tags']:

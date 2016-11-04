@@ -87,7 +87,7 @@ class USLConnector(DBConnector):
                 'IEML': str(usl)
             }
 
-        if tags and self._check_tags(tags, all_present=False):
+        if tags and self._check_tags(tags, all_present=False, except_id=id):
             for l in tags:
                 update['TAGS.%s'%l] = tags[l]
 
@@ -121,12 +121,13 @@ class USLConnector(DBConnector):
 
         return self.usls.find(query)
 
-    def _check_tags(self, tags, all_present=True):
+    def _check_tags(self, tags, all_present=True, except_id=None):
         if not check_tags(tags, all_present=all_present):
             raise InvalidTags(tags)
 
         for l in tags:
-            if self.get(tag=tags[l], language=l):
+            entry = self.get(tag=tags[l], language=l)
+            if entry and entry['_id'] != except_id:
                 raise DuplicateTag(tags[l])
 
         return True
