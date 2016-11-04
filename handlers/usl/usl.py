@@ -54,24 +54,31 @@ def delete_usl(id):
 
 
 @exception_handler
-def query_usl(fr=None, en=None, fr_keywords=None, en_keywords=None):
-    query = {}
+def query_usl(fr=None, en=None, fr_keywords=None, en_keywords=None, query=None):
+    _query = {}
+
+    if query:
+        fr = query
+        en = query
+        fr_keywords = [query]
+        en_keywords = [query]
+        _query['union'] = True
 
     if fr or en:
-        query['tags'] = {}
+        _query['tags'] = {}
         if fr:
-            query['tags']['FR'] = fr
+            _query['tags']['FR'] = fr
         if en:
-            query['tags']['EN'] = en
+            _query['tags']['EN'] = en
 
     if fr_keywords or en_keywords:
-        query['keywords'] = {}
+        _query['keywords'] = {}
         if fr_keywords:
-            query['keywords']['FR'] = list(fr_keywords)
+            _query['keywords']['FR'] = list(fr_keywords)
         if en_keywords:
-            query['keywords']['FR'] = list(en_keywords)
+            _query['keywords']['EN'] = list(en_keywords)
 
-    result = USLConnector().query(**query)
+    result = USLConnector().query(**_query)
 
     return {'success': True,
             'match': [{
