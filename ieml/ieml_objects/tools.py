@@ -6,6 +6,7 @@ import functools
 
 from ieml.ieml_objects.commons import IEMLObjects
 from ieml.ieml_objects.exceptions import InvalidIEMLObjectArgument
+from ieml.ieml_objects.parser.parser import IEMLParser
 from ieml.ieml_objects.paths import IEMLPath
 from ieml.ieml_objects.terms import Term
 from ieml.script.operator import script
@@ -14,6 +15,16 @@ from ieml.ieml_objects.sentences import Sentence, Clause, SuperSentence, SuperCl
 from ieml.ieml_objects.texts import Text
 from ieml.ieml_objects.words import Word, Morpheme
 from ieml.ieml_objects.exceptions import CantGenerateElement
+
+
+def ieml(arg):
+    if isinstance(arg, IEMLObjects):
+        return arg
+
+    if isinstance(arg, str):
+        return IEMLParser().parse(arg)
+
+    raise ValueError("Invalid argument, c'ant instantiate an IEMLObject from %s."%str(arg))
 
 
 def _loop_result(max_try):
