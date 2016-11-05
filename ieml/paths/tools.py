@@ -55,13 +55,13 @@ def _resolve_path_tree_graph(tree_graph, path):
                 raise ValueError("Double substance s in path [%s]"%str(path))
 
             if c.kind == 'm':
-                if c.index:
+                if c.index is not None:
                     _stack.add(tree_graph.transitions[s][c.index][1][2])
                 else:
                     _stack |= {vals[1][2] for vals in tree_graph.transitions[s]}
 
             if c.kind == 'a':
-                if c.index:
+                if c.index is not None:
                     _stack.add(tree_graph.transitions[s][c.index][0])
                 else:
                     _stack |= {vals[0] for vals in tree_graph.transitions[s]}
@@ -90,12 +90,12 @@ def _resolve_path(obj, path):
 
     if isinstance(obj, Word):
         if path.kind == 'r':
-            if path.index:
-                return {obj.root[path.index]}
+            if path.index is not None:
+                return {obj.root.children[path.index]}
             return set(obj.root.children)
         else:
-            if path.index:
-                return {obj.flexing[path.index]}
+            if path.index is not None:
+                return {obj.flexing.children[path.index]}
             return set(obj.flexing.children)
 
     if isinstance(obj, Term):

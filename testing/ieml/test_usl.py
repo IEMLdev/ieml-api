@@ -1,10 +1,13 @@
+import random
 import re
 
 from ieml.ieml_objects import RandomPoolIEMLObjectGenerator, Sentence, Hypertext, Text, Word, PropositionPath
 from ieml.ieml_objects.hypertexts import Hyperlink
 from ieml.ieml_objects.parser.parser import IEMLParser
 from ieml.ieml_objects.sentences import SuperSentence
-from ieml.usl.tools import random_usl
+from ieml.paths.tools import resolve
+from ieml.usl import usl
+from ieml.usl.tools import random_usl, replace_paths
 from ieml.usl.usl import Usl
 from testing.ieml.helper import *
 
@@ -47,3 +50,14 @@ class TestUsl(unittest.TestCase):
     def test_equality(self):
         ieml = RandomPoolIEMLObjectGenerator(level=Text).text()
         self.assertEqual(Usl(ieml_object=ieml), Usl(ieml_object=ieml))
+
+class TextUslToots(unittest.TestCase):
+    def test_replace(self):
+        u = usl(Word(Morpheme([Term('M:')])))
+        u2 = replace_paths(u, [('r0', '[S:]')])
+        self.assertEqual(u2, usl(Word(Morpheme([Term('S:')]))))
+
+    def test_deference_path(self):
+        u = random_usl(rank_type=Text)
+        p = random.sample(u.paths, 1)
+        self.assertEqual(u[p[0][0]], {p[0][1]})
