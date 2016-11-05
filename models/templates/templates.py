@@ -1,11 +1,14 @@
 import itertools
+from _operator import mul
+from functools import reduce
 
 from ieml.ieml_objects.terms import Term
-from ieml.ieml_objects.tools import replace_from_paths
+from ieml.ieml_objects.tools import replace_from_paths, ieml
+from ieml.paths.tools import path
 from ieml.script.constants import CONTAINS_RELATION
-from ieml.usl.tools import usl
+from ieml.usl.tools import usl, replace_paths
 from models.commons import DBConnector, generate_tags, check_tags
-from models.constants import TEMPLATES_COLLECTION, TAG_LANGUAGES
+from models.constants import TEMPLATES_COLLECTION, TAG_LANGUAGES, MAX_SIZE_TEMPLATE
 from models.terms import TermsConnector
 from models.usls.usls import usl_index
 
@@ -16,21 +19,47 @@ class TemplatesConnector(DBConnector):
         self.templates = self.db[TEMPLATES_COLLECTION]
 
     def save_template(self, _usl, paths, tags_rule=None):
+        """
+        save a template for the given usl, varying the terms specified in rules.
 
-        if not all(isinstance(p[-1], Term) for p in paths):
-            raise ValueError("The paths must end on a Term.")
+        :param _usl:
+        :param rules: list of paths
+        :param tags_rule: a string where the declinaison of each variying term will be inserred a the place of the $i.
+        :return:
+        """
+        paths = [path(p) for p in paths]
 
-        paths = list(map(tuple, paths))
+        terms = [_usl[p] for p in paths]
 
-        # path -> [terms]
-        paradigms = {p: p[-1].relations(CONTAINS_RELATION) for p in paths}
+        if any(len(t) != 1 for t in terms):
+            raise ValueError("Invalids path, lead to multiple elements.")
 
-        # usl -> elements
-        all_elements = list(itertools.product(*paradigms.values()))
-        expansion = {usl(replace_from_paths(_usl.ieml_object, paths, elements)):
-                         {'ELEMENTS': [str(e) for e in elements]} for elements in all_elements}
+        terms = [t for s in terms for t in s]
 
-        # usl -> elements, tags
+        if any(not isinstance(t, Term) for t in terms):
+            raise ValueError("Template only support Term variation.")
+
+        # path -> []
+        paradigms = {p: t.relations(CONTAINS_RELATION) for p, t in zip(paths, terms)}
+
+        template_size = reduce(mul, map(len, paradigms.values()))
+
+        if template_size > MAX_SIZE_TEMPLATE:
+            raise ValueError("Can't generate this template, maximum size of %d and the template size is %d."%
+                             (MAX_SIZE_TEMPLATE, template_size))
+
+        if any(not rels for rels in paradigms.values()):
+            errors = filter(lambda e: not paradigms[e], paradigms)
+            raise ValueError("The terms at the given paths are not paradigms.[%s]"%(', '.join(map(str, errors))))
+
+        # all the combinations with the resulting usl
+        expansion = {}
+        for product in itertools.product(*([(p, t) for t in paradigms[p]] for p in paradigms)):
+            expansion[replace_paths(_usl, product)] = {
+                'TAGS': {},
+                'ELEMENTS': [str(t) for p, t in product]
+            }
+
         if tags_rule and check_tags(tags_rule):
             terms_tags = {str(term): TermsConnector().get_term(term)['TAGS']
                           for term in set(itertools.chain.from_iterable(paradigms.values()))}
@@ -53,7 +82,7 @@ class TemplatesConnector(DBConnector):
                 'IEML': str(u),
                 **expansion[u]
                           } for u in expansion],
-            'PATHS': [[str(e) for e in p]for p in paths]
+            'PATHS': [str(p) for p in paths]
         }
 
         if tags_rule:

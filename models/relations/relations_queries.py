@@ -214,7 +214,10 @@ class RelationsQueries:
                 return cls._format_relations((relation_title,), pack_ancestor=pack_ancestor,
                                              max_depth_father=max_depth_father, max_depth_child=max_depth_child)
             else:
-                return relations[relation_title] # we only return the selected relation
+                try:
+                    return relations[relation_title] # we only return the selected relation
+                except KeyError:
+                    return []
         else:
             result = cls._format_relations(relations, pack_ancestor=pack_ancestor,
                                            max_depth_father=max_depth_father, max_depth_child=max_depth_child)

@@ -28,6 +28,7 @@ def recent_usls(n, language='EN'):
 @exception_handler
 def usl_to_json(usl):
     u = _usl(usl["usl"])
+
     def _walk(u, start=True):
         if isinstance(u, Term):
             return {
@@ -37,8 +38,8 @@ def usl_to_json(usl):
                 'title': {'en':TermsConnector().get_term(u.script)['TAGS']['EN'],
                           'fr':TermsConnector().get_term(u.script)['TAGS']['FR']}
             }
-        if start and len(u.children) == 1:
-            return _walk(u.children[0])
+        # if start and len(u.children) == 1:
+        #     return _walk(u.children[0])
 
         def _build_tree(transition, children_tree, supersentence=False):
             result = {

@@ -5,7 +5,7 @@ from ieml.ieml_objects.parser.parser import IEMLParser
 from ieml.ieml_objects.sentences import Sentence, SuperSentence
 from ieml.ieml_objects.terms import Term
 from ieml.ieml_objects.texts import Text
-from ieml.ieml_objects.tools import RandomPoolIEMLObjectGenerator
+from ieml.ieml_objects.tools import RandomPoolIEMLObjectGenerator, ieml
 from ieml.ieml_objects.words import Word, Morpheme
 from ieml.paths.paths import Path
 from ieml.paths.tools import path, resolve_ieml_object
@@ -25,7 +25,7 @@ def usl(arg):
 
     try:
         parser = IEMLParser()
-        rules = [(path(r[0]), r[1] if not isinstance(r, str) else parser.parse(r[1])) for r in arg]
+        rules = [(path(r[0]), ieml(r[1])) for r in arg]
         return Usl(resolve_ieml_object(rules))
     except TypeError:
         pass
@@ -49,3 +49,7 @@ def random_usl(rank_type=None):
             rank_type = Text
 
     return usl(_ieml_object_generator.from_type(rank_type))
+
+
+def replace_paths(u, rules):
+    return usl([(p,t) for p, t in {**{p:t for p, t in u.paths}, **{path(p): ieml(t) for p, t in rules}}.items()])
