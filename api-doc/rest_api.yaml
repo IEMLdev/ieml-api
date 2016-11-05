@@ -224,6 +224,30 @@ paths:
           description: |
             The ieml string
 
+  /intlekt/edition/paths_to_usl:
+    post:
+      operationId: handlers.rules_to_usl
+      tags:
+        - Intlekt
+      description: |
+        Take a list of couple (path, element) and return the associated usl.
+      parameters:
+        - name: rules
+          in: body
+          required: True
+          description: |
+            The list of rules
+          schema:
+            type: array
+            items:
+              type: array
+              items:
+                type: string
+      responses:
+        '200':
+          description: |
+            The ieml string
+
   /intlekt/edition/recent:
     get:
       operationId: handlers.recent_usls

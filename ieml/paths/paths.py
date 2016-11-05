@@ -163,6 +163,11 @@ class Path:
 
         raise NotImplemented
 
+    def __eq__(self, other):
+        return str(self) == str(other)
+
+    def __hash__(self):
+        return hash(self.__str__())
 
 class ContextPath(Path):
     def __init__(self, children):
