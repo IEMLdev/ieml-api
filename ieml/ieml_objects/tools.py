@@ -45,7 +45,7 @@ def _loop_result(max_try):
 
 
 class RandomPoolIEMLObjectGenerator:
-    def __init__(self, level, pool_size=20):
+    def __init__(self, level=Text, pool_size=20):
         self.level = level
         self.pool_size = pool_size
 
@@ -124,11 +124,11 @@ class RandomPoolIEMLObjectGenerator:
         return Sentence(self._build_graph_object(p, p, Clause, max_nodes=max_clause))
 
     @_loop_result(10)
-    def super_sentence(self):
+    def super_sentence(self, max_clause=4):
         def p():
             return random.sample(self.sentences_pool, 1)[0]
 
-        return SuperSentence(self._build_graph_object(p, p, SuperClause))
+        return SuperSentence(self._build_graph_object(p, p, SuperClause, max_nodes=max_clause))
 
     @_loop_result(10)
     def text(self):
