@@ -1,4 +1,5 @@
 import logging
+from functools import lru_cache
 
 from ply import yacc
 
@@ -81,8 +82,11 @@ class PathParser(metaclass=Singleton):
         # Build the lexer and parser
         self.lexer = get_lexer()
         self.parser = yacc.yacc(module=self, errorlog=logging, start='path', debug=True)
+        # rename the parsing method (can't name it directly parse with lru_cache due to ply checking)
+        self.parse = self.t_parse
 
-    def parse(self, s):
+    @lru_cache()
+    def t_parse(self, s):
         """Parses the input string, and returns a reference to the created AST's root"""
         self.root = None
         self.parser.parse(s, lexer=self.lexer, debug=False)
