@@ -93,6 +93,8 @@ class Hyperlink(IEMLObjects):
 
 
 class Hypertext(IEMLObjects):
+    closable = True
+
     def __init__(self, children):
 
         try:

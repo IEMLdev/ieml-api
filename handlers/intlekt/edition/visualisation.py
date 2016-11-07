@@ -25,7 +25,7 @@ def sample_usls(n, language='EN'):
 def recent_usls(n, language='EN'):
     return []
 
-@exception_handler
+# @exception_handler
 def usl_to_json(usl):
     u = _usl(usl["usl"])
 
@@ -38,8 +38,8 @@ def usl_to_json(usl):
                 'title': {'en':TermsConnector().get_term(u.script)['TAGS']['EN'],
                           'fr':TermsConnector().get_term(u.script)['TAGS']['FR']}
             }
-        # if start and len(u.children) == 1:
-        #     return _walk(u.children[0])
+        if not u.closable and start and len(u.children) == 1:
+             return _walk(u.children[0])
 
         def _build_tree(transition, children_tree, supersentence=False):
             result = {
