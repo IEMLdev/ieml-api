@@ -3,7 +3,7 @@ from functools import partial
 from ieml.ieml_objects.hypertexts import Hyperlink, Hypertext
 from ieml.ieml_objects.sentences import Clause, SuperClause
 from ieml.ieml_objects.words import Word, Morpheme
-from ieml.usl.tools import usl
+from ieml.usl.tools import usl as _usl, usl
 from handlers.commons import exception_handler
 from ieml.ieml_objects import Term, Sentence, SuperSentence
 from ieml.ieml_objects.texts import Text
@@ -76,8 +76,8 @@ def _ieml_object_to_json(u, start=True):
 
 
 @exception_handler
-def usl_to_json(_usl):
-    u = usl(_usl["usl"])
+def usl_to_json(usl):
+    u = _usl(usl["usl"])
     return _ieml_object_to_json(u.ieml_object)
 
 

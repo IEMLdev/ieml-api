@@ -1,7 +1,9 @@
 import random
 import string
 
+from ieml.ieml_objects.texts import Text
 from ieml.usl import random_usl
+from models.constants import TAG_LANGUAGES
 from models.usls.usls import usl_index
 from testing.models.stub_db import ModelTestCase
 
@@ -26,7 +28,9 @@ class TestUSLsModel(ModelTestCase):
                 'IEML': str(_usl)
             },
             'TAGS': tags,
-            'KEYWORDS': keywords
+            'KEYWORDS': keywords,
+            'TEMPLATES': [],
+            'PARENTS': []
         }
 
     def test_add_usl(self):
@@ -97,3 +101,16 @@ class TestUSLsModel(ModelTestCase):
         self.usls.update(entry['_id'], keywords=keywords)
         self.assertEqual(self.usls.query(keywords=keywords).count(), 1)
 
+    def test_templates(self):
+        while True:
+            try:
+                u = random_usl(rank_type=Text)
+                paths = random.sample([p for p, t in u.paths if t.script.paradigm], 2)
+                break
+            except ValueError:
+                continue
+
+        self.usls.add_template(u, paths, tags_rule={l:"$0, $1" for l in TAG_LANGUAGES})
+        template_entry = self.usls.get(usl=u)
+        self.assertListEqual(template_entry['PARENTS'], [])
+        self.assertEqual(template_entry['TEMPLATES'][0]['PATHS'], [str(p) for p in paths])

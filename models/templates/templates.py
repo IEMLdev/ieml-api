@@ -88,7 +88,7 @@ class TemplatesConnector(DBConnector):
         if tags_rule:
             entry['TAGS_RULE'] = tags_rule
 
-        self.templates.save(entry)
+        self.templates.insert_one(entry)
 
     def get_template(self, usl):
         return self.templates.find_one({'_id': usl_index(usl)})

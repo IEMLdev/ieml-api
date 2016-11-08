@@ -900,6 +900,72 @@ paths:
               success:
                 type: boolean
 
+  '/usls/templates':
+    post:
+      operationId: handlers.save_template
+      tags:
+        - usl
+        - template
+        - edition
+      description: Save a template to the db.
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            required:
+              - ieml
+              - paths
+            properties:
+              ieml:
+                type: string
+              paths:
+                type: array
+                items:
+                  type: string
+              tags_rules:
+                type: object
+                required:
+                  - fr
+                  - en
+                properties:
+                  fr:
+                    type: string
+                  en:
+                    type: string
+              tags:
+                type: object
+                required:
+                  - fr
+                  - en
+                properties:
+                  fr:
+                    type: string
+                  en:
+                    type: string
+              keywords:
+                type: object
+                properties:
+                  fr:
+                    type: array
+                    items:
+                      type: string
+                  en:
+                    type: array
+                    items:
+                      type: string
+      responses:
+        200:
+          description: Successful response
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+              id:
+                type: string
+
 definitions:
   usl_entry:
     properties:

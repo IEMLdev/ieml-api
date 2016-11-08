@@ -1,3 +1,5 @@
+from itertools import islice
+
 from pymongo import MongoClient
 
 from helpers.metaclasses import Singleton
@@ -42,6 +44,6 @@ def generate_tags(usl):
     result = {}
     entries = [TermsConnector().get_term(t.script) for t in usl.ieml_object.tree_iter() if isinstance(t, Term)]
     for l in TAG_LANGUAGES:
-        result[l] = ' '.join((e['TAGS'][l] for e in entries))
+        result[l] = ' '.join((e['TAGS'][l] for e in islice(entries, 10)))
 
     return result
