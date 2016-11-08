@@ -3,7 +3,7 @@ from functools import partial
 from ieml.ieml_objects.hypertexts import Hyperlink, Hypertext
 from ieml.ieml_objects.sentences import Clause, SuperClause
 from ieml.ieml_objects.words import Word, Morpheme
-from ieml.usl.tools import usl as _usl, usl
+from ieml.usl.tools import usl
 from handlers.commons import exception_handler
 from ieml.ieml_objects import Term, Sentence, SuperSentence
 from ieml.ieml_objects.texts import Text
@@ -27,58 +27,60 @@ def sample_usls(n, language='EN'):
 def recent_usls(n, language='EN'):
     return []
 
-# @exception_handler
-def usl_to_json(usl):
-    u = _usl(usl["usl"])
+def _ieml_object_to_json(u, start=True):
+    if isinstance(u, Term):
+        return {
+            'type': u.__class__.__name__.lower(),
+            'script': str(u.script),
+            'singular_sequences': [str(s) for s in u.script.singular_sequences],
+            'title': {'en': TermsConnector().get_term(u.script)['TAGS']['EN'],
+                      'fr': TermsConnector().get_term(u.script)['TAGS']['FR']}
+        }
+    if not u.closable and start and len(u.children) == 1:
+        return _ieml_object_to_json(u.children[0])
 
-    def _walk(u, start=True):
-        if isinstance(u, Term):
-            return {
-                'type': u.__class__.__name__.lower(),
-                'script': str(u.script),
-                'singular_sequences': [str(s) for s in u.script.singular_sequences],
-                'title': {'en':TermsConnector().get_term(u.script)['TAGS']['EN'],
-                          'fr':TermsConnector().get_term(u.script)['TAGS']['FR']}
-            }
-        if not u.closable and start and len(u.children) == 1:
-             return _walk(u.children[0])
-
-        def _build_tree(transition, children_tree, supersentence=False):
-            result = {
-                'type': 'supersentence-node' if supersentence else 'sentence-node',
-                'mode': _walk(transition[1].mode, start=False),
-                'node': _walk(transition[0], start=False),
-                'children': []
-            }
-            if transition[0] in children_tree:
-                result['children'] = [_build_tree(c, children_tree, supersentence=supersentence) for c in children_tree[transition[0]]]
-            return result
-
-        if isinstance(u, Sentence):
-            result = {
-                'type': 'sentence-root-node',
-                'node': _walk(u.tree_graph.root, start=False),
-                'children': [
-                    _build_tree(c, u.tree_graph.transitions) for c in u.tree_graph.transitions[u.tree_graph.root]
-                ]
-            }
-        elif isinstance(u, SuperSentence):
-            result = {
-                'type': 'supersentence-root-node',
-                'node': _walk(u.tree_graph.root, start=False),
-                'children': [
-                    _build_tree(c, u.tree_graph.transitions, supersentence=True) for c in u.tree_graph.transitions[u.tree_graph.root]
-                    ]
-            }
-        else:
-            result = {
-                'type': u.__class__.__name__.lower(),
-                'children': [_walk(c, start=False) for c in u]
-            }
-
+    def _build_tree(transition, children_tree, supersentence=False):
+        result = {
+            'type': 'supersentence-node' if supersentence else 'sentence-node',
+            'mode': _ieml_object_to_json(transition[1].mode, start=False),
+            'node': _ieml_object_to_json(transition[0], start=False),
+            'children': []
+        }
+        if transition[0] in children_tree:
+            result['children'] = [_build_tree(c, children_tree, supersentence=supersentence) for c in
+                                  children_tree[transition[0]]]
         return result
 
-    return _walk(u.ieml_object)
+    if isinstance(u, Sentence):
+        result = {
+            'type': 'sentence-root-node',
+            'node': _ieml_object_to_json(u.tree_graph.root, start=False),
+            'children': [
+                _build_tree(c, u.tree_graph.transitions) for c in u.tree_graph.transitions[u.tree_graph.root]
+                ]
+        }
+    elif isinstance(u, SuperSentence):
+        result = {
+            'type': 'supersentence-root-node',
+            'node': _ieml_object_to_json(u.tree_graph.root, start=False),
+            'children': [
+                _build_tree(c, u.tree_graph.transitions, supersentence=True) for c in
+                u.tree_graph.transitions[u.tree_graph.root]
+                ]
+        }
+    else:
+        result = {
+            'type': u.__class__.__name__.lower(),
+            'children': [_ieml_object_to_json(c, start=False) for c in u]
+        }
+
+    return result
+
+
+@exception_handler
+def usl_to_json(_usl):
+    u = usl(_usl["usl"])
+    return _ieml_object_to_json(u.ieml_object)
 
 
 def _tree_node(json, constructor):
@@ -119,6 +121,12 @@ def json_to_usl(json):
     return str(usl(_json_to_ieml(json['json'])))
 
 
-# @exception_handler
+@exception_handler
 def rules_to_usl(rules):
     return str(usl([(r[0], Term(r[1])) for r in rules]))
+
+
+@exception_handler
+def rules_to_json(rules):
+    u = usl([(r[0], Term(r[1])) for r in rules])
+    return _ieml_object_to_json(u.ieml_object)
