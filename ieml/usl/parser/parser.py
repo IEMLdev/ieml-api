@@ -16,7 +16,8 @@ class USLParser(metaclass=Singleton):
 
         # Build the lexer and parser
         self.lexer = get_lexer()
-        self.parser = yacc.yacc(module=self, errorlog=logging, start='usl')
+        self.parser = yacc.yacc(module=self, errorlog=logging, start='usl',
+                                debug=False, optimize=True, picklefile="parser/usl_parser.pickle")
 
     def parse(self, s):
         """Parses the input string, and returns a reference to the created AST's root"""

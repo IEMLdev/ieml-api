@@ -36,7 +36,8 @@ class IEMLParser(metaclass=Singleton):
 
         # Build the lexer and parser
         self.lexer = get_lexer()
-        self.parser = yacc.yacc(module=self, errorlog=logging, start='proposition')
+        self.parser = yacc.yacc(module=self, errorlog=logging, start='proposition',
+                                debug=False, optimize=True, picklefile="parser/ieml_parser.pickle")
 
     def parse(self, s):
         """Parses the input string, and returns a reference to the created AST's root"""

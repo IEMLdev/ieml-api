@@ -6,7 +6,7 @@ from ply import yacc
 from helpers.metaclasses import Singleton
 from ieml.exceptions import CannotParse
 from ieml.paths.parser.lexer import tokens, get_lexer
-from ieml.paths.paths import Coordinate, Path, AdditivePath, MultiplicativePath, ContextPath
+from ieml.paths.paths import Coordinate, AdditivePath, MultiplicativePath, ContextPath
 
 
 class PathParser(metaclass=Singleton):
@@ -16,7 +16,8 @@ class PathParser(metaclass=Singleton):
 
         # Build the lexer and parser
         self.lexer = get_lexer()
-        self.parser = yacc.yacc(module=self, errorlog=logging, start='path', debug=True)
+        self.parser = yacc.yacc(module=self, errorlog=logging, start='path',
+                                debug=False, optimize=True, picklefile="parser/path_parser.pickle")
         # rename the parsing method (can't name it directly parse with lru_cache due to ply checking)
         self.parse = self.t_parse
 
