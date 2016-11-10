@@ -1,4 +1,3 @@
-from ieml.ieml_objects.paths import IEMLPath
 from ieml.ieml_objects.commons import IEMLObjects
 from ieml.ieml_objects.tree_graph import TreeGraph
 from ieml.ieml_objects.constants import MAX_NODES_IN_SENTENCE
@@ -84,17 +83,6 @@ class AbstractSentence(IEMLObjects):
 
     def compute_str(self, children_str):
         return '[' + '+'.join(children_str) + ']'
-
-    def _resolve_coordinates(self, paths):
-        """
-        Return the list of all sub-element (sentence or word) that are pointing by coordinate in the tree_graph
-        :param paths: a coordinate object
-        :return: list of ieml object of inferior rank - 2
-        """
-        return self.tree_graph[paths]
-
-    def _coordinates_children(self):
-        return [(self.tree_graph.path_of_node(node), node) for clause in self for node in clause]
 
 
 class Clause(AbstractClause):

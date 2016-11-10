@@ -1,5 +1,3 @@
-from ieml.ieml_objects.paths import IEMLCoordinate
-from ieml.exceptions import InvalidPathException
 from ieml.ieml_objects.commons import IEMLObjects
 from ieml.ieml_objects.constants import MORPHEME_SIZE_LIMIT
 from ieml.ieml_objects.exceptions import InvalidIEMLObjectArgument
@@ -41,18 +39,6 @@ class Morpheme(IEMLObjects):
     def compute_str(self, children_str):
         return '('+'+'.join(children_str)+')'
 
-    def _resolve_coordinates(self, coordinate):
-        if not isinstance(coordinate, TermCoordinate):
-            raise ValueError("Must be a term coordinate %s."%str(coordinate))
-
-        if any(c not in self.children for c in coordinate.objects):
-            raise InvalidPathException(self, coordinate)
-
-        return coordinate.objects
-
-    def _coordinates_children(self):
-        return [(TermCoordinate(t), t) for t in self.children]
-
 
 class Word(IEMLObjects):
     closable = True
@@ -91,64 +77,3 @@ class Word(IEMLObjects):
 
     def compute_str(self, children_str):
         return '['+'*'.join(children_str)+']'
-
-    def _resolve_coordinates(self, coordinate):
-        if not isinstance(coordinate, WordCoordinate):
-            raise ValueError("Must be a word coordinate %s."%str(coordinate))
-        return ((self.root,) if 'r' in coordinate.types else ()) +\
-               ((self.flexing,) if 'f' in coordinate.types else ())
-
-    def _coordinates_children(self):
-        return [(WordCoordinate('r'), self.root)] + [(WordCoordinate('f'), self.flexing)] if self.flexing else []
-
-
-class WordCoordinate(IEMLCoordinate):
-    def __init__(self, v):
-        if isinstance(v, str):
-            self.types = v,
-        else:
-            try:
-                self.types = tuple(sorted(set(v)))
-            except TypeError:
-                raise ValueError("A word coordinate must be initialised with an iterable or 'r' or 'f'.")
-
-        if any(k not in ('r', 'f') for k in self.types):
-            raise ValueError("A word coordinate must be r or f, not %s"%str(v))
-        super().__init__()
-
-    def __str__(self):
-        return '+'.join(self.types)
-
-    def _do_add(self, other):
-        return WordCoordinate(self.types + other.types)
-
-    def __eq__(self, other):
-        return self.types == other.types
-
-    def __hash__(self):
-        return hash(self.types)
-
-
-class TermCoordinate(IEMLCoordinate):
-    def __init__(self, terms):
-        if isinstance(terms, Term):
-            self.objects = terms,
-        else:
-            try:
-                self.objects = tuple(sorted(set(terms)))
-            except TypeError:
-                raise ValueError("A term coordinate must be initialised with an iterable of term or a term")
-
-        super().__init__()
-
-    def __str__(self):
-        return '+'.join(map(str,self.objects))
-
-    def _do_add(self, other):
-        return TermCoordinate(self.objects + other.objects)
-
-    def __eq__(self, other):
-        return self.objects == other.objects
-
-    def __hash__(self):
-        return hash(self.objects)

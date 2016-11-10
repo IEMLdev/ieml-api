@@ -1,5 +1,3 @@
-from collections import defaultdict
-
 from ieml.ieml_objects.exceptions import TermNotFoundInDictionary
 from ieml.ieml_objects.commons import IEMLObjects
 from ieml.script.operator import script
@@ -51,11 +49,3 @@ class Term(IEMLObjects):
     @property
     def empty(self):
         return self.script.empty
-
-    @property
-    def is_promotion(self):
-        """This is kept as a property to keep homogeneity with the propositions"""
-        return False
-
-    def get_promotion_origin(self):
-        return self

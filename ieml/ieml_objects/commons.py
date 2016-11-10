@@ -1,9 +1,5 @@
-from collections import defaultdict
-from itertools import chain
-
 from ieml.commons import TreeStructure
 from ieml.ieml_objects.exceptions import InvalidIEMLObjectArgument
-from ieml.ieml_objects.paths import IEMLPath
 
 
 class IEMLType(type):
@@ -93,46 +89,3 @@ class IEMLObjects(TreeStructure, metaclass=IEMLType):
 
     def _do_precompute_str(self):
         self._str = self._compute_str()
-
-    def path(self, path):
-        """:return a list of IEMLObject at that path"""
-        if not isinstance(path, IEMLPath):
-            raise ValueError("Can't deference a non IEMLPath object %s." % str(path))
-
-        if path.empty:
-            return [self]
-
-        res = []
-        for p in path:
-            res += list(chain.from_iterable(c.path(IEMLPath([p[1:]])) for c in self._resolve_coordinates(p[0])))
-        return res
-        # raise InvalidPathException(self, path)
-
-    def _resolve_coordinates(self, coordinate):
-        """:return a list of elements IEMLObject"""
-        raise NotImplemented
-
-    def _coordinates_children(self):
-        """The returned elements must be (coordinate, child)"""
-        raise NotImplemented
-
-    @property
-    def paths(self):
-        """:return a list of (IEMLPath, Term) for each term in this object"""
-        if not self._paths:
-            if not self.children:
-                return [(IEMLPath([]), self)]
-
-            result = {}
-            for coord, child in self._coordinates_children():
-                for path, term in child.paths:
-                    term_path = IEMLPath([(coord,) + p for p in path.coordinates_sum])
-                    if term not in result:
-                        result[term] = term_path
-                    else:
-                        result[term] = term_path + result[term]
-
-            self._paths = [(result[t], t) for t in result]
-
-        return self._paths
-
