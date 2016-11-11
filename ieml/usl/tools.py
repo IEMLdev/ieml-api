@@ -1,13 +1,11 @@
 import random
 
 from ieml.ieml_objects.commons import IEMLObjects, IEMLType
-from ieml.ieml_objects.parser.parser import IEMLParser
 from ieml.ieml_objects.sentences import Sentence, SuperSentence
 from ieml.ieml_objects.terms import Term
 from ieml.ieml_objects.texts import Text
 from ieml.ieml_objects.tools import RandomPoolIEMLObjectGenerator, ieml
 from ieml.ieml_objects.words import Word, Morpheme
-from ieml.paths.paths import Path
 from ieml.paths.tools import path, resolve_ieml_object
 from ieml.usl.parser.parser import USLParser
 from ieml.usl.usl import Usl
@@ -24,7 +22,6 @@ def usl(arg):
         return USLParser().parse(arg)
 
     try:
-        parser = IEMLParser()
         rules = [(path(r[0]), ieml(r[1])) for r in arg]
         return Usl(resolve_ieml_object(rules))
     except TypeError:

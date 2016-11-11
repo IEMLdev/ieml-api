@@ -7,6 +7,7 @@ from ieml.ieml_objects.sentences import SuperSentence, Sentence, Clause, SuperCl
 from ieml.ieml_objects.terms import Term
 from ieml.ieml_objects.texts import Text
 from ieml.ieml_objects.words import Word, Morpheme
+from ieml.paths.exceptions import IEMLObjectResolutionError, ResolveError
 from ieml.paths.parser.parser import PathParser
 from ieml.paths.paths import Path, Coordinate, MultiplicativePath, AdditivePath, ContextPath
 
@@ -254,15 +255,16 @@ def _build_deps_tree_graph(rules):
     coord_m = Coordinate('m')
 
     # apply the rules on the tree starting from s
-    def _apply_rule(node, mode=False):
+    def _apply_rule(node, _path, mode=False):
         # we add the globals rules to its own
         _merge_nodes(node['rules'][coord_a], roots[coord_a])
         _merge_nodes(node['rules'][coord_m], roots[coord_m])
 
-        obj = _resolve_ctx(node['context'])
+        obj = _resolve_ctx(_path, node['context'])
+        error = obj is None
 
         if mode or not node['resolve']:
-            return obj
+            return error, obj
 
         # resolve the children
         max_i = max(n.index for n in node['resolve'])
@@ -276,8 +278,8 @@ def _build_deps_tree_graph(rules):
             indexed = {k.index: node['resolve'][k] for k in node['resolve'] if k.kind == r}
             rules = [k for k in node['rules'] if k.kind == r]
 
-            if max(indexed) + 1 > len(indexed) + (1 if rules else 0):
-                raise ValueError("Not enough rules to instanciate all the %s rules."%r)
+            if max(indexed, default=-1) + 1 > len(indexed) + (1 if rules else 0):
+                raise ResolveError("Not enough information to instantiate all the %s rules. At %s."%(r, _path))
 
             for i in range(max_i + 1):
                 if i in indexed:
@@ -287,18 +289,20 @@ def _build_deps_tree_graph(rules):
 
                 _merge_nodes(child, node['rules'][r])
 
-                _result[r].append(_apply_rule(child, mode=r == 'm'))
+                e, n = _apply_rule(child, _path + "%s%d"%(r, i), mode=r == 'm')
+                error |= e
+                _result[r].append(n)
 
         for a, m in zip(_result['a'], _result['m']):
             result.append((obj, a, m))
 
-        return obj
+        return error, obj
     # 'context' attribute is now the sub element
     # generating the triplet from the root s
 
-    _apply_rule(roots[s])
+    error, o = _apply_rule(roots[s], 's0')
 
-    return result[::-1]
+    return error, result[::-1]
 
 
 def _build_deps_text(rules):
@@ -314,7 +318,7 @@ def _build_deps_text(rules):
             ctx_P = None
 
         if not isinstance(actual_P, Coordinate):
-            raise ValueError("A text must be defined by a single coordinate.")
+            raise ResolveError("A text must be defined by a coordinate, not %s"%actual_P)
 
         if actual_P.index is not None:
             indexes[actual_P.index].append((ctx_P, e))
@@ -322,12 +326,13 @@ def _build_deps_text(rules):
             generals.append((ctx_P, e))
 
     if not indexes:
-        return []
+        return False, []
 
-    if max(indexes) + 1 - len(indexes) > 1:
+    if max(indexes, default=-1) + 1 - len(indexes) > 1:
         # if there is more than one missing
-        raise ValueError("Index missing on text definition.")
+        raise ResolveError("Index missing on text definition.")
 
+    error = False
     i = 0
     result = []
     while i <= max(indexes):
@@ -335,10 +340,12 @@ def _build_deps_text(rules):
         if i in indexes:
             ctx_rules.extend(indexes[i])
 
-        result.append(_resolve_ctx(ctx_rules))
+        node = _resolve_ctx("t%d"%i, ctx_rules)
+        error |= node is None
+        result.append(node)
         i += 1
 
-    return result
+    return error, result
 
 
 def _build_deps_word(rules):
@@ -363,14 +370,17 @@ def _build_deps_word(rules):
             ctx_P = None
 
         if not isinstance(actual_P, Coordinate):
-            raise ValueError("A word must be defined by a single coordinate.")
+            raise ResolveError("A word must be defined by a single coordinate.")
 
         if actual_P.index is not None:
             result[actual_P.kind]['indexes'][actual_P.index].append((ctx_P, e))
         else:
             result[actual_P.kind]['generals'].append((ctx_P, e))
 
+    error = False
     for k in result:
+        # k for kind (r or f)
+
         indexes = result[k]['indexes']
         generals = result[k]['generals']
 
@@ -380,7 +390,7 @@ def _build_deps_word(rules):
 
         if max(indexes, default=-1) + 1 > len(indexes) + len(generals):
             # if there is more than one missing
-            raise ValueError("Index missing on word (%s) definition."%k)
+            raise ResolveError("Index missing on word definition.")
 
         current = []
         length = len(indexes) + len(generals)
@@ -391,11 +401,14 @@ def _build_deps_word(rules):
             else:
                 ctx_rules = [next(generals)]
 
-            current.append(_resolve_ctx(ctx_rules))
+            node = _resolve_ctx("%s%d"%(k, i), ctx_rules)
+            error |= node is None
+
+            current.append(node)
 
         result[k] = current
 
-    return result
+    return error, result
 
 
 def _inferred_types(path, e):
@@ -407,49 +420,90 @@ def _inferred_types(path, e):
     if result:
         return result
 
-    raise ValueError("No compatible type found with the path %s and the ieml object of type %s"%
+    raise ResolveError("No compatible type found with the path %s and the ieml object of type %s"%
                      (str(path), e.__class__.__name__))
 
 
+_errors = []
+_context_stack = []
+
+
+def _context_error_handler(func):
+    def wrapper(_path, rules):
+        _context_stack.append(_path)
+
+        result = None
+        try:
+            result = func(rules)
+        except ResolveError as e:
+            _errors.append((':'.join(_context_stack[1:]), str(e)))
+
+        _context_stack.pop()
+
+        return result
+
+    return wrapper
+
+
+@_context_error_handler
 def _resolve_ctx(rules):
+    """
+    Resolve the context of the rules (the type of this element), and building the ieml element.
+    :param rules:
+    :return:
+    """
+    if not rules:
+        raise ResolveError("Missing node definition.")
 
     # if rules == [(None, e)] --> e
     if len(rules) == 1 and rules[0][0] is None:
         return rules[0][1]
 
-
     if any(r[0] is None for r in rules):
-        raise ValueError("Multiple definition, multiple ieml object provided.")
+        raise ResolveError("Multiple definition, multiple ieml object provided for the same node.")
 
     if any(not isinstance(r[0], Path) for r in rules):
-        raise ValueError("Must have only path instance.")
+        raise ResolveError("Must have only path instance.")
 
+    # resolve all the possible types for this element
     r0 = rules[0]
     types = _inferred_types(*r0)
-    for r in rules:
+    for r in rules[1:]:
         types = types.intersection(_inferred_types(*r))
 
     if not types:
-        raise ValueError("No definition, no type inferred on rules list.")
+        raise ResolveError("No definition, no type inferred on rules list.")
 
     if len(types) > 1:
-        raise ValueError("Multiple definition, multiple type inferred on rules list.")
+        raise ResolveError("Multiple definition, multiple type inferred on rules list.")
 
     type = next(types.__iter__())
 
     if type == Word:
-        deps = _build_deps_word(rules)
+        error, deps = _build_deps_word(rules)
+        if error:
+            return
+
         flexing = None
         if deps['f']:
             flexing = Morpheme(deps['f'])
+        if not deps['r']:
+            raise ResolveError("No root for the word node.")
+
         return Word(Morpheme(deps['r']), flexing)
 
     if type == Text:
-        deps = _build_deps_text(rules)
+        error, deps = _build_deps_text(rules)
+        if error:
+            return
+
         return Text(deps)
 
     if type in (SuperSentence, Sentence):
-        deps = _build_deps_tree_graph(rules)
+        error, deps = _build_deps_tree_graph(rules)
+        if error:
+            return
+
         if type == Sentence:
             clauses = []
             for s, a, m in deps:
@@ -461,11 +515,21 @@ def _resolve_ctx(rules):
                 clauses.append(SuperClause(s, a, m))
             return SuperSentence(clauses)
 
-    raise ValueError("Invalid type inferred %s"%type.__name__)
+    raise ResolveError("Invalid type inferred %s"%type.__name__)
 
 
 def resolve_ieml_object(paths, elements=None):
+    global _errors, _context_stack
+    _errors = []
+    _context_stack = []
+
     if elements is None:
-        return _resolve_ctx([(d, e) for p, e in paths for d in p.develop()])
-    return _resolve_ctx([(d, e) for e, p in zip(elements, paths) for d in p.develop()])
+        result = _resolve_ctx('', [(d, e) for p, e in paths for d in p.develop()])
+    else:
+        result = _resolve_ctx('', [(d, e) for e, p in zip(elements, paths) for d in p.develop()])
+
+    if _errors:
+        raise IEMLObjectResolutionError(_errors)
+
+    return result
 
