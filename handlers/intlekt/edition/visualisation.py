@@ -3,6 +3,7 @@ from functools import partial
 from ieml.ieml_objects.hypertexts import Hyperlink, Hypertext
 from ieml.ieml_objects.sentences import Clause, SuperClause
 from ieml.ieml_objects.words import Word, Morpheme
+from ieml.paths.exceptions import IEMLObjectResolutionError
 from ieml.usl.tools import usl as _usl, usl
 from handlers.commons import exception_handler
 from ieml.ieml_objects import Term, Sentence, SuperSentence
@@ -121,12 +122,29 @@ def json_to_usl(json):
     return str(usl(_json_to_ieml(json['json'])))
 
 
+def _path_to_usl_clean(rules):
+    try:
+        return True, usl(rules)
+    except IEMLObjectResolutionError as e:
+        return False, {
+            'success': False,
+            'errors': [{
+                'path': p,
+                'message': m
+            } for p, m in e.errors]
+        }
+
 @exception_handler
 def rules_to_usl(rules):
-    return str(usl([(r[0], Term(r[1])) for r in rules]))
+    success, result = _path_to_usl_clean([(r[0], Term(r[1])) for r in rules])
+    if success:
+        return str(result)
+    return result
 
 
 @exception_handler
 def rules_to_json(rules):
-    u = usl([(r[0], Term(r[1])) for r in rules])
+    success, u = _path_to_usl_clean([(r[0], Term(r[1])) for r in rules])
+    if not success:
+        return u
     return _ieml_object_to_json(u.ieml_object)

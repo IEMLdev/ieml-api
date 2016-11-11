@@ -2,7 +2,7 @@ from ieml.usl.tools import usl, random_usl
 
 
 def paths():
-    for i in range(1000):
+    for i in range(100):
         u = random_usl()
         usl(u.paths)
 
