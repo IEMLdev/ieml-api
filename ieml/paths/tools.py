@@ -3,6 +3,7 @@ from itertools import chain
 
 import numpy
 
+from ieml.ieml_objects.exceptions import InvalidIEMLObjectArgument
 from ieml.ieml_objects.sentences import SuperSentence, Sentence, Clause, SuperClause
 from ieml.ieml_objects.terms import Term
 from ieml.ieml_objects.texts import Text
@@ -209,7 +210,7 @@ def _build_deps_tree_graph(rules):
             ctx_P = None
 
         if isinstance(actual_P, MultiplicativePath):
-            actual_P = actual_P.children
+            actual_P = list(actual_P.children)
         else:
             actual_P = [actual_P]
 
@@ -426,6 +427,7 @@ def _inferred_types(path, e):
 
 _errors = []
 _context_stack = []
+debug = False
 
 
 def _context_error_handler(func):
@@ -433,10 +435,15 @@ def _context_error_handler(func):
         _context_stack.append(_path)
 
         result = None
-        try:
+        if debug:
             result = func(rules)
-        except ResolveError as e:
-            _errors.append((':'.join(_context_stack[1:]), str(e)))
+        else:
+            try:
+                result = func(rules)
+            except ResolveError as e:
+                _errors.append((':'.join(_context_stack[1:]), str(e)))
+            except InvalidIEMLObjectArgument as e:
+                _errors.append((':'.join(_context_stack[1:]), str(e)))
 
         _context_stack.pop()
 

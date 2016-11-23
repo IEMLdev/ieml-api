@@ -248,6 +248,25 @@ paths:
           description: |
             The ieml string
 
+  /intlekt/edition/usl_to_paths:
+    post:
+      operationId: handlers.usl_to_rules
+      tags:
+        - Intlekt
+      description: |
+        Take the ieml of a usl and return the list of (path, terms).
+      parameters:
+        - name: ieml
+          in: body
+          description: |
+            the ieml of the usl
+          schema:
+            type: string
+      responses:
+        '200':
+          description: |
+            The ieml string
+
   /intlekt/edition/paths_to_json:
     post:
       operationId: handlers.rules_to_json

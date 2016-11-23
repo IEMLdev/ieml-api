@@ -148,3 +148,9 @@ def rules_to_json(rules):
     if not success:
         return u
     return _ieml_object_to_json(u.ieml_object)
+
+
+@exception_handler
+def usl_to_rules(ieml):
+    u = usl(ieml)
+    return [(str(p), str(t.script)) for ps, t in u.paths for p in ps.develop()]

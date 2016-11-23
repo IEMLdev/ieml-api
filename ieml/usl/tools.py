@@ -21,11 +21,11 @@ def usl(arg):
     if isinstance(arg, str):
         return USLParser().parse(arg)
 
-    try:
-        rules = [(path(r[0]), ieml(r[1])) for r in arg]
-        return Usl(resolve_ieml_object(rules))
-    except TypeError:
-        pass
+    # try:
+    rules = [(path(r[0]), ieml(r[1])) for r in arg]
+    return Usl(resolve_ieml_object(rules))
+    # except TypeError:
+    #     pass
 
     raise ValueError("Invalid argument to create an usl object.")
 
