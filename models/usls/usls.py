@@ -1,3 +1,4 @@
+import datetime
 import hashlib
 import re
 import uuid
@@ -65,7 +66,9 @@ class USLConnector(DBConnector):
                 "EN": keywords['EN']
             },
             'PARENTS': [template] if template is not None else [],
-            'TEMPLATES': []
+            'TEMPLATES': [],
+            'LAST_MODIFIED': datetime.datetime.utcnow()
+
         })
 
         return usl_id
@@ -216,6 +219,7 @@ class USLConnector(DBConnector):
             raise ValueError("Can't edit the ieml of this usl, it has a parent template or template children.")
 
         if update:
+            update['LAST_MODIFIED'] = datetime.datetime.utcnow()
             self.usls.update_one({'_id': id}, {'$set': update})
 
     def query(self, tags=None, keywords=None, union=False):
@@ -237,6 +241,9 @@ class USLConnector(DBConnector):
             query = {'$or': [{k: query[k]} for k in query]}
 
         return self.usls.find(query)
+
+    def most_recent(self, number):
+        return list(itertools.islice(self.usls.find().sort("LAST_MODIFIED", 1), number))
 
     def _check_tags(self, tags, all_present=True, except_id=None):
         if not check_tags(tags, all_present=all_present):

@@ -9,6 +9,7 @@ from handlers.commons import exception_handler
 from ieml.ieml_objects import Term, Sentence, SuperSentence
 from ieml.ieml_objects.texts import Text
 from models.terms.terms import TermsConnector
+from models.usls.usls import USLConnector
 
 word = "[([a.i.-]+[i.i.-])*([E:A:T:.]+[E:S:.wa.-]+[E:S:.o.-])]"
 sentence = "[([([a.i.-]+[i.i.-])*([E:A:T:.]+[E:S:.wa.-]+[E:S:.o.-])]*[([S:.-'B:.-'n.-S:.U:.-',])]*[([E:T:.f.-])])+([([a.i.-]+[i.i.-])*([E:A:T:.]+[E:S:.wa.-]+[E:S:.o.-])]*[([t.i.-s.i.-'u.T:.-U:.-'wo.-',B:.-',_M:.-',_;])]*[([E:E:T:.])])]"
@@ -16,17 +17,22 @@ supersentence = "[([([([wo.s.-]+[o.wa.-]+[M:O:.j.-])*([E:A:.wu.-]+[d.i.-m.i.-t.u
 
 def sample_usls(n, language='EN'):
     return [
-        {"ieml" : word, "title" : { 'fr' : "Nous avons l'intention de fabriquer et de vendre beaucoup",
-                                    'en' : "We intend to make and sell a lot" }},
-        {"ieml" : sentence, "title" : { 'fr': "Nous avons l'intention de fabriquer et de vendre beaucoup de nos véhicules à roues sans conducteurs en Europe",
-                                        'en': "We intend to make and sell a lot of driverless vehicles in Europe"}},
-        {"ieml" : supersentence, "title" : { 'fr': "Superphrase générée aléatoirement",
-                                             'en': "Randomly generated supersentence"}}
+        {"ieml" : word, "tags" : { 'FR' : "Nous avons l'intention de fabriquer et de vendre beaucoup",
+                                    'EN' : "We intend to make and sell a lot" }, 'keywords': {"FR":[], "EN":[]}},
+        {"ieml" : sentence, "title" : { 'FR': "Nous avons l'intention de fabriquer et de vendre beaucoup de nos véhicules à roues sans conducteurs en Europe",
+                                        'EN': "We intend to make and sell a lot of driverless vehicles in Europe"}, 'keywords': {"FR":[], "EN":[]}},
+        {"ieml" : supersentence, "title" : { 'FR': "Superphrase générée aléatoirement",
+                                             'EN': "Randomly generated supersentence"}, 'keywords': {"FR":[], "EN":[]}}
     ]
 
 
 def recent_usls(n, language='EN'):
-    return []
+    return [{'success': True,
+             'id': usl['_id'],
+             'ieml': usl['USL']['IEML'],
+             'tags': usl['TAGS'],
+             'keywords': usl['KEYWORDS']
+            } for usl in USLConnector().most_recent(int(n))]
 
 def _ieml_object_to_json(u, start=True):
     if isinstance(u, Term):
