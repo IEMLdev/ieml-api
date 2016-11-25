@@ -140,7 +140,7 @@ class TermsConnector(DBConnector):
             raise TermNotFound(script)
 
         update = {}
-        if tags and term['TAGS'] != tags and self._check_tags(tags):
+        if tags and term['TAGS'] != tags and self._check_tags(tags, ignore=term):
             update['TAGS'] = tags
 
         if root is not None and root != term['ROOT']:
@@ -225,19 +225,27 @@ class TermsConnector(DBConnector):
         paradigms = self.terms.find({'ROOT': True, 'INHIBITS': {'$ne': []}})
         return [(p['_id'], p['INHIBITS']) for p in paradigms]
 
-    def search_by_tag(self, tag, language=None):
+    def search_by_tag(self, tag, language=None, ignore=None):
         """
         returns a list of terms with a matching tag for a
         :param tag: value of the tested tag
         :param language: language of the tag
+        :param ignore:
         :return: list of
         """
+
+        request = {}
+        if ignore is not None:
+            request["_id"] = {'$ne': ignore["_id"]}
+
         #TODO : IMPROVE THIS
         if language is None:
-            return self.terms.find({
-                'TAG.%s'%language: tag for language in TAG_LANGUAGES})
+            for language in TAG_LANGUAGES:
+                request['TAG.%s'%language] = tag
+        else:
+            request['TAG.%s' % language] = tag
 
-        return self.terms.find({"TAGS.%s" % language : tag })
+        return self.terms.find(request)
 
     def recompute_relations(self, all_delete=False, verbose=False):
         """
@@ -259,12 +267,12 @@ class TermsConnector(DBConnector):
                 inhibitions=True,
                 verbose=verbose)
 
-    def _check_tags(self, tags):
+    def _check_tags(self, tags, ignore=None):
         if not check_tags(tags):
             raise InvalidTags(tags)
 
         for l in tags:
-            if self.search_by_tag(tags[l], language=l).count() != 0:
+            if self.search_by_tag(tags[l], language=l, ignore=ignore).count() != 0:
                 raise DuplicateTag(tags[l])
 
         return True
