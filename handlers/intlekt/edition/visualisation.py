@@ -19,9 +19,9 @@ def sample_usls(n, language='EN'):
     return [
         {"ieml" : word, "tags" : { 'FR' : "Nous avons l'intention de fabriquer et de vendre beaucoup",
                                     'EN' : "We intend to make and sell a lot" }, 'keywords': {"FR":[], "EN":[]}},
-        {"ieml" : sentence, "title" : { 'FR': "Nous avons l'intention de fabriquer et de vendre beaucoup de nos véhicules à roues sans conducteurs en Europe",
+        {"ieml" : sentence, "tags" : { 'FR': "Nous avons l'intention de fabriquer et de vendre beaucoup de nos véhicules à roues sans conducteurs en Europe",
                                         'EN': "We intend to make and sell a lot of driverless vehicles in Europe"}, 'keywords': {"FR":[], "EN":[]}},
-        {"ieml" : supersentence, "title" : { 'FR': "Superphrase générée aléatoirement",
+        {"ieml" : supersentence, "tags" : { 'FR': "Superphrase générée aléatoirement",
                                              'EN': "Randomly generated supersentence"}, 'keywords': {"FR":[], "EN":[]}}
     ]
 
