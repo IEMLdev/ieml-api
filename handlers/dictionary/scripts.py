@@ -35,11 +35,12 @@ def _build_old_model_from_term_entry(term_db_entry):
     }
 
 
-@cached("all_ieml", 60)
+@cached("all_ieml", 1000)
 @exception_handler
 def all_ieml():
     """Returns a dump of all the terms contained in the DB, formatted for the JS client"""
-    result = [_build_old_model_from_term_entry(entry) for entry in terms_db().get_all_terms()]
+    result = [{**_build_old_model_from_term_entry(entry),
+              'INDEX': i} for i, entry in enumerate(sorted(terms_db().get_all_terms(), key=lambda d: sc(d["_id"])))]
     return result
 
 
