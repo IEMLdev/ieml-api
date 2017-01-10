@@ -136,7 +136,7 @@ def save_datas(datas):
 
 
 def load_datas():
-    with open('scoopit-datas.json') as f:
+    with open('/home/louis/code/ieml/propositions-restful-server/scripts/scoopit-datas.json') as f:
         return json.load(f)
 
 def mongo_save_datas(datas):
@@ -195,5 +195,7 @@ def scoopit_login(username, password):
 # save_datas(scrap_scoopit())
 # datas = scrap_scoopit()
 # save_datas(datas)
-# mongo_save_datas(datas)
-scoopit_login('pierre.levy@mac.me', '1plotin')
+data = load_datas()
+save_datas(data)
+mongo_save_datas(data)
+# scoopit_login('pierre.levy@mac.me', '1plotin')
