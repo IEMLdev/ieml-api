@@ -70,7 +70,7 @@ Then, we'll need to softlink that config file to add it to the activated sites, 
 takes the config into account. 
 
 ```bash
-sudo ln -s /etc/nginx/site-available/ieml-propositions /etc/nginx/sites-enabled/ieml-propositions
+sudo ln -s /etc/nginx/site-availables/ieml-propositions /etc/nginx/sites-enabled/ieml-propositions
 sudo service nginx restart
 ```
 
