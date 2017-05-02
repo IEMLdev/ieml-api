@@ -15,7 +15,7 @@ def collection_get_tags(url):
 
 
 def collection_is_download_complete(url):
-    return True
+    return {'finished': True, 'complete': True}
 
 
 def download_collection_from_url(url):

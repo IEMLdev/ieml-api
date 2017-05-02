@@ -6,7 +6,7 @@ OLD_RELATIONSHIPS_COLLECTION = "relationships"
 
 RELATIONS_COLLECTION = "relations"
 RELATIONS_LOCK_COLLECTION = "relations_lock"
-
+SOURCE_COLLECTION = "collection_sources"
 TERMS_COLLECTION = "terms"
 
 USLS_COLLECTION = "usls"

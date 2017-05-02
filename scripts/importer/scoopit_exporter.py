@@ -134,7 +134,6 @@ def save_datas(datas):
     with open('scoopit-datas.json', 'w') as f:
         json.dump(datas, f,indent=True)
 
-
 def load_datas():
     with open('/home/louis/code/ieml/propositions-restful-server/scripts/scoopit-datas.json') as f:
         return json.load(f)
@@ -193,7 +192,7 @@ def scoopit_login(username, password):
 
 
 # save_datas(scrap_scoopit())
-# datas = scrap_scoopit()
+datas = scrap_scoopit()
 # save_datas(datas)
 data = load_datas()
 save_datas(data)
