@@ -7,7 +7,7 @@ info:
   description : API for both the IEML dictionary and the IEML library
 
 basePath : /api
-produces : 
+produces :
   - application/json
 paths:
 
@@ -15,30 +15,30 @@ paths:
   ##          INTLEKT         ##
   ##############################
 
-  /intlekt/push:
-    post:
-      operationId: handlers.push_server_event
-      tags:
-        - Intlekt
-      parameters:
-        - name: screen_name
-          in: query
-          description: The twitter screen_name of the user we wish to notify of the event
-          type: string
-          required: true
-        - name: event_data
-          in: body
-          description: |
-            A description of the event
-          required: true
-          schema:
-            type: object
-      description: |
-        Push asynchronous server event to the client
-      responses:
-        '200':
-          description: |
-            Everything went well
+  # /intlekt/push:
+  #   post:
+  #     operationId: handlers.push_server_event
+  #     tags:
+  #       - Intlekt
+  #     parameters:
+  #       - name: screen_name
+  #         in: query
+  #         description: The twitter screen_name of the user we wish to notify of the event
+  #         type: string
+  #         required: true
+  #       - name: event_data
+  #         in: body
+  #         description: |
+  #           A description of the event
+  #         required: true
+  #         schema:
+  #           type: object
+  #     description: |
+  #       Push asynchronous server event to the client
+  #     responses:
+  #       '200':
+  #         description: |
+  #           Everything went well
 
   /intlekt/collection/get_tags:
     post:
@@ -47,6 +47,8 @@ paths:
         Retrieve the ordered list of tags in this collection url. Download the list of tag from the internet and save it,
         in a MongoDb database if needed. Return the list of tags with each tag title, count, link in the source collection
         and ieml. This list is sorted from the most cited tag to the lowest.
+      consumes:
+        - application/json
       tags:
         - Intlekt
         - Collection
@@ -74,6 +76,8 @@ paths:
       operationId: handlers.collection_define_tag
       description: |
         Set the ieml of a specific tag of a specific collection url.
+      consumes:
+        - application/json
       tags:
         - Intlekt
         - Collection
@@ -99,263 +103,259 @@ paths:
           description: |
             Success
 
+  #
+  # /intlekt/test:
+  #   get:
+  #     operationId: handlers.test_endpoint
+  #     tags:
+  #       - Intlekt
+  #     description: |
+  #       A wildcard endpoint for testing purposes
+  #     responses:
+  #       '200':
+  #         description: |
+  #           Some message
+  #
+  # /intlekt/auth/logout:
+  #   get:
+  #     operationId: handlers.logout
+  #     tags:
+  #       - Intlekt
+  #     description: |
+  #       log out
+  #     responses:
+  #       '200':
+  #         description: |
+  #           json formatted success message
+  #
+  # /intlekt/auth/info:
+  #   get:
+  #     operationId: handlers.info
+  #     tags:
+  #       - Intlekt
+  #     description: |
+  #       get info about the currently logged-in user
+  #     responses:
+  #       '200':
+  #         description: |
+  #           info about the currently logged-in user
+  #
+  # /intlekt/twitter/token:
+  #   get:
+  #     operationId: handlers.twitter_token
+  #     tags:
+  #       - Intlekt
+  #     description: |
+  #       Initiate the oauth dance
+  #     responses:
+  #       '302':
+  #         description: |
+  #           redirect the user's browser to Twitter's authorization page
+  #
+  # /intlekt/twitter/upgradeToken:
+  #   get:
+  #     operationId: handlers.twitter_upgradeToken
+  #     tags:
+  #       - Intlekt
+  #     description: |
+  #       retrieve the token
+  #     responses:
+  #       '302':
+  #         description: redirect the our home screen
+  #
+  # /intlekt/twitter/home_timeline:
+  #   get:
+  #     operationId: handlers.twitter_home_timeline
+  #     tags:
+  #       - Intlekt
+  #     description: |
+  #       Generate a visualization for the user's home timeline
+  #     responses:
+  #       '200':
+  #         description: |
+  #           a series of coordinates adequate for a specific type of visualization
+  #
+  # /intlekt/twitter/update:
+  #   get:
+  #     operationId: handlers.twitter_update
+  #     tags:
+  #       - Intlekt
+  #     description: |
+  #       Request an update of the user's twitter feed
+  #     responses:
+  #       '200':
+  #         description: |
+  #           a series of coordinates adequate for a specific type of visualization
+  #
+  # /intlekt/twitter/similarities:
+  #   get:
+  #     operationId: handlers.twitter_similarities
+  #     tags:
+  #       - Intlekt
+  #     description: |
+  #       Request a similarity computation on the user's home timeline
+  #     responses:
+  #       '200':
+  #         description: |
+  #           a list of resources ranked by similarity
 
-  /intlekt/test:
-    get:
-      operationId: handlers.test_endpoint
-      tags:
-        - Intlekt
-      description: |
-        A wildcard endpoint for testing purposes
-      responses:
-        '200':
-          description: |
-            Some message
-
-  /intlekt/auth/logout:
-    get:
-      operationId: handlers.logout
-      tags:
-        - Intlekt
-      description: |
-        log out
-      responses:
-        '200':
-          description: |
-            json formatted success message
-
-  /intlekt/auth/info:
-    get:
-      operationId: handlers.info
-      tags:
-        - Intlekt
-      description: |
-        get info about the currently logged-in user
-      responses:
-        '200':
-          description: |
-            info about the currently logged-in user
-
-  /intlekt/twitter/token:
-    get:
-      operationId: handlers.twitter_token
-      tags:
-        - Intlekt
-      description: |
-        Initiate the oauth dance
-      responses:
-        '302':
-          description: |
-            redirect the user's browser to Twitter's authorization page
-
-  /intlekt/twitter/upgradeToken:
-    get:
-      operationId: handlers.twitter_upgradeToken
-      tags:
-        - Intlekt
-      description: |
-        retrieve the token
-      responses:
-        '302':
-          description: redirect the our home screen
-
-  /intlekt/twitter/home_timeline:
-    get:
-      operationId: handlers.twitter_home_timeline
-      tags:
-        - Intlekt
-      description: |
-        Generate a visualization for the user's home timeline
-      responses:
-        '200':
-          description: |
-            a series of coordinates adequate for a specific type of visualization
-
-  /intlekt/twitter/update:
-    get:
-      operationId: handlers.twitter_update
-      tags:
-        - Intlekt
-      description: |
-        Request an update of the user's twitter feed
-      responses:
-        '200':
-          description: |
-            a series of coordinates adequate for a specific type of visualization
-
-  /intlekt/twitter/similarities:
-    get:
-      operationId: handlers.twitter_similarities
-      tags:
-        - Intlekt
-      description: |
-        Request a similarity computation on the user's home timeline
-      responses:
-        '200':
-          description: |
-            a list of resources ranked by similarity
-
-  /intlekt/edition/usl_to_json:
-    post:
-      operationId: handlers.usl_to_json
-      tags:
-        - Intlekt
-      description: |
-        Parse and return the json content of an usl ieml script.
-      parameters:
-        - name: usl
-          in: body
-          required: true
-          description: |
-            The usl ieml.
-          schema:
-            type: object
-          description: |
-            The usl to decompose and return the json
-        - name: language
-          in: query
-          description: |
-            The language to get the title in.
-          type: string
-      responses:
-        '200':
-          description: |
-            a nested json displaying the usl construction.
-
-  /intlekt/edition/json_to_usl:
-    post:
-      operationId: handlers.json_to_usl
-      tags:
-        - Intlekt
-      description: |
-        Parse a json describing an usl and return the ieml string.
-      parameters:
-        - name: json
-          in: body
-          required: true
-          description: |
-            The json object.
-          schema:
-            type: object
-          description: |
-            The json to decompose and return the ieml string
-      responses:
-        '200':
-          description: |
-            The ieml string
-
-  /intlekt/edition/paths_to_usl:
-    post:
-      operationId: handlers.rules_to_usl
-      tags:
-        - Intlekt
-      description: |
-        Take a list of couple (path, element) and return the associated usl.
-      parameters:
-        - name: rules
-          in: body
-          required: True
-          description: |
-            The list of rules
-          schema:
-            type: array
-            items:
-              type: array
-              items:
-                type: string
-      responses:
-        '200':
-          description: |
-            The ieml string
-
-  /intlekt/edition/usl_to_paths:
-    post:
-      operationId: handlers.usl_to_rules
-      tags:
-        - Intlekt
-      description: |
-        Take the ieml of a usl and return the list of (path, terms).
-      parameters:
-        - name: ieml
-          in: body
-          description: |
-            the ieml of the usl
-          schema:
-            type: string
-      responses:
-        '200':
-          description: |
-            The ieml string
-
-  /intlekt/edition/paths_to_json:
-    post:
-      operationId: handlers.rules_to_json
-      tags:
-        - Intlekt
-      description: |
-        Take a list of couple (path, element) and return the json of the associated usl.
-      parameters:
-        - name: rules
-          in: body
-          required: True
-          description: |
-            The list of rules
-          schema:
-            type: array
-            items:
-              type: array
-              items:
-                type: string
-      responses:
-        '200':
-          description: |
-            The json object
-
-  /intlekt/edition/recent:
-    get:
-      operationId: handlers.recent_usls
-      tags:
-        - Intlekt
-      description: |
-        Return the n most recent USLs opened by the user
-      parameters:
-        - name: language
-          in: query
-          description: |
-            The language to get the title in.
-          type: string
-        - name: n
-          in: query
-          description: |
-            The desired number of usls.
-          type: number
-      responses:
-        '200':
-          description: |
-            A list of usl/descriptor tuples
-
-  /intlekt/edition/samples:
-    get:
-      operationId: handlers.sample_usls
-      tags:
-        - Intlekt
-      description: |
-        Return n example USLs (or less)
-      parameters:
-        - name: language
-          in: query
-          description: |
-            The language to get the title in.
-          type: string
-        - name: n
-          in: query
-          description: |
-            The desired number of usls.
-          type: number
-      responses:
-        '200':
-          description: |
-            A list of usl/descriptor tuples
+  # /intlekt/edition/usl_to_json:
+  #   post:
+  #     operationId: handlers.usl_to_json
+  #     tags:
+  #       - Intlekt
+  #     description: |
+  #       Parse and return the json content of an usl ieml script.
+  #     parameters:
+  #       - name: usl
+  #         in: body
+  #         required: true
+  #         description: |
+  #           The usl ieml.
+  #         schema:
+  #           type: object
+  #       - name: language
+  #         in: query
+  #         description: |
+  #           The language to get the title in.
+  #         type: string
+  #     responses:
+  #       '200':
+  #         description: |
+  #           a nested json displaying the usl construction.
+  #
+  # /intlekt/edition/json_to_usl:
+  #   post:
+  #     operationId: handlers.json_to_usl
+  #     tags:
+  #       - Intlekt
+  #     description: |
+  #       Parse a json describing an usl and return the ieml string.
+  #     parameters:
+  #       - name: json
+  #         in: body
+  #         required: true
+  #         description: |
+  #           The json object.
+  #         schema:
+  #           type: object
+  #     responses:
+  #       '200':
+  #         description: |
+  #           The ieml string
+  #
+  # /intlekt/edition/paths_to_usl:
+  #   post:
+  #     operationId: handlers.rules_to_usl
+  #     tags:
+  #       - Intlekt
+  #     description: |
+  #       Take a list of couple (path, element) and return the associated usl.
+  #     parameters:
+  #       - name: rules
+  #         in: body
+  #         required: True
+  #         description: |
+  #           The list of rules
+  #         schema:
+  #           type: array
+  #           items:
+  #             type: array
+  #             items:
+  #               type: string
+  #     responses:
+  #       '200':
+  #         description: |
+  #           The ieml string
+  #
+  # /intlekt/edition/usl_to_paths:
+  #   post:
+  #     operationId: handlers.usl_to_rules
+  #     tags:
+  #       - Intlekt
+  #     description: |
+  #       Take the ieml of a usl and return the list of (path, terms).
+  #     parameters:
+  #       - name: ieml
+  #         in: body
+  #         description: |
+  #           the ieml of the usl
+  #         schema:
+  #           type: string
+  #     responses:
+  #       '200':
+  #         description: |
+  #           The ieml string
+  #
+  # /intlekt/edition/paths_to_json:
+  #   post:
+  #     operationId: handlers.rules_to_json
+  #     tags:
+  #       - Intlekt
+  #     description: |
+  #       Take a list of couple (path, element) and return the json of the associated usl.
+  #     parameters:
+  #       - name: rules
+  #         in: body
+  #         required: True
+  #         description: |
+  #           The list of rules
+  #         schema:
+  #           type: array
+  #           items:
+  #             type: array
+  #             items:
+  #               type: string
+  #     responses:
+  #       '200':
+  #         description: |
+  #           The json object
+  #
+  # /intlekt/edition/recent:
+  #   get:
+  #     operationId: handlers.recent_usls
+  #     tags:
+  #       - Intlekt
+  #     description: |
+  #       Return the n most recent USLs opened by the user
+  #     parameters:
+  #       - name: language
+  #         in: query
+  #         description: |
+  #           The language to get the title in.
+  #         type: string
+  #       - name: n
+  #         in: query
+  #         description: |
+  #           The desired number of usls.
+  #         type: number
+  #     responses:
+  #       '200':
+  #         description: |
+  #           A list of usl/descriptor tuples
+  #
+  # /intlekt/edition/samples:
+  #   get:
+  #     operationId: handlers.sample_usls
+  #     tags:
+  #       - Intlekt
+  #     description: |
+  #       Return n example USLs (or less)
+  #     parameters:
+  #       - name: language
+  #         in: query
+  #         description: |
+  #           The language to get the title in.
+  #         type: string
+  #       - name: n
+  #         in: query
+  #         description: |
+  #           The desired number of usls.
+  #         type: number
+  #     responses:
+  #       '200':
+  #         description: |
+  #           A list of usl/descriptor tuples
 
   ##############################
   ## FOR THE DICTIONARY'S API ##
@@ -601,6 +601,7 @@ paths:
       responses:
         '200':
           description: Successful response
+
   /updateieml:
     post:
       operationId: handlers.update_ieml_script
@@ -667,6 +668,7 @@ paths:
       responses:
         '200':
           description: Successful response
+
   '/updaterelations':
     post:
       operationId: handlers.update_relations
@@ -700,6 +702,7 @@ paths:
       responses:
         '200':
           description: Successful response
+
   '/exists/FR/{tag_fr}':
     get:
       operationId: handlers.fr_tag_exists
@@ -713,6 +716,7 @@ paths:
       responses:
         '200':
           description: Successful response
+
   '/exists/EN/{tag_en}':
     get:
       operationId: handlers.en_tag_exists
@@ -727,645 +731,645 @@ paths:
         '200':
           description: Successful response
 
-  #################################
-  ## FOR THE USL/PROPOSITION API ##
-  #################################
+#   #################################
+#   ## FOR THE USL/PROPOSITION API ##
+#   #################################
+#
+#   ##############################
+#   ## FOR THE
+#   ##############################
+#
+#   /distance/usls:
+#     post:
+#       operationId: handlers.distance_usl_group
+#       description: Compute the distance between the usl in argument.
+#       parameters:
+#         - name: body
+#           in: body
+#           description: A list of usl
+#           required: true
+#           schema:
+# #            type: object
+# #            properties:
+# #              usls:
+#             type: array
+#             items:
+#               type: string
+#       responses:
+#         200:
+#           description: Successful response
+#           schema:
+#             $ref: '#/definitions/distance_group'
+#
+#   /usls:
+#     get:
+#       operationId: handlers.query_usl
+#       tags:
+#         - usl
+#         - edition
+#       description: Get a list of usl matching the parameters from the db.
+#       parameters:
+#         - in: query
+#           name: fr
+#           type: string
+#           description: Get the usls that have their fr tag containing this parameter.
+#         - in: query
+#           name: en
+#           type: string
+#           description: Get the usls that have their en tag containing this parameter.
+#         - in: query
+#           name: fr_keywords
+#           description: Get the usls that have their fr keyword containing one of this parameter.
+#           type: array
+#           items:
+#             type: string
+#         - in: query
+#           name: en_keywords
+#           description: Get the usls that have their en keyword containing one of this parameter.
+#           type: array
+#           items:
+#             type: string
+#         - in: query
+#           name: quey
+#           type: string
+#           description: Get the usls that have their fr or en tag or keywords containing this parameter.
+#
+#       responses:
+#         200:
+#           description: Successful response
+#           schema:
+#             type: object
+#             properties:
+#               success:
+#                 type: boolean
+#                 description: if the request is successful.
+#               match:
+#                 description: the list of the usls matched.
+#                 type: array
+#                 items:
+#                   $ref: '#/definitions/usl_entry'
+#
+#     post:
+#       operationId: handlers.save_usl
+#       tags:
+#         - usl
+#         - edition
+#       description: Save an usl to the db.
+#       parameters:
+#         - in: body
+#           name: body
+#           required: true
+#           schema:
+#             type: object
+#             required:
+#               - ieml
+#               - tags
+#             properties:
+#               ieml:
+#                 type: string
+#               tags:
+#                 type: object
+#                 required:
+#                   - fr
+#                   - en
+#                 properties:
+#                   fr:
+#                     type: string
+#                   en:
+#                     type: string
+#               keywords:
+#                 type: object
+#                 properties:
+#                   fr:
+#                     type: array
+#                     items:
+#                       type: string
+#                   en:
+#                     type: array
+#                     items:
+#                       type: string
+#       responses:
+#         200:
+#           description: Successful response
+#           schema:
+#             type: object
+#             properties:
+#               success:
+#                 type: boolean
+#               id:
+#                 type: string
+#
+#   '/usls/{id}':
+#     delete:
+#       operationId: handlers.delete_usl
+#       tags:
+#         - usl
+#         - edition
+#       description: Delete an usl from the db.
+#       parameters:
+#         - in: path
+#           name: id
+#           required: true
+#           type: string
+#       responses:
+#         200:
+#           description: Successful response
+#           schema:
+#             type: object
+#             properties:
+#               success:
+#                 type: boolean
+#
+#     get:
+#       operationId: handlers.get_usl_id
+#       tags:
+#         - usl
+#         - edition
+#       description: Get a usl from the db.
+#       parameters:
+#         - in: path
+#           name: id
+#           required: true
+#           type: string
+#       responses:
+#         200:
+#           description: Successful response
+#           schema:
+#             $ref: '#/definitions/usl_entry'
+#
+#     put:
+#       operationId: handlers.update_usl
+#       tags:
+#         - usl
+#         - edition
+#       description: Update an exsting usl.
+#       parameters:
+#         - in: path
+#           name: id
+#           required: true
+#           type: string
+#         - in: body
+#           name: body
+#           required: true
+#           schema:
+#             type: object
+#             properties:
+#               ieml:
+#                 type: string
+#               tags:
+#                 type: object
+#                 properties:
+#                   fr:
+#                     type: string
+#                   en:
+#                     type: string
+#               keywords:
+#                 type: object
+#                 properties:
+#                   fr:
+#                     type: array
+#                     items:
+#                       type: string
+#                   en:
+#                     type: array
+#                     items:
+#                       type: string
+#       responses:
+#         200:
+#           description: Successful response
+#           schema:
+#             type: object
+#             properties:
+#               success:
+#                 type: boolean
+#
+#   '/usls/templates':
+#     post:
+#       operationId: handlers.save_template
+#       tags:
+#         - usl
+#         - template
+#         - edition
+#       description: Save a template to the db.
+#       parameters:
+#         - in: body
+#           name: body
+#           required: true
+#           schema:
+#             type: object
+#             required:
+#               - ieml
+#               - paths
+#             properties:
+#               ieml:
+#                 type: string
+#               paths:
+#                 type: array
+#                 items:
+#                   type: string
+#               tags_rules:
+#                 type: object
+#                 required:
+#                   - fr
+#                   - en
+#                 properties:
+#                   fr:
+#                     type: string
+#                   en:
+#                     type: string
+#               tags:
+#                 type: object
+#                 required:
+#                   - fr
+#                   - en
+#                 properties:
+#                   fr:
+#                     type: string
+#                   en:
+#                     type: string
+#               keywords:
+#                 type: object
+#                 properties:
+#                   fr:
+#                     type: array
+#                     items:
+#                       type: string
+#                   en:
+#                     type: array
+#                     items:
+#                       type: string
+#       responses:
+#         200:
+#           description: Successful response
+#           schema:
+#             type: object
+#             properties:
+#               success:
+#                 type: boolean
+#               id:
+#                 type: string
 
-  ##############################
-  ## FOR THE
-  ##############################
-
-  /distance/usls:
-    post:
-      operationId: handlers.distance_usl_group
-      description: Compute the distance between the usl in argument.
-      parameters:
-        - name: body
-          in: body
-          description: A list of usl
-          required: true
-          schema:
-#            type: object
-#            properties:
-#              usls:
-            type: array
-            items:
-              type: string
-      responses:
-        200:
-          description: Successful response
-          schema:
-            $ref: '#/definitions/distance_group'
-
-  /usls:
-    get:
-      operationId: handlers.query_usl
-      tags:
-        - usl
-        - edition
-      description: Get a list of usl matching the parameters from the db.
-      parameters:
-        - in: query
-          name: fr
-          type: string
-          description: Get the usls that have their fr tag containing this parameter.
-        - in: query
-          name: en
-          type: string
-          description: Get the usls that have their en tag containing this parameter.
-        - in: query
-          name: fr_keywords
-          description: Get the usls that have their fr keyword containing one of this parameter.
-          type: array
-          items:
-            type: string
-        - in: query
-          name: en_keywords
-          description: Get the usls that have their en keyword containing one of this parameter.
-          type: array
-          items:
-            type: string
-        - in: query
-          name: quey
-          type: string
-          description: Get the usls that have their fr or en tag or keywords containing this parameter.
-
-      responses:
-        200:
-          description: Successful response
-          schema:
-            type: object
-            properties:
-              success:
-                type: boolean
-                description: if the request is successful.
-              match:
-                description: the list of the usls matched.
-                type: array
-                items:
-                  $ref: '#/definitions/usl_entry'
-
-    post:
-      operationId: handlers.save_usl
-      tags:
-        - usl
-        - edition
-      description: Save an usl to the db.
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-            required:
-              - ieml
-              - tags
-            properties:
-              ieml:
-                type: string
-              tags:
-                type: object
-                required:
-                  - fr
-                  - en
-                properties:
-                  fr:
-                    type: string
-                  en:
-                    type: string
-              keywords:
-                type: object
-                properties:
-                  fr:
-                    type: array
-                    items:
-                      type: string
-                  en:
-                    type: array
-                    items:
-                      type: string
-      responses:
-        200:
-          description: Successful response
-          schema:
-            type: object
-            properties:
-              success:
-                type: boolean
-              id:
-                type: string
-
-  '/usls/{id}':
-    delete:
-      operationId: handlers.delete_usl
-      tags:
-        - usl
-        - edition
-      description: Delete an usl from the db.
-      parameters:
-        - in: path
-          name: id
-          required: true
-          type: string
-      responses:
-        200:
-          description: Successful response
-          schema:
-            type: object
-            properties:
-              success:
-                type: boolean
-
-    get:
-      operationId: handlers.get_usl_id
-      tags:
-        - usl
-        - edition
-      description: Get a usl from the db.
-      parameters:
-        - in: path
-          name: id
-          required: true
-          type: string
-      responses:
-        200:
-          description: Successful response
-          schema:
-            $ref: '#/definitions/usl_entry'
-
-    put:
-      operationId: handlers.update_usl
-      tags:
-        - usl
-        - edition
-      description: Update an exsting usl.
-      parameters:
-        - in: path
-          name: id
-          required: true
-          type: string
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-            properties:
-              ieml:
-                type: string
-              tags:
-                type: object
-                properties:
-                  fr:
-                    type: string
-                  en:
-                    type: string
-              keywords:
-                type: object
-                properties:
-                  fr:
-                    type: array
-                    items:
-                      type: string
-                  en:
-                    type: array
-                    items:
-                      type: string
-      responses:
-        200:
-          description: Successful response
-          schema:
-            type: object
-            properties:
-              success:
-                type: boolean
-
-  '/usls/templates':
-    post:
-      operationId: handlers.save_template
-      tags:
-        - usl
-        - template
-        - edition
-      description: Save a template to the db.
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-            required:
-              - ieml
-              - paths
-            properties:
-              ieml:
-                type: string
-              paths:
-                type: array
-                items:
-                  type: string
-              tags_rules:
-                type: object
-                required:
-                  - fr
-                  - en
-                properties:
-                  fr:
-                    type: string
-                  en:
-                    type: string
-              tags:
-                type: object
-                required:
-                  - fr
-                  - en
-                properties:
-                  fr:
-                    type: string
-                  en:
-                    type: string
-              keywords:
-                type: object
-                properties:
-                  fr:
-                    type: array
-                    items:
-                      type: string
-                  en:
-                    type: array
-                    items:
-                      type: string
-      responses:
-        200:
-          description: Successful response
-          schema:
-            type: object
-            properties:
-              success:
-                type: boolean
-              id:
-                type: string
-
-definitions:
-  usl_entry:
-    properties:
-      id:
-        type: string
-      ieml:
-        type: string
-      tags:
-        type: object
-        properties:
-          fr:
-            type: string
-          en:
-            type: string
-      keywords:
-        type: object
-        properties:
-          fr:
-            type: array
-            items:
-              type: string
-          en:
-            type: array
-            items:
-              type: string
-
-
-  distance_group:
-    properties:
-      usls:
-        type: array
-        items:
-          type: string
-      distances:
-        type: array
-        items:
-          type: array
-          items:
-            type: number
-
-
-  ##############################
-  ## FOR THE DICTIONARY'S API ##
-  ##############################
-
-  ieml_term:
-    properties:
-      CANONICAL:
-        type: array
-        items:
-          type: string
-      CLASS:
-        type: number
-      EN:
-        type: string
-      FR:
-        type: string
-      IEML:
-        type: string
-      LAYER:
-        type: number
-      PARADIGM:
-        type: number
-      ROOT_PARADIGM:
-        type: boolean
-      TAILLE:
-        type: number
-      _id:
-        type: string
-
-
-  #################################
-  ## FOR THE USL/PROPOSITION API ##
-  #################################
-  search_filters:
-    type: object
-    required :
-      - search_string
-    properties:
-      search_string:
-        type : string
-      language:
-        type : string
-      level:
-        type: array
-        items:
-          type: string
-      category:
-        type: string
-      term_type:
-        type : string
-    
-  ieml_element:
-    type: object
-    required:
-      - IEML
-      - TAGS
-      - TYPE
-    properties:
-      IEML: 
-        type : string
-      TAGS:
-        type : string
-      TYPE:
-        type : string
-        
-  tag_exists:
-    type: object
-    properties:
-      exist: 
-        type: boolean
-    
-  tags:
-    type : object
-    required:
-      - FR
-      - EN
-    properties:
-      FR:
-        type : string
-      EN:
-        type : string
-  
-  word_data:
-    type: object
-    required:
-      - substance
-      - mode
-      - tags
-    properties:
-      substance:
-        type : array
-        items :
-          type: string
-      mode:
-        type : array
-        items :
-          type: string
-      tags:
-        $ref: "#/definitions/tags"
-      
-  node:
-    type: object
-    required:
-      - ieml_string
-      - id
-    properties:
-      ieml_string:
-        type : string
-      id :
-        type : string
-  
-  proposition_graph:
-    type : object
-    required:
-      - nodes
-      - graph
-      - tags
-    properties:
-      nodes:
-        type : array
-        items:
-          $ref: "#/definitions/node"
-      graph:
-        type: array
-        items:
-          type: object
-          required:
-            - substance
-            - attribut
-            - mode
-          properties:
-            substance :
-              type : string
-            attribut :
-              type : string
-            mode :
-              type : string
-      tags:
-        $ref: "#/definitions/tags"
-      validation_type:
-        type : integer
-    
-  text_data:
-    type: object
-    required:
-      - text
-      - tags
-    properties:
-      text:
-        type : array
-        items :
-          type: string
-      tags:
-        $ref: "#/definitions/tags"
-  
-  hyperlink_data:
-    type: object
-    required:
-      - literal
-      - selection
-    properties:
-      literal:
-        type: string
-      selection:
-        type : array
-        items:
-          type : string
-  
-  hypertext_graph:
-    type : object
-    required:
-      - nodes
-      - graph
-      - tags
-    properties:
-      nodes:
-        type : array
-        items:
-          $ref: "#/definitions/node"
-      graph:
-        type: array
-        items:
-          type: object
-          required:
-            - substance
-            - attribut
-            - mode
-          properties:
-            substance :
-              type : string
-            attribut :
-              type : string
-            mode :
-              $ref: "#/definitions/hyperlink_data"
-              
-      tags:
-        $ref: "#/definitions/tags"
-      validation_type:
-        type : integer
-  
-  validate_response :
-    type : object
-    required:
-      - valid
-      - ieml
-    properties:
-      valid :
-        type : boolean
-      ieml:
-        type : string
-  
-  proposition_tree:
-    type: object
-    required :
-      - id
-      - name
-      - data
-      - children
-    properties:
-      id :
-        type: string
-      name:
-        type: string
-      data :
-        type: object
-        required : 
-          - PATH
-          - TAGS
-          - TYPE
-        properties:
-          PATH:
-            type: array
-            items:
-              type : string
-          TAGS:
-            $ref: "#/definitions/tags"
-          TYPE : 
-            type: string
-      children:
-        type : array
-        items:
-          $ref: "#/definitions/proposition_tree"
-  
-  proposition_data:
-    type : object
-    required:
-      - IEML
-      - TAGS
-      - TYPE
-    properties:
-          IEML:
-            type: string
-          TAGS:
-            $ref: "#/definitions/tags"
-          TYPE : 
-            type: string
-  
-  decomposed_ieml_element:
-    type: object
-    properties:
-    
-      word_data: 
-        type: object
-        required :
-          - substance
-          - mode
-        properties:
-          substance:
-            type: array
-            items:
-              $ref: "#/definitions/proposition_data"
-          mode:
-            type: array
-            items:
-              $ref: "#/definitions/proposition_data"
-      
-      sentence_data:
-        type : array
-        items:
-          type : object
-          required :
-            - substance
-            - attribute
-            - mode
-          properties:
-            substance:
-              $ref: "#/definitions/proposition_data"
-            attribute:
-              $ref: "#/definitions/proposition_data"
-            mode:
-              $ref: "#/definitions/proposition_data"
-      
-      text_data:
-        type: array
-        items :
-          $ref: "#/definitions/proposition_data"
-      
-      hypertext_data:
-        type: array
-        items:
-          type: object
-          required:
-            - substance
-            - attribute
-            - mode
-          properties:
-            substance: 
-              type: string
-            attribute : 
-              type: string
-            mode :
-              type: object
-              required:
-                - literal
-                - path
-              properties:
-                literal:
-                  type: string
-                path:
-                  type: array
-                  items:
-                    type : string
-        
+# definitions:
+#   usl_entry:
+#     properties:
+#       id:
+#         type: string
+#       ieml:
+#         type: string
+#       tags:
+#         type: object
+#         properties:
+#           fr:
+#             type: string
+#           en:
+#             type: string
+#       keywords:
+#         type: object
+#         properties:
+#           fr:
+#             type: array
+#             items:
+#               type: string
+#           en:
+#             type: array
+#             items:
+#               type: string
+#
+#
+#   distance_group:
+#     properties:
+#       usls:
+#         type: array
+#         items:
+#           type: string
+#       distances:
+#         type: array
+#         items:
+#           type: array
+#           items:
+#             type: number
+#
+#
+#   ##############################
+#   ## FOR THE DICTIONARY'S API ##
+#   ##############################
+#
+#   ieml_term:
+#     properties:
+#       CANONICAL:
+#         type: array
+#         items:
+#           type: string
+#       CLASS:
+#         type: number
+#       EN:
+#         type: string
+#       FR:
+#         type: string
+#       IEML:
+#         type: string
+#       LAYER:
+#         type: number
+#       PARADIGM:
+#         type: number
+#       ROOT_PARADIGM:
+#         type: boolean
+#       TAILLE:
+#         type: number
+#       _id:
+#         type: string
+#
+#
+#   #################################
+#   ## FOR THE USL/PROPOSITION API ##
+#   #################################
+#   search_filters:
+#     type: object
+#     required :
+#       - search_string
+#     properties:
+#       search_string:
+#         type : string
+#       language:
+#         type : string
+#       level:
+#         type: array
+#         items:
+#           type: string
+#       category:
+#         type: string
+#       term_type:
+#         type : string
+#
+#   ieml_element:
+#     type: object
+#     required:
+#       - IEML
+#       - TAGS
+#       - TYPE
+#     properties:
+#       IEML:
+#         type : string
+#       TAGS:
+#         type : string
+#       TYPE:
+#         type : string
+#
+#   tag_exists:
+#     type: object
+#     properties:
+#       exist:
+#         type: boolean
+#
+#   tags:
+#     type : object
+#     required:
+#       - FR
+#       - EN
+#     properties:
+#       FR:
+#         type : string
+#       EN:
+#         type : string
+#
+#   word_data:
+#     type: object
+#     required:
+#       - substance
+#       - mode
+#       - tags
+#     properties:
+#       substance:
+#         type : array
+#         items :
+#           type: string
+#       mode:
+#         type : array
+#         items :
+#           type: string
+#       tags:
+#         $ref: "#/definitions/tags"
+#
+#   node:
+#     type: object
+#     required:
+#       - ieml_string
+#       - id
+#     properties:
+#       ieml_string:
+#         type : string
+#       id :
+#         type : string
+#
+#   proposition_graph:
+#     type : object
+#     required:
+#       - nodes
+#       - graph
+#       - tags
+#     properties:
+#       nodes:
+#         type : array
+#         items:
+#           $ref: "#/definitions/node"
+#       graph:
+#         type: array
+#         items:
+#           type: object
+#           required:
+#             - substance
+#             - attribut
+#             - mode
+#           properties:
+#             substance :
+#               type : string
+#             attribut :
+#               type : string
+#             mode :
+#               type : string
+#       tags:
+#         $ref: "#/definitions/tags"
+#       validation_type:
+#         type : integer
+#
+#   text_data:
+#     type: object
+#     required:
+#       - text
+#       - tags
+#     properties:
+#       text:
+#         type : array
+#         items :
+#           type: string
+#       tags:
+#         $ref: "#/definitions/tags"
+#
+#   hyperlink_data:
+#     type: object
+#     required:
+#       - literal
+#       - selection
+#     properties:
+#       literal:
+#         type: string
+#       selection:
+#         type : array
+#         items:
+#           type : string
+#
+#   hypertext_graph:
+#     type : object
+#     required:
+#       - nodes
+#       - graph
+#       - tags
+#     properties:
+#       nodes:
+#         type : array
+#         items:
+#           $ref: "#/definitions/node"
+#       graph:
+#         type: array
+#         items:
+#           type: object
+#           required:
+#             - substance
+#             - attribut
+#             - mode
+#           properties:
+#             substance :
+#               type : string
+#             attribut :
+#               type : string
+#             mode :
+#               $ref: "#/definitions/hyperlink_data"
+#
+#       tags:
+#         $ref: "#/definitions/tags"
+#       validation_type:
+#         type : integer
+#
+#   validate_response :
+#     type : object
+#     required:
+#       - valid
+#       - ieml
+#     properties:
+#       valid :
+#         type : boolean
+#       ieml:
+#         type : string
+#
+#   proposition_tree:
+#     type: object
+#     required :
+#       - id
+#       - name
+#       - data
+#       - children
+#     properties:
+#       id :
+#         type: string
+#       name:
+#         type: string
+#       data :
+#         type: object
+#         required :
+#           - PATH
+#           - TAGS
+#           - TYPE
+#         properties:
+#           PATH:
+#             type: array
+#             items:
+#               type : string
+#           TAGS:
+#             $ref: "#/definitions/tags"
+#           TYPE :
+#             type: string
+#       children:
+#         type : array
+#         items:
+#           $ref: "#/definitions/proposition_tree"
+#
+#   proposition_data:
+#     type : object
+#     required:
+#       - IEML
+#       - TAGS
+#       - TYPE
+#     properties:
+#           IEML:
+#             type: string
+#           TAGS:
+#             $ref: "#/definitions/tags"
+#           TYPE :
+#             type: string
+#
+#   decomposed_ieml_element:
+#     type: object
+#     properties:
+#
+#       word_data:
+#         type: object
+#         required :
+#           - substance
+#           - mode
+#         properties:
+#           substance:
+#             type: array
+#             items:
+#               $ref: "#/definitions/proposition_data"
+#           mode:
+#             type: array
+#             items:
+#               $ref: "#/definitions/proposition_data"
+#
+#       sentence_data:
+#         type : array
+#         items:
+#           type : object
+#           required :
+#             - substance
+#             - attribute
+#             - mode
+#           properties:
+#             substance:
+#               $ref: "#/definitions/proposition_data"
+#             attribute:
+#               $ref: "#/definitions/proposition_data"
+#             mode:
+#               $ref: "#/definitions/proposition_data"
+#
+#       text_data:
+#         type: array
+#         items :
+#           $ref: "#/definitions/proposition_data"
+#
+#       hypertext_data:
+#         type: array
+#         items:
+#           type: object
+#           required:
+#             - substance
+#             - attribute
+#             - mode
+#           properties:
+#             substance:
+#               type: string
+#             attribute :
+#               type: string
+#             mode :
+#               type: object
+#               required:
+#                 - literal
+#                 - path
+#               properties:
+#                 literal:
+#                   type: string
+#                 path:
+#                   type: array
+#                   items:
+#                     type : string
+#
