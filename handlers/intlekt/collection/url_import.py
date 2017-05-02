@@ -3,7 +3,7 @@ from models.collections.sources import SourcesConnector
 from pipeline.importer.scoopit import import_tags
 
 
-# @exception_handler
+@exception_handler
 def collection_define_tag(body):
     SourcesConnector().set_ieml(body['url'], body['tag'], body['ieml'])
     return {'success': True}
@@ -22,5 +22,6 @@ def collection_get_tags(body):
                'link': t['link'],
                'ieml': t['ieml']} for t in SourcesConnector().get_source(url)['tags']]
 
-    return sorted(result, key=lambda d: d['count'], reverse=True)
+    return {'success': True,
+            'tags': list(sorted(result, key=lambda d: d['count'], reverse=True))}
 
