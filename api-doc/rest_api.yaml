@@ -40,45 +40,92 @@ paths:
           description: |
             Everything went well
 
-  /intlekt/collections/draft:
+  /intlekt/collection/download_from_url:
     post:
-      operationId: handlers.createCollectionDraft
+      operationId: handlers.download_collection_from_url
       tags:
         - Intlekt
+        - Collection
       parameters:
-        - name: collectionParams
-          in: body
+        - name: url
+          in: query
           description: |
-            A description of the starting parameters of a new collection
+            Scoopit url of a collection to download posts
           required: true
           schema:
-            type: object
-      description: |
-        Ask the server to create a new collection for us
+            type: string
       responses:
         '200':
           description: |
             The request has been accepted
 
-  '/intlekt/collections/{collection_id}/dataset':
+  /intlekt/collection/is_download_complete:
     get:
-      operationId: handlers.getPreTaggedDataset
+      operationId: handlers.collection_is_download_complete
       tags:
         - Intlekt
+        - Collection
       parameters:
-        - name: collection_id
-          in: path
+        - name: url
+          in: query
           description: |
-            The id of the collection
+            The url of the collection
           required: true
           type: string
-          description: |
-            Return the collection of Tagged Resources associated with a collection. If no
-            Resources currently exist, a request will be made to retrieve them
       responses:
         '200':
           description: |
-            The tagged resources associated with the requested collection
+            Return true or false
+
+
+  /intlekt/collection/get_tags:
+    get:
+      operationId: handlers.collection_get_tags
+      tags:
+        - Intlekt
+        - Collection
+      parameters:
+        - name: url
+          in: query
+          description: |
+            The url of the collection
+          required: true
+          type: string
+      responses:
+        '200':
+          description: |
+            return the list of tag and theirs frequency
+
+
+  /intlekt/collection/define_tag:
+    post:
+      operationId: handlers.collection_define_tag
+      tags:
+        - Intlekt
+        - Collection
+      parameters:
+        - name: url
+          in: query
+          required: true
+          type: string
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            required:
+              - tag
+              - ieml
+            properties:
+              tag:
+                type : string
+              ieml:
+                type : string
+      responses:
+        '200':
+          description: |
+            Success
+
 
   /intlekt/test:
     get:
