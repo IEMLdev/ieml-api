@@ -365,7 +365,7 @@ paths:
     get:
       operationId: handlers.all_ieml
       tags:
-        - IEML
+        - Dictionary
       description: |
         Returns a list of all the `IEML term` objects.
       responses:
@@ -380,7 +380,7 @@ paths:
     get:
       operationId: handlers.get_term
       tags:
-        - IEML
+        - Dictionary
       description: |
         Return a specific term object.
       parameters:
@@ -396,6 +396,8 @@ paths:
 
   /client/authenticate:
     post:
+      tags:
+        - Dictionary
       operationId: handlers.authenticate
       description: |
         Login handler for the dictionary user
@@ -418,6 +420,7 @@ paths:
     get:
       operationId: handlers.parse_ieml
       tags:
+        - Dictionary
         - Parsing
       description: |
         Checks the validity of `IEML term`
@@ -461,6 +464,7 @@ paths:
     get:
       operationId: handlers.script_table
       tags:
+        - Dictionary
         - Parsing
       description: |
         Compute the tables for an `IEML paradigm`
@@ -492,6 +496,7 @@ paths:
     get:
       operationId: handlers.script_tree
       tags:
+        - Dictionary
         - Parsing
       description: |
         Computes the tree of a given `IEML term`
@@ -507,6 +512,8 @@ paths:
 
   /getRelVisibility:
     post:
+      tags:
+        - Dictionary
       operationId: handlers.get_relation_visibility
       description: |
         TODO
@@ -527,6 +534,7 @@ paths:
     post:
       operationId: handlers.get_relations
       tags:
+        - Dictionary
         - Relations
       description: >
         Returns a list of all the relations associated with the `IEML term`
@@ -577,6 +585,9 @@ paths:
       operationId: handlers.new_ieml_script
       description: |
         Add a new `IEML` term to the dictionary
+      tags:
+        - Dictionary
+        - Term
       parameters:
         - in : body
           name : body
@@ -605,6 +616,9 @@ paths:
   /updateieml:
     post:
       operationId: handlers.update_ieml_script
+      tags:
+        - Dictionary
+        - Term
       description: |
         Modify an `IEML` term from the dictionary
       parameters:
@@ -640,6 +654,8 @@ paths:
   /update_status:
     get:
       operationId: handlers.computation_status
+      tags:
+        - Dictionary
       description: |
         Get the status of the computation.
       responses:
@@ -649,6 +665,9 @@ paths:
   /remieml:
     post:
       operationId: handlers.remove_ieml_script
+      tags:
+        - Dictionary
+        - Term
       description: |
         Delete an `IEML` term from the dictionary
       parameters:
@@ -672,6 +691,9 @@ paths:
   '/updaterelations':
     post:
       operationId: handlers.update_relations
+      tags:
+        - Dictionary
+        - Relation
       description: |
         Recompute the relations in the dictionary. This operation may take a long time (~2min).
       parameters:
@@ -692,6 +714,9 @@ paths:
   '/exists/ieml/{ieml_term}':
     get:
       operationId: handlers.ieml_term_exists
+      tags:
+        - Dictionary
+        - Term
       description: |
         Check if `<term_ieml>` exists in the dictionary
       parameters:
@@ -706,6 +731,9 @@ paths:
   '/exists/FR/{tag_fr}':
     get:
       operationId: handlers.fr_tag_exists
+      tags:
+        - Dictionary
+        - Term
       description: |
         Check if `<term_ieml>` exists in the **French** dictionary
       parameters:
@@ -720,6 +748,9 @@ paths:
   '/exists/EN/{tag_en}':
     get:
       operationId: handlers.en_tag_exists
+      tags:
+        - Dictionary
+        - Term
       description: |
         Check if `<term_ieml>` exists in the **English** dictionary
       parameters:
@@ -1009,7 +1040,7 @@ paths:
 #               id:
 #                 type: string
 
-# definitions:
+definitions:
 #   usl_entry:
 #     properties:
 #       id:
@@ -1050,34 +1081,34 @@ paths:
 #             type: number
 #
 #
-#   ##############################
-#   ## FOR THE DICTIONARY'S API ##
-#   ##############################
-#
-#   ieml_term:
-#     properties:
-#       CANONICAL:
-#         type: array
-#         items:
-#           type: string
-#       CLASS:
-#         type: number
-#       EN:
-#         type: string
-#       FR:
-#         type: string
-#       IEML:
-#         type: string
-#       LAYER:
-#         type: number
-#       PARADIGM:
-#         type: number
-#       ROOT_PARADIGM:
-#         type: boolean
-#       TAILLE:
-#         type: number
-#       _id:
-#         type: string
+  ##############################
+  ## FOR THE DICTIONARY'S API ##
+  ##############################
+
+  ieml_term:
+    properties:
+      CANONICAL:
+        type: array
+        items:
+          type: string
+      CLASS:
+        type: number
+      EN:
+        type: string
+      FR:
+        type: string
+      IEML:
+        type: string
+      LAYER:
+        type: number
+      PARADIGM:
+        type: number
+      ROOT_PARADIGM:
+        type: boolean
+      TAILLE:
+        type: number
+      _id:
+        type: string
 #
 #
 #   #################################
