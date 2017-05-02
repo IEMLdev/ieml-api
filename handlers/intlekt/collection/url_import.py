@@ -1,23 +1,26 @@
-from string import ascii_lowercase
+from handlers.commons import exception_handler
+from models.collections.sources import SourcesConnector
+from pipeline.importer.scoopit import import_tags
 
-import numpy as np
 
-
+# @exception_handler
 def collection_define_tag(body):
+    SourcesConnector().set_ieml(body['url'], body['tag'], body['ieml'])
     return {'success': True}
 
 
-def collection_get_tags(url):
-    print("url %s"%url)
+@exception_handler
+def collection_get_tags(body):
+    url = body['url']
 
-    return [{'tag': ''.join(np.random.choice(list(ascii_lowercase), 8)),
-             'count': np.random.randint(1, 10)} for _ in range(5)]
+    s = SourcesConnector()
+    if not s.get_source(url):
+        import_tags(url)
 
+    result = [{'tags': t['title'],
+               'count': t['count'],
+               'link': t['link'],
+               'ieml': t['ieml']} for t in SourcesConnector().get_source(url)['tags']]
 
-def collection_is_download_complete(url):
-    return {'finished': True, 'complete': True}
+    return sorted(result, key=lambda d: d['count'], reverse=True)
 
-
-def download_collection_from_url(url):
-    print(url)
-    return {'success': True}

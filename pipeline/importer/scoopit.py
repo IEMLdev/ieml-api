@@ -2,6 +2,8 @@ import urllib.request
 from urllib.parse import urlparse
 from bs4 import BeautifulSoup
 
+from models.collections.sources import SourcesConnector
+
 SCOOPIT_URL="www.scoop.it"
 
 
@@ -14,10 +16,11 @@ def import_tags(url):
     if not _check_is_scoopit_url(url):
         raise ValueError("Not a scoopit url: %s"%url)
 
-    return import_theme(url)
+    tags = scrap_tags(url)
+    SourcesConnector().save_sources(url, tags)
 
 
-def import_theme(theme_url):
+def scrap_tags(theme_url):
     r = urllib.request.urlopen(theme_url).read()
     th_html = BeautifulSoup(r, "lxml")
     tags = []
@@ -25,11 +28,9 @@ def import_theme(theme_url):
     for tag in th_html.select('.topic-tags-list > .topic-tags-item > a'):
         tags.append({
             'title': tag.select('.topic-tags-item-name')[0].contents[0],
-            'count': tag.select('.topic-tags-item-count')[0].contents[0],
-            'url': "http://%s%s" % (urlparse(theme_url).netloc, tag['href'])
+            'count': int(tag.select('.topic-tags-item-count')[0].contents[0]),
+            'link': "http://%s%s" % (urlparse(theme_url).netloc, tag['href'])
         })
-
-    print(tags)
 
     return tags
 
@@ -37,4 +38,4 @@ def import_theme(theme_url):
 
 
 if __name__ == '__main__':
-    import_tags("http://www.scoop.it/t/big-data-cloud-and-social-everything#")
+    import_tags("http://www.scoop.it/t/big-data-cloud-and-social-everything")

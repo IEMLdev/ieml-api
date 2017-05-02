@@ -40,57 +40,25 @@ paths:
           description: |
             Everything went well
 
-  /intlekt/collection/download_from_url:
-    post:
-      operationId: handlers.download_collection_from_url
-      tags:
-        - Intlekt
-        - Collection
-      parameters:
-        - name: url
-          in: query
-          description: |
-            Scoopit url of a collection to download posts
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: |
-            The request has been accepted
-
-  /intlekt/collection/is_download_complete:
-    get:
-      operationId: handlers.collection_is_download_complete
-      tags:
-        - Intlekt
-        - Collection
-      parameters:
-        - name: url
-          in: query
-          description: |
-            The url of the collection
-          required: true
-          type: string
-      responses:
-        '200':
-          description: |
-            Return true or false
-
-
   /intlekt/collection/get_tags:
-    get:
+    post:
       operationId: handlers.collection_get_tags
       tags:
         - Intlekt
         - Collection
       parameters:
-        - name: url
-          in: query
+        - name: body
+          in: body
           description: |
             The url of the collection
           required: true
-          type: string
+          schema:
+            type: object
+            required:
+              - url
+            properties:
+              url:
+                type: string
       responses:
         '200':
           description: |
@@ -104,10 +72,6 @@ paths:
         - Intlekt
         - Collection
       parameters:
-        - name: url
-          in: query
-          required: true
-          type: string
         - name: body
           in: body
           required: true
@@ -116,11 +80,14 @@ paths:
             required:
               - tag
               - ieml
+              - url
             properties:
               tag:
                 type : string
               ieml:
                 type : string
+              url:
+                type: string
       responses:
         '200':
           description: |
