@@ -43,6 +43,10 @@ paths:
   /intlekt/collection/get_tags:
     post:
       operationId: handlers.collection_get_tags
+      description: |
+        Retrieve the ordered list of tags in this collection url. Download the list of tag from the internet and save it,
+        in a MongoDb database if needed. Return the list of tags with each tag title, count, link in the source collection
+        and ieml. This list is sorted from the most cited tag to the lowest.
       tags:
         - Intlekt
         - Collection
@@ -68,6 +72,8 @@ paths:
   /intlekt/collection/define_tag:
     post:
       operationId: handlers.collection_define_tag
+      description: |
+        Set the ieml of a specific tag of a specific collection url.
       tags:
         - Intlekt
         - Collection
