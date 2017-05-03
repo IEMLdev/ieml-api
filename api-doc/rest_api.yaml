@@ -89,7 +89,8 @@ paths:
         - Intlekt
         - Glossary
       description: |
-        Return the list of defined glossary. A glossary is defined by his id. All glossary have a name.
+        Return the list of defined glossaries. A glossary is defined by his id. All glossary have a name unique for all
+        the glossaries.
       responses:
         '200':
           description: Successful response
@@ -108,11 +109,14 @@ paths:
                   required:
                     - id
                     - name
+                    - nb_terms
                   properties:
                     id:
                       type: string
                     name:
                       type: string
+                    nb_terms:
+                      type: integer
 
     post:
       operationId: handlers.new_glossary
@@ -198,19 +202,14 @@ paths:
             type: object
             required:
               - success
-              - glossary
+              - terms
             properties:
               success:
                 type: boolean
-              glossary:
+              terms:
                 type: array
                 items:
-                  type: object
-                  required:
-                    - ieml
-                  properties:
-                    ieml:
-                      type: string
+                  type: string
     post:
       operationId: handlers.add_terms_to_glossary
       tags:
