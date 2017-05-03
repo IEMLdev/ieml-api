@@ -1,8 +1,9 @@
 import urllib.request
 from urllib.parse import urlparse
+
 from bs4 import BeautifulSoup
 
-from models.collections.sources import SourcesConnector
+from models.intlekt.collections.sources import SourcesConnector
 
 SCOOPIT_URL="www.scoop.it"
 
