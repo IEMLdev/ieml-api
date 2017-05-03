@@ -10,7 +10,10 @@ class Term(IEMLObjects):
         if isinstance(s, str) and s[0] == '[' and s[-1] == ']':
             s = s[1:-1]
 
-        self.script = script(s)
+        if isinstance(s, Term):
+            self.script = s.script
+        else:
+            self.script = script(s)
 
         self.grammatical_class = self.script.script_class
 
