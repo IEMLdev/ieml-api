@@ -1,5 +1,5 @@
 from handlers.commons import exception_handler
-from models.collections.sources import SourcesConnector
+from models.intlekt.collections.sources import SourcesConnector
 from pipeline.importer.scoopit import import_tags
 
 

@@ -85,8 +85,6 @@ paths:
   /glossary:
     get:
       operationId: handlers.get_glossary_list
-      produces:
-        - application/json
       tags:
         - Intlekt
         - Glossary
@@ -118,13 +116,13 @@ paths:
 
     post:
       operationId: handlers.new_glossary
-      produces:
+      consumes:
         - application/json
       tags:
         - Intlekt
         - Glossary
       description: |
-        Create a new glossary and return his id.
+        Create a new glossary and return his id. If there is already a glossary with this name, return an error.
       parameters:
         - name: body
           in: body
@@ -151,7 +149,7 @@ paths:
                 type: string
     delete:
       operationId: handlers.delete_glossary
-      produces:
+      consumes:
         - application/json
       tags:
         - Intlekt
@@ -186,8 +184,6 @@ paths:
       tags:
         - Intlekt
         - Glossary
-      produces:
-        - application/json
       description: |
         Get a list of all term in the glossary with this id.
       parameters:
@@ -220,7 +216,7 @@ paths:
       tags:
         - Intlekt
         - Glossary
-      produces:
+      consumes:
         - application/json
       description: |
         Add a list of terms to the glossary with glossary_id. It a term is already present in this glossary,
@@ -236,10 +232,12 @@ paths:
           schema:
             type: object
             required:
-              - ieml
+              - terms
             properties:
-              ieml:
-                type: string
+              terms:
+                type: array
+                items:
+                  type: string
       responses:
         '200':
           description: Successful response
@@ -256,7 +254,7 @@ paths:
       tags:
         - Intlekt
         - Glossary
-      produces:
+      consumes:
         - application/json
       description: |
         Remove a list of terms to the glossary with glossary_id. If a term is not present in this glossary,
@@ -272,10 +270,12 @@ paths:
           schema:
             type: object
             required:
-              - ieml
+              - terms
             properties:
-              ieml:
-                type: string
+              terms:
+                type: array
+                items:
+                  type: string
       responses:
         '200':
           description: Successful response
