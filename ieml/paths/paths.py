@@ -38,9 +38,57 @@ COORDINATES_CONTEXTS = {
 }
 
 
-
-
 class Path:
+    # represent a path.
+    # A path is an element of the form
+    # this correspond to a descent in an ieml tree
+    #
+    # 't0:sa0:r0'
+    # 't:s:(r0+f1)'
+    # 't:(sm0+sa0:m0):r1'
+    # '(t0+t1):s:s:f'
+    #
+    # A path have a context, the types of ieml-object that this path can deference.
+    # The type of the ieml_object inferred by this path on a well typed ieml-object is determined by the context at the
+    # end of the string.
+    #
+    # There are 5 different context, for each ieml-object type. A context switch occur with ':'.
+    # - the Text context :
+    #    't' is the only literal. If indexed like 'tn' where 'n' is an integer, it represent the n-th element in the
+    # text object. This context allow only one character ('t' or 'tn') then it is always followed by ':' or nothing.
+    # It can be followed by a super-sentence, a sentence or a word context.
+    #
+    # - the Super Sentence and Sentence ctx:
+    # Begin with 's' or 'sn' but if the 'n' is an integer, it will be ignored. Can be followed by 'an' or 'mn'
+    # where 'n' is an integer. When it is followed by 'an' it lead to the the n-th attribute of the current node. Same
+    # for 'mn', but for the mode of the n-th attribute (the clause of this node, the n-th attribute and his mode). If
+    # it is a mode, it can only be followed by a context switch ':'.
+    # Supersentence lead to Sentence ctx and sentence to word ctx.
+    #
+    # - the Word context:
+    # Only one literal of the form 'r' | 'rn' | 'f' | 'fn' where 'n' is an integer. These literal cannot be followed by
+    # another character. If 'r' it lead all the root terms (the morphem), 'rn' lead only the n-th in the root morphem.
+    # Same for 'f'|'fn' and the flexing morphem.
+    #
+    #  Ex: 't0:sa0:r' -> In a text context (or usl), the first element of the text, which is a sentence,
+    #  then in a sentence context, the word of the first attribute of the root (index on 's' is ignored),
+    #  then in a word context, the roots terms.
+    #
+    #
+    #
+    # the context of a path can be accessed:
+    #   p.context.accept is a set of accepted types to deference
+    #   p.context.switch is a dict of accepted types to inferred types i.e. the type of b = a[p] where a type is in
+    # p.context.accept. len(p.context.switch) == len(p.context.accept)
+    #
+    # We add the '+' notation. An additive path is defined by the sum of multiple paths.
+    # To get the list of sub path : p.develop
+    #
+    # p.cardinal == len(p.develop)
+    #
+    #
+
+
     def __init__(self, children):
         try:
             children = list(children)
@@ -64,7 +112,9 @@ class Path:
         self.children = tuple(_children)
         self.cardinal = None
         self._development = None
+        self.context = None
 
+    @property
     def develop(self):
         if self._development is None:
             if self.cardinal == 1:
@@ -82,14 +132,13 @@ class Path:
             self.context = COORDINATES_CONTEXTS[self.kind]
             return
 
-        development = self.develop()
         # the development is either a mul of coords or a context of mul and coords
 
         accept = set()
         switch = defaultdict(set)
         conserve = False
 
-        for d in development:
+        for d in self.develop:
             if isinstance(d, Coordinate):
                 accept |= d.context.accept
                 conserve = conserve or d.context.conserve
@@ -169,6 +218,7 @@ class Path:
     def __hash__(self):
         return hash(self.__str__())
 
+
 class ContextPath(Path):
     def __init__(self, children):
         if not children:
@@ -193,7 +243,7 @@ class ContextPath(Path):
         return ':'.join(result)
 
     def _develop(self):
-        return tuple(ContextPath(p) for p in product(*[c.develop() for c in self.children]))
+        return tuple(ContextPath(p) for p in product(*[c.develop for c in self.children]))
 
 
 class AdditivePath(Path):
@@ -210,7 +260,7 @@ class AdditivePath(Path):
         return '+'.join(map(str, self.children))
 
     def _develop(self):
-        return tuple(chain.from_iterable(c.develop() for c in self.children))
+        return tuple(chain.from_iterable(c.develop for c in self.children))
 
 
 class MultiplicativePath(Path):
@@ -235,7 +285,7 @@ class MultiplicativePath(Path):
         return result
 
     def _develop(self):
-        return tuple(MultiplicativePath(p) for p in product(*[c.develop() for c in self.children]))
+        return tuple(MultiplicativePath(p) for p in product(*[c.develop for c in self.children]))
 
 
 class Coordinate(Path):
