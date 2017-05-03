@@ -1,1 +1,0 @@
-from .metaclasses import LoggedInstantiator, Singleton

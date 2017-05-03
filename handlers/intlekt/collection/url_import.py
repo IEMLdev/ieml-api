@@ -23,5 +23,5 @@ def collection_get_tags(body):
                'ieml': t['ieml']} for t in SourcesConnector().get_source(url)['tags']]
 
     return {'success': True,
-            'tags': list(sorted(result, key=lambda d: d['count'], reverse=True))}
+            'tags': sorted(result, key=lambda d: d['count'], reverse=True)}
 

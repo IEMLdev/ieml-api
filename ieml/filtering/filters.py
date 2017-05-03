@@ -1,11 +1,15 @@
 from enum import Enum
-
-from ieml.AST.usl import HyperText, Text
 from ieml.calculation.distance import (paradigmatic_equivalence_class_index, set_proximity_index,
                                        object_proximity_index, connexity_index, mutual_inclusion_index)
-from ieml.AST.propositions import Word, Sentence, SuperSentence
-from ieml.AST.terms import Term
 from math import ceil
+
+from ieml.ieml_objects.hypertexts import Hypertext
+from ieml.ieml_objects.sentences import Sentence, SuperSentence
+from ieml.ieml_objects.terms import Term
+from ieml.ieml_objects.texts import Text
+from ieml.ieml_objects.words import Word
+from ieml.usl.tools import usl
+from ieml.usl.usl import Usl
 
 
 class FilteringLevel(Enum):
@@ -19,10 +23,7 @@ class FilteringLevel(Enum):
         """If the max level for a USL is a sentence or supersentence, then its filtering level is the same,
         else, this function figures out if it's a multiterm on uniterm word"""
 
-        if isinstance(input_usl, HyperText):
-            usl = input_usl.texts[0]
-        elif isinstance(input_usl, Text):
-            usl = input_usl
+        input_usl = usl(input_usl)
 
         usl_max_level = usl.max_level
         # TODO : unittest this function

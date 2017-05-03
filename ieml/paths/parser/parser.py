@@ -3,10 +3,10 @@ from functools import lru_cache
 
 from ply import yacc
 
-from helpers.metaclasses import Singleton
 from ieml.exceptions import CannotParse
 from ieml.paths.parser.lexer import tokens, get_lexer
 from ieml.paths.paths import Coordinate, AdditivePath, MultiplicativePath, ContextPath
+from metaclasses import Singleton
 
 
 class PathParser(metaclass=Singleton):
@@ -21,7 +21,7 @@ class PathParser(metaclass=Singleton):
         # rename the parsing method (can't name it directly parse with lru_cache due to ply checking)
         self.parse = self.t_parse
 
-    @lru_cache()
+    @lru_cache(maxsize=1024)
     def t_parse(self, s):
         """Parses the input string, and returns a reference to the created AST's root"""
         self.root = None

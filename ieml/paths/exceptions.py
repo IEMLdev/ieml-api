@@ -15,6 +15,7 @@ class ResolveError(Exception):
     def __str__(self):
         return str(self.message)
 
+
 class IEMLObjectResolutionError(Exception):
     def __init__(self, errors):
         self.errors = errors

@@ -2,12 +2,12 @@ import logging
 
 import ply.yacc as yacc
 
-from helpers.metaclasses import Singleton
-from ieml.ieml_objects import Word, Morpheme, Clause, SuperClause, Sentence, SuperSentence, Term, Text, Hypertext
 from ieml.exceptions import CannotParse
+from ieml.ieml_objects import Word, Morpheme, Clause, SuperClause, Sentence, SuperSentence, Term, Text, Hypertext
 from ieml.ieml_objects.hypertexts import Hyperlink, PropositionPath
 from ieml.ieml_objects.parser.lexer import get_lexer, tokens
 from ieml.script.operator import script
+from metaclasses import Singleton
 
 
 def _add(lp1, p2):

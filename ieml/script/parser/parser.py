@@ -1,15 +1,15 @@
 import logging
 import types
+from functools import lru_cache
 
 import ply.yacc as yacc
 
-from helpers.metaclasses import Singleton
 from ieml.exceptions import CannotParse
+from ieml.script import AdditiveScript, MultiplicativeScript
 from ieml.script.constants import REMARKABLE_ADDITION
 from ieml.script.script import NullScript
+from metaclasses import Singleton
 from .lexer import get_script_lexer, tokens
-from ieml.script import AdditiveScript, MultiplicativeScript
-from functools import lru_cache
 
 
 class ScriptParser(metaclass=Singleton):

@@ -3,7 +3,6 @@ from _operator import mul
 from functools import reduce
 
 from ieml.ieml_objects.terms import Term
-from ieml.ieml_objects.tools import replace_from_paths, ieml
 from ieml.paths.tools import path
 from ieml.script.constants import CONTAINS_RELATION
 from ieml.usl.tools import usl, replace_paths

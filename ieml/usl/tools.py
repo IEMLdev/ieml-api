@@ -21,11 +21,17 @@ def usl(arg):
     if isinstance(arg, str):
         return USLParser().parse(arg)
 
-    # try:
-    rules = [(path(r[0]), ieml(r[1])) for r in arg]
-    return Usl(resolve_ieml_object(rules))
-    # except TypeError:
-    #     pass
+    if isinstance(arg, dict):
+        # map path -> Ieml_object
+        return Usl(resolve_ieml_object(arg))
+
+    try:
+        rules = [(a, b) for a, b in arg]
+    except TypeError:
+        pass
+    else:
+        rules = [(path(a), ieml(b)) for a, b in rules]
+        return Usl(resolve_ieml_object(rules))
 
     raise ValueError("Invalid argument to create an usl object.")
 
@@ -49,4 +55,8 @@ def random_usl(rank_type=None):
 
 
 def replace_paths(u, rules):
-    return usl([(p,t) for p, t in {**{p:t for p, t in u.paths}, **{path(p): ieml(t) for p, t in rules}}.items()])
+    k = [(p,t) for p, t in {
+            **usl(u).paths,
+            **{path(p): ieml(t) for p, t in rules}}.items()]
+    return usl(k
+        )

@@ -1,17 +1,16 @@
 import functools
+import logging
 import os
-import random
 
 import pymongo.errors
 
-from helpers.metaclasses import Singleton
+from metaclasses import Singleton
 from models.commons import DBConnector
 from models.constants import RELATIONS_COLLECTION, ROOT_PARADIGM_TYPE, SINGULAR_SEQUENCE_TYPE, PARADIGM_TYPE, \
-    RELATIONS_LOCK_COLLECTION, DROP_RELATIONS, SCRIPT_INSERTION, SCRIPT_DELETION
+    RELATIONS_LOCK_COLLECTION, DROP_RELATIONS
 from models.exceptions import NotAParadigm, RootParadigmIntersection, \
     ParadigmAlreadyExist, RootParadigmMissing, SingularSequenceAlreadyExist, NotASingularSequence, TermNotFound, \
     CollectionAlreadyLocked
-import logging
 
 
 def safe_execution(role):

@@ -59,5 +59,5 @@ class TextUslToots(unittest.TestCase):
 
     def test_deference_path(self):
         u = random_usl(rank_type=Text)
-        p = random.sample(u.paths, 1)
+        p = random.sample(tuple(u.paths.items()), 1)
         self.assertEqual(u[p[0][0]], {p[0][1]})

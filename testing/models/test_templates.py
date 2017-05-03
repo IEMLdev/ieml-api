@@ -17,7 +17,7 @@ class TestTemplates(ModelTestCase):
         while True:
             try:
                 u = random_usl(rank_type=Text)
-                paths = random.sample([p for p, t in u.paths if t.script.paradigm], 2)
+                paths = random.sample([p for p, t in u.paths.items() if t.script.paradigm], 2)
                 break
             except ValueError:
                 continue

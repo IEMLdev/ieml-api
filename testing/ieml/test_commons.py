@@ -8,10 +8,10 @@ from ieml.ieml_objects.parser.parser import IEMLParser
 from ieml.ieml_objects.sentences import AbstractSentence, SuperSentence, Sentence
 from ieml.ieml_objects.terms import Term
 from ieml.ieml_objects.texts import Text
-from ieml.ieml_objects.tools import RandomPoolIEMLObjectGenerator, replace_from_paths
+from ieml.ieml_objects.tools import RandomPoolIEMLObjectGenerator
 from ieml.ieml_objects.words import Word
 from ieml.script.operator import sc
-from ieml.usl.tools import random_usl
+from ieml.usl.tools import random_usl, replace_paths
 from ieml.usl.usl import Usl
 
 
@@ -66,18 +66,16 @@ class TestTreeStructure(TestCase):
         while text.children[0] == c0:
             c0 = r.word()
 
-        text2 = replace_from_paths(text, [[text.children[0]]], [c0])
+        text2 = replace_paths(text, [('t', c0)])
         self.assertTrue(c0 in text2)
         self.assertNotEqual(text2, text)
 
         t = Term('wa.')
-        self.assertEqual(replace_from_paths(t, [[sc('wa.')]], [sc('we.')]), t)
+        self.assertEqual(replace_paths(t, [('', sc('we.'))]), t)
 
-        with self.assertRaises(ValueError):
-            replace_from_paths(t, [], [Term])
 
         t2 = Term('we.')
-        self.assertEqual(t2, replace_from_paths(t, [[]], [t2]))
+        self.assertEqual(t2, replace_paths(t, [('', t2)]))
 
         paths = random.sample(text.paths, random.randint(2, len(text.paths)))
         args = []
@@ -92,13 +90,13 @@ class TestTreeStructure(TestCase):
                 self.assertTrue(p[-1].closable)
                 args.append((p, r.from_type(p[-1].__class__)))
 
-        text3 = replace_from_paths(text, *zip(*args))
+        text3 = replace_paths(text, args)
         self.assertNotEqual(text, text3)
         self.assertIsInstance(text3, Text)
 
         # different elements
         args = [(p, r.from_type(p[-1].__class__)) for p, e in args]
-        text4 = replace_from_paths(text, *zip(*args))
+        text4 = replace_paths(text, args)
         self.assertNotEqual(text2, text3)
 
 

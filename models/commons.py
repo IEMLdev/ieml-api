@@ -2,11 +2,11 @@ from itertools import islice
 
 from pymongo import MongoClient
 
-from helpers.metaclasses import Singleton
+from config import DB_ADDRESS, DB_NAME, OLD_DB_NAME
 from ieml.ieml_objects.terms import Term
+from metaclasses import Singleton
 from models.constants import TAG_LANGUAGES
 from .constants import OLD_TERMS_COLLECTION
-from config import DB_ADDRESS, DB_NAME, OLD_DB_NAME
 
 
 class DBConnector(object, metaclass=Singleton):

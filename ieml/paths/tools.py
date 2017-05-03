@@ -109,7 +109,7 @@ def resolve(ieml_object, path):
         raise ValueError("Can't resolve [%s] on %s"%(str(path), str(ieml_object)))
 
     result = set()
-    for d in path.develop():
+    for d in path.develop:
         if isinstance(d, (Coordinate, MultiplicativePath)):
             result |= _resolve_path(ieml_object, d)
         else:
@@ -530,10 +530,13 @@ def resolve_ieml_object(paths, elements=None):
     _errors = []
     _context_stack = []
 
+    if isinstance(paths, dict):
+        paths = list(paths.items())
+
     if elements is None:
-        result = _resolve_ctx('', [(d, e) for p, e in paths for d in p.develop()])
+        result = _resolve_ctx('', [(d, e) for p, e in paths for d in p.develop])
     else:
-        result = _resolve_ctx('', [(d, e) for e, p in zip(elements, paths) for d in p.develop()])
+        result = _resolve_ctx('', [(d, e) for e, p in zip(elements, paths) for d in p.develop])
 
     if _errors:
         raise IEMLObjectResolutionError(_errors)

@@ -159,4 +159,4 @@ def rules_to_json(rules):
 @exception_handler
 def usl_to_rules(ieml):
     u = usl(ieml)
-    return [(str(p), str(t.script)) for ps, t in u.paths for p in ps.develop()]
+    return [(str(p), str(t.script)) for ps, t in u.paths for p in ps.develop]
