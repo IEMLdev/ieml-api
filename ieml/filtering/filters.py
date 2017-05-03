@@ -25,7 +25,7 @@ class FilteringLevel(Enum):
 
         input_usl = usl(input_usl)
 
-        usl_max_level = usl.max_level
+        usl_max_level = input_usl.max_level
         # TODO : unittest this function
         if usl_max_level == Sentence:
             return cls.SENTENCE

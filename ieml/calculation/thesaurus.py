@@ -1,4 +1,4 @@
-from ieml.ieml_objects.terms import Term, Word, Sentence, SuperSentence, Text, HyperText
+from ieml.ieml_objects import Term, Word, Sentence, SuperSentence, Text, Hypertext
 from ieml.script.tables import generate_tables
 from ieml.script.operator import sc
 from collections import namedtuple, defaultdict
@@ -18,7 +18,7 @@ def _build_cache(usl_collection):
     def usl_elem_generator(u):
         if isinstance(u, (Word, Sentence, SuperSentence)):
             yield u
-        elif isinstance(u, (Text, HyperText)):
+        elif isinstance(u, (Text, Hypertext)):
             for c in u.children:
                 yield from usl_elem_generator(c)
 

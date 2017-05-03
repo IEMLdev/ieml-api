@@ -90,6 +90,10 @@ class RandomPoolIEMLObjectGenerator:
         return random.sample(self.terms_pool, 1)[0]
 
     @_loop_result(10)
+    def uniterm_word(self):
+        return Word(Morpheme(random.sample(self.terms_pool, 1)))
+
+    @_loop_result(10)
     def word(self):
         return Word(Morpheme(random.sample(self.terms_pool, 3)), Morpheme(random.sample(self.terms_pool, 2)))
 

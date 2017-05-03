@@ -30,7 +30,7 @@ class TemplatesConnector(DBConnector):
 
         terms = [_usl[p] for p in paths]
 
-        if any(len(t) != 1 for t in terms):
+        if any(not isinstance(t, Term) or len(t) != 1 for t in terms):
             raise ValueError("Invalids path, lead to multiple elements.")
 
         terms = [t for s in terms for t in s]

@@ -1,8 +1,9 @@
 import unittest
-from ieml.AST.propositions import Word, Sentence, SuperSentence, Morpheme, Clause, SuperClause
-from ieml.AST.terms import Term
-from ieml.operator import sc, usl
 from ieml.calculation.thesaurus import rank_paradigms, rank_usls, paradigm_usl_distribution
+from ieml.ieml_objects.terms import Term
+from ieml.ieml_objects.words import Morpheme, Word
+from ieml.script.operator import sc
+from ieml.usl.tools import usl
 from models.terms import TermsConnector
 import numpy as np
 
@@ -49,9 +50,6 @@ class ThesaurusTests(unittest.TestCase):
             Term(sc("M:.E:A:M:.-")),
             Term(sc("B:M:.y.-"))
         ]
-
-        for t in self.terms:
-            t.check()
 
         self.term_scripts = [t.script for t in self.terms]
 

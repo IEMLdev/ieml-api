@@ -2,20 +2,21 @@ import logging
 import pprint
 from random import shuffle, randint
 
-from ieml.AST.tools import RandomPropositionGenerator
-from ieml.AST.usl import Text, HyperText
 from ieml.filtering import *
 from ieml.filtering.filters import BinaryFilter
+from ieml.ieml_objects.texts import Text
+from ieml.ieml_objects.tools import RandomPoolIEMLObjectGenerator
+from ieml.usl.tools import usl
 from testing.ieml.helper import *
 
 
 class BasePipelineTester(unittest.TestCase):
 
     def setUp(self):
-        self.generator = RandomPropositionGenerator()
-        self.random_uniterm_words = [self.generator.get_random_uniterm_word() for i in range(10)]
-        self.random_multiterm_words = [self.generator.get_random_multiterm_word() for i in range(10)]
-        self.random_sentences = [self.generator.get_random_proposition(Sentence) for i in range(3)]
+        self.generator = RandomPoolIEMLObjectGenerator()
+        self.random_uniterm_words = [Word(Morpheme([self.generator.term()])) for i in range(10)]
+        self.random_multiterm_words = [self.generator.word() for i in range(10)]
+        self.random_sentences = [self.generator.sentence() for i in range(3)]
 
 
 class TestUSLFilteringLevels(BasePipelineTester):
@@ -34,12 +35,12 @@ class TestUSLFilteringLevels(BasePipelineTester):
         self.assertEqual(FilteringLevel.get_usl_filtering_level(text), FilteringLevel.SENTENCE)
 
     def test_supersentence_level(self):
-        text = Text([self.generator.get_random_proposition(SuperSentence)] + self.random_sentences +
+        text = Text([self.generator.super_sentence()] + self.random_sentences +
                     self.random_multiterm_words[1:2] + self.random_uniterm_words[1:3])
         self.assertEqual(FilteringLevel.get_usl_filtering_level(text), FilteringLevel.SUPERSENTENCE)
 
     def test_with_hypertext(self):
-        hypertext  = HyperText(Text(self.random_sentences + self.random_multiterm_words[1:2] +
+        hypertext  = usl(Text(self.random_sentences + self.random_multiterm_words[1:2] +
                                     self.random_uniterm_words[1:3]))
         self.assertEqual(FilteringLevel.get_usl_filtering_level(hypertext), FilteringLevel.SENTENCE)
 
@@ -53,7 +54,6 @@ class TestUSLSets(BasePipelineTester):
         for proposition in self.random_uniterm_words + self.random_multiterm_words + self.random_sentences:
             text = Text([proposition])
             all_usl_texts.append(text)
-            text.check()
         self.usl_set = USLSet(all_usl_texts)
 
     def test_usl_set_sorting(self):
@@ -80,12 +80,12 @@ class TestUSLSets(BasePipelineTester):
 class TestPipeLineCreation(unittest.TestCase):
 
     def test_linear_pipeline_gen(self):
-        query = Text([RandomPropositionGenerator().get_random_uniterm_word()])
+        query = Text([RandomPoolIEMLObjectGenerator().uniterm_word()])
         pipeline = LinearPipeline.gen_pipeline_from_query(query)
         self.assertEqual(type(pipeline), LinearPipeline)
 
     def test_conditionnal_pipeline_gen(self):
-        query = Text([RandomPropositionGenerator().get_random_proposition(Sentence)])
+        query = Text([RandomPoolIEMLObjectGenerator().sentence()])
         pipeline = ConditionalPipeline.gen_pipeline_from_query(query)
         self.assertEqual(type(pipeline), ConditionalPipeline)
         self.assertEqual(len(pipeline.filters_list), 3)
@@ -97,44 +97,43 @@ class BasePipelineTester(unittest.TestCase):
 class TestLinearPipeLine(unittest.TestCase):
 
     def setUp(self):
-        self.generator = RandomPropositionGenerator()
+        self.generator = RandomPoolIEMLObjectGenerator()
         logging.basicConfig(level=logging.DEBUG)
 
     def test_linear_pl_two_usl(self):
         """Only inputs two USL repeatedly, and uses of them as a query"""
-        word_a, word_b = tuple(self.generator.get_random_uniterm_word()for i in range(2))
-        usl_a_derivates = [HyperText(Text([word_a, self.generator.get_random_uniterm_word()])) for i in range(50)]
-        usl_b_derivates = [HyperText(Text([word_b, self.generator.get_random_uniterm_word()])) for i in range(50)]
+        word_a, word_b = tuple(self.generator.uniterm_word()for i in range(2))
+        usl_a_derivates = [usl(Text([word_a, self.generator.uniterm_word()])) for i in range(50)]
+        usl_b_derivates = [usl(Text([word_b, self.generator.uniterm_word()])) for i in range(50)]
         all_usls = usl_a_derivates + usl_b_derivates
         shuffle(all_usls)
-        for usl in all_usls:
-            usl.check()
-        query = HyperText(Text([word_a]))
-        query.check()
+
+        query = usl(Text([word_a]))
+
         pipeline = LinearPipeline.gen_pipeline_from_query(query)
         filtered_set = pipeline.filter(USLSet(all_usls), query, 10)
-        pprint.pprint([str(usl) for usl in filtered_set.get_usls()])
+        pprint.pprint([str(_usl) for _usl in filtered_set.get_usls()])
         print(str(word_a))
 
     def test_linear_pl_ten_usl(self):
         """Only inputs two USL repeatedly, and uses of them as a query"""
-        words = [self.generator.get_random_uniterm_word() for i in range(10)]
+        words = [self.generator.uniterm_word() for i in range(10)]
         all_usls = []
         for word  in words:
             for i in range(15):
-                new_usl = HyperText(Text([word] +
-                                     [self.generator.get_random_uniterm_word()
+                new_usl = usl(Text([word] +
+                                     [self.generator.uniterm_word()
                                       for i in range(randint(1,5))]))
-                new_usl.check()
+
                 all_usls.append(new_usl)
         shuffle(all_usls)
-        query = HyperText(Text([words[0]]))
-        query.check()
+        query = usl(Text([words[0]]))
+
         pipeline = LinearPipeline.gen_pipeline_from_query(query)
         filtered_set = pipeline.filter(USLSet(all_usls), query, 10, [0.1, 0.9])
-        pprint.pprint([str(usl) for usl in filtered_set.get_usls()])
+        pprint.pprint([str(_usl) for _usl in filtered_set.get_usls()])
         print(str(words[0]))
-        pprint.pprint([str(usl) for usl in filtered_set.get_usls() if words[0] in usl.texts[0].children])
+        pprint.pprint([str(_usl) for _usl in filtered_set.get_usls() if words[0] in _usl.texts[0].children])
 
 
 class TestConditionalPipeLine(unittest.TestCase):

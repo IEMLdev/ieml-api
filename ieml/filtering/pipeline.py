@@ -1,14 +1,15 @@
 import logging
 
-from ieml.AST.propositions import SuperSentence, Word, Sentence
-from ieml.AST.terms import Term
-from ieml.AST.usl import HyperText, Text
-
 #
 from ieml.calculation.distance import set_proximity_index
 from ieml.filtering.filters import FilteringLevel, ParadigmaticProximityFilter, IndicatorFilter, BinaryFilter
+from ieml.ieml_objects.hypertexts import Hypertext
+from ieml.ieml_objects.sentences import SuperSentence, Sentence
+from ieml.ieml_objects.terms import Term
+from ieml.ieml_objects.texts import Text
+from ieml.ieml_objects.words import Word
 
-TOP_USL_TYPES = [SuperSentence, HyperText, Text]
+TOP_USL_TYPES = [SuperSentence, Hypertext, Text]
 
 
 class USLSet:

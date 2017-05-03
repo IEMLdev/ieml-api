@@ -21,26 +21,26 @@ class TestIEMLType(unittest.TestCase):
         self.assertEqual(r.text().__class__.rank(), 8)
 
 
-class TestMetaFeatures(unittest.TestCase):
-    """Tests inter-class operations and metaclass related features"""
-
-    def test_class_comparison(self):
-        self.assertGreater(Word, Term)
-        self.assertGreater(Sentence, Word)
-        self.assertLess(Morpheme, SuperSentence)
-
-    def test_precompute_string(self):
-        generator = RandomPoolIEMLObjectGenerator(Text)
-        proposition = generator.sentence()
-
-        self.assertIsNotNone(proposition._str)
-
-        text = Text([proposition])
-        self.assertIsNotNone(text._str)
-
-        hyperlink = Hyperlink(text, generator.text(), PropositionPath((proposition,)))
-        hypertext = Hypertext([hyperlink])
-        self.assertIsNotNone(hypertext._str)
+# class TestMetaFeatures(unittest.TestCase):
+#     """Tests inter-class operations and metaclass related features"""
+#
+#     def test_class_comparison(self):
+#         self.assertGreater(Word, Term)
+#         self.assertGreater(Sentence, Word)
+#         self.assertLess(Morpheme, SuperSentence)
+#
+#     def test_precompute_string(self):
+#         generator = RandomPoolIEMLObjectGenerator(Text)
+#         proposition = generator.sentence()
+#
+#         self.assertIsNotNone(proposition._str)
+#
+#         text = Text([proposition])
+#         self.assertIsNotNone(text._str)
+#
+#         hyperlink = Hyperlink(text, generator.text(), PropositionPath((proposition,)))
+#         hypertext = Hypertext([hyperlink])
+#         self.assertIsNotNone(hypertext._str)
 
 class TestPropositionsInclusion(unittest.TestCase):
 

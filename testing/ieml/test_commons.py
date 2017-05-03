@@ -11,7 +11,7 @@ from ieml.ieml_objects.texts import Text
 from ieml.ieml_objects.tools import RandomPoolIEMLObjectGenerator
 from ieml.ieml_objects.words import Word
 from ieml.script.operator import sc
-from ieml.usl.tools import random_usl, replace_paths
+from ieml.usl.tools import random_usl, replace_paths, usl
 from ieml.usl.usl import Usl
 
 
@@ -48,11 +48,10 @@ class TestTreeStructure(TestCase):
                 self.assertIsNotNone(t._paths)
 
         for k in (Text, SuperSentence, Sentence, Word, Term):
-            t = RandomPoolIEMLObjectGenerator(level=Text).from_type(k)
+            t = random_usl(k)
             test_counter(t)
 
-        t = IEMLParser().parse(
-            "[([([wo.s.-]+[x.t.-]+[t.e.-m.u.-'])*([E:A:.wu.-]+[n.o.-d.o.-'])]*"
+        t = usl("[([([wo.s.-]+[x.t.-]+[t.e.-m.u.-'])*([E:A:.wu.-]+[n.o.-d.o.-'])]*"
             "[([E:A:.wu.-]+[o.wa.-]+[b.e.-s.u.-'])*([M:O:.j.-]+[e.-o.-we.h.-'])]*"
             "[([E:A:.wu.-]+[o.wa.-]+[b.e.-s.u.-'])*([M:O:.j.-]+[e.-o.-we.h.-'])])]")
 
