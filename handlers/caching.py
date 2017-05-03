@@ -27,7 +27,6 @@ def flush_cache(func):
 
 
 class cached(object):
-
     def __init__(self, cache_key, timeout=None):
         self.timeout = timeout or CACHE_TIMEOUT
         self.cache_key = cache_key

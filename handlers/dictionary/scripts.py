@@ -1,4 +1,4 @@
-from handlers.commons import exception_handler
+from handlers.commons import exception_handler, ieml_term_model
 from ieml.script.operator import sc
 from models.exceptions import InvalidRelationCollectionState, InvalidRelationTitle, TermNotFound, RootParadigmMissing
 from models.relations.relations import RelationsConnector
@@ -33,6 +33,12 @@ def _build_old_model_from_term_entry(term_db_entry):
         "ROOT_PARADIGM": term_db_entry["ROOT"],
         "RANK": rank
     }
+
+
+@cached("dictionary_dump", 1000)
+@exception_handler
+def dictionary_dump():
+    return [ieml_term_model(t['_id']) for t in terms_db().get_all_terms()]
 
 
 @cached("all_ieml", 1000)

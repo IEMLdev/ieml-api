@@ -286,6 +286,22 @@ paths:
               success:
                 type: boolean
 
+  /intlekt/dictionary:
+    get:
+      description: |
+        Return all the terms defined in the ieml dictionary.
+      tags:
+        - Intlekt
+        - Dictionary
+      operationId: handlers.dictionary_dump
+      responses:
+        '200':
+          description: Successful response
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/term'
+
   ##############################
   ## FOR THE DICTIONARY'S API ##
   ##############################

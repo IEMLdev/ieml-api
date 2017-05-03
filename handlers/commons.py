@@ -28,13 +28,9 @@ def ieml_term_model(term):
     if term_entry is None:
         raise ValueError("Term %s not found in the dictionary."%str(term))
 
-    try:
-        entry = RelationsConnector().get_script(term_entry["_id"])
-        rank = entry['RANK'] if term.script.paradigm else 0
-        index = entry['INDEX']
-    except (TermNotFound, KeyError):
-        rank = 'n/a'
-        index = 0
+    entry = RelationsConnector().get_script(term_entry["_id"])
+    rank = entry['RANK'] if term.script.paradigm else 0
+    index = entry['INDEX']
 
     return {
         'CLASS': GRAMMATICAL_CLASS_NAMES[term.grammatical_class],

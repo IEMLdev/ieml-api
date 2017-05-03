@@ -41,4 +41,5 @@ def remove_terms_to_glossary(glossary_id, body):
 
 def get_terms_of_glossary(glossary_id):
     return {'success': True,
-            'terms': [ieml_term_model(t) for t in GlossaryConnector().get(id=glossary_id)['terms']]}
+            'terms': sorted((ieml_term_model(t) for t in GlossaryConnector().get(id=glossary_id)['terms']),
+                            key=lambda c: c['INDEX'])}
