@@ -11,7 +11,7 @@ class InvalidIEMLObjectArgument(Exception):
 
 class TermNotFoundInDictionary(InvalidIEMLObjectArgument):
     def __init__(self, term):
-        self.message = "Cannot find term %s in the dictionnary" % str(term)
+        self.message = "Cannot find term %s in the dictionary" % str(term)
 
     def __str__(self):
         return self.message

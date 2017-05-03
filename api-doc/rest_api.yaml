@@ -298,9 +298,17 @@ paths:
         '200':
           description: Successful response
           schema:
-            type: array
-            items:
-              $ref: '#/definitions/term'
+            type: object
+            required:
+              - success
+              - terms
+            properties:
+              success:
+                type: boolean
+              terms:
+                type: array
+                items:
+                  $ref: '#/definitions/term'
 
   ##############################
   ## FOR THE DICTIONARY'S API ##

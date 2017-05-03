@@ -38,7 +38,7 @@ def _build_old_model_from_term_entry(term_db_entry):
 @cached("dictionary_dump", 1000)
 @exception_handler
 def dictionary_dump():
-    return [ieml_term_model(t['_id']) for t in terms_db().get_all_terms()]
+    return {'success': True, 'terms': [ieml_term_model(t['_id']) for t in terms_db().get_all_terms()]}
 
 
 @cached("all_ieml", 1000)

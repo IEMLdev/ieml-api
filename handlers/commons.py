@@ -16,6 +16,8 @@ def exception_handler(func):
         except Exception as e:
             return {'success': False, 'message': e.__class__.__name__ + ': ' + str(e)}
         else:
+            if 'success' not in result:
+                print("Warning 'success' field is not present in %s response."%func.__name__)
             return result
 
     return wrapper
