@@ -29,6 +29,7 @@ class TermsConnector(DBConnector):
         :param script: the script to get.
         :return: the document or None
         """
+
         return self.terms.find_one({'_id': str(script)})
 
     def get_all_terms(self):

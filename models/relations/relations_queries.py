@@ -279,6 +279,10 @@ class RelationsQueries:
         """
         scripts = [cls._to_ast(s['_id']) for s in RelationsConnector().relations.find({})]
 
+        # Update the INDEX parameter
+        for i, s in enumerate(sorted(scripts)):
+            RelationsConnector().relations.update_one({'_id': str(s)}, {'$set': {'INDEX': i}})
+
         RelationsConnector().relations.update(
             {},
             {'$unset': {'RELATIONS' + '.' + CHILD_RELATION: 1, 'RELATIONS' + '.' + FATHER_RELATION: 1}})
@@ -295,6 +299,7 @@ class RelationsQueries:
         # compute and save the children, they need the father to get calculated
         for s in bar(scripts):
             cls._compute_children(str(s))
+
 
     @classmethod
     def _do_inhibition(cls, inhibition, verbose=False):

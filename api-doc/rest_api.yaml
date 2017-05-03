@@ -82,7 +82,7 @@ paths:
   ## GLOSSARY API             ##
   ##############################
 
-  /glossary:
+  /intlekt/glossary:
     get:
       operationId: handlers.get_glossary_list
       tags:
@@ -182,7 +182,7 @@ paths:
               success:
                 type: boolean
 
-  '/glossary/{glossary_id}':
+  '/intlekt/glossary/{glossary_id}':
     get:
       operationId: handlers.get_terms_of_glossary
       tags:
@@ -209,7 +209,7 @@ paths:
               terms:
                 type: array
                 items:
-                  type: string
+                  $ref: '#/definitions/term'
     post:
       operationId: handlers.add_terms_to_glossary
       tags:
@@ -721,3 +721,26 @@ definitions:
         type: number
       _id:
         type: string
+
+  term:
+    properties:
+      CLASS:
+        type: string
+      EN:
+        type: string
+      FR:
+        type: string
+      IEML:
+        type: string
+      LAYER:
+        type: number
+      PARADIGM:
+        type: boolean
+      ROOT_PARADIGM:
+        type: boolean
+      SIZE:
+        type: number
+      INDEX:
+        type: number
+      RANK:
+        type: number

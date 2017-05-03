@@ -1,3 +1,6 @@
+import bidict
+
+
 class TreeStructure:
     def __init__(self):
         super().__init__()
@@ -39,3 +42,9 @@ LAYER_MARKS = [
     '_',
     ';'
 ]
+
+GRAMMATICAL_CLASS_NAMES = bidict.bidict({
+    0: 'AUXILIARY',
+    1: 'VERB',
+    2: 'NOUN'
+})

@@ -1,3 +1,5 @@
+from ieml.commons import GRAMMATICAL_CLASS_NAMES
+
 remarkable_multiplication_lookup_table = {
     "U:U:": "wo", "U:A:": "wa", "U:S:": "y", "U:B:": "o", "U:T:": "e",
     "A:U:": "wu", "A:A:": "we", "A:S:": "u", "A:B:": "a", "A:T:": "i",
@@ -83,6 +85,6 @@ INHIBIT_RELATIONS = [
     CHILD_RELATION + '.' + MODE,
 ]
 
-AUXILIARY_CLASS = 0
-VERB_CLASS = 1
-NOUN_CLASS = 2
+AUXILIARY_CLASS = GRAMMATICAL_CLASS_NAMES.inv['AUXILIARY']
+VERB_CLASS = GRAMMATICAL_CLASS_NAMES.inv['VERB']
+NOUN_CLASS = GRAMMATICAL_CLASS_NAMES.inv['NOUN']
