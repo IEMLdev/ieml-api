@@ -203,6 +203,8 @@ paths:
             required:
               - success
               - terms
+              - name
+              - id
             properties:
               success:
                 type: boolean
@@ -210,6 +212,10 @@ paths:
                 type: array
                 items:
                   $ref: '#/definitions/term'
+              id:
+                type: string
+              name:
+                type: string
     post:
       operationId: handlers.add_term_to_glossary
       tags:

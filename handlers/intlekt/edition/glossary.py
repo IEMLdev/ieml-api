@@ -41,8 +41,12 @@ def remove_terms_to_glossary(glossary_id, body):
     GlossaryConnector().remove_terms(terms, id=glossary_id)
     return {'success': True}
 
-
+@exception_handler
 def get_terms_of_glossary(glossary_id):
+    glossary = GlossaryConnector().get(id=glossary_id)
+
     return {'success': True,
-            'terms': sorted((ieml_term_model(t) for t in GlossaryConnector().get(id=glossary_id)['terms']),
-                            key=lambda c: c['INDEX'])}
+            'terms': sorted((ieml_term_model(t) for t in glossary['terms']),
+                            key=lambda c: c['INDEX']),
+            'id': glossary['id'],
+            'name': glossary['name']}
