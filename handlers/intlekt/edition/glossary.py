@@ -24,11 +24,14 @@ def delete_glossary(body):
 
 
 @exception_handler
-def add_terms_to_glossary(glossary_id, body):
-    terms = list(body['terms'])
+def add_term_to_glossary(glossary_id, body):
+    term = body['term']
 
-    GlossaryConnector().add_terms(terms, id=glossary_id)
-    return {'success': True}
+    modified = GlossaryConnector().add_terms([term], id=glossary_id)
+    if modified:
+        return {'success': True}
+    else:
+        return {'success': False, 'message': 'Term "%s" already present in this glossary.'%term}
 
 
 @exception_handler
