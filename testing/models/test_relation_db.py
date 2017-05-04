@@ -7,6 +7,7 @@ import time
 import functools
 
 from ieml.script.constants import OPPOSED_SIBLING_RELATION
+from ieml.script.operator import script
 from models.exceptions import CollectionAlreadyLocked
 from models.relations.relations import RelationsConnector
 from models.relations.relations_queries import RelationsQueries
@@ -16,6 +17,7 @@ from testing.models.test_model import paradigms
 
 class TestRelationCollection(ModelTestCase):
     connectors = ('terms', 'relations')
+
     def setUp(self):
         super().setUp()
         self._clear()
@@ -90,3 +92,9 @@ class TestRelationCollection(ModelTestCase):
             target()
 
         p.join()
+
+    def test_index(self):
+        r0 = [t['_id'] for t in sorted(self.relations.relations.find(), key=lambda c: c['INDEX'])]
+        r1 = list(map(str, sorted(map(script, r0))))
+
+        self.assertListEqual(r0, r1)
