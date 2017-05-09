@@ -44,7 +44,7 @@ def remove_words_to_lexicon(lexicon_id, body):
     return {'success': True}
 
 
-# @exception_handler
+@exception_handler
 def get_words_of_lexicon(lexicon_id):
     lexicon = LexiconConnector().get(id=lexicon_id)
 

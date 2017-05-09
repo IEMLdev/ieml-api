@@ -87,6 +87,13 @@ def usl_to_json(usl):
     return _ieml_object_to_json(u.ieml_object)
 
 
+@exception_handler
+def ieml_to_json(ieml):
+    u = _usl(ieml)
+    return {'success': True,
+            'json': _ieml_object_to_json(u.ieml_object)}
+
+
 def _tree_node(json, constructor):
     result = []
     for child in json['children']:
@@ -137,6 +144,7 @@ def _path_to_usl_clean(rules):
             } for p, m in e.errors]
         }
 
+
 @exception_handler
 def rules_to_usl(rules):
     success, result = _path_to_usl_clean([(r[0], Term(r[1])) for r in rules])
@@ -156,4 +164,21 @@ def rules_to_json(rules):
 @exception_handler
 def usl_to_rules(ieml):
     u = usl(ieml)
-    return [(str(p), str(t.script)) for ps, t in u.paths for p in ps.develop]
+    return {'success': True,
+            'rules': [{'path': str(p),
+                       'ieml': str(t.script)} for ps, t in u.paths.items() for p in ps.develop]}
+
+
+@exception_handler
+def to_ieml(body):
+    if 'rules' in body and isinstance(body['rules'], list):
+        success, result = _path_to_usl_clean([(r['path'], Term(r['ieml'])) for r in body['rules']])
+        if success:
+            return {'success': True,
+                    'ieml': str(result)}
+        else:
+            return result
+
+    if 'json' in body and isinstance(body['json'], dict):
+        return {'success': True,
+                'ieml': str(_json_to_ieml(body['json']))}

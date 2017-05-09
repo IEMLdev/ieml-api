@@ -526,6 +526,109 @@ paths:
                 items:
                   $ref: '#/definitions/term'
 
+  /usl/to_json:
+    get:
+      description: |
+        Return the json representation of an ieml string
+      consumes:
+        - application/json
+      tags:
+        - Intlekt
+        - IEML
+      operationId: handlers.ieml_to_json
+      parameters:
+        - name: ieml
+          in: query
+          required: true
+          type: string
+      responses:
+        '200':
+          description: |
+            successful request
+          schema:
+            type: object
+            required:
+              - success
+            properties:
+              success:
+                type: boolean
+              json:
+                $ref: '#/definitions/ieml_object_json'
+
+  /usl/to_ieml:
+    post:
+      description: |
+        Return the ieml string associated with an usl json representation or an usl rules representation.
+      consumes:
+        - application/json
+      tags:
+        - Intlekt
+        - IEML
+      operationId: handlers.to_ieml
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              json:
+                type: object
+              rules:
+                type: array
+                items:
+                  $ref: '#/definitions/rule'
+      responses:
+        '200':
+          description: |
+            successful request
+          schema:
+            type: object
+            required:
+              - success
+            properties:
+              success:
+                type: boolean
+              ieml:
+                type: string
+
+  /usl/to_rules:
+    get:
+      description: |
+        Return the rules representation for an ieml string.
+      consumes:
+        - application/json
+      tags:
+        - Intlekt
+        - IEML
+      operationId: handlers.usl_to_rules
+      parameters:
+        - name: ieml
+          in: query
+          required: true
+          type: string
+      responses:
+        '200':
+          description: |
+            successful request
+          schema:
+            type: object
+            required:
+              - success
+            properties:
+              success:
+                type: boolean
+              rules:
+                type: array
+                items:
+                  $ref: '#/definitions/rule'
+
+
+
+
+
+
+
   ##############################
   ## FOR THE DICTIONARY'S API ##
   ##############################
@@ -1005,3 +1108,13 @@ definitions:
 
       term:
         $ref: '#/definitions/term'
+
+  rule:
+    required:
+      - ieml
+      - path
+    properties:
+      ieml:
+        type: string
+      path:
+        type: string

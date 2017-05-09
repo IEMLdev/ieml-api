@@ -56,7 +56,8 @@ class USLConnector(DBConnector):
             '_id': usl_id,
             'USL': {
                 'INDEX': usl_index(usl),
-                'IEML': str(usl)
+                'IEML': str(usl),
+                'TYPE': str(usl.ieml_object.__class__.__name__)
             },
             'TAGS': {
                 "FR": tags['FR'],
@@ -68,7 +69,6 @@ class USLConnector(DBConnector):
             'PARENTS': [template] if template is not None else [],
             'TEMPLATES': [],
             'LAST_MODIFIED': datetime.datetime.utcnow()
-
         })
 
         return usl_id
@@ -76,13 +76,15 @@ class USLConnector(DBConnector):
     def add_template(self, _usl, paths, _tags=None, tags_rule=None, _keywords=None):
         """
         save a template for the given usl, varying the terms specified in rules.
+        You must provide singular path (cardinality 1) support at most (for the moment) 2 path variation.
 
         :param _usl:
         :param rules: list of paths
         :param tags_rule: a string where the declinaison of each variying term will be inserred a the place of the $i.
         :return:
         """
-        paths = [path(p) for p in paths]
+        paths = [path(pp) for p in paths for pp in p.develop]
+
 
         terms = [_usl[p] for p in paths]
 
@@ -95,7 +97,7 @@ class USLConnector(DBConnector):
         else:
             _keywords = {l: [] for l in TAG_LANGUAGES}
 
-        if any(not isinstance(t, Term) or len(t) != 1 for t in terms):
+        if any(not isinstance(t, Term) or t.script.cardinal != 1 for t in terms):
             raise ValueError("Invalids path, lead to multiple elements.")
 
         terms = [t for s in terms for t in s]
@@ -200,7 +202,8 @@ class USLConnector(DBConnector):
         if usl and isinstance(usl, Usl):
             update['USL'] = {
                 'INDEX': usl_index(usl),
-                'IEML': str(usl)
+                'IEML': str(usl),
+                'TYPE': str(usl.ieml_object.__class__.__name__)
             }
 
         if tags and self._check_tags(tags, all_present=False, except_id=id):
@@ -261,6 +264,7 @@ class USLConnector(DBConnector):
 
     def _generate_id(self):
         free = False
+        _id = None
         while not free:
             _id = uuid.uuid4().hex
             free = self.usls.find_one({'_id': _id}) is None

@@ -58,5 +58,4 @@ def replace_paths(u, rules):
     k = [(p,t) for p, t in {
             **usl(u).paths,
             **{path(p): ieml(t) for p, t in rules}}.items()]
-    return usl(k
-        )
+    return usl(k)

@@ -8,6 +8,11 @@ from models.usls.usls import usl_index
 from testing.models.stub_db import ModelTestCase
 
 
+def _drop_date(d):
+    del d['LAST_MODIFIED']
+    return d
+
+
 class TestUSLsModel(ModelTestCase):
 
     connectors = ('usls',)
@@ -25,7 +30,8 @@ class TestUSLsModel(ModelTestCase):
             '_id': _id,
             'USL': {
                 'INDEX': usl_index(_usl),
-                'IEML': str(_usl)
+                'IEML': str(_usl),
+                'TYPE': str(_usl.ieml_object.__class__.__name__)
             },
             'TAGS': tags,
             'KEYWORDS': keywords,
@@ -36,14 +42,18 @@ class TestUSLsModel(ModelTestCase):
     def test_add_usl(self):
         _entry = self.save_random_usl()
 
-        self.assertEqual(list(self.usls.usls.find())[0], _entry, "Entry in db doesn't match.")
+        self.assertDictEqual(
+            _drop_date(list(self.usls.usls.find())[0]),
+            _entry,
+            "Entry in db doesn't match.")
 
     def test_get_usl(self):
         _entry = self.save_random_usl()
 
-        self.assertEqual(_entry, self.usls.get(usl=_entry['USL']['IEML']))
-        self.assertEqual(_entry, self.usls.get(id=_entry['_id']))
-        self.assertEqual(_entry, self.usls.get(tag=_entry['TAGS']['EN'], language='EN'))
+
+        self.assertDictEqual(_entry, _drop_date(self.usls.get(usl=_entry['USL']['IEML'])))
+        self.assertDictEqual(_entry, _drop_date(self.usls.get(id=_entry['_id'])))
+        self.assertDictEqual(_entry, _drop_date(self.usls.get(tag=_entry['TAGS']['EN'], language='EN')))
 
     def test_remove_usl(self):
         _entry = self.save_random_usl()
@@ -60,7 +70,7 @@ class TestUSLsModel(ModelTestCase):
         _db_entries = sorted(self.usls.usls.find(), key=lambda e: e['_id'])
         _entries = sorted((_entry0, _entry1), key=lambda e: e['_id'])
         for e0, e1 in zip(_entries, _db_entries):
-            self.assertDictEqual(e0, e1)
+            self.assertDictEqual(e0, _drop_date(e1))
 
     def test_query(self):
         tags = lambda i: {'FR': 'testFR%d'%i, 'EN': 'testEN%d'%i}
