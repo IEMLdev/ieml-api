@@ -12,6 +12,7 @@ TEMPLATES_COLLECTION = "templates"
 
 ## Edition
 GLOSSARIES_COLLECTION = "glossaries"
+LEXICONS_COLLECTION = "lexicons"
 SOURCE_COLLECTION = "collection_sources"
 
 

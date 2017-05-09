@@ -10,6 +10,7 @@ import config
 from ieml.script.operator import sc
 from models.constants import TAG_LANGUAGES
 from models.intlekt.edition.glossary import GlossaryConnector
+from models.intlekt.edition.lexicon import LexiconConnector
 from models.relations.relations import RelationsConnector
 from models.templates.templates import TemplatesConnector
 from models.terms.terms import TermsConnector
@@ -138,6 +139,8 @@ class ModelTestCase(unittest.TestCase):
         self.usls = USLConnector()
         self.templates = TemplatesConnector()
         self.glossary = GlossaryConnector()
+        self.lexicon = LexiconConnector()
+
         self._clear()
 
     def _clear(self):
@@ -154,6 +157,8 @@ class ModelTestCase(unittest.TestCase):
             self.templates.drop()
         if 'glossary' in self.connectors:
             self.glossary.drop()
+        if 'lexicon' in self.connectors:
+            self.lexicon.drop()
 
     def _save_paradigm(self, paradigm, recompute_relations=True):
         list_terms = [{

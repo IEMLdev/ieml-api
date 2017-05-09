@@ -290,6 +290,218 @@ paths:
               success:
                 type: boolean
 
+  ##############################
+  ## LEXICON API             ##
+  ##############################
+
+  /intlekt/lexicon:
+    get:
+      operationId: handlers.get_lexicon_list
+      tags:
+        - Intlekt
+        - Lexicon
+      description: |
+        Return the list of defined lexicons. A lexicon is defined by his id. Each lexicon have a name unique for all
+        the lexicons.
+      responses:
+        '200':
+          description: Successful response
+          schema:
+            type: object
+            required:
+              - success
+              - lexicons
+            properties:
+              success:
+                type: boolean
+              lexicons:
+                type: array
+                items:
+                  type: object
+                  required:
+                    - id
+                    - name
+                    - nb_words
+                  properties:
+                    id:
+                      type: string
+                    name:
+                      type: string
+                    nb_words:
+                      type: integer
+
+    post:
+      operationId: handlers.new_lexicon
+      consumes:
+        - application/json
+      tags:
+        - Intlekt
+        - Lexicon
+      description: |
+        Create a new lexicon and return his id. If there is already a lexicon with this name, return an error.
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            required:
+              - name
+            properties:
+              name:
+                type: string
+      responses:
+        '200':
+          description: Successful response
+          schema:
+            type: object
+            required:
+              - success
+              - id
+            properties:
+              success:
+                type: boolean
+              id:
+                type: string
+    delete:
+      operationId: handlers.delete_lexicon
+      consumes:
+        - application/json
+      tags:
+        - Intlekt
+        - Lexicon
+      description: |
+        Delete an existing lexicon given its id.
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            required:
+              - id
+            properties:
+              id:
+                type: string
+      responses:
+        '200':
+          description: Successful response
+          schema:
+            type: object
+            required:
+              - success
+            properties:
+              success:
+                type: boolean
+
+  '/intlekt/lexicon/{lexicon_id}':
+    get:
+      operationId: handlers.get_words_of_lexicon
+      tags:
+        - Intlekt
+        - Lexicon
+      description: |
+        Get a list of all words in the lexicon with this id.
+      parameters:
+        - name: lexicon_id
+          in: path
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Successful response
+          schema:
+            type: object
+            required:
+              - success
+              - words
+              - name
+              - id
+            properties:
+              success:
+                type: boolean
+              words:
+                type: string
+                items:
+                  $ref: '#/definitions/ieml_object_json'
+              id:
+                type: string
+              name:
+                type: string
+    post:
+      operationId: handlers.add_word_to_lexicon
+      tags:
+        - Intlekt
+        - Lexicon
+      consumes:
+        - application/json
+      description: |
+        Add a list of words to the lexicon with lexicon_id. It a word is already present in this lexicon,
+        the word is ignored.
+      parameters:
+        - name: lexicon_id
+          in: path
+          required: true
+          type: string
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            required:
+              - word
+            properties:
+              word:
+                type: string
+      responses:
+        '200':
+          description: Successful response
+          schema:
+            type: object
+            required:
+              - success
+            properties:
+              success:
+                type: boolean
+
+    delete:
+      operationId: handlers.remove_words_to_lexicon
+      tags:
+        - Intlekt
+        - Lexicon
+      consumes:
+        - application/json
+      description: |
+        Remove a list of words from the lexicon with lexicon_id. If a word is not present in this lexicon,
+        the word is ignored.
+      parameters:
+        - name: lexicon_id
+          in: path
+          required: true
+          type: string
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            required:
+              - words
+            properties:
+              words:
+                type: array
+                items:
+                  type: string
+      responses:
+        '200':
+          description: Successful response
+          schema:
+            type: object
+            required:
+              - success
+            properties:
+              success:
+                type: boolean
+
   /intlekt/dictionary:
     get:
       description: |
@@ -772,3 +984,24 @@ definitions:
         type: number
       RANK:
         type: number
+
+  ieml_object_json:
+    required:
+      - type
+    properties:
+      type:
+        type: string
+
+      children:
+        type: array
+        items:
+          $ref: '#/definitions/ieml_object_json'
+
+      node:
+        $ref: '#/definitions/ieml_object_json'
+
+      mode:
+        $ref: '#/definitions/ieml_object_json'
+
+      term:
+        $ref: '#/definitions/term'
