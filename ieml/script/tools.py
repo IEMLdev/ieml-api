@@ -6,7 +6,7 @@ from bidict import bidict
 
 from ieml.script.exceptions import NoRemarkableSiblingForAdditiveScript
 from ieml.script.constants import REMARKABLE_ADDITION, PRIMITVES, OPPOSED_SIBLING_RELATION, \
-    ASSOCIATED_SIBLING_RELATION, CROSSED_SIBLING_RELATION, TWIN_SIBLING_RELATION, MAX_LAYER
+    ASSOCIATED_SIBLING_RELATION, CROSSED_SIBLING_RELATION, TWIN_SIBLING_RELATION, MAX_LAYER, INVERSE_RELATIONS
 from ieml.commons import LAYER_MARKS
 from ieml.script.script import MultiplicativeScript, REMARKABLE_MULTIPLICATION_SCRIPT, Script, AdditiveScript, remarkable_multiplication_lookup_table
 
@@ -369,6 +369,13 @@ def factorize(script):
 
     result = pack_factorisation(factor(seqs))
     return result
+
+
+def inverse_relation(relation_name):
+    keys = relation_name.split('.')
+
+    return '.'.join([INVERSE_RELATIONS[keys[0]]] + keys[1:])
+
 
 if __name__ == '__main__':
     from ieml.script.parser import ScriptParser
