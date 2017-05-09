@@ -27,25 +27,30 @@ class TestTreeStructure(TestCase):
 
     def test_paths(self):
         def test_counter(t):
-            c1 = Counter(chain.from_iterable(t.path(p[0]) for p in t.paths))
+            c1 = Counter(t for p, t in t.paths.items() for pp in p.develop)
 
             def elems(node):
                 if isinstance(node, Text):
                     return chain.from_iterable(elems(c) for c in node)
                 if isinstance(node, AbstractSentence):
+                    tree_g = node.tree_graph
+
                     return chain.from_iterable(elems(k)
-                        for k in chain(node.tree_graph.nodes, (c.mode for c in node.children)))
+                        for k in chain(tree_g.nodes,
+                                       [clause.mode for d in tree_g.transitions.values() for a, clause in d]))
+
                 if isinstance(node, Word):
-                    return list(k for k in chain(node.root.children, node.flexing.children))
+                    return list(k for k in chain(node.root.children,
+                                                 [] if node.flexing is not None else node.flexing.children))
                 if isinstance(node, Term):
                     return node,
 
-            c2 = Counter(elems(t))
+            c2 = Counter(elems(t.ieml_object))
             self.assertEqual(len(c1), len(c2))
             self.assertDictEqual(c1, c2)
 
             if not isinstance(t, Term):
-                self.assertIsNotNone(t._paths)
+                self.assertIsNotNone(t.paths)
 
         for k in (Text, SuperSentence, Sentence, Word, Term):
             t = random_usl(k)
