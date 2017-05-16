@@ -9,6 +9,7 @@ from ieml.script import CONTAINED_RELATION, CONTAINS_RELATION, RemarkableSibling
 from ieml.script.constants import ROOT_RELATION
 from ieml.script.parser import ScriptParser
 from ieml.script.tables import get_table_rank
+from ieml.script.tools import inverse_relation
 from models.constants import RELATION_COMPUTING, SCRIPT_INSERTION, SCRIPT_DELETION
 from models.exceptions import NotARootParadigm, CantRemoveNonEmptyRootParadigm, InvalidRelationTitle, \
     InvalidRelationCollectionState
@@ -138,7 +139,7 @@ class RelationsQueries:
         """
         pipeline = []
         if script_list:
-            pipeline.append({'$match': {'_id': [s if isinstance(s, str) else str(s) for s in script_list]}})
+            pipeline.append({'$match': {'_id': [str(s) for s in script_list]}})
         pipeline.append({'$group': {'_id': '$ROOT'}})
 
         return [root['_id'] for root in RelationsConnector().relations.aggregate(pipeline)]
@@ -309,8 +310,38 @@ class RelationsQueries:
         :return: None
         """
         bar = cls._get_progressbar(verbose)
-        for s, i in bar(inhibition):
-            cls._inhibit_relations(str(s), i)
+
+        inhibitions = {s: l for s, l in inhibition}
+
+        all_terms = {s['_id']: s for s in RelationsConnector().relations.find()}
+
+        for t in bar(all_terms.values()):
+            if t['ROOT'] in inhibitions:
+                relations_r = cls.relations(t['_id'])
+
+                for reltype_inhib in inhibitions[t['ROOT']]:
+                    for reltype in relations_r:
+                        if reltype.startswith(reltype_inhib):
+
+                            # relation must be deleted, but first, let remove inverse link
+                            for s in relations_r[reltype]:
+                                d = all_terms[s]['RELATIONS']
+                                for key in inverse_relation(reltype).split('.'):
+                                    d = d[key]
+
+                                if t['_id'] in d['ELEMENTS']:
+                                    d['ELEMENTS'].remove(t['_id'])
+
+                    d = t['RELATIONS']
+                    for key in reltype_inhib.split('.')[:-1]:
+                        d = d[key]
+
+                    if reltype_inhib.split('.')[-1] in d:
+                        del d[reltype_inhib.split('.')[-1]]
+
+        RelationsConnector().relations.drop()
+        RelationsConnector().relations.insert_many(all_terms.values())
+
 
     @staticmethod
     def _format_relations(relations, pack_ancestor=False, max_depth_father=-1, max_depth_child=-1):
@@ -547,21 +578,32 @@ class RelationsQueries:
     @classmethod
     def _inhibit_relations(cls, script_str, inhibits=None):
         """
-        Inhibit a parser relation given the inhibit dict.
-        :param script_str: the parser to inhibit.
+        Inhibit a term relation given the inhibit dict.
+        :param script_str: the term to inhibit.
         :param inhibits: the dict of relation to inhibit.
         :return: None
         """
         if not inhibits:
             return
 
+
+        to_inhibit = [r['_id'] for r in RelationsConnector().relations.find({'ROOT': script_str})]
+
         unset = {}
+        unset_reverse = {}
         for relation in inhibits:
             unset['RELATIONS.' + relation] = 1
+            unset_reverse['RELATIONS.' + inverse_relation(relation) + '.ELEMENTS'] = {'$in': to_inhibit}
 
         RelationsConnector().relations.update(
             {'ROOT': script_str},
             {'$unset': unset},
+            multi=True
+        )
+
+        RelationsConnector().relations.update(
+            {},
+            {"$pull": unset_reverse},
             multi=True
         )
 
@@ -579,3 +621,5 @@ class RelationsQueries:
     def _inhibitions():
         from models.terms.terms import TermsConnector
         return TermsConnector().get_inhibitions()
+
+

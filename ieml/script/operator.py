@@ -1,5 +1,6 @@
 from ieml.script.parser.parser import ScriptParser
-from ieml.script.script import MultiplicativeScript, Script
+from ieml.script.script import MultiplicativeScript, Script, AdditiveScript
+from ieml.script.tools import factorize
 
 
 def m(substance, attribute=None, mode=None):
@@ -17,7 +18,14 @@ def script(arg):
     elif isinstance(arg, Script):
         return arg
     else:
-        raise NotImplemented
+        try:
+            arg = [script(a) for a in arg]
+            return factorize(arg)
+        except TypeError:
+            pass
+
+    raise NotImplemented
+
 
 # shorthand
 sc = script

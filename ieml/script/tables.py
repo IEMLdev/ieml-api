@@ -1,73 +1,93 @@
-from collections import namedtuple
+from collections import namedtuple, OrderedDict
 
 import numpy as np
 
-from ieml.script.parser import ScriptParser
-from ieml.script.operator import m
+from ieml.script.operator import m, script
 from ieml.script.script import AdditiveScript, MultiplicativeScript
 
 Variable = namedtuple('Variable', ['address', 'script'])
 
+Table = namedtuple('Table', ['paradigm', 'headers', 'cells', 'dim'])
+Tab = namedtuple('Tab', ['rows', 'columns', 'paradigm', 'cells'])
 
-class Table:
-    def __init__(self, headers, cells, paradigm, split_tabs=False):
-        self.split_tabs = split_tabs
+def tables_from_script(s):
+    s = script(s)
 
-        self.__headers = headers
-        self.__cells = cells
-        self.__split_cells = []
-        self.__paradigm = paradigm
-        self.__dimension = cells.ndim
-        self.__split_headers = []
+    def _from_cells_array(a):
+        cells = a
+        headers = OrderedDict()
 
-    @property
-    def headers(self):
-        if self.__dimension == 3 and self.split_tabs:
+        tabs = [cells]
+        if len(cells.shape) == 3:
+            # 3d tab, first split tabs
+            tabs = [cells[:,:,i] for i in range(cells.shape[2])]
 
-            if self.__split_headers:
-                return self.__split_headers
+        dim = len(cells.shape)
+
+        for t in tabs:
+            if len(t.shape) == 1:
+                # 1d
+                rows = [script(t)]
+                columns = []
+            elif len(t.shape) == 2:
+                # 2d
+                rows = [script(c) for c in t]
+                columns = [script(c) for c in t.transpose()]
+
+            if len(t.shape) == 0:
+                rows = []
+                columns = []
+                tabs_sc = t[()]
             else:
-                self.__split_headers = [[], [], []]
-                for var in self.__paradigm[2].singular_sequences:
-                    rows = []
-                    cols = []
+                tabs_sc = script(rows)
 
-                    for row_header in self.__headers[0]:
-                        s = m(row_header[0], row_header[1], var)
-                        rows.append(s)
-                    for col_header in self.__headers[1]:
-                        s = m(col_header[0], col_header[1], var)
-                        cols.append(s)
+            headers[tabs_sc] = Tab(rows=rows, columns=columns, paradigm=tabs_sc, cells=t)
 
-                    self.__split_headers[0].append(rows)
-                    self.__split_headers[1].append(cols)
+        paradigm = script(headers)
 
-                self.__split_headers[2] = self.__headers[2]
-                return self.__split_headers
-        else:
-            return self.__headers
+        return Table(paradigm=paradigm, headers=headers, cells=cells, dim=dim)
 
-    @property
-    def cells(self):
-        if self.__dimension == 3 and self.split_tabs:
-            if not self.__split_cells:
-                self.__split_cells = np.dsplit(self.__cells, self.__cells.shape[2])
-                return self.__split_cells
-            else:
-                return self.__split_cells
-        else:
-            return self.__cells
+    return [_from_cells_array(table) for table in s.cells]
 
-    @property
-    def paradigm(self):
-        return self.__paradigm
 
-    @property
-    def dimension(self):
-        return self.__dimension
+
+#
+# class Tables:
+#     def __init__(self, paradigm):
+#         self.paradigm = paradigm
+#
+#         self.__headers = None
+#
+#     @property
+#     def headers(self):
+#         if self.__headers is None:
+#             self.__headers = self._build_headers()
+#         return self.__headers
+#
+#     @property
+#     def cells(self):
+#         if self.dimension == 3 and self.split_tabs:
+#             if not self.__split_cells:
+#                 self.__split_cells = np.dsplit(self.__cells, self.__cells.shape[2])
+#                 return self.__split_cells
+#             else:
+#                 return self.__split_cells
+#         else:
+#             return self.__cells
+#
+#     @property
+#     def dimension(self):
+#         return len(self.paradigm.cells)
+#
+#     def _build_headers(self):
+#         # headers of table
+#         result = [ for table in self.cells]
 
 
 def generate_tables(parent_script, ):
+    if parent_script.cardinal == 1:
+        raise ValueError("The script %s is a singular sequence, can't generate a table from it."%str(parent_script))
+
     """Generates a paradigm table from a given Script.
        The table is implemented using a named tuple"""
     table_list = []
