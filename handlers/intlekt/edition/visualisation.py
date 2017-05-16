@@ -87,9 +87,9 @@ def usl_to_json(usl):
     return _ieml_object_to_json(u.ieml_object)
 
 
-@exception_handler
-def ieml_to_json(ieml):
-    u = _usl(ieml)
+# @exception_handler
+def ieml_to_json(body):
+    u = _usl(body['ieml'])
     return {'success': True,
             'json': _ieml_object_to_json(u.ieml_object)}
 
@@ -161,15 +161,14 @@ def rules_to_json(rules):
     return _ieml_object_to_json(u.ieml_object)
 
 
-@exception_handler
-def usl_to_rules(ieml):
-    u = usl(ieml)
+
+def usl_to_rules(body):
+    u = usl(body['ieml'])
     return {'success': True,
             'rules': [{'path': str(p),
                        'ieml': str(t.script)} for ps, t in u.paths.items() for p in ps.develop]}
 
 
-@exception_handler
 def to_ieml(body):
     if 'rules' in body and isinstance(body['rules'], list):
         success, result = _path_to_usl_clean([(r['path'], Term(r['ieml'])) for r in body['rules']])
@@ -179,17 +178,21 @@ def to_ieml(body):
         else:
             return result
 
-    if 'json' in body and isinstance(body['json'], dict):
+    elif 'json' in body and isinstance(body['json'], dict):
         response = {'success': True,
                   'ieml': str(_json_to_ieml(body['json']))}
 
-    u = LibraryConnector().get(response['ieml'])
+    else:
+        raise ValueError("No representation to convert in ieml. Specify at least one of the 'rules' "
+                         "or the 'json' body attributes.")
+
+    u = LibraryConnector().get(usl=response['ieml'])
     if u is None:
         response['defined'] = False
-        response['translation'] = usl(response['ieml']).auto_translation()
+        response['translations'] = usl(response['ieml']).auto_translation()
     else:
         response['defined'] = True
-        response['translation'] = u['translation']
+        response['translations'] = u['TRANSLATIONS']
 
     return response
 

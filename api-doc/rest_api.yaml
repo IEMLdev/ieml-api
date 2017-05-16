@@ -639,7 +639,7 @@ paths:
 
 
   /intlekt/usl/to_json:
-    get:
+    post:
       description: |
         Return the json representation of an ieml string
       consumes:
@@ -648,10 +648,16 @@ paths:
         - USL
       operationId: handlers.ieml_to_json
       parameters:
-        - name: ieml
-          in: query
+        - name: body
+          in: body
           required: true
-          type: string
+          schema:
+            type: object
+            required:
+              - ieml
+            properties:
+              ieml:
+                type: string
       responses:
         '200':
           description: |
@@ -665,6 +671,7 @@ paths:
                 type: boolean
               json:
                 $ref: '#/definitions/ieml_object_json'
+
 
   /intlekt/usl/to_ieml:
     post:
@@ -707,11 +714,11 @@ paths:
                 type: string
               defined:
                 type: boolean
-              translation:
+              translations:
                 $ref: "#/definitions/translations"
 
   /intlekt/usl/to_rules:
-    get:
+    post:
       description: |
         Return the rules representation for an ieml string.
       consumes:
@@ -720,10 +727,16 @@ paths:
         - USL
       operationId: handlers.usl_to_rules
       parameters:
-        - name: ieml
-          in: query
+        - name: body
+          in: body
           required: true
-          type: string
+          schema:
+            type: object
+            required:
+              - ieml
+            properties:
+              ieml:
+                type: string
       responses:
         '200':
           description: |
@@ -801,7 +814,7 @@ definitions:
   ieml_object_word_json:
     required:
       - type
-      - translation
+      - translations
       - root
       - inflexion
     properties:
@@ -816,7 +829,7 @@ definitions:
         type: array
         items:
             $ref: '#/definitions/term'
-      translation:
+      translations:
         $ref: '#/definitions/translations'
 
 
