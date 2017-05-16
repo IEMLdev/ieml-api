@@ -9,7 +9,7 @@ from handlers.commons import exception_handler, ieml_term_model
 from ieml.ieml_objects import Term, Sentence, SuperSentence
 from ieml.ieml_objects.texts import Text
 from models.terms.terms import TermsConnector
-from models.usls.usls import USLConnector
+from models.usls.library import LibraryConnector
 
 word = "[([a.i.-]+[i.i.-])*([E:A:T:.]+[E:S:.wa.-]+[E:S:.o.-])]"
 sentence = "[([([a.i.-]+[i.i.-])*([E:A:T:.]+[E:S:.wa.-]+[E:S:.o.-])]*[([S:.-'B:.-'n.-S:.U:.-',])]*[([E:T:.f.-])])+([([a.i.-]+[i.i.-])*([E:A:T:.]+[E:S:.wa.-]+[E:S:.o.-])]*[([t.i.-s.i.-'u.T:.-U:.-'wo.-',B:.-',_M:.-',_;])]*[([E:E:T:.])])]"
@@ -30,9 +30,9 @@ def recent_usls(n, language='EN'):
     return [{'success': True,
              'id': usl['_id'],
              'ieml': usl['USL']['IEML'],
-             'tags': usl['TAGS'],
+             'tags': usl['TRANSLATIONS'],
              'keywords': usl['KEYWORDS']
-            } for usl in USLConnector().most_recent(int(n))]
+            } for usl in LibraryConnector().most_recent(int(n))]
 
 
 def _ieml_object_to_json(u, start=True):
@@ -174,11 +174,22 @@ def to_ieml(body):
     if 'rules' in body and isinstance(body['rules'], list):
         success, result = _path_to_usl_clean([(r['path'], Term(r['ieml'])) for r in body['rules']])
         if success:
-            return {'success': True,
+            response = {'success': True,
                     'ieml': str(result)}
         else:
             return result
 
     if 'json' in body and isinstance(body['json'], dict):
-        return {'success': True,
-                'ieml': str(_json_to_ieml(body['json']))}
+        response = {'success': True,
+                  'ieml': str(_json_to_ieml(body['json']))}
+
+    u = LibraryConnector().get(response['ieml'])
+    if u is None:
+        response['defined'] = False
+        response['translation'] = usl(response['ieml']).auto_translation()
+    else:
+        response['defined'] = True
+        response['translation'] = u['translation']
+
+    return response
+
