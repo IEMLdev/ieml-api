@@ -9,6 +9,7 @@ RELATIONS_LOCK_COLLECTION = "relations_lock"
 TERMS_COLLECTION = "terms"
 USLS_COLLECTION = "usls"
 TEMPLATES_COLLECTION = "templates"
+LIBRARY_COLLECTION = 'library'
 
 ## Edition
 GLOSSARIES_COLLECTION = "glossaries"
