@@ -3,89 +3,70 @@ from collections import defaultdict
 from models.exceptions import USLNotFound
 from handlers.commons import exception_handler
 from ieml.usl import usl
-from models.usls.usls import USLConnector
+from models.usls.library import LibraryConnector
 
 
 @exception_handler
 def save_usl(body):
     _usl = usl(body['ieml'])
     tags = {'FR': body['tags']['fr'], 'EN': body['tags']['en']}
-    keywords = defaultdict(lambda : list())
-    if 'keywords' in body:
-        if 'fr' in body['keywords']:
-            keywords['FR'] = body['keywords']['fr']
-        if 'en' in body['keywords']:
-            keywords['EN'] = body['keywords']['en']
-
-    _id = USLConnector().save(_usl, tags=tags, keywords=keywords)
+    _id = LibraryConnector().save(_usl, translations=tags)
     return {'success': True, 'id': _id}
 
 
 @exception_handler
 def get_usl_ieml(ieml):
-    _usl = USLConnector().get(usl=ieml)
+    _usl = LibraryConnector().get(usl=ieml)
     if not _usl:
-        raise USLNotFound(ieml)
+        raise ValueError("Usl not found in the library with ieml: %s"%str(ieml))
 
     return {'success': True,
             'id': _usl['_id'],
             'ieml': _usl['USL']['IEML'],
-            'tags': _usl['TAGS'],
-            'keywords': _usl['KEYWORDS']}
+            'translations': _usl['TRANSLATIONS']}
 
 
 @exception_handler
 def get_usl_id(id):
-    _usl = USLConnector().get(id=id)
+    _usl = LibraryConnector().get(id=id)
     if not _usl:
-        raise USLNotFound(id)
+        raise ValueError("Usl not found in the library with id: %s" % str(id))
 
     return {'success': True,
             'id': _usl['_id'],
             'ieml': _usl['USL']['IEML'],
-            'tags': _usl['TAGS'],
-            'keywords': _usl['KEYWORDS']}
+            'tags': _usl['TRANSLATIONS']}
 
 
 @exception_handler
 def delete_usl(id):
-    USLConnector().remove(id=id)
+    LibraryConnector().remove(id=id)
     return {'success': True}
 
 
 @exception_handler
-def query_usl(fr=None, en=None, fr_keywords=None, en_keywords=None, query=None):
+def query_usl(fr=None, en=None, query=None):
     _query = {}
 
     if query:
         fr = query
         en = query
-        fr_keywords = [query]
-        en_keywords = [query]
         _query['union'] = True
 
     if fr or en:
-        _query['tags'] = {}
+        _query['translations'] = {}
         if fr:
-            _query['tags']['FR'] = fr
+            _query['translations']['FR'] = fr
         if en:
-            _query['tags']['EN'] = en
+            _query['translations']['EN'] = en
 
-    if fr_keywords or en_keywords:
-        _query['keywords'] = {}
-        if fr_keywords:
-            _query['keywords']['FR'] = list(fr_keywords)
-        if en_keywords:
-            _query['keywords']['EN'] = list(en_keywords)
-
-    result = USLConnector().query(**_query)
+    result = LibraryConnector().query(**_query)
 
     return {'success': True,
             'match': [{
                 'id': e['_id'],
                 'ieml': e['USL']['IEML'],
-                'tags': e['TAGS'],
-                'keywords': e['KEYWORDS']} for e in result]}
+                'translations': e['TRANSLATIONS']} for e in result]}
 
 
 @exception_handler
@@ -95,21 +76,14 @@ def update_usl(id, body):
     if 'ieml' in body:
         query['usl'] = usl(body['ieml'])
 
-    if 'tags' in body:
-        if 'fr' in body['tags'] or 'en' in body['tags']:
-            query['tags'] = {}
-            if 'fr' in body['tags']:
-                query['tags']['FR'] = body['tags']['fr']
+    if 'translations' in body:
+        if 'fr' in body['translations'] or 'en' in body['translations']:
+            query['translations'] = {}
+            if 'fr' in body['translations']:
+                query['translations']['FR'] = body['translations']['fr']
             if 'en' in body['tags']:
-                query['tags']['EN'] = body['tags']['en']
+                query['translations']['EN'] = body['translations']['en']
 
-    if 'keywords' in body:
-        query['keywords'] = {}
-        if 'fr' in body['keywords']:
-            query['keywords']['FR'] = list(body['keywords']['fr'])
-        if 'en' in body['keywords']:
-            query['keywords']['EN'] = list(body['keywords']['en'])
-
-    USLConnector().update(id=id, **query)
+        LibraryConnector().update(id=id, **query)
 
     return {'success': True}
