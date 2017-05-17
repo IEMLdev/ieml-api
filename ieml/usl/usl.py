@@ -1,6 +1,7 @@
 from ieml.ieml_objects.terms import Term
 from ieml.paths.paths import Path
 from ieml.paths.tools import enumerate_paths, resolve
+from models.commons import generate_translations
 
 
 class Usl:
@@ -33,3 +34,6 @@ class Usl:
             return resolve(self.ieml_object, item)
 
         raise NotImplemented
+
+    def auto_translation(self):
+        return generate_translations(self)

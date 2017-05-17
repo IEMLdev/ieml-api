@@ -14,7 +14,7 @@ from models.intlekt.edition.lexicon import LexiconConnector
 from models.relations.relations import RelationsConnector
 from models.templates.templates import TemplatesConnector
 from models.terms.terms import TermsConnector
-from models.usls.usls import USLConnector
+from models.usls.library import LibraryConnector
 
 
 def stub_db(module_model, connectors):
@@ -121,7 +121,7 @@ class ModelTestCase(unittest.TestCase):
         # because of the stub of the singleton DbConnector in models.commons
         self.terms = TermsConnector()
         self.relations = RelationsConnector()
-        self.usls = USLConnector()
+        self.library = LibraryConnector()
         self.templates = TemplatesConnector()
         self.glossary = GlossaryConnector()
 
@@ -136,7 +136,7 @@ class ModelTestCase(unittest.TestCase):
     def setUp(self):
         self.terms = TermsConnector()
         self.relations = RelationsConnector()
-        self.usls = USLConnector()
+        self.library = LibraryConnector()
         self.templates = TemplatesConnector()
         self.glossary = GlossaryConnector()
         self.lexicon = LexiconConnector()
@@ -148,8 +148,8 @@ class ModelTestCase(unittest.TestCase):
             self.terms.drop()
         if 'relations' in self.connectors:
             self.relations.drop()
-        if 'usls' in self.connectors:
-            self.usls.drop()
+        if 'library' in self.connectors:
+            self.library.drop()
         if 'logins' in self.connectors:
             from models.logins.logins import _get_users_collection
             _get_users_collection().drop()

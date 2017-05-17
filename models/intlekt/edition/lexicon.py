@@ -1,9 +1,9 @@
 import uuid
 
 from ieml.ieml_objects.tools import ieml
-from ieml.ieml_objects.words import Word
 from models.commons import DBConnector
 from models.constants import LEXICONS_COLLECTION
+from models.usls.library import LibraryConnector
 
 
 class LexiconConnector(DBConnector):
@@ -13,7 +13,8 @@ class LexiconConnector(DBConnector):
 
         # ensure unique names
         if LEXICONS_COLLECTION not in self.db.collection_names() or \
-                        "name_index" not in self.lexicon.index_information():
+           "name_index" not in self.lexicon.index_information():
+
             self.lexicon.create_index('name', unique=True, name="name_index")
 
     def all_lexicons(self):
@@ -44,7 +45,7 @@ class LexiconConnector(DBConnector):
 
         return {'id': lexicon['_id'],
                 'name': lexicon['name'],
-                'words': lexicon['words']}
+                'words': [LibraryConnector().get(id=i) for i in lexicon['words']]}
 
     def add_lexicon(self, name):
         """
@@ -84,9 +85,9 @@ class LexiconConnector(DBConnector):
         except TypeError:
             raise ValueError("Must be a list of words")
 
-        words = list(map(str, map(ieml, words)))
+        ids = _to_library_id(words)
 
-        result = self.lexicon.update_one({'_id': id}, {'$addToSet': {'words': {'$each': words}}})
+        result = self.lexicon.update_one({'_id': id}, {'$addToSet': {'words': {'$each': ids}}})
 
         return result.modified_count == 1
 
@@ -102,11 +103,29 @@ class LexiconConnector(DBConnector):
         except TypeError:
             raise ValueError("Must be a list of words")
 
-        words = list(map(str, map(ieml, words)))
+        ids = _to_library_id(words)
 
-        result = self.lexicon.update_one({'_id': id}, {'$pull': {'words': {'$in': words}}})
+        result = self.lexicon.update_one({'_id': id}, {'$pull': {'words': {'$in': ids}}})
 
         return result.modified_count == 1
 
     def drop(self):
         self.lexicon.drop()
+
+
+def _to_library_id(it):
+    library = LibraryConnector()
+
+    result = []
+    for w in map(ieml, it):
+        record = library.get(usl=w)
+        if record is None:
+            raise ValueError("Word must be saved to the library before being added to the lexicon: %s"
+                             %str(w))
+
+        if record['USL']['TYPE'] != 'Word':
+            raise ValueError("Non Word ieml object are incompatible with the lexicons: %s" % str(record['USL']['TYPE']))
+
+        result.append(record['_id'])
+
+    return result

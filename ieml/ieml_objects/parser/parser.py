@@ -38,9 +38,11 @@ class IEMLParser(metaclass=Singleton):
         self.lexer = get_lexer()
         self.parser = yacc.yacc(module=self, errorlog=logging, start='proposition',
                                 debug=False, optimize=True, picklefile="parser/ieml_parser.pickle")
+        self._ieml = None
 
     def parse(self, s):
         """Parses the input string, and returns a reference to the created AST's root"""
+        self._ieml = s
         self.root = None
         self.hyperlinks = []
         self.parser.parse(s, lexer=self.lexer)
@@ -176,6 +178,8 @@ class IEMLParser(metaclass=Singleton):
             print("Syntax error at '%s' (%d, %d)" % (p.value, p.lineno, p.lexpos))
         else:
             print("Syntax error at EOF")
+
+        raise CannotParse(self._ieml)
 
 if __name__ == '__main__':
     print(str(IEMLParser().parse('[wa.]')))

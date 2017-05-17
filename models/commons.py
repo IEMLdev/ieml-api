@@ -27,6 +27,11 @@ def create_tags_indexes(collection):
         collection.create_index('TAGS.%s'%language, unique=True)
 
 
+def create_translations_indexes(collection):
+    for language in TAG_LANGUAGES:
+        collection.create_index('TRANSLATIONS.%s'%language, unique=True)
+
+
 def check_tags(tags, all_present=True):
     return isinstance(tags, dict) and (all(lang in tags for lang in TAG_LANGUAGES) or not all_present) \
            and all((tag in TAG_LANGUAGES and tag) for tag in tags) \
@@ -39,7 +44,7 @@ def check_keywords(keywords):
            and all(isinstance(e, str) for tag in keywords for e in keywords[tag])
 
 
-def generate_tags(usl):
+def generate_translations(usl):
     from models.terms import TermsConnector
     result = {}
     entries = [TermsConnector().get_term(t.script) for t in usl.ieml_object.tree_iter() if isinstance(t, Term)]
@@ -47,3 +52,5 @@ def generate_tags(usl):
         result[l] = ' '.join((e['TAGS'][l] for e in islice(entries, 10)))
 
     return result
+
+generate_tags = generate_translations

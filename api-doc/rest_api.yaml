@@ -25,7 +25,6 @@ paths:
       consumes:
         - application/json
       tags:
-        - Intlekt
         - Collection
       parameters:
         - name: body
@@ -54,7 +53,6 @@ paths:
       consumes:
         - application/json
       tags:
-        - Intlekt
         - Collection
       parameters:
         - name: body
@@ -86,7 +84,6 @@ paths:
     get:
       operationId: handlers.get_glossary_list
       tags:
-        - Intlekt
         - Glossary
       description: |
         Return the list of defined glossaries. A glossary is defined by his id. All glossary have a name unique for all
@@ -123,7 +120,6 @@ paths:
       consumes:
         - application/json
       tags:
-        - Intlekt
         - Glossary
       description: |
         Create a new glossary and return his id. If there is already a glossary with this name, return an error.
@@ -156,7 +152,6 @@ paths:
       consumes:
         - application/json
       tags:
-        - Intlekt
         - Glossary
       description: |
         Delete an existing glossary given its id.
@@ -186,7 +181,6 @@ paths:
     get:
       operationId: handlers.get_terms_of_glossary
       tags:
-        - Intlekt
         - Glossary
       description: |
         Get a list of all term in the glossary with this id.
@@ -219,7 +213,6 @@ paths:
     post:
       operationId: handlers.add_term_to_glossary
       tags:
-        - Intlekt
         - Glossary
       consumes:
         - application/json
@@ -255,7 +248,6 @@ paths:
     delete:
       operationId: handlers.remove_terms_to_glossary
       tags:
-        - Intlekt
         - Glossary
       consumes:
         - application/json
@@ -298,7 +290,6 @@ paths:
     get:
       operationId: handlers.get_lexicon_list
       tags:
-        - Intlekt
         - Lexicon
       description: |
         Return the list of defined lexicons. A lexicon is defined by his id. Each lexicon have a name unique for all
@@ -335,7 +326,6 @@ paths:
       consumes:
         - application/json
       tags:
-        - Intlekt
         - Lexicon
       description: |
         Create a new lexicon and return his id. If there is already a lexicon with this name, return an error.
@@ -368,7 +358,6 @@ paths:
       consumes:
         - application/json
       tags:
-        - Intlekt
         - Lexicon
       description: |
         Delete an existing lexicon given its id.
@@ -398,7 +387,6 @@ paths:
     get:
       operationId: handlers.get_words_of_lexicon
       tags:
-        - Intlekt
         - Lexicon
       description: |
         Get a list of all words in the lexicon with this id.
@@ -431,12 +419,11 @@ paths:
     post:
       operationId: handlers.add_word_to_lexicon
       tags:
-        - Intlekt
         - Lexicon
       consumes:
         - application/json
       description: |
-        Add a list of words to the lexicon with lexicon_id. It a word is already present in this lexicon,
+        Add a word to the lexicon with lexicon_id. If the word is already present in this lexicon,
         the word is ignored.
       parameters:
         - name: lexicon_id
@@ -467,7 +454,6 @@ paths:
     delete:
       operationId: handlers.remove_words_to_lexicon
       tags:
-        - Intlekt
         - Lexicon
       consumes:
         - application/json
@@ -502,12 +488,16 @@ paths:
               success:
                 type: boolean
 
+  ##############################
+  ## DICTIONARY API           ##
+  ##############################
+
+
   /intlekt/dictionary:
     get:
       description: |
         Return all the terms defined in the ieml dictionary.
       tags:
-        - Intlekt
         - Dictionary
       operationId: handlers.dictionary_dump
       responses:
@@ -526,21 +516,148 @@ paths:
                 items:
                   $ref: '#/definitions/term'
 
-  /usl/to_json:
-    get:
+
+  ##############################
+  ## Library API              ##
+  ##############################
+
+  /intlekt/library:
+    post:
+      description: |
+        Define a new usl in the intlekt library. The usl must have an associated translation, which an index is build on
+         it. If the ieml string doesn't reference a valid ieml_object an error is returned. If the ieml is already
+         present in db, an error is returned (use the put method to update the usl). The translations do not need to be
+         unique (unlike the translation of the dictionary). Return the id of the saved record.
+      consumes:
+        - application/json
+      tags:
+        - Library
+      operationId: handlers.save_to_library
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            required:
+              - ieml
+              - translations
+            properties:
+              ieml:
+                type: string
+              translations:
+                $ref: '#/definitions/translations'
+      responses:
+        '200':
+          description: Successful response
+          schema:
+            type: object
+            required:
+              - success
+              - id
+            properties:
+              success:
+                type: boolean
+              id:
+                type: string
+    # delete:
+    #   description: |
+    #     Delete a list of usl from the library. If an ieml is not valid, an error is raised. If the usl is not
+    #     present in the db, this call do nothing.
+    #   consumes:
+    #     - application/json
+    #   tags:
+    #     - Library
+    #   operationId: handlers.remove_from_library
+    #   parameters:
+    #     - name: body
+    #       in: body
+    #       required: true
+    #       schema:
+    #         type: object
+    #         required:
+    #           - ieml
+    #         properties:
+    #           ieml:
+    #             type: array
+    #             items:
+    #               type: string
+      # responses:
+      #   '200':
+      #     description: Successful response
+      #     schema:
+      #       type: object
+      #       required:
+      #         - success
+      #       properties:
+      #         success:
+      #           type: boolean
+
+  '/intlekt/library/ieml/{ieml}':
+    put:
+      description: |
+        Update an usl already saved to the library. You can update the translations previously defined
+        and the ieml.
+      operationId: handlers.update_usl_translation_from_ieml
+      consumes:
+        - application/json
+      tags:
+        - Library
+      parameters:
+        - name: ieml
+          in: path
+          required: true
+          type: string
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              ieml:
+                type: string
+              translations:
+                $ref: '#/definitions/translations'
+      responses:
+        '200':
+          description: Successful response
+          schema:
+            type: object
+            required:
+              - success
+            properties:
+              success:
+                type: boolean
+
+
+
+
+
+  ##############################
+  ## USL API                  ##
+  ##############################
+
+
+  /intlekt/usl/to_json:
+    post:
       description: |
         Return the json representation of an ieml string
       consumes:
         - application/json
       tags:
-        - Intlekt
-        - IEML
+        - USL
       operationId: handlers.ieml_to_json
       parameters:
-        - name: ieml
-          in: query
+        - name: body
+          in: body
           required: true
-          type: string
+          schema:
+            type: object
+            required:
+              - ieml
+            properties:
+              ieml:
+                type: string
       responses:
         '200':
           description: |
@@ -555,15 +672,19 @@ paths:
               json:
                 $ref: '#/definitions/ieml_object_json'
 
-  /usl/to_ieml:
+
+  /intlekt/usl/to_ieml:
     post:
       description: |
         Return the ieml string associated with an usl json representation or an usl rules representation.
+        Check for invalid structure and return an error message explaining the error if so.
+        You must provide one of 'json' or 'rules' property. It return also a auto-generated translation, or
+        the translation present in the library if the usl is defined. If the usl is present in the library,
+        the flag defined is set to true.
       consumes:
         - application/json
       tags:
-        - Intlekt
-        - IEML
+        - USL
       operationId: handlers.to_ieml
       parameters:
         - name: body
@@ -591,22 +712,31 @@ paths:
                 type: boolean
               ieml:
                 type: string
+              defined:
+                type: boolean
+              translations:
+                $ref: "#/definitions/translations"
 
-  /usl/to_rules:
-    get:
+  /intlekt/usl/to_rules:
+    post:
       description: |
         Return the rules representation for an ieml string.
       consumes:
         - application/json
       tags:
-        - Intlekt
-        - IEML
+        - USL
       operationId: handlers.usl_to_rules
       parameters:
-        - name: ieml
-          in: query
+        - name: body
+          in: body
           required: true
-          type: string
+          schema:
+            type: object
+            required:
+              - ieml
+            properties:
+              ieml:
+                type: string
       responses:
         '200':
           description: |
@@ -623,48 +753,9 @@ paths:
                 items:
                   $ref: '#/definitions/rule'
 
-
-
-
-
-
-
   ##############################
   ## FOR THE DICTIONARY'S API ##
   ##############################
-
-  /allieml:
-    get:
-      operationId: handlers.all_ieml
-      tags:
-        - Dictionary
-      description: |
-        Returns a list of all the `IEML term` objects.
-      responses:
-        '200':
-          description: Successful response
-          schema:
-            type: array
-            items:
-              $ref: '#/definitions/ieml_term'
-
-  /get_term:
-    get:
-      operationId: handlers.get_term
-      tags:
-        - Dictionary
-      description: |
-        Return a specific term object.
-      parameters:
-        - name: script
-          in: query
-          type: string
-          required: true
-      responses:
-        '200':
-          description: Successful response
-          schema:
-            $ref: '#/definitions/ieml_term'
 
   /client/authenticate:
     post:
@@ -688,383 +779,7 @@ paths:
         '200':
           description: Successful response
 
-  /scriptparser/parse:
-    get:
-      operationId: handlers.parse_ieml
-      tags:
-        - Dictionary
-        - Parsing
-      description: |
-        Checks the validity of `IEML term`
-      parameters:
-        - name: iemltext
-          in: query
-          description: The `IEML term` for which we want to get the computed tree.
-          type: string
-          required: true
-      responses:
-        '200':
-          description: Successful response
-          schema:
-            title: Parsed term
-            type: object
-            required:
-              - success
-            properties:
-              factorization:
-                type: string
-              level:
-                type : integer
-              taille:
-                type : integer
-              class:
-                type: integer
-              success  :
-                type: boolean
-              canonical:
-                type: array
-                items:
-                  type : string
-              rootIntersections:
-                type: array
-                items:
-                  type: string
-              containsSize:
-                type: integer
-
-  /scriptparser/tables:
-    get:
-      operationId: handlers.script_table
-      tags:
-        - Dictionary
-        - Parsing
-      description: |
-        Compute the tables for an `IEML paradigm`
-      parameters:
-        - name: iemltext
-          in: query
-          description: The `IEML paradigm` for which we want to get the computed table.
-          type: string
-          required: true
-      responses:
-        '200':
-          description: Successful response
-          schema:
-            type: object
-            properties:
-              success:
-                type: boolean
-              tree:
-                type: object
-                properties:
-                  Tables:
-                    type: array
-                    items:
-                      type: object
-                  input:
-                    type: string
-
-  /scriptparser/tree:
-    get:
-      operationId: handlers.script_tree
-      tags:
-        - Dictionary
-        - Parsing
-      description: |
-        Computes the tree of a given `IEML term`
-      parameters:
-        - name: iemltext
-          in: query
-          description: The `IEML term` for which we want to get the computed tree.
-          type: string
-          required: true
-      responses:
-        '200':
-          description: Successful response
-
-  /getRelVisibility:
-    post:
-      tags:
-        - Dictionary
-      operationId: handlers.get_relation_visibility
-      description: |
-        TODO
-      parameters:
-        - name: body
-          in: body
-          required: True
-          schema:
-            type: object
-            properties:
-              ieml:
-                type: string
-      responses:
-        '200':
-          description: Successful response
-
-  /rels:
-    post:
-      operationId: handlers.get_relations
-      tags:
-        - Dictionary
-        - Relations
-      description: >
-        Returns a list of all the relations associated with the `IEML term`
-        given in the payload
-      parameters:
-        - name: term
-          in: body
-          description: >
-            The `IEML term` for which we want to get its associated
-            relationships.
-          required: true
-          schema:
-            type: object
-            properties:
-              ieml:
-                type: string
-              factorize_descendant:
-                type: boolean
-      responses:
-        '200':
-          description: Successful response
-          schema:
-            type: array
-            items:
-              type: object
-              properties:
-                rellist:
-                  type: array
-                  items:
-                    type: object
-                    properties:
-                      _id:
-                        type: string
-                      exists:
-                        type: boolean
-                      ieml:
-                        type: string
-                      start:
-                        type: string
-                      visible:
-                        type: boolean
-                reltype:
-                  type: string
-                visible:
-                  type: boolean
-  /newieml:
-    post:
-      operationId: handlers.new_ieml_script
-      description: |
-        Add a new `IEML` term to the dictionary
-      tags:
-        - Dictionary
-        - Term
-      parameters:
-        - in : body
-          name : body
-          required : true
-          schema :
-            type: object
-            required:
-              - IEML
-              - PARADIGM
-              - token
-            properties:
-              IEML:
-                type : string
-              PARADIGM:
-                type : string
-              token :
-                type : string
-              INHIBITS :
-                type : array
-                items :
-                  type : string
-      responses:
-        '200':
-          description: Successful response
-
-  /updateieml:
-    post:
-      operationId: handlers.update_ieml_script
-      tags:
-        - Dictionary
-        - Term
-      description: |
-        Modify an `IEML` term from the dictionary
-      parameters:
-        - name : body
-          in: body
-          required : true
-          schema:
-            type : object
-            required:
-              - ID
-              - token
-            properties:
-              ID :
-                type : string
-              PARADIGM :
-                type : string
-              IEML :
-                type : string
-              FR :
-                type : string
-              EN :
-                type : string
-              token :
-                type : string
-              INHIBITS :
-                type : array
-                items :
-                  type : string
-      responses:
-        '200':
-          description: Successful response
-
-  /update_status:
-    get:
-      operationId: handlers.computation_status
-      tags:
-        - Dictionary
-      description: |
-        Get the status of the computation.
-      responses:
-        '200':
-          description: Successful response
-
-  /remieml:
-    post:
-      operationId: handlers.remove_ieml_script
-      tags:
-        - Dictionary
-        - Term
-      description: |
-        Delete an `IEML` term from the dictionary
-      parameters:
-        - in : body
-          name : body
-          required : true
-          schema :
-            type: object
-            required:
-              - id
-              - token
-            properties:
-              id:
-                type : string
-              token:
-                type : string
-      responses:
-        '200':
-          description: Successful response
-
-  '/updaterelations':
-    post:
-      operationId: handlers.update_relations
-      tags:
-        - Dictionary
-        - Relation
-      description: |
-        Recompute the relations in the dictionary. This operation may take a long time (~2min).
-      parameters:
-        - in : body
-          name : body
-          required : true
-          schema :
-            type: object
-            required:
-              - token
-            properties:
-              token:
-                type : string
-      responses:
-        '200':
-          description: Successful response
-
-  '/exists/ieml/{ieml_term}':
-    get:
-      operationId: handlers.ieml_term_exists
-      tags:
-        - Dictionary
-        - Term
-      description: |
-        Check if `<term_ieml>` exists in the dictionary
-      parameters:
-        - in: path
-          name: ieml_term
-          required: true
-          type: string
-      responses:
-        '200':
-          description: Successful response
-
-  '/exists/FR/{tag_fr}':
-    get:
-      operationId: handlers.fr_tag_exists
-      tags:
-        - Dictionary
-        - Term
-      description: |
-        Check if `<term_ieml>` exists in the **French** dictionary
-      parameters:
-        - in: path
-          name: tag_fr
-          required: true
-          type: string
-      responses:
-        '200':
-          description: Successful response
-
-  '/exists/EN/{tag_en}':
-    get:
-      operationId: handlers.en_tag_exists
-      tags:
-        - Dictionary
-        - Term
-      description: |
-        Check if `<term_ieml>` exists in the **English** dictionary
-      parameters:
-        - in: path
-          name: tag_en
-          required: true
-          type: string
-      responses:
-        '200':
-          description: Successful response
-
-
 definitions:
-  ##############################
-  ## FOR THE DICTIONARY'S API ##
-  ##############################
-
-  ieml_term:
-    properties:
-      CANONICAL:
-        type: array
-        items:
-          type: string
-      CLASS:
-        type: number
-      EN:
-        type: string
-      FR:
-        type: string
-      IEML:
-        type: string
-      LAYER:
-        type: number
-      PARADIGM:
-        type: number
-      ROOT_PARADIGM:
-        type: boolean
-      TAILLE:
-        type: number
-      _id:
-        type: string
-
   term:
     properties:
       CLASS:
@@ -1095,19 +810,38 @@ definitions:
       type:
         type: string
 
-      children:
+
+  ieml_object_word_json:
+    required:
+      - type
+      - translations
+      - root
+      - inflexion
+    properties:
+      type:
+        type: string
+
+      root:
         type: array
         items:
-          $ref: '#/definitions/ieml_object_json'
+            $ref: '#/definitions/term'
+      inflexion:
+        type: array
+        items:
+            $ref: '#/definitions/term'
+      translations:
+        $ref: '#/definitions/translations'
 
-      node:
-        $ref: '#/definitions/ieml_object_json'
 
-      mode:
-        $ref: '#/definitions/ieml_object_json'
-
-      term:
-        $ref: '#/definitions/term'
+  translations:
+    required:
+        - FR
+        - EN
+    properties:
+      FR:
+        type: string
+      EN:
+        type: string
 
   rule:
     required:

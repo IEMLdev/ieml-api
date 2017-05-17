@@ -33,7 +33,7 @@ objects = [
             Word(Morpheme([Term("S:.-'B:.-'n.-S:.U:.-',")])),  # Europe
             Word(Morpheme([Term("E:T:.f.-")]))  # dans
         )])),
-        'tags': {
+        'translations': {
             'FR': "Nous avons l'intention de fabriquer et de vendre beaucoup de nos véhicules à roues sans conducteurs en Europe",
             'EN': "We intend to manufacture and sell a lot of our wheeled vehicles without drivers in Europe"
         },

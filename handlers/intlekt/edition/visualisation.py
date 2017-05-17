@@ -9,7 +9,7 @@ from handlers.commons import exception_handler, ieml_term_model
 from ieml.ieml_objects import Term, Sentence, SuperSentence
 from ieml.ieml_objects.texts import Text
 from models.terms.terms import TermsConnector
-from models.usls.usls import USLConnector
+from models.usls.library import LibraryConnector
 
 word = "[([a.i.-]+[i.i.-])*([E:A:T:.]+[E:S:.wa.-]+[E:S:.o.-])]"
 sentence = "[([([a.i.-]+[i.i.-])*([E:A:T:.]+[E:S:.wa.-]+[E:S:.o.-])]*[([S:.-'B:.-'n.-S:.U:.-',])]*[([E:T:.f.-])])+([([a.i.-]+[i.i.-])*([E:A:T:.]+[E:S:.wa.-]+[E:S:.o.-])]*[([t.i.-s.i.-'u.T:.-U:.-'wo.-',B:.-',_M:.-',_;])]*[([E:E:T:.])])]"
@@ -30,9 +30,9 @@ def recent_usls(n, language='EN'):
     return [{'success': True,
              'id': usl['_id'],
              'ieml': usl['USL']['IEML'],
-             'tags': usl['TAGS'],
+             'tags': usl['TRANSLATIONS'],
              'keywords': usl['KEYWORDS']
-            } for usl in USLConnector().most_recent(int(n))]
+            } for usl in LibraryConnector().most_recent(int(n))]
 
 
 def _ieml_object_to_json(u, start=True):
@@ -87,9 +87,9 @@ def usl_to_json(usl):
     return _ieml_object_to_json(u.ieml_object)
 
 
-@exception_handler
-def ieml_to_json(ieml):
-    u = _usl(ieml)
+# @exception_handler
+def ieml_to_json(body):
+    u = _usl(body['ieml'])
     return {'success': True,
             'json': _ieml_object_to_json(u.ieml_object)}
 
@@ -161,24 +161,38 @@ def rules_to_json(rules):
     return _ieml_object_to_json(u.ieml_object)
 
 
-@exception_handler
-def usl_to_rules(ieml):
-    u = usl(ieml)
+
+def usl_to_rules(body):
+    u = usl(body['ieml'])
     return {'success': True,
             'rules': [{'path': str(p),
                        'ieml': str(t.script)} for ps, t in u.paths.items() for p in ps.develop]}
 
 
-@exception_handler
 def to_ieml(body):
     if 'rules' in body and isinstance(body['rules'], list):
         success, result = _path_to_usl_clean([(r['path'], Term(r['ieml'])) for r in body['rules']])
         if success:
-            return {'success': True,
+            response = {'success': True,
                     'ieml': str(result)}
         else:
             return result
 
-    if 'json' in body and isinstance(body['json'], dict):
-        return {'success': True,
-                'ieml': str(_json_to_ieml(body['json']))}
+    elif 'json' in body and isinstance(body['json'], dict):
+        response = {'success': True,
+                  'ieml': str(_json_to_ieml(body['json']))}
+
+    else:
+        raise ValueError("No representation to convert in ieml. Specify at least one of the 'rules' "
+                         "or the 'json' body attributes.")
+
+    u = LibraryConnector().get(usl=response['ieml'])
+    if u is None:
+        response['defined'] = False
+        response['translations'] = usl(response['ieml']).auto_translation()
+    else:
+        response['defined'] = True
+        response['translations'] = u['TRANSLATIONS']
+
+    return response
+

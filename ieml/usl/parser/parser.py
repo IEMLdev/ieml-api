@@ -40,6 +40,7 @@ class USLParser(metaclass=Singleton):
             print("Syntax error at '%s' (%d, %d)" % (p.value, p.lineno, p.lexpos))
         else:
             print("Syntax error at EOF")
+
         raise CannotParse(self.usl)
 
 if __name__ == '__main__':
