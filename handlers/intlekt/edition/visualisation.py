@@ -1,5 +1,6 @@
 from functools import partial
 
+from ieml.exceptions import CannotParse
 from ieml.ieml_objects.hypertexts import Hyperlink, Hypertext
 from ieml.ieml_objects.sentences import Clause, SuperClause
 from ieml.ieml_objects.words import Word, Morpheme
@@ -87,7 +88,7 @@ def usl_to_json(usl):
     return _ieml_object_to_json(u.ieml_object)
 
 
-# @exception_handler
+@exception_handler
 def ieml_to_json(body):
     u = _usl(body['ieml'])
     return {'success': True,
@@ -161,7 +162,7 @@ def rules_to_json(rules):
     return _ieml_object_to_json(u.ieml_object)
 
 
-
+@exception_handler
 def usl_to_rules(body):
     u = usl(body['ieml'])
     return {'success': True,
@@ -169,12 +170,30 @@ def usl_to_rules(body):
                        'ieml': str(t.script)} for ps, t in u.paths.items() for p in ps.develop]}
 
 
+@exception_handler
 def to_ieml(body):
     if 'rules' in body and isinstance(body['rules'], list):
-        success, result = _path_to_usl_clean([(r['path'], Term(r['ieml'])) for r in body['rules']])
+        rules = []
+        errors = []
+        for r in body['rules']:
+            try:
+                rules.append((r['path'], Term(r['ieml'])))
+            except CannotParse as e:
+                errors.append({
+                    'path': r['path'],
+                    'message': str(e)
+                })
+
+        if errors:
+            return {
+                'success': False,
+                'errors': errors
+            }
+
+        success, result = _path_to_usl_clean(rules)
         if success:
             response = {'success': True,
-                    'ieml': str(result)}
+                        'ieml': str(result)}
         else:
             return result
 
