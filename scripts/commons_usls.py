@@ -2,7 +2,7 @@ from ieml.ieml_objects.sentences import Sentence, Clause
 from ieml.ieml_objects.terms import Term
 from ieml.ieml_objects.words import Word, Morpheme
 from ieml.usl.tools import usl
-from models.usls.usls import USLConnector
+from models.usls.library import LibraryConnector
 
 root = Word(Morpheme([Term("i.i.-"),  # fabriquer
                      Term("a.i.-")]),  # vendre
@@ -33,7 +33,7 @@ objects = [
             Word(Morpheme([Term("S:.-'B:.-'n.-S:.U:.-',")])),  # Europe
             Word(Morpheme([Term("E:T:.f.-")]))  # dans
         )])),
-        'tags': {
+        'translations': {
             'FR': "Nous avons l'intention de fabriquer et de vendre beaucoup de nos véhicules à roues sans conducteurs en Europe",
             'EN': "We intend to manufacture and sell a lot of our wheeled vehicles without drivers in Europe"
         },
@@ -46,7 +46,7 @@ objects = [
 
 
 def save_usls():
-    usls = USLConnector()
+    usls = LibraryConnector()
     for o in objects:
         if usls.get(usl=o['usl']) is None:
             usls.save(**o)

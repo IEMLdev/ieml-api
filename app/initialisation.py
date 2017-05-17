@@ -2,8 +2,6 @@ from flask_socketio import SocketIO
 import multiprocessing
 from flask_compress import Compress
 
-from scripts.commons_usls import init_dev_db
-
 socketio = SocketIO()
 
 def create_app():
