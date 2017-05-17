@@ -2,7 +2,7 @@ from ieml.ieml_objects.sentences import Sentence, Clause
 from ieml.ieml_objects.terms import Term
 from ieml.ieml_objects.words import Word, Morpheme
 from ieml.usl.tools import usl
-from models.usls.usls import USLConnector
+from models.usls.library import LibraryConnector
 
 root = Word(Morpheme([Term("i.i.-"),  # fabriquer
                      Term("a.i.-")]),  # vendre
@@ -46,7 +46,7 @@ objects = [
 
 
 def save_usls():
-    usls = USLConnector()
+    usls = LibraryConnector()
     for o in objects:
         if usls.get(usl=o['usl']) is None:
             usls.save(**o)

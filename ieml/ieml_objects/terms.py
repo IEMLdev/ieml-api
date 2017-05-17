@@ -6,24 +6,23 @@ from ieml.script.operator import script
 import os
 import yaml
 from metaclasses import Singleton
+import numpy as np
 
 
-class TermSingleton(type):
-    def __call__(cls, *args, **kwargs):
-        s = args[0]
+class Term(IEMLObjects):
+    closable = True
+
+    __term_instances = {}
+
+    def __new__(cls, s):
         if isinstance(s, str) and s[0] == '[' and s[-1] == ']':
             s = s[1:-1]
         s = script(s)
 
-        if s not in Dictionary().terms:
-            print("Allocating term %s."%str(s))
-            return super(TermSingleton, cls).__call__(*args, **kwargs)
+        if s not in cls.__term_instances:
+            cls.__term_instances[s] = super(Term, cls).__new__(cls)
 
-        return Dictionary().terms[s]
-
-
-class Term(IEMLObjects, metaclass=TermSingleton):
-    closable = True
+        return cls.__term_instances[s]
 
     def __init__(self, s):
         if isinstance(s, Term):
@@ -42,6 +41,7 @@ class Term(IEMLObjects, metaclass=TermSingleton):
         self.inhibitions = None
         self.root = None
         self.rank = None
+        self.index = None
 
     def relations(self, relation_name):
         if relation_name not in self._relations:
@@ -71,7 +71,7 @@ class Term(IEMLObjects, metaclass=TermSingleton):
 
     @property
     def defined(self):
-        return all(self.__getattribute__(p) is not None for p in ['translation', 'inhibitions', 'root', 'rank'])
+        return all(self.__getattribute__(p) is not None for p in ['translation', 'inhibitions', 'root', 'rank', 'index'])
 
 
 
@@ -102,11 +102,11 @@ def save_dictionary(directory):
     def _get_translations(term):
         return {l: Dictionary().translations[l][term] for l in LANGUAGES }
 
-    save = {str(root): {
+    save = {str(root.script): {
         'translation': _get_translations(root),
         'inhibitions': root.inhibitions,
         'paradigms': [{
-            'paradigm': str(p),
+            'paradigm': str(p.script),
             'translation': _get_translations(p)
         } for p in Dictionary().terms.values() if p.root == root]
     } for root in Dictionary().roots}
@@ -126,9 +126,10 @@ def load_dictionary(directory):
 
     for r_p, v in roots.items():
         dictionary.add_term(r_p, root=True, inhibitions=v['inhibitions'], translation=v['translation'])
-        for p in v['paradigm']:
+        for p in v['paradigms']:
             dictionary.add_term(p['paradigm'], root=False, translation=p['translation'])
 
+    dictionary.compute_relations()
     return dictionary
 
 
@@ -139,8 +140,9 @@ class Dictionary(metaclass=Singleton):
 
         self.terms = {}
         self.translations = {l: bidict() for l in LANGUAGES}
-        self.roots = set()
+        self.roots = {}
         self.tables = {}
+        self.index = []
 
     def add_term(self, script, root=False, inhibitions=(), translation=None):
 
@@ -177,12 +179,14 @@ class Dictionary(metaclass=Singleton):
         self.set_translation(term, translation)
 
         term.root = root_p
+        self.roots[root_p].append(term)
+
         term.inhibitions = inhibitions
 
         self.terms[term.script] = term
 
     def _define_root(self, term, inhibitions, translation):
-        self.roots.add(term)
+        self.roots[term] = list()
         self._define_term(term, root_p=term, inhibitions=inhibitions, translation=translation)
 
         # for ss in term.script.singular_sequences:
@@ -209,8 +213,36 @@ class Dictionary(metaclass=Singleton):
 
         term.translation = translation
 
+    def compute_relations(self):
+        self.index = sorted(self.terms.values())
+        for i, t in enumerate(self.index):
+            t.index = i
+
+        self.contains = np.zeros(shape=(len(self), len(self)), dtype=np.int8)
+
+        for r_p, v in self.roots.items():
+            paradigms = {t for t in v if t.script.paradigm}
+            indexes = [t.index for t in v]
+            self.contains[r_p.index, indexes] = 1
+
+            for p in paradigms:
+                contains = [self.terms[ss] for ss in p.script.singular_sequences] + [k for k in paradigms if k in p]
+                p.contains = contains
+                contains = [c.index for c in contains]
+
+                self.contains[p.index, contains] = 1
+
+        # rel_shape = (len(self),)*2
+        #
+        # def test(i, j):
+        #     return self.index[i].script in self.index[j].script
+        # # rel_contain = lambda i, j:
+        # self.contained = np.fromfunction(np.vectorize(test), shape=rel_shape, dtype=np.int32)
+
+
 
 if __name__ == '__main__':
     print(os.getcwd())
     d = load_dictionary('../../data/dictionary')
+    print(d.contains)
     print(len(d))
