@@ -25,7 +25,7 @@ class ScriptParser(metaclass=Singleton):
         # rename the parsing method (can't name it directly parse with lru_cache due to ply checking)
         self.parse = self.t_parse
 
-    @lru_cache()
+    @lru_cache(maxsize=10000)
     def t_parse(self, s):
         self.root = None
         self.script = s

@@ -1,7 +1,7 @@
 import functools
 
 from ieml.commons import GRAMMATICAL_CLASS_NAMES
-from ieml.ieml_objects.terms import Term
+from ieml.ieml_objects.tools import term as _term
 from models.exceptions import InvalidRelationCollectionState, TermNotFound
 from models.relations.relations import RelationsConnector
 from models.relations.relations_queries import RelationsQueries
@@ -24,7 +24,7 @@ def exception_handler(func):
 
 
 def ieml_term_model(term):
-    term = Term(term)
+    term = _term(term)
 
     term_entry = TermsConnector().get_term(str(term.script))
     if term_entry is None:

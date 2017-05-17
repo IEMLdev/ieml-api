@@ -10,8 +10,6 @@ from ieml.script.constants import PRIMITVES, remarkable_multiplication_lookup_ta
 import numpy as np
 
 
-
-
 class Script(TreeStructure):
     """ A parser is defined by a character (PRIMITIVES, REMARKABLE_ADDITION OR REMARKABLE_MULTIPLICATION)
      or a list of parser children. All the element in the children list must be an AdditiveScript or
@@ -43,6 +41,7 @@ class Script(TreeStructure):
 
         # The singular sequences
         self._singular_sequences = None
+        self._singular_sequences_set = None
 
         # The contained paradigms (tables)
         self._tables = None
@@ -54,6 +53,8 @@ class Script(TreeStructure):
         # class of the parser, one of the following : VERB (1), AUXILIARY (0), and NOUN (2)
         self.script_class = None
 
+        self._hash = None
+
     def __add__(self, other):
         if not isinstance(other, Script):
             raise InvalidScript()
@@ -61,17 +62,13 @@ class Script(TreeStructure):
         return AdditiveScript(children=[self, other])
 
     def __eq__(self, other):
-        if not isinstance(other, Script):
-            return False
-
-        if self._str is None or other._str is None:
-            return NotImplemented
-
-        return self._str == other._str
+        return self.__hash__() == other.__hash__()
 
     def __hash__(self):
         """Since the IEML string for any proposition AST is supposed to be unique, it can be used as a hash"""
-        return self.__str__().__hash__()
+        if self._hash is None:
+            self._hash = self.__str__().__hash__()
+        return self._hash
 
     def __lt__(self, other):
         if not isinstance(self, Script) or not isinstance(other, Script):
@@ -142,7 +139,10 @@ class Script(TreeStructure):
         if not isinstance(item, Script):
             return False
 
-        return set(item.singular_sequences).issubset(set(self.singular_sequences))
+        if item.layer != self.layer:
+            return False
+
+        return item.singular_sequences_set.issubset(self.singular_sequences_set)
 
     @property
     def cells(self):
@@ -160,6 +160,13 @@ class Script(TreeStructure):
             self._singular_sequences = self._compute_singular_sequences()
 
         return self._singular_sequences
+
+    @property
+    def singular_sequences_set(self):
+        if self._singular_sequences_set is None:
+            self._singular_sequences_set = set(self.singular_sequences)
+
+        return self._singular_sequences_set
 
     @property
     def tables(self):

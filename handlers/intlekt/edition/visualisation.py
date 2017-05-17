@@ -2,12 +2,14 @@ from functools import partial
 
 from ieml.ieml_objects.hypertexts import Hyperlink, Hypertext
 from ieml.ieml_objects.sentences import Clause, SuperClause
+from ieml.ieml_objects.tools import term
 from ieml.ieml_objects.words import Word, Morpheme
 from ieml.paths.exceptions import IEMLObjectResolutionError
 from ieml.usl.tools import usl as _usl, usl
 from handlers.commons import exception_handler, ieml_term_model
 from ieml.ieml_objects import Term, Sentence, SuperSentence
 from ieml.ieml_objects.texts import Text
+
 from models.terms.terms import TermsConnector
 from models.usls.library import LibraryConnector
 
@@ -109,7 +111,7 @@ def _children_list(constructor, json):
     return constructor(children=list(_json_to_ieml(c) for c in json['children']))
 
 type_to_action = {
-    Term.__name__.lower(): lambda json: Term(json['term']['IEML']),
+    Term.__name__.lower(): lambda json: term(json['term']['IEML']),
     'sentence-root-node': lambda json: Sentence(_tree_node(json, Clause)),
     'supersentence-root-node': lambda json: SuperSentence(_tree_node(json, SuperClause)),
     'sentence-node': lambda json: Sentence(_tree_node(json, Clause)),
@@ -147,7 +149,7 @@ def _path_to_usl_clean(rules):
 
 @exception_handler
 def rules_to_usl(rules):
-    success, result = _path_to_usl_clean([(r[0], Term(r[1])) for r in rules])
+    success, result = _path_to_usl_clean([(r[0], term(r[1])) for r in rules])
     if success:
         return str(result)
     return result
@@ -155,7 +157,7 @@ def rules_to_usl(rules):
 
 @exception_handler
 def rules_to_json(rules):
-    success, u = _path_to_usl_clean([(r[0], Term(r[1])) for r in rules])
+    success, u = _path_to_usl_clean([(r[0], term(r[1])) for r in rules])
     if not success:
         return u
     return _ieml_object_to_json(u.ieml_object)

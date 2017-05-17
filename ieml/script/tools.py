@@ -238,6 +238,7 @@ class RemarkableSibling:
         return cls.opposed_siblings(script1.children[0], script2.children[1]) and \
             cls.opposed_siblings(script1.children[1], script2.children[0])
 
+
 _remarkable_multiplications_twin_siblings = [re.escape(t) for t in ['wo.', 'we.', 's.', 'm.', 'l.']]
 _remarkable_multiplications_opposed_siblings = \
     {'j.': 'y\\.', 'n.': 'f\\.', 't.': 'd\\.', 'o.': 'h\\.', 'u.': 'g\\.',
