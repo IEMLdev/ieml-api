@@ -1,5 +1,5 @@
 from models.commons import DBConnector
-from models.intlekt.constants import DEMO_DB_NAME
+from models.intlekt.old.constants import DEMO_DB_NAME
 
 
 class DemoConnector(DBConnector):

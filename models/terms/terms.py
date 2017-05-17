@@ -222,7 +222,17 @@ class TermsConnector(DBConnector):
 
         self.terms.insert(insertion)
 
-    def get_inhibitions(self):
+    def get_inhibitions(self, script=None):
+        """
+        Return the list of root paradigms and theirs associated inhibitions.
+        If script is specified, return the list of inhibitions for this scripts.
+        :param script: optional, the script to get his inhibitions
+        :return: A list of tuple of (root_p ieml, inhibitions[]) or inhibitions[] if script was specified
+        """
+        if script is not None:
+            root = RelationsQueries.relations(script, relation_title='ROOT')
+            return self.get_term(root)['INHIBITS']
+
         paradigms = self.terms.find({'ROOT': True, 'INHIBITS': {'$ne': []}})
         return [(p['_id'], p['INHIBITS']) for p in paradigms]
 

@@ -9,7 +9,7 @@ from ieml.usl.tools import usl, replace_paths
 from models.commons import DBConnector, generate_tags, check_tags
 from models.constants import TEMPLATES_COLLECTION, TAG_LANGUAGES, MAX_SIZE_TEMPLATE
 from models.terms import TermsConnector
-from models.usls.usls import usl_index
+from models.usls.library import usl_index
 
 
 class TemplatesConnector(DBConnector):

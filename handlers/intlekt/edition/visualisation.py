@@ -5,11 +5,11 @@ from ieml.ieml_objects.sentences import Clause, SuperClause
 from ieml.ieml_objects.words import Word, Morpheme
 from ieml.paths.exceptions import IEMLObjectResolutionError
 from ieml.usl.tools import usl as _usl, usl
-from handlers.commons import exception_handler
+from handlers.commons import exception_handler, ieml_term_model
 from ieml.ieml_objects import Term, Sentence, SuperSentence
 from ieml.ieml_objects.texts import Text
 from models.terms.terms import TermsConnector
-from models.usls.usls import USLConnector
+from models.usls.library import LibraryConnector
 
 word = "[([a.i.-]+[i.i.-])*([E:A:T:.]+[E:S:.wa.-]+[E:S:.o.-])]"
 sentence = "[([([a.i.-]+[i.i.-])*([E:A:T:.]+[E:S:.wa.-]+[E:S:.o.-])]*[([S:.-'B:.-'n.-S:.U:.-',])]*[([E:T:.f.-])])+([([a.i.-]+[i.i.-])*([E:A:T:.]+[E:S:.wa.-]+[E:S:.o.-])]*[([t.i.-s.i.-'u.T:.-U:.-'wo.-',B:.-',_M:.-',_;])]*[([E:E:T:.])])]"
@@ -30,19 +30,16 @@ def recent_usls(n, language='EN'):
     return [{'success': True,
              'id': usl['_id'],
              'ieml': usl['USL']['IEML'],
-             'tags': usl['TAGS'],
+             'tags': usl['TRANSLATIONS'],
              'keywords': usl['KEYWORDS']
-            } for usl in USLConnector().most_recent(int(n))]
+            } for usl in LibraryConnector().most_recent(int(n))]
+
 
 def _ieml_object_to_json(u, start=True):
     if isinstance(u, Term):
-        return {
-            'type': u.__class__.__name__.lower(),
-            'script': str(u.script),
-            'singular_sequences': [str(s) for s in u.script.singular_sequences],
-            'title': {'en': TermsConnector().get_term(u.script)['TAGS']['EN'],
-                      'fr': TermsConnector().get_term(u.script)['TAGS']['FR']}
-        }
+        return {"term": ieml_term_model(u),
+                "type": "term"}
+
     if not u.closable and start and len(u.children) == 1:
         return _ieml_object_to_json(u.children[0])
 
@@ -90,6 +87,13 @@ def usl_to_json(usl):
     return _ieml_object_to_json(u.ieml_object)
 
 
+# @exception_handler
+def ieml_to_json(body):
+    u = _usl(body['ieml'])
+    return {'success': True,
+            'json': _ieml_object_to_json(u.ieml_object)}
+
+
 def _tree_node(json, constructor):
     result = []
     for child in json['children']:
@@ -105,7 +109,7 @@ def _children_list(constructor, json):
     return constructor(children=list(_json_to_ieml(c) for c in json['children']))
 
 type_to_action = {
-    Term.__name__.lower(): lambda json: Term(json['script']),
+    Term.__name__.lower(): lambda json: Term(json['term']['IEML']),
     'sentence-root-node': lambda json: Sentence(_tree_node(json, Clause)),
     'supersentence-root-node': lambda json: SuperSentence(_tree_node(json, SuperClause)),
     'sentence-node': lambda json: Sentence(_tree_node(json, Clause)),
@@ -140,6 +144,7 @@ def _path_to_usl_clean(rules):
             } for p, m in e.errors]
         }
 
+
 @exception_handler
 def rules_to_usl(rules):
     success, result = _path_to_usl_clean([(r[0], Term(r[1])) for r in rules])
@@ -156,7 +161,38 @@ def rules_to_json(rules):
     return _ieml_object_to_json(u.ieml_object)
 
 
-@exception_handler
-def usl_to_rules(ieml):
-    u = usl(ieml)
-    return [(str(p), str(t.script)) for ps, t in u.paths for p in ps.develop]
+
+def usl_to_rules(body):
+    u = usl(body['ieml'])
+    return {'success': True,
+            'rules': [{'path': str(p),
+                       'ieml': str(t.script)} for ps, t in u.paths.items() for p in ps.develop]}
+
+
+def to_ieml(body):
+    if 'rules' in body and isinstance(body['rules'], list):
+        success, result = _path_to_usl_clean([(r['path'], Term(r['ieml'])) for r in body['rules']])
+        if success:
+            response = {'success': True,
+                    'ieml': str(result)}
+        else:
+            return result
+
+    elif 'json' in body and isinstance(body['json'], dict):
+        response = {'success': True,
+                  'ieml': str(_json_to_ieml(body['json']))}
+
+    else:
+        raise ValueError("No representation to convert in ieml. Specify at least one of the 'rules' "
+                         "or the 'json' body attributes.")
+
+    u = LibraryConnector().get(usl=response['ieml'])
+    if u is None:
+        response['defined'] = False
+        response['translations'] = usl(response['ieml']).auto_translation()
+    else:
+        response['defined'] = True
+        response['translations'] = u['TRANSLATIONS']
+
+    return response
+

@@ -2,6 +2,7 @@ from ieml.ieml_objects.commons import IEMLObjects
 from ieml.ieml_objects.constants import MORPHEME_SIZE_LIMIT
 from ieml.ieml_objects.exceptions import InvalidIEMLObjectArgument
 from ieml.ieml_objects.terms import Term
+from ieml.script.constants import MAX_SINGULAR_SEQUENCES
 
 
 class Morpheme(IEMLObjects):
@@ -27,6 +28,10 @@ class Morpheme(IEMLObjects):
                                             str([str(t) for t in _children]))
 
         super().__init__(sorted(_children))
+
+        self.cardinal = 1
+        for c in self.children:
+            self.cardinal *= c.script.cardinal
 
     @property
     def grammatical_class(self):
@@ -60,6 +65,10 @@ class Word(IEMLObjects):
             raise InvalidIEMLObjectArgument(Word, "The root of a Word cannot be empty (%s)."%str(_children[0]))
 
         super().__init__(_children, literals=literals)
+
+        self.cardinal = self.root.cardinal * (self.flexing.cardinal if self.flexing is not None else 1)
+        if self.cardinal > MAX_SINGULAR_SEQUENCES:
+            raise ValueError("Too many word- singular sequences defined (max: 360) here: %d"%self.cardinal)
 
     @property
     def grammatical_class(self):

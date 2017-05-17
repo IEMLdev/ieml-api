@@ -1,6 +1,6 @@
 from handlers.commons import exception_handler
 from ieml.usl.tools import usl
-from models.usls.usls import USLConnector
+from models.usls.library import USLConnector
 
 
 # @exception_handler
