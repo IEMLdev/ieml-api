@@ -44,20 +44,37 @@ def dictionary_dump():
             'terms': sorted((ieml_term_model(t['_id']) for t in terms_db().get_all_terms()), key=lambda c: c['INDEX'])}
 
 
-def _drupal_process(d):
-    return {
-        'uuid': uuid.uuid3(uuid.NAMESPACE_X500, d['IEML']),
+def _drupal_process(dico):
+    all_uuid = {
+        d['IEML']: uuid.uuid3(uuid.NAMESPACE_X500, d['IEML']) for d in dico
+    }
+
+    return [{
+        'uuid': all_uuid[d['IEML']],
         'IEML': d['IEML'],
         'FR': d['FR'],
         'EN': d['EN'],
-        'INDEX': d['INDEX']
-    }
+        'INDEX': d['INDEX'],
+        'relations': [
+            {
+                'category': 'Inclusion',
+                'type': 'Contained',
+                'terms': [all_uuid[k] for k in all_uuid if k != d['IEML']][:2]
+            },
+            {
+                'category': 'Inclusion',
+                'type': 'Contains',
+                'terms': [all_uuid[k] for k in all_uuid if k != d['IEML']][2:]
+            },
+        ]
+    } for d in dico]
 
 
 @cached("dictionary_dump", 1000)
 @exception_handler
 def drupal_dictionary_dump():
-    return [_drupal_process(ieml_term_model(t['_id'])) for t in terms_db().get_all_terms()]
+    dico = [ieml_term_model(t['_id']) for t in terms_db().get_all_terms()][:5]
+    return _drupal_process(dico)
 
 
 
