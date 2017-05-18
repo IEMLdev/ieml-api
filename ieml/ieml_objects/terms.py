@@ -1,5 +1,6 @@
+import json
+from collections import namedtuple, defaultdict
 
-import sys
 from bidict import bidict
 
 from ieml.commons import LANGUAGES
@@ -8,10 +9,12 @@ from ieml.script.constants import MAX_LAYER
 from ieml.script.operator import script
 import os
 import yaml
-import pickle as pkl
 from ieml.script.script import AdditiveScript, NullScript, MultiplicativeScript
 from metaclasses import Singleton
 import numpy as np
+
+Relations = namedtuple('Relations', ['contains', 'contained', 'father', 'children',
+                                     'opposed', 'associated', 'twins', 'crossed'])
 
 
 class Term(IEMLObjects):
@@ -31,8 +34,9 @@ class Term(IEMLObjects):
         self.translation = None
         self.inhibitions = None
         self.root = None
-        self.rank = None
+        # self.rank = None
         self.index = None
+        self.relations = None
 
     # def relations(self, relation_name):
     #     if relation_name not in self._relations:
@@ -62,7 +66,7 @@ class Term(IEMLObjects):
 
     @property
     def defined(self):
-        return all(self.__getattribute__(p) is not None for p in ['translation', 'inhibitions', 'root', 'rank', 'index'])
+        return all(self.__getattribute__(p) is not None for p in ['translation', 'inhibitions', 'root', 'index', 'relations'])
 
 
 
@@ -91,12 +95,20 @@ def save_dictionary(directory, pickle=True):
     """
 
     if pickle:
-        limit = sys.getrecursionlimit()
-        sys.setrecursionlimit(10000)
-        file = os.path.join(directory, "dictionary.pkl")
-        with open(file, 'wb') as fp:
-            pkl.dump(Dictionary(), fp)
-        sys.setrecursionlimit(limit)
+        # limit = sys.getrecursionlimit()
+        # sys.setrecursionlimit(10000)
+        file = os.path.join(directory, "dictionary.json")
+        relations_file = os.path.join(directory, "dictionary_relations.npy")
+
+        state = Dictionary().__getstate__()
+        np.save(arr=state['relations'], file=relations_file)
+
+        del state['relations']
+
+        with open(file, 'w') as fp:
+            json.dump(state, fp)
+
+        # sys.setrecursionlimit(limit)
     else:
         def _get_translations(term):
             return {l: Dictionary().translations[l][term] for l in LANGUAGES }
@@ -118,12 +130,15 @@ def save_dictionary(directory, pickle=True):
 
 
 def load_dictionary(directory, dictionary):
-    file_name = "dictionary"
-    dic_pkl = os.path.join(directory, os.path.join(directory, file_name, ".pkl"))
-    if os.path.isfile(dic_pkl):
-        with open(dic_pkl, 'r') as fp:
-            Singleton._instances[Dictionary] = pkl.load(fp)
-            return Singleton._instances[Dictionary]
+    dic_json = os.path.join(directory, "dictionary.json")
+    dic_rel = os.path.join(directory, "dictionary_relations.npy")
+
+    if os.path.isfile(dic_json):
+        with open(dic_json, 'r') as fp:
+            state = json.load(fp)
+
+        state['relations'] = np.load(dic_rel)
+        dictionary.__setstate__(state)
     else:
         file = os.path.join(directory, "dictionary_true.yml")
         print("Loading dictionary ... ", end='', flush=True)
@@ -146,42 +161,78 @@ class Dictionary(metaclass=Singleton):
 
         super().__init__()
 
-        self.singular_sequences = set()
         self.terms = {}
         self.translations = {l: bidict() for l in LANGUAGES}
         self.roots = {}
-        self.index = []
+        self.relations = None
 
         # list layer (int) -> list of terms at this layer
         self._layers = None         # make layers stacks
-        self.relations = None
+        self._index = None
+        self._singular_sequences = None
 
         folder = os.path.join(os.path.dirname(__file__), "../../data/dictionary")
-        d = load_dictionary(folder, dictionary=self)
-        if d != self:
-            print("New dictionary instancied")
+        load_dictionary(folder, dictionary=self)
 
     def __getstate__(self):
         return {
-            'index': [str(t) for t in self.index],
+            'index': [str(t.script) for t in self.index],
             'translations': {l: {str(t.script): text for t, text in v.items()} for l, v in self.translations.items()},
             'roots': [str(t.script) for t in self.roots],
             'relations': self.relations
         }
 
     def __setstate__(self, state):
-        self.index = [Term(t, dictionary=self) for t in state['index']]
+        self._index = [Term(t, dictionary=self) for t in state['index']]
+        assert sorted(self._index) == self._index
+
         self.terms = {t.script:t for t in self.index}
         self.translations = {l: {self.terms[t]: text for t, text in v.items()} for l, v in state['translations'].items()}
         self.roots = {self.terms[r]: [] for r in state['roots']}
         self.relations = state['relations']
 
+        self._layers = None
+        self._singular_sequences = None
+
+        self.define_terms()
+        print("loaded !")
+
+    def define_terms(self):
+        for i, t in enumerate(self.index):
+            t.index = i
+
+        for r, v in self.roots.items():
+            for t in v:
+                t.root = r
+
+        for t in self.terms.values():
+            t.translation = {l: self.translations[l][t] for l in self.translations}
+            t.inhibitions = []
+            # t.rank = None
+
+        self._set_terms_relations()
+
+    @property
+    def singular_sequences(self):
+        if self._singular_sequences is None:
+            self._singular_sequences = sorted(ss for r in self.roots for ss in r.script.singular_sequences)
+
+        return self._singular_sequences
+
+    @property
+    def index(self):
+        if self._index is None:
+            self._index = sorted(self.terms.values())
+        return self._index
+
     @property
     def layers(self):
         if self._layers is None:
-            for t in self.terms
             self._layers = [[] for _ in range(MAX_LAYER + 1)]
+            for t in self.index:
+                self._layers[t.script.layer].append(t)
 
+        return self._layers
 
     def add_term(self, script, root=False, inhibitions=(), translation=None):
 
@@ -200,7 +251,7 @@ class Dictionary(metaclass=Singleton):
                 raise ValueError("Root paradigm intersection with term %s when adding root term %s" %
                                  (str(root_p), str(term)))
 
-            self._define_term(term, root_p=root_p, inhibitions=inhibitions, translation=translation)
+            self._add_term(term, root_p=root_p, inhibitions=inhibitions, translation=translation)
 
         elif len(roots_p) > 1:
             raise ValueError("Can't define the term %s in the dictionary, the term is in multiples root paradigms [%s]"%
@@ -209,29 +260,19 @@ class Dictionary(metaclass=Singleton):
             if not term.script.paradigm:
                 raise ValueError("Can't add the singular sequence term %s as a root paradigm."%str(term))
 
-            self._define_root(term, inhibitions, translation)
+            self._add_root(term, inhibitions, translation)
 
         else:
             raise ValueError("Can't add term %s to the dictionary, it is not defined within a root paradigm."%str(term))
 
-    def _define_term(self, term, root_p, inhibitions, translation):
-
+    def _add_term(self, term, root_p, inhibitions, translation):
         self.set_translation(term, translation)
-
-        term.root = root_p
         self.roots[root_p].append(term)
-
-        term.inhibitions = inhibitions
-
-        self.layer_stack[term.script.layer].append(term)
-
         self.terms[term.script] = term
 
-    def _define_root(self, term, inhibitions, translation):
+    def _add_root(self, term, inhibitions, translation):
         self.roots[term] = list()
-        self.singular_sequences |= set(term.script.singular_sequences)
-
-        self._define_term(term, root_p=term, inhibitions=inhibitions, translation=translation)
+        self._add_term(term, root_p=term, inhibitions=inhibitions, translation=translation)
 
     def __len__(self):
         return len(self.terms)
@@ -249,8 +290,6 @@ class Dictionary(metaclass=Singleton):
                                  (translation[l], str(self.translations[l].inv[translation[l]]), str(term)))
 
             self.translations[l][term] = translation[l]
-
-        term.translation = translation
 
     def _compute_contains(self):
         print("Compute contains")
@@ -301,7 +340,7 @@ class Dictionary(metaclass=Singleton):
         print("Compute siblings")
 
         _twins = []
-        for l in self.layer_stack[1:]:
+        for l in self.layers[1:]:
             for i, t0 in enumerate(l):
                 if not isinstance(t0.script, MultiplicativeScript):
                     continue
@@ -342,27 +381,37 @@ class Dictionary(metaclass=Singleton):
         return siblings
 
     def _set_terms_relations(self):
-        _twins = [self.index[j] for j in np.where(self.siblings[2, :, :] == 1)[0]]
-        for t in _twins:
-            t.twins = _twins
+        _res = defaultdict(dict)
 
         for i in range(len(self)):
             t = self.index[i]
-            t.contained = [self.index[j] for j in np.where(self.contained[i, :] == 1)[0]]
-            t.contains = [self.index[j] for j in np.where(self.contains[i, :] == 1)[0]]
+            _res[t]['contained'] = [self.index[j] for j in np.where(self.rel('CONTAINED')[i, :] == 1)[0]]
+            _res[t]['contains'] = [self.index[j] for j in np.where(self.rel('CONTAINS')[i, :] == 1)[0]]
 
-            t.father = [[], [], []]
-            t.children = [[], [], []]
+            _res[t]['father'] = [[], [], []]
+            _res[t]['children'] = [[], [], []]
             for k in range(3):
-                t.father[k] = [self.index[j] for j in np.where(self.father[k, i, :] == 1)[0]]
-                t.children[k] = [self.index[j] for j in np.where(self.children[k, i, :] == 1)[0]]
+                _res[t]['father'][k] = [self.index[j] for j in
+                               np.where(self.relations[RELATION_TYPES_TO_INDEX['FATHER.SUBSTANCE'] + k, i, :] == 1)[0]]
+                _res[t]['children'][k] = [self.index[j] for j in
+                                 np.where(self.relations[RELATION_TYPES_TO_INDEX['CHILDREN.SUBSTANCE'] + k, i, :] == 1)[0]]
 
-            t.opposed = [self.index[j] for j in np.where(self.siblings[0, i, :] == 1)[0]]
-            t.associated = [self.index[j] for j in np.where(self.siblings[1, i, :] == 1)[0]]
-            t.crossed = [self.index[j] for j in np.where(self.siblings[2, i, :] == 1)[0]]
+            _res[t]['opposed'] = [self.index[j] for j in np.where(self.rel("OPPOSED")[i, :] == 1)[0]]
+            _res[t]['associated'] = [self.index[j] for j in np.where(self.rel("ASSOCIATED")[i, :] == 1)[0]]
+            _res[t]['crossed'] = [self.index[j] for j in np.where(self.rel("CROSSED")[i, :] == 1)[0]]
+            _res[t]['twins'] = []
+
+        _twins = [self.index[j] for j in np.where(self.rel('TWIN')[:, :] == 1)[0]]
+        for t in _twins:
+            _res[t]['twins'] = _twins
+
+        for t in _res:
+            t.relations = Relations(**_res[t])
+
+    def rel(self, type):
+        return self.relations[RELATION_TYPES_TO_INDEX[type], :, :]
 
     def compute_relations(self):
-        self.index = sorted(self.terms.values())
         for i, t in enumerate(self.index):
             t.index = i
 
@@ -374,7 +423,7 @@ class Dictionary(metaclass=Singleton):
                                          contained[None, :, :],
                                          father,
                                          children,
-                                         siblings), axis=0)
+                                         siblings), axis=0).astype(np.bool)
         print("Set terms ")
         self._set_terms_relations()
 
@@ -395,10 +444,7 @@ RELATION_TYPES_TO_INDEX = bidict({
 })
 
 
-
 if __name__ == '__main__':
     print(os.getcwd())
     d = Dictionary()
-    save_dictionary('../../data/dictionary')
-    print(d.father)
     print(len(d))
