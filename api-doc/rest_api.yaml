@@ -517,6 +517,20 @@ paths:
                   $ref: '#/definitions/term'
 
 
+  /intlekt/dictionary/drupal:
+    get:
+      description: |
+        Return the dictionary for the drupal website
+      tags:
+        - Drupal
+      operationId: handlers.drupal_dictionary_dump
+      responses:
+        '200':
+          description: Successful response
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/drupal_term'
   ##############################
   ## Library API              ##
   ##############################
@@ -801,6 +815,19 @@ definitions:
       INDEX:
         type: number
       RANK:
+        type: number
+
+  drupal_term:
+    properties:
+      uuid:
+        type: string
+      EN:
+        type: string
+      FR:
+        type: string
+      IEML:
+        type: string
+      INDEX:
         type: number
 
   ieml_object_json:

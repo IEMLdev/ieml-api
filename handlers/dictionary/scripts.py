@@ -1,3 +1,5 @@
+import uuid
+
 from handlers.commons import exception_handler, ieml_term_model
 from ieml.script.operator import sc
 from models.exceptions import InvalidRelationCollectionState, InvalidRelationTitle, TermNotFound, RootParadigmMissing
@@ -40,6 +42,23 @@ def _build_old_model_from_term_entry(term_db_entry):
 def dictionary_dump():
     return {'success': True,
             'terms': sorted((ieml_term_model(t['_id']) for t in terms_db().get_all_terms()), key=lambda c: c['INDEX'])}
+
+
+def _drupal_process(d):
+    return {
+        'uuid': uuid.uuid3(uuid.NAMESPACE_X500, d['IEML']),
+        'IEML': d['IEML'],
+        'FR': d['FR'],
+        'EN': d['EN'],
+        'INDEX': d['INDEX']
+    }
+
+
+@cached("dictionary_dump", 1000)
+@exception_handler
+def drupal_dictionary_dump():
+    return [_drupal_process(ieml_term_model(t['_id'])) for t in terms_db().get_all_terms()]
+
 
 
 @cached("all_ieml", 1000)
