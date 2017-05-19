@@ -25,6 +25,7 @@ PRIMITVES = {
 }
 
 MAX_SINGULAR_SEQUENCES = 360
+MAX_SIZE_HEADER = 12
 
 character_value = {
     'E': 0x1,

@@ -1,7 +1,9 @@
 import unittest
 import yaml
 import numpy as np
+from ieml.ieml_objects.terms import Dictionary
 
+from ieml.ieml_objects.tools import term
 from ieml.script.operator import sc, script
 from ieml.script.parser import ScriptParser
 from ieml.script.tools import factorize
@@ -13,6 +15,22 @@ class TableGenerationTest(unittest.TestCase):
 
     def setUp(self):
         self.parser = ScriptParser()
+
+    def test_irregular(self):
+        t = term("i.B:.-+u.M:.-U:.-'")
+        self.assertEqual(len(t.script.tables), 1)
+        self.assertEqual(t.script.tables[0].dim, 1)
+
+    def test_rank(self):
+        for s in Dictionary().terms:
+            ranks = set()
+            for t in s.tables:
+                ranks.add(t.rank)
+
+            if s.paradigm:
+                self.assertEqual(len(ranks), 1, "Too many ranks for %s"%str(s))
+            else:
+                self.assertFalse(ranks)
 
     def test_headers(self):
         with open("../../data/dictionary/dictionary.yml", 'r') as fp:

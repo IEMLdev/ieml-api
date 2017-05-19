@@ -1,4 +1,5 @@
 from collections import namedtuple, OrderedDict
+from functools import partial
 
 import numpy as np
 
@@ -7,28 +8,38 @@ from ieml.script.script import AdditiveScript, MultiplicativeScript
 
 Variable = namedtuple('Variable', ['address', 'script'])
 
-Table = namedtuple('Table', ['paradigm', 'headers', 'cells', 'dim'])
+# Table = namedtuple('Table', ['paradigm', 'headers', 'cells', 'dim', 'index'])
 Tab = namedtuple('Tab', ['rows', 'columns', 'paradigm', 'cells'])
 
-def tables_from_script(s):
-    s = script(s)
 
-    def _from_cells_array(a):
-        cells = a
-        headers = OrderedDict()
+class Table:
+    def __init__(self, cells):
+        if not isinstance(cells, np.ndarray):
+            raise ValueError("The cells argument must be an array of singular "
+                             "sequences, not %s"%cells.__class__.__name__)
 
-        tabs = [cells]
-        if len(cells.shape) == 3:
+        self.cells = cells
+
+        self.headers = None
+        self.build_headers()
+
+        self.paradigm = script(self.headers)
+        self._index = None
+        self._rank = None
+
+    def build_headers(self):
+        self.headers = OrderedDict()
+        tabs = [self.cells]
+        if self.dim == 3:
             # 3d tab, first split tabs
-            tabs = [cells[:,:,i] for i in range(cells.shape[2])]
-
-        dim = len(cells.shape)
+            tabs = [self.cells[:,:,i] for i in range(self.cells.shape[2])]
 
         for t in tabs:
             if len(t.shape) == 1:
                 # 1d
                 rows = [script(t)]
                 columns = []
+
             elif len(t.shape) == 2:
                 # 2d
                 rows = [script(c) for c in t]
@@ -41,47 +52,36 @@ def tables_from_script(s):
             else:
                 tabs_sc = script(rows)
 
-            headers[tabs_sc] = Tab(rows=rows, columns=columns, paradigm=tabs_sc, cells=t)
+            self.headers[tabs_sc] = Tab(rows=rows, columns=columns, paradigm=tabs_sc, cells=t)
 
-        paradigm = script(headers)
+    def index(self, s):
+        if self._index is None:
+            # build lookup table for coordinates
+            _index = [{ss.children[i] for ss in self.paradigm.singular_sequences} for i in range(3)]
+            self._index = [{ss: i for i, ss in enumerate(sorted(_index[j]))} for j in range(3)]
 
-        return Table(paradigm=paradigm, headers=headers, cells=cells, dim=dim)
+        if s not in self.paradigm:
+            return []
 
-    return [_from_cells_array(table) for table in s.cells]
+        if s.layer == 0:
+            raise NotImplemented
 
+        return [tuple(self._index[i][ss.children[i]] for i in range(3)) for ss in s.singular_sequences]
 
+    @property
+    def dim(self):
+        return len(self.cells.shape)
 
-#
-# class Tables:
-#     def __init__(self, paradigm):
-#         self.paradigm = paradigm
-#
-#         self.__headers = None
-#
-#     @property
-#     def headers(self):
-#         if self.__headers is None:
-#             self.__headers = self._build_headers()
-#         return self.__headers
-#
-#     @property
-#     def cells(self):
-#         if self.dimension == 3 and self.split_tabs:
-#             if not self.__split_cells:
-#                 self.__split_cells = np.dsplit(self.__cells, self.__cells.shape[2])
-#                 return self.__split_cells
-#             else:
-#                 return self.__split_cells
-#         else:
-#             return self.__cells
-#
-#     @property
-#     def dimension(self):
-#         return len(self.paradigm.cells)
-#
-#     def _build_headers(self):
-#         # headers of table
-#         result = [ for table in self.cells]
+    @property
+    def rank(self):
+        if self._rank is None:
+            from ieml.ieml_objects.terms import Dictionary
+            self._rank = Dictionary().get_rank(self)
+
+        return self._rank
+
+    def __eq__(self, other):
+        return isinstance(other, Table) and self.paradigm == other.paradigm
 
 
 def generate_tables(parent_script, ):
@@ -358,9 +358,8 @@ def _compute_rank(paradigm, root):
 
     """
 
-    parser = ScriptParser()
     if isinstance(root, dict):
-        root = parser.parse(root["_id"])
+        root = script(root["_id"])
     tbls = _get_tables(root, paradigm.singular_sequences)  # We get the tables that contain our paradigm
 
     check_dim = None

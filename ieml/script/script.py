@@ -4,7 +4,7 @@ from itertools import chain
 
 from ieml.script.exceptions import InvalidScriptCharacter, InvalidScript, IncompatiblesScriptsLayers, TooManySingularSequences
 from ieml.commons import TreeStructure, LAYER_MARKS
-from ieml.script.constants import MAX_LAYER, MAX_SINGULAR_SEQUENCES
+from ieml.script.constants import MAX_LAYER, MAX_SINGULAR_SEQUENCES, MAX_SIZE_HEADER
 from ieml.script.constants import PRIMITVES, remarkable_multiplication_lookup_table, REMARKABLE_ADDITION, \
     character_value, AUXILIARY_CLASS, VERB_CLASS, NOUN_CLASS
 import numpy as np
@@ -148,7 +148,7 @@ class Script(TreeStructure):
     def cells(self):
         if self._cells is None:
             if self.cardinal == 1:
-                self._cells = [self]
+                self._cells = []
             else:
                 self._cells = self._compute_cells()
 
@@ -171,8 +171,8 @@ class Script(TreeStructure):
     @property
     def tables(self):
         if self._tables is None:
-            from ieml.script.tables import tables_from_script
-            self._tables = tables_from_script(self)
+            from ieml.script.tables import Table
+            self._tables = [Table(cell) for cell in self.cells]
 
         return self._tables
 
@@ -281,7 +281,10 @@ class AdditiveScript(Script):
             return s
 
     def _compute_cells(self):
-        if self.layer == 0:
+        # we generate one table per children, unless one children is a singular sequence.
+        # if so, we generate one column instead
+
+        if any(not c.paradigm for c in self.children):
             # layer 0 -> column paradigm (like I: F: M: O:)
             return np.array([[s for s in self.singular_sequences]])
 
@@ -446,6 +449,10 @@ class MultiplicativeScript(Script):
             return [np.vectorize(resolve_ss)(c) for c in v[0].cells]
 
         # more than one plural var, we build a multidimensional array
+        # Check the table dimension
+        if any(c.cardinal > MAX_SIZE_HEADER for c, _ in plurals_child):
+            raise ValueError("The table defined by the script %s produce a table with more than %d headers."%
+                             (str(self), MAX_SIZE_HEADER))
 
         # 1st dim the rows
         # 2nd dim the columns

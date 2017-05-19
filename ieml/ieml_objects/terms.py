@@ -34,9 +34,10 @@ class Term(IEMLObjects):
         self.translation = None
         self.inhibitions = None
         self.root = None
-        # self.rank = None
         self.index = None
         self.relations = None
+
+        self._rank = None
 
     # def relations(self, relation_name):
     #     if relation_name not in self._relations:
@@ -67,93 +68,6 @@ class Term(IEMLObjects):
     @property
     def defined(self):
         return all(self.__getattribute__(p) is not None for p in ['translation', 'inhibitions', 'root', 'index', 'relations'])
-
-
-
-def save_dictionary(directory, pickle=True):
-    """
-    Save the dictionary to a file.
-    the roots argument must be the form:
-    {
-    root_p => {
-        paradigms => [{
-            paradigm => '',
-            translation => {
-                fr => '',
-                en => ''
-            }, ...],
-        inhibitions => ['', ...]
-        translation => {
-                fr => '',
-                en => ''
-            }
-        }
-    }
-    :param dictionary:
-    :param directory:
-    :return:
-    """
-
-    if pickle:
-        # limit = sys.getrecursionlimit()
-        # sys.setrecursionlimit(10000)
-        file = os.path.join(directory, "dictionary.json")
-        relations_file = os.path.join(directory, "dictionary_relations.npy")
-
-        state = Dictionary().__getstate__()
-        np.save(arr=state['relations'], file=relations_file)
-
-        del state['relations']
-
-        with open(file, 'w') as fp:
-            json.dump(state, fp)
-
-        # sys.setrecursionlimit(limit)
-    else:
-        def _get_translations(term):
-            return {l: Dictionary().translations[l][term] for l in LANGUAGES }
-
-        to_save = [r for r in Dictionary().roots]
-
-        save = {str(root.script): {
-            'translation': _get_translations(root),
-            'inhibitions': root.inhibitions,
-            'paradigms': [{
-                'paradigm': str(p.script),
-                'translation': _get_translations(p)
-            } for p in Dictionary().terms.values() if p.root == root]
-        } for root in to_save[:10]}
-
-        file = os.path.join(directory, "dictionary.yml")
-        with open(file, 'w') as fp:
-            yaml.dump(save, fp)
-
-
-def load_dictionary(directory, dictionary):
-    dic_json = os.path.join(directory, "dictionary.json")
-    dic_rel = os.path.join(directory, "dictionary_relations.npy")
-
-    if os.path.isfile(dic_json):
-        with open(dic_json, 'r') as fp:
-            state = json.load(fp)
-
-        state['relations'] = np.load(dic_rel)
-        dictionary.__setstate__(state)
-    else:
-        file = os.path.join(directory, "dictionary_true.yml")
-        print("Loading dictionary ... ", end='', flush=True)
-
-        with open(file, 'r') as fp:
-            roots = yaml.load(fp)
-
-        for r_p, v in roots.items():
-            dictionary.add_term(r_p, root=True, inhibitions=v['inhibitions'], translation=v['translation'])
-            for p in v['paradigms']:
-                dictionary.add_term(p['paradigm'], root=False, translation=p['translation'])
-        dictionary.compute_relations()
-        print("Done.")
-
-        return dictionary
 
 
 class Dictionary(metaclass=Singleton):
@@ -189,13 +103,19 @@ class Dictionary(metaclass=Singleton):
         self.terms = {t.script:t for t in self.index}
         self.translations = {l: {self.terms[t]: text for t, text in v.items()} for l, v in state['translations'].items()}
         self.roots = {self.terms[r]: [] for r in state['roots']}
+
+        self.singular_sequences_map = { ss:r for r in self.roots for ss in r.script.singular_sequences }
+        for t in self.index:
+            self.roots[self.singular_sequences_map[t.script.singular_sequences[0]]].append(t)
+
         self.relations = state['relations']
 
+        # reset the cache properties
         self._layers = None
         self._singular_sequences = None
 
         self.define_terms()
-        print("loaded !")
+        print("\t[*] Dictionary loaded")
 
     def define_terms(self):
         for i, t in enumerate(self.index):
@@ -208,6 +128,7 @@ class Dictionary(metaclass=Singleton):
         for t in self.terms.values():
             t.translation = {l: self.translations[l][t] for l in self.translations}
             t.inhibitions = []
+            # t.rank =
             # t.rank = None
 
         self._set_terms_relations()
@@ -242,28 +163,23 @@ class Dictionary(metaclass=Singleton):
             # print("Term %s already defined."%str(term))
             return
 
-        roots_p = {root_term for root_term in self.roots if term.script in root_term.script}
-
-        if len(roots_p) == 1:
-            root_p = next(roots_p.__iter__())
-
+        root_p = self.get_root(term)
+        if root_p is None:
             if root:
-                raise ValueError("Root paradigm intersection with term %s when adding root term %s" %
-                                 (str(root_p), str(term)))
+                if not term.script.paradigm:
+                    raise ValueError("Can't add the singular sequence term %s as a root paradigm." % str(term))
 
-            self._add_term(term, root_p=root_p, inhibitions=inhibitions, translation=translation)
+                self._add_root(term, inhibitions, translation)
 
-        elif len(roots_p) > 1:
-            raise ValueError("Can't define the term %s in the dictionary, the term is in multiples root paradigms [%s]"%
-                             (str(term), ', '.join(map(str, roots_p))))
-        elif root:
-            if not term.script.paradigm:
-                raise ValueError("Can't add the singular sequence term %s as a root paradigm."%str(term))
+            else:
+                raise ValueError(
+                    "Can't add term %s to the dictionary, it is not defined within a root paradigm." % str(term))
 
-            self._add_root(term, inhibitions, translation)
+        if root:
+            raise ValueError("Root paradigm intersection with term %s when adding root term %s" %
+                             (str(root_p), str(term)))
 
-        else:
-            raise ValueError("Can't add term %s to the dictionary, it is not defined within a root paradigm."%str(term))
+        self._add_term(term, root_p=root_p, inhibitions=inhibitions, translation=translation)
 
     def _add_term(self, term, root_p, inhibitions, translation):
         self.set_translation(term, translation)
@@ -272,10 +188,24 @@ class Dictionary(metaclass=Singleton):
 
     def _add_root(self, term, inhibitions, translation):
         self.roots[term] = list()
+        for ss in term.script.singular_sequences:
+            self.singular_sequences_map[ss] = term
+
         self._add_term(term, root_p=term, inhibitions=inhibitions, translation=translation)
 
     def __len__(self):
         return len(self.terms)
+
+    def get_root(self, term):
+        try:
+            res = {self.singular_sequences_map[ss] for ss in term.script.singular_sequences}
+        except KeyError:
+            return None
+
+        if len(res) > 1:
+            raise ValueError("Term %s is in multiples root paradigms [%s]" % (str(term), ', '.join(map(str, res))))
+
+        return next(res.__iter__())
 
     def set_translation(self, term, translation):
         if not isinstance(translation, dict) or len(translation) != 2 or any(not isinstance(v, str) for v in translation.values()):
@@ -320,6 +250,7 @@ class Dictionary(metaclass=Singleton):
                 for i in range(3):
                     if isinstance(sub_s.children[i], NullScript):
                         continue
+
 
                     if sub_s.children[i] in self.terms:
                         father[i, t.index, self.terms[sub_s.children[i]].index] = 1
@@ -427,6 +358,59 @@ class Dictionary(metaclass=Singleton):
         print("Set terms ")
         self._set_terms_relations()
 
+    def get_rank(self, table):
+        s0 = table.paradigm
+
+        if s0 not in self.terms:
+            raise ValueError("Can't calculate a rank for a table not defined "
+                             "(%s is not associated with a term in the dictionary)."%str(s0))
+
+        term = self.terms[s0]
+
+        if table in term.root.script.tables:
+            # root paradigm, rank of 0 or 1
+            _rank = 1
+        elif table.dim == 1:
+            # paradigm of layer 0 not root are rank 2
+            _rank = 2
+        elif not s0.paradigm:
+            # singular sequences have a rank of 6
+            _rank = 6
+        else:
+            res = set()
+
+            for p in term.relations.contained:
+                if p == term:
+                    continue
+
+                for t in p.script.tables:
+                    if s0 not in t.paradigm or t == table or t.rank % 2 == 0:
+                        continue
+
+                    l = [i for i in range(3) if s0.children[i] in t.paradigm.children[i]
+                         and s0.children[i].paradigm]
+
+                    if not l:
+                        continue
+                    # at least one dimension if shared
+                    # test if only this dimension or more cells
+                    if s0.cardinal == s0.children[l[0]].cardinal:
+                        res.add(t.rank + 2)
+                    else:
+                        res.add(t.rank + 1)
+
+                    break
+
+            if len(res) > 1:
+                raise ValueError("Multiple rank candidates ...")
+            elif not res:
+                raise ValueError("No rank candidates ...")
+            else:
+                _rank = next(res.__iter__())
+
+        return _rank
+
+
 
 RELATION_TYPES_TO_INDEX = bidict({
     'CONTAINS': 0,
@@ -442,6 +426,93 @@ RELATION_TYPES_TO_INDEX = bidict({
     'TWIN': 10,
     'CROSSED': 11
 })
+
+
+def save_dictionary(directory, pickle=True):
+    """
+    Save the dictionary to a file.
+    the roots argument must be the form:
+    {
+    root_p => {
+        paradigms => [{
+            paradigm => '',
+            translation => {
+                fr => '',
+                en => ''
+            }, ...],
+        inhibitions => ['', ...]
+        translation => {
+                fr => '',
+                en => ''
+            }
+        }
+    }
+    :param dictionary:
+    :param directory:
+    :return:
+    """
+
+    if pickle:
+        # limit = sys.getrecursionlimit()
+        # sys.setrecursionlimit(10000)
+        file = os.path.join(directory, "dictionary.json")
+        relations_file = os.path.join(directory, "dictionary_relations.npy")
+
+        state = Dictionary().__getstate__()
+        np.save(arr=state['relations'], file=relations_file)
+
+        del state['relations']
+
+        with open(file, 'w') as fp:
+            json.dump(state, fp)
+
+        # sys.setrecursionlimit(limit)
+    else:
+        def _get_translations(term):
+            return {l: Dictionary().translations[l][term] for l in LANGUAGES }
+
+        to_save = [r for r in Dictionary().roots]
+
+        save = {str(root.script): {
+            'translation': _get_translations(root),
+            'inhibitions': root.inhibitions,
+            'paradigms': [{
+                'paradigm': str(p.script),
+                'translation': _get_translations(p)
+            } for p in Dictionary().terms.values() if p.root == root]
+        } for root in to_save[:10]}
+
+        file = os.path.join(directory, "dictionary.yml")
+        with open(file, 'w') as fp:
+            yaml.dump(save, fp)
+
+
+def load_dictionary(directory, dictionary):
+    dic_json = os.path.join(directory, "dictionary.json")
+    dic_rel = os.path.join(directory, "dictionary_relations.npy")
+
+    if os.path.isfile(dic_json):
+        with open(dic_json, 'r') as fp:
+            state = json.load(fp)
+
+        state['relations'] = np.load(dic_rel)
+        dictionary.__setstate__(state)
+    else:
+        file = os.path.join(directory, "dictionary_true.yml")
+        print("Loading dictionary ... ", end='', flush=True)
+
+        with open(file, 'r') as fp:
+            roots = yaml.load(fp)
+
+        for r_p, v in roots.items():
+            dictionary.add_term(r_p, root=True, inhibitions=v['inhibitions'], translation=v['translation'])
+            for p in v['paradigms']:
+                dictionary.add_term(p['paradigm'], root=False, translation=p['translation'])
+        dictionary.compute_relations()
+        print("Done.")
+
+        return dictionary
+
 
 
 if __name__ == '__main__':
