@@ -18,6 +18,9 @@ class Table:
             raise ValueError("The cells argument must be an array of singular "
                              "sequences, not %s"%cells.__class__.__name__)
 
+        if len(cells.shape) != 3:
+            raise ValueError("Invalid shape for cells")
+
         self.cells = cells
 
         self.headers = None
@@ -25,64 +28,63 @@ class Table:
 
         self.paradigm = script(self.headers)
         self._index = None
-        self._rank = None
+        self._dim = None
+
+        self.rank = None
+        self.term = None
+        self.partition = None
+
+    def define_table(self, term, table=None):
+        if not term.defined:
+            raise ValueError("Term %s is not defined in the dictionary, can't define a table with it."%str(term))
+
+        self.term = term
+        self.rank = term.rank
+
+        if self.rank != 1 and not table.defined:
+            raise ValueError("Table is not defined in the dictionary, can't define a table with it as partition."%str(term))
+
+        self.partition = table
+
+    @property
+    def defined(self):
+        return all(self.__getattribute__(p) is not None for p in ['rank', 'term'])
 
     def build_headers(self):
         self.headers = OrderedDict()
-        tabs = [self.cells]
-        if self.dim == 3:
-            # 3d tab, first split tabs
-            tabs = [self.cells[:,:,i] for i in range(self.cells.shape[2])]
 
-        for t in tabs:
-            if len(t.shape) == 1:
-                # 1d
-                rows = [script(t)]
-                columns = []
-
-            elif len(t.shape) == 2:
-                # 2d
-                rows = [script(c) for c in t]
-                columns = [script(c) for c in t.transpose()]
-
-            if len(t.shape) == 0:
-                rows = []
-                columns = []
-                tabs_sc = t[()]
-            else:
-                tabs_sc = script(rows)
-
+        for t in self.cells.transpose(2,0,1):
+            rows = [script(c) for c in t]
+            columns = [script(c) for c in t.transpose()]
+            tabs_sc = script(rows)
             self.headers[tabs_sc] = Tab(rows=rows, columns=columns, paradigm=tabs_sc, cells=t)
 
     def index(self, s):
-        if self._index is None:
-            # build lookup table for coordinates
-            _index = [{ss.children[i] for ss in self.paradigm.singular_sequences} for i in range(3)]
-            self._index = [{ss: i for i, ss in enumerate(sorted(_index[j]))} for j in range(3)]
-
         if s not in self.paradigm:
             return []
 
-        if s.layer == 0:
-            raise NotImplemented
+        if self._index is None:
+            self._index = {ss: tuple(*zip(*np.where(self.cells == ss))) for ss in self.paradigm.singular_sequences}
 
-        return [tuple(self._index[i][ss.children[i]] for i in range(3)) for ss in s.singular_sequences]
+        return [self._index[ss] for ss in s.singular_sequences]
 
     @property
     def dim(self):
-        return len(self.cells.shape)
+        if self._dim is None:
+            self._dim = 3
+            if self.cells.shape[2] == 1:
+                self._dim -= 1
 
-    @property
-    def rank(self):
-        if self._rank is None:
-            from ieml.ieml_objects.terms import Dictionary
-            self._rank = Dictionary().get_rank(self)
+            if self.cells.shape[1] == 1:
+                self._dim -= 1
 
-        return self._rank
+        return self._dim
 
     def __eq__(self, other):
         return isinstance(other, Table) and self.paradigm == other.paradigm
 
+    def __hash__(self):
+        return self.paradigm.__hash__()
 
 def generate_tables(parent_script, ):
     if parent_script.cardinal == 1:

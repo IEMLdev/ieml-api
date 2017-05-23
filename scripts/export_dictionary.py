@@ -1,5 +1,5 @@
 import os
-from ieml.ieml_objects.terms import Dictionary, save_dictionary
+from ieml.ieml_objects.dictionary import Dictionary, save_dictionary
 from ieml.script.operator import script
 from ieml.script.tools import factorize
 from models.terms.terms import TermsConnector as tc
@@ -7,8 +7,7 @@ from models.terms.terms import TermsConnector as tc
 
 def load_dictionary_from_db():
 
-
-    dic = Dictionary()
+    dic = Dictionary(cache=False)
 
     for t in tc().root_paradigms():
         s = factorize(script(t['_id']))
@@ -27,8 +26,8 @@ def load_dictionary_from_db():
                         'en': t['TAGS']['EN']
                      })
 
-
-
+    dic.compute_relations()
+    dic.compute_ranks()
 
 if __name__ == '__main__':
     print(os.getcwd())

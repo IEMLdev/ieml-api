@@ -1,4 +1,7 @@
+import json
 import unittest
+from collections import defaultdict
+
 import yaml
 import numpy as np
 from ieml.ieml_objects.terms import Dictionary
@@ -21,7 +24,24 @@ class TableGenerationTest(unittest.TestCase):
         self.assertEqual(len(t.script.tables), 1)
         self.assertEqual(t.script.tables[0].dim, 1)
 
+    def test_irregular2(self):
+        scripts = ["M:M:.-O:M:.+M:O:.-E:.-+s.y.-'", "wa.F:.-"]
+        t = term(scripts[0])
+        self.assertEqual(len(t.script.tables), 1)
+        self.assertEqual(t.script.tables[0].dim, 3)
+        self.assertEqual(t.script.tables[0].rank, 1)
+
+        t = term(scripts[1])
+        self.assertEqual(len(t.script.tables), 1)
+        self.assertEqual(t.script.tables[0].dim, 1)
+        self.assertEqual(t.script.tables[0].rank, 3)
+
+
     def test_rank(self):
+        with open('../../data/ranks.json', 'r') as fp:
+            old_ranks = json.load(fp)
+
+        diff = defaultdict(list)
         for s in Dictionary().terms:
             ranks = set()
             for t in s.tables:
@@ -29,8 +49,16 @@ class TableGenerationTest(unittest.TestCase):
 
             if s.paradigm:
                 self.assertEqual(len(ranks), 1, "Too many ranks for %s"%str(s))
+                r = list(ranks)[0]
+                if r != old_ranks[str(s)]:
+                    diff[str(s)].extend([r, old_ranks[str(s)]])
             else:
-                self.assertFalse(ranks)
+                self.assertSetEqual(ranks, {6})
+
+        with open('../../data/diff_ranks.yml', 'w') as fp:
+            yaml.dump(diff, fp)
+
+        print(len(diff))
 
     def test_headers(self):
         with open("../../data/dictionary/dictionary.yml", 'r') as fp:

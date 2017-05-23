@@ -3,7 +3,6 @@ import random
 import itertools
 
 import functools
-from ieml.ieml_objects.terms import Dictionary
 from ieml.ieml_objects.commons import IEMLObjects
 from ieml.ieml_objects.exceptions import InvalidIEMLObjectArgument
 from ieml.ieml_objects.parser.parser import IEMLParser

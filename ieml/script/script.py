@@ -148,7 +148,7 @@ class Script(TreeStructure):
     def cells(self):
         if self._cells is None:
             if self.cardinal == 1:
-                self._cells = []
+                self._cells = [np.array([[[self]]])]
             else:
                 self._cells = self._compute_cells()
 
@@ -286,7 +286,7 @@ class AdditiveScript(Script):
 
         if any(not c.paradigm for c in self.children):
             # layer 0 -> column paradigm (like I: F: M: O:)
-            return np.array([[s for s in self.singular_sequences]])
+            return [np.array([[[s]] for s in self.singular_sequences])]
 
         return [t for c in self.children for t in c.cells]
 
@@ -457,7 +457,8 @@ class MultiplicativeScript(Script):
         # 1st dim the rows
         # 2nd dim the columns
         # 3rd dim the tabs
-        result = np.zeros(shape=[v[0].cardinal for v in plurals_child], dtype=object)
+        result = np.zeros(shape=[plurals_child[i][0].cardinal if i < len(plurals_child)
+                                 else 1 for i in range(3)], dtype=object)
 
         seq_index = [{s:i for i, s in enumerate(v[0].singular_sequences)} for v in plurals_child]
 
