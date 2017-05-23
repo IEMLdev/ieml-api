@@ -409,9 +409,24 @@ paths:
               success:
                 type: boolean
               words:
-                type: string
+                type: array
                 items:
-                  $ref: '#/definitions/ieml_object_json'
+                  type: object
+                  required:
+                    - ieml
+                    - translations
+                    - id
+                    - last_modified
+                  properties:
+                    ieml:
+                      type: string
+                    id:
+                      type: string
+                    translations:
+                      $ref: "#/definitions/translations"
+                    last_modified:
+                      type: string
+
               id:
                 type: string
               name:
@@ -517,6 +532,20 @@ paths:
                   $ref: '#/definitions/term'
 
 
+  /intlekt/dictionary/drupal:
+    get:
+      description: |
+        Return the dictionary for the drupal website
+      tags:
+        - Drupal
+      operationId: handlers.drupal_dictionary_dump
+      responses:
+        '200':
+          description: Successful response
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/drupal_term'
   ##############################
   ## Library API              ##
   ##############################
@@ -801,6 +830,19 @@ definitions:
       INDEX:
         type: number
       RANK:
+        type: number
+
+  drupal_term:
+    properties:
+      uuid:
+        type: string
+      EN:
+        type: string
+      FR:
+        type: string
+      IEML:
+        type: string
+      INDEX:
         type: number
 
   ieml_object_json:

@@ -1,3 +1,5 @@
+import uuid
+
 from handlers.commons import exception_handler, ieml_term_model
 from ieml.script.operator import sc
 from models.exceptions import InvalidRelationCollectionState, InvalidRelationTitle, TermNotFound, RootParadigmMissing
@@ -40,6 +42,40 @@ def _build_old_model_from_term_entry(term_db_entry):
 def dictionary_dump():
     return {'success': True,
             'terms': sorted((ieml_term_model(t['_id']) for t in terms_db().get_all_terms()), key=lambda c: c['INDEX'])}
+
+
+def _drupal_process(dico):
+    all_uuid = {
+        d['IEML']: uuid.uuid3(uuid.NAMESPACE_X500, d['IEML']) for d in dico
+    }
+
+    return [{
+        'uuid': all_uuid[d['IEML']],
+        'IEML': d['IEML'],
+        'FR': d['FR'],
+        'EN': d['EN'],
+        'INDEX': d['INDEX'],
+        'relations': [
+            {
+                'category': 'Inclusion',
+                'type': 'Contained',
+                'terms': [all_uuid[k] for k in all_uuid if k != d['IEML']][:2]
+            },
+            {
+                'category': 'Inclusion',
+                'type': 'Contains',
+                'terms': [all_uuid[k] for k in all_uuid if k != d['IEML']][2:]
+            },
+        ]
+    } for d in dico]
+
+
+@cached("dictionary_dump", 1000)
+@exception_handler
+def drupal_dictionary_dump():
+    dico = [ieml_term_model(t['_id']) for t in terms_db().get_all_terms()][:5]
+    return _drupal_process(dico)
+
 
 
 @cached("all_ieml", 1000)
