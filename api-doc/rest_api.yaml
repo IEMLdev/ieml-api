@@ -409,7 +409,7 @@ paths:
               success:
                 type: boolean
               words:
-                type: string
+                type: array
                 items:
                   $ref: '#/definitions/ieml_object_json'
               id:

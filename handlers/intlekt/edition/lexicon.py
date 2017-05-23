@@ -49,6 +49,6 @@ def get_words_of_lexicon(lexicon_id):
     lexicon = LexiconConnector().get(id=lexicon_id)
 
     return {'success': True,
-            'terms': [_ieml_object_to_json(ieml(t)) for t in lexicon['words']],
+            'words': [_ieml_object_to_json(ieml(t)) for t in lexicon['words']],
             'id': lexicon['id'],
             'name': lexicon['name']}
