@@ -463,7 +463,7 @@ class Dictionary(metaclass=Singleton):
 
         self.roots = {self.terms[r]: [] for r in state['roots']}
         self.ranks = {}
-        self.partitions = {self.terms[t]:[self.terms[tt] for tt in v] for t, v in state['partitions']}
+        self.partitions = {self.terms[t]: [self.terms[tt] for tt in v] for t, v in state['partitions'].items()}
 
         self.singular_sequences_map = {ss: r for r in self.roots for ss in r.script.singular_sequences}
         for t in self.index:
@@ -476,7 +476,6 @@ class Dictionary(metaclass=Singleton):
         self._layers = None
         self._singular_sequences = None
 
-        self.compute_ranks()
         self.define_terms()
         print("\t[*] Dictionary loaded")
 
