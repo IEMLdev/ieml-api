@@ -1,12 +1,15 @@
+from handlers.commons import exception_handler
 from ieml.usl.tools import usl
 from models.usls.library import LibraryConnector
 
 
+@exception_handler
 def save_to_library(body):
     id = LibraryConnector().save(body['ieml'], body['translations'])
     return {'success': True, 'id': id}
 
 
+@exception_handler
 def update_usl_translation_from_ieml(ieml, body):
     u = usl(ieml)
     record = LibraryConnector().get(usl=u)

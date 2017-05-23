@@ -411,7 +411,22 @@ paths:
               words:
                 type: array
                 items:
-                  $ref: '#/definitions/ieml_object_json'
+                  type: object
+                  required:
+                    - ieml
+                    - translations
+                    - id
+                    - last_modified
+                  properties:
+                    ieml:
+                      type: string
+                    id:
+                      type: string
+                    translations:
+                      $ref: "#/definitions/translations"
+                    last_modified:
+                      type: string
+
               id:
                 type: string
               name:
