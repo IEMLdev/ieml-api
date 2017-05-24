@@ -11,7 +11,6 @@ from handlers.commons import exception_handler, ieml_term_model
 from ieml.ieml_objects import Term, Sentence, SuperSentence
 from ieml.ieml_objects.texts import Text
 
-from models.terms.terms import TermsConnector
 from models.usls.library import LibraryConnector
 
 word = "[([a.i.-]+[i.i.-])*([E:A:T:.]+[E:S:.wa.-]+[E:S:.o.-])]"
@@ -179,7 +178,7 @@ def to_ieml(body):
         errors = []
         for r in body['rules']:
             try:
-                rules.append((r['path'], Term(r['ieml'])))
+                rules.append((r['path'], term(r['ieml'])))
             except CannotParse as e:
                 errors.append({
                     'path': r['path'],

@@ -2,20 +2,21 @@ import queue
 
 from handlers.commons import exception_handler
 from handlers.dictionary.client import need_login
-from handlers.dictionary.commons import terms_db, relation_name_table, relations_order
+from handlers.dictionary.commons import relation_name_table, relations_order
+
 from ieml.exceptions import CannotParse
+from ieml.ieml_objects.dictionary import RELATION_TYPES_TO_INDEX
+from ieml.ieml_objects.terms import Term
+from ieml.ieml_objects.tools import term
 from ieml.script.operator import sc
-from models.constants import RELATION_COMPUTING
-from models.exceptions import CollectionAlreadyLocked, DBException
-from models.relations.relations import RelationsConnector
-from models.relations.relations_queries import RelationsQueries
+
 from multiprocessing import Process, Queue, active_children
 
 def get_relation_visibility(body):
     try:
-        script_ast = sc(body["ieml"])
-        term_db_entry = terms_db().get_term(script_ast)
-        inhibited_relations = [relation_name_table.inv[rel_name] for rel_name in term_db_entry["INHIBITS"]]
+        print("get_relation_visibility")
+        _term = term(body["ieml"])
+        inhibited_relations = [relation_name_table.inv[rel_name] for rel_name in _term.inhibitions]
         return {"viz": inhibited_relations}
     except CannotParse:
         pass
@@ -78,26 +79,61 @@ def computation_status():
     return response
 
 
-@exception_handler
-def get_relations(term):
-    script_ast = sc(term["ieml"])
-    all_relations = []
-    for relation_type, relations in RelationsQueries.relations(script_ast, pack_ancestor=True, max_depth_child=1).items():
-        if relations: # if there aren't any relations, we skip
-            if relation_type != "ROOT":
-                relations_list = sorted([{"ieml" : rel,
-                          "exists": True,
-                          "visible": True}
-                         for rel in relations], key=lambda s: sc(s['ieml']), reverse=True)
-            else:
-                relations_list = [{"ieml": relations,
-                      "exists": True,
-                      "visible": True}]
+# @exception_handler
+def get_relations(body):
+    t = term(body["ieml"])
 
-            all_relations.append({
-                "reltype": relation_name_table.inv[relation_type],
-                "rellist": relations_list,
+    relations = list(t.relations)
+    _relations = []
+    for l in relations:
+        if l == [] or isinstance(l[0], Term):
+            _relations.append(l)
+        else:
+            _relations.extend(l)
+
+    all_relations = [
+        {
+            "reltype": relation_name_table.inv[RELATION_TYPES_TO_INDEX.inv[i]],
+            "rellist": [
+                {
+                    "exists": True,
+                    "visible": True,
+                    "ieml": str(r.script)
+                } for r in reversed(rels)
+            ],
+            "exists": True,
+            "visible": True
+        } for i, rels in enumerate(_relations) if rels != []
+    ]
+
+    all_relations.append({
+        "reltype": relation_name_table.inv['ROOT'],
+        "rellist": [
+            {
                 "exists": True,
-                "visible": True
-            })
+                "visible": True,
+                "ieml": str(t.root.script)
+            }],
+        "exists": True,
+        "visible": True
+    })
+
+    # for relation_type, relations in RelationsQueries.relations(script_ast, pack_ancestor=True, max_depth_child=1).items():
+    #     if relations: # if there aren't any relations, we skip
+    #         if relation_type != "ROOT":
+    #             relations_list = sorted([{"ieml" : rel,
+    #                       "exists": True,
+    #                       "visible": True}
+    #                      for rel in relations], key=lambda s: sc(s['ieml']), reverse=True)
+    #         else:
+    #             relations_list = [{"ieml": relations,
+    #                   "exists": True,
+    #                   "visible": True}]
+    #
+    #         all_relations.append({
+    #             "reltype": relation_name_table.inv[relation_type],
+    #             "rellist": relations_list,
+    #             "exists": True,
+    #             "visible": True
+    #         })
     return sorted(all_relations, key=lambda rel_entry: relations_order[rel_entry['reltype']])
