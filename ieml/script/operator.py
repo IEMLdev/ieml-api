@@ -12,11 +12,15 @@ def m(substance, attribute=None, mode=None):
 
 
 def script(arg):
+    from ieml.ieml_objects.terms import Term
+
     if isinstance(arg, str):
         s = ScriptParser().parse(arg)
         return s
     elif isinstance(arg, Script):
         return arg
+    elif isinstance(arg, Term):
+        return arg.script
     else:
         try:
             arg = [script(a) for a in arg]

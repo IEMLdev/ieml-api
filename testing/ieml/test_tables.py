@@ -4,7 +4,7 @@ from collections import defaultdict
 
 import yaml
 import numpy as np
-from ieml.ieml_objects.terms import Dictionary
+from ieml.ieml_objects.dictionary import Dictionary
 
 from ieml.ieml_objects.tools import term
 from ieml.script.operator import sc, script
@@ -29,12 +29,12 @@ class TableGenerationTest(unittest.TestCase):
         t = term(scripts[0])
         self.assertEqual(len(t.script.tables), 1)
         self.assertEqual(t.script.tables[0].dim, 3)
-        self.assertEqual(t.script.tables[0].rank, 1)
+        self.assertEqual(t.rank, 1)
 
         t = term(scripts[1])
         self.assertEqual(len(t.script.tables), 1)
         self.assertEqual(t.script.tables[0].dim, 1)
-        self.assertEqual(t.script.tables[0].rank, 3)
+        self.assertEqual(t.rank, 3)
 
 
     def test_rank(self):

@@ -1,6 +1,5 @@
 import json
 from collections import defaultdict, namedtuple
-import yaml
 from bidict import bidict
 import numpy as np
 import os
@@ -8,6 +7,7 @@ import os
 from ieml.commons import LANGUAGES
 from ieml.ieml_objects.terms import Term
 from ieml.script.constants import MAX_LAYER
+from ieml.script.operator import script
 from ieml.script.script import AdditiveScript, NullScript, MultiplicativeScript
 from metaclasses import Singleton
 
@@ -30,6 +30,8 @@ RELATION_TYPES_TO_INDEX = bidict({
     'CROSSED': 11
 })
 
+DICTIONARY_FOLDER = os.path.join(os.path.dirname(__file__), "../../data/dictionary")
+
 
 class Dictionary(metaclass=Singleton):
     def __init__(self, cache=True):
@@ -40,6 +42,7 @@ class Dictionary(metaclass=Singleton):
         self.translations = {l: bidict() for l in LANGUAGES}
         self.roots = {}
         self.relations = None
+        self.inhibitions = {}
 
         # terms -> int
         self.ranks = None
@@ -54,9 +57,8 @@ class Dictionary(metaclass=Singleton):
         self._index = None
         self._singular_sequences = None
 
-        folder = os.path.join(os.path.dirname(__file__), "../../data/dictionary")
         if cache:
-            load_dictionary(folder, dictionary=self)
+            load_dictionary(DICTIONARY_FOLDER, dictionary=self)
 
     def define_terms(self):
         for i, t in enumerate(self.index):
@@ -100,9 +102,6 @@ class Dictionary(metaclass=Singleton):
 
         return self._layers
 
-    def rel(self, type):
-        return self.relations[RELATION_TYPES_TO_INDEX[type], :, :]
-
     def add_term(self, script, root=False, inhibitions=(), translation=None):
         term = Term(script, self)
 
@@ -127,24 +126,12 @@ class Dictionary(metaclass=Singleton):
                 raise ValueError("Root paradigm intersection with term %s when adding root term %s" %
                                  (str(root_p), str(term)))
             else:
-                self._add_term(term, root_p=root_p, inhibitions=inhibitions, translation=translation)
+                self._add_term(term, root_p=root_p, translation=translation)
 
-    def compute_relations(self):
-        for i, t in enumerate(self.index):
-            t.index = i
-
-        contains, contained = self._compute_contains()
-        father, children = self._compute_father()
-        siblings = self._compute_siblings()
-
-        self.relations = np.concatenate((contains[None, :, :],
-                                         contained[None, :, :],
-                                         father,
-                                         children,
-                                         siblings), axis=0).astype(np.bool)
-        self._set_terms_relations()
+        self._index = None
 
     def compute_ranks(self):
+        print("\t[*] Computing ranks")
         tables = defaultdict(list)
         self.ranks = {}
 
@@ -154,16 +141,21 @@ class Dictionary(metaclass=Singleton):
                 # test if the table table is a connexe tiling of the table t
                 size = 1
                 for i, indexes in enumerate(zip(*coords)):
-                    if i >= t.dim:
-                        return False
+                    # if i >= t.dim:
+                    #     return False
 
                     indexes = sorted(set(indexes))
                     size *= len(indexes)
 
                     missing = [j for j in range(shape_t[i]) if j not in indexes]
                     # more than one transition from missing -> included
-                    if sum(1 for j in missing if (j + 1) % shape_t[i] not in missing) > 1:
-                        return False
+                    transitions = [j for j in missing if (j + 1) % shape_t[i] not in missing]
+                    if len(transitions) > 1:
+                        step = int(shape_t[i] / len(transitions))
+
+                        # check if there is a periodicity
+                        if any((j + step)%shape_t[i] not in transitions for j in transitions):
+                            return False
 
                     # at least a square of 2x2x1
                     if len(indexes) < 2 and i != 2:
@@ -199,10 +191,7 @@ class Dictionary(metaclass=Singleton):
 
                 return False, 0
 
-            # if not table.defined:
-            #     raise ValueError("Can't determine if a term is a partition of a non defined table.")
-
-            if term0.script not in term1.script:
+            if term0.script not in term1.script or self.ranks[term1] % 2 == 0:
                 return None, None
 
             if len(term0.script.tables) != 1:
@@ -221,7 +210,8 @@ class Dictionary(metaclass=Singleton):
                     else:
                         break
                 else:
-                    return 1, None
+                    # print("Tabs subset for %s in %s"%(str(term0), str(term1)))
+                    return 0, None
 
             for table in tables[term1]:
                 if term0.script not in table.paradigm:
@@ -240,22 +230,32 @@ class Dictionary(metaclass=Singleton):
                     return 1, table
             return None, None
 
-        self.partitions = defaultdict(list)
+        def _define(term, rank, term_src, defined):
+            self.ranks[term] = rank
+            defined.add(term)
+            self.partitions[term_src].add(term)
+
+            for t in term.script.tables:
+                t_term = self.terms[t.paradigm]
+                tables[t_term] += [t]
+                self.ranks[t_term] = rank
+                defined.add(t_term)
+                self.partitions[term_src].add(t_term)
+
+                if len(t.headers) != 1:
+                    for tab in t.headers:
+                        self.ranks[self.terms[tab]] = rank
+                        defined.add(self.terms[tab])
+                        tables[self.terms[tab]] = self.terms[tab].tables
+                        self.partitions[term_src].add(t_term)
+
+        self.partitions = defaultdict(set)
         for ss in self.singular_sequences:
             self.ranks[ss] = 6
 
         for root in self.roots:
-            self.ranks[root] = 1
-            tables[root] += root.script.tables
-
-            defined = [root]
-
-            for t in root.script.tables:
-                # t.define_table(term=root)
-                tables[self.terms[t.paradigm]] += [t]
-                self.ranks[self.terms[t.paradigm]] = 1
-
-                defined.append(self.terms[t.paradigm])
+            defined = set()
+            _define(root, 1, root, defined)
 
             # order by the cardinal (ieml order reversed)
             for term in sorted(self.roots[root], reverse=True)[1:]:
@@ -265,28 +265,32 @@ class Dictionary(metaclass=Singleton):
                 if not term.script.paradigm:
                     break
 
+                res = defaultdict(list)
                 for term1 in defined:
                     rank, parent_table = get_rank_partition(term, term1)
                     if rank is not None:
-                        break
-                else:
+                        res[self.ranks[term1] + rank].append(term1)
+
+                if not res:
                     raise ValueError("No rank candidates for %s" % str(term))
+                if len(res) > 1:
+                    print("Multiple rank candidates for %s (%s)" %
+                                     (str(term), ', '.join("%s:%d->%d"%(str(t1), self.ranks[t1], r) for r,v in res.items() for parent_t, t1 in v)))
+                    continue
 
-                self.ranks[term] = self.ranks[term1] + rank
-                tables[term] += term.script.tables
+                rank = next(res.__iter__())
+                if len(res[rank]) > 1:
+                    res[rank] = sorted(res[rank])
+                    # print("Multiple candidate for rank %d : (%s)"%(rank, ", ".join(str(t) for t in res[rank])))
+                term1 = res[rank][0]
 
-                self.partitions[term1].append(term)
-                defined.append(term)
-
-                for t in term.script.tables:
-                    tables[self.terms[t.paradigm]] += [t]
-                    self.ranks[self.terms[t.paradigm]] = self.ranks[term]
-                    self.partitions[term1].append(self.terms[t.paradigm])
-
-                    defined.append(self.terms[t.paradigm])
+                _define(term, rank, term1, defined)
 
     def __len__(self):
         return len(self.terms)
+
+    def __contains__(self, item):
+        return script(item) in self.terms
 
     def get_root(self, term):
         try:
@@ -313,8 +317,37 @@ class Dictionary(metaclass=Singleton):
 
             self.translations[l][term] = translation[l]
 
+    def rel(self, type):
+        return self.relations[RELATION_TYPES_TO_INDEX[type], :, :]
+
+    def compute_relations(self):
+        for i, t in enumerate(self.index):
+            t.index = i
+
+        contains, contained = self._compute_contains()
+        father, children = self._compute_father()
+        siblings = self._compute_siblings()
+
+        self.relations = np.concatenate((contains[None, :, :],
+                                         contained[None, :, :],
+                                         father,
+                                         children,
+                                         siblings), axis=0).astype(np.bool)
+        self._do_inhibitions()
+        self._set_terms_relations()
+
+    def _do_inhibitions(self):
+        print("\t[*] Performing inhibitions")
+
+        for r in self.roots:
+            inhibitions = self.inhibitions[r]
+            indexes = [t.index for t in self.roots[r]]
+
+            for rel in inhibitions:
+                self.relations[RELATION_TYPES_TO_INDEX[rel], indexes, indexes] = 0
+
     def _compute_contains(self):
-        print("Compute contains")
+        print("\t[*] Computing contains/contained relations")
         # contain/contained
         contains = np.diag(np.ones(len(self), dtype=np.int8))
         for r_p, v in self.roots.items():
@@ -329,8 +362,21 @@ class Dictionary(metaclass=Singleton):
         return [contains, contained]
 
     def _compute_father(self):
-        print("Compute father/child")
-        # father/children
+        print("\t[*] Computing father/child relations")
+
+        def _recurse_script(script, res_indexes):
+            if isinstance(script, NullScript):
+                return
+
+            if script in self.terms:
+                res_indexes.append(self.terms[script].index)
+
+            if script.layer == 0:
+                return
+
+            for c in script.children:
+                _recurse_script(c, res_indexes)
+
         father = np.zeros((3, len(self), len(self)))
         for t in self.terms.values():
             s = t.script
@@ -340,13 +386,20 @@ class Dictionary(metaclass=Singleton):
                     continue
 
                 for i in range(3):
-                    if isinstance(sub_s.children[i], NullScript):
-                        continue
+                    res_indexes = []
+                    _recurse_script(sub_s.children[i], res_indexes)
+                    father[i, t.index, res_indexes] = 1
 
-
-                    if sub_s.children[i] in self.terms:
-                        father[i, t.index, self.terms[sub_s.children[i]].index] = 1
-
+                    # if isinstance(sub_s.children[i], NullScript):
+                    #     continue
+                    #
+                    # child = sub_s.children[i]
+                    # if isinstance(child, AdditiveScript):
+                    #     for c in child.children:
+                    #         if c in self.terms:
+                    #             father[i, t.index, self.terms[c].index] = 1
+                    # else:
+                    #     if child in self.terms:
         children = np.transpose(father, (0, 2, 1))
         return [father, children]
 
@@ -357,10 +410,22 @@ class Dictionary(metaclass=Singleton):
         #  -1 associated
         #  -2 twin
         #  -3 crossed
+        def _opposed_sibling(s0, s1):
+            return s0.children[0] == s1.children[1] and s0.children[1] == s1.children[0]
+
+        def _associated_sibling(s0, s1):
+            return s0.children[0] == s1.children[0] and \
+                   s0.children[1] == s1.children[1] and \
+                   s0.children[2] != s1.children[2]
+
+        def _crossed_sibling(s0, s1):
+            return s0.layer > 2 and \
+                   _opposed_sibling(s0.children[0], s1.children[1]) and \
+                   _opposed_sibling(s0.children[1], s1.children[0])
 
         siblings = np.zeros((4, len(self), len(self)))
 
-        print("Compute siblings")
+        print("\t[*] Computing siblings relations")
 
         _twins = []
         for l in self.layers[1:]:
@@ -372,19 +437,6 @@ class Dictionary(metaclass=Singleton):
                     _twins.append(t0)
 
                 for t1 in [t for t in l[i:] if isinstance(t.script, MultiplicativeScript)]:
-
-                    def _opposed_sibling(s0, s1):
-                        return s0.children[0] == s1.children[1] and s0.children[1] == s1.children[0]
-
-                    def _associated_sibling(s0, s1):
-                        return s0.children[0] == s1.children[0] and \
-                               s0.children[1] == s1.children[1] and \
-                               s0.children[2] != s1.children[2]
-
-                    def _crossed_sibling(s0, s1):
-                        return s0.layer > 2 and \
-                               _opposed_sibling(s0.children[0], s1.children[1]) and \
-                               _opposed_sibling(s0.children[1], s1.children[0])
 
                     if _opposed_sibling(t0.script, t1.script):
                         siblings[0, t0.index, t1.index] = 1
@@ -431,7 +483,7 @@ class Dictionary(metaclass=Singleton):
         for t in _res:
             t.relations = Relations(**_res[t])
 
-    def _add_term(self, term, root_p, inhibitions, translation):
+    def _add_term(self, term, root_p, translation):
         self.set_translation(term, translation)
         self.roots[root_p].append(term)
         self.terms[term.script] = term
@@ -441,7 +493,9 @@ class Dictionary(metaclass=Singleton):
         for ss in term.script.singular_sequences:
             self.singular_sequences_map[ss] = term
 
-        self._add_term(term, root_p=term, inhibitions=inhibitions, translation=translation)
+        self.inhibitions[term] = inhibitions
+
+        self._add_term(term, root_p=term, translation=translation)
 
     def __getstate__(self):
         return {
@@ -450,22 +504,30 @@ class Dictionary(metaclass=Singleton):
             'roots': [str(t.script) for t in self.roots],
             'relations': self.relations,
             'ranks': {str(t.script): r for t, r in self.ranks.items()},
-            'partitions': {str(t.script): [str(tt.script) for tt in v] for t, v in self.partitions.items()}
+            'partitions': {str(t.script): [str(tt.script) for tt in v] for t, v in self.partitions.items()},
+            'inhibitions': {str(r.script): v for r, v in self.inhibitions.items()}
         }
 
     def __setstate__(self, state):
-        self._index = [Term(t, dictionary=self) for t in state['index']]
-        assert sorted(self._index) == self._index
+        self.roots = {Term(r, dictionary=self): [] for r in state['roots']}
+        self.singular_sequences_map = {ss: r for r in self.roots for ss in r.script.singular_sequences}
 
-        self.terms = {t.script: t for t in self.index}
-        self.translations = {l: {self.terms[t]: text for t, text in v.items()} for l, v in
+        self.terms = {ss: Term(ss, dictionary=self) for ss in self.singular_sequences_map}
+        for r in self.roots:
+            self.terms[r.script] = r
+
+        for t in state['index']:
+            if t not in self.terms:
+                self.terms[t] = Term(t, dictionary=self)
+
+        self._index = [self.terms[t] for t in state['index']]
+
+        self.translations = {l: bidict({self.terms[t]: text for t, text in v.items()}) for l, v in
                              state['translations'].items()}
 
-        self.roots = {self.terms[r]: [] for r in state['roots']}
         self.ranks = {}
         self.partitions = {self.terms[t]: [self.terms[tt] for tt in v] for t, v in state['partitions'].items()}
 
-        self.singular_sequences_map = {ss: r for r in self.roots for ss in r.script.singular_sequences}
         for t in self.index:
             self.ranks[t] = state['ranks'][str(t.script)]
             self.roots[self.singular_sequences_map[t.script.singular_sequences[0]]].append(t)
@@ -476,6 +538,8 @@ class Dictionary(metaclass=Singleton):
         self._layers = None
         self._singular_sequences = None
 
+        self.inhibitions = {self.terms[r]: v for r, v in state['inhibitions'].items()}
+
         self.define_terms()
         print("\t[*] Dictionary loaded")
 
@@ -483,7 +547,7 @@ class Dictionary(metaclass=Singleton):
 def save_dictionary(directory):
     file = os.path.join(directory, "dictionary.json")
     relations_file = os.path.join(directory, "dictionary_relations.npy")
-
+    print("\t[*] Saving dictionary to disk (%s, %s)"%(str(file), str(relations_file)))
     state = Dictionary().__getstate__()
 
     # save relations as numpy array
@@ -497,6 +561,7 @@ def save_dictionary(directory):
 def load_dictionary(directory, dictionary):
     dic_json = os.path.join(directory, "dictionary.json")
     dic_rel = os.path.join(directory, "dictionary_relations.npy")
+    print("\t[*] Loading dictionary from disk (%s, %s)"%(str(dic_json), str(dic_rel)))
 
     with open(dic_json, 'r') as fp:
         state = json.load(fp)
@@ -506,4 +571,6 @@ def load_dictionary(directory, dictionary):
 
 
 if __name__ == '__main__':
-    Dictionary()
+    Dictionary().compute_relations()
+    save_dictionary(DICTIONARY_FOLDER)
+    print(list(map(str, Dictionary().terms["i.B:.-+u.M:.-O:.-'"].relations.father[0])))

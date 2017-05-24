@@ -14,7 +14,7 @@ from ieml.ieml_objects.texts import Text
 from ieml.ieml_objects.words import Word, Morpheme
 from ieml.ieml_objects.exceptions import CantGenerateElement
 from ieml.script.script import Script
-from ieml.ieml_objects import terms
+from ieml.ieml_objects.dictionary import Dictionary
 
 
 def ieml(arg):
@@ -34,15 +34,15 @@ def term(arg):
     if isinstance(arg, str):
         if arg[0] == '[' and arg[-1] == ']':
             arg = arg[1:-1]
-        arg = script(arg)
 
-    if isinstance(arg, Script):
-        d = terms.Dictionary()
+    if isinstance(arg, Script) or isinstance(arg, str):
+        d = Dictionary()
         if arg in d.terms:
             return d.terms[arg]
 
     print("Invalid argument for term creation %s (or not in dictionary)"%str(arg))
     raise NotImplemented
+
 
 def _loop_result(max_try):
     def decorator(func):
