@@ -1,9 +1,8 @@
 import unittest
 # We use protected method _compute_rank for dependency injection
 from ieml.ieml_objects.dictionary import Dictionary
-from ieml.script.tables import get_table_rank, _compute_rank, generate_tables
+from ieml.ieml_objects.tools import term
 from ieml.script.operator import sc
-from ieml.script.tools import factorize
 
 
 class RankComputationTest(unittest.TestCase):
@@ -27,31 +26,14 @@ class RankComputationTest(unittest.TestCase):
         self.assertEqual(term.rank, 2)
 
     def test_rank3_2d(self):
-        term = self.dic.terms[sc("O:M:.M:M:.-+M:M:.O:M:.-")]
+        t = self.dic.terms[sc("c.-'O:M:.-'n.o.-s.o.-',")]
 
-        root_table = term.tables[1]
-        h = root_table.headers[next(root_table.headers.__iter__())].rows[2]
-        term = self.dic.terms[h]
-
-        self.assertEqual(term.rank, 3)
-
-        self.assertEqual(term("[T:M:.e.-M:M:.i.-wa.e.-']"), 3)
+        self.assertEqual(t.rank, 3)
 
     def test_rank4_2d(self):
-        term = self.dic.terms[sc("O:M:.M:M:.-+M:M:.O:M:.-")]
-        # Build table for the paradigm of rank 3 (root_table.headers[1][2])
-        root_table = term.tables[1]
-        h = root_table.headers[next(root_table.headers.__iter__())].rows[2]
-        term = self.dic.terms[h]
+        t = self.dic.terms["E:M:.we.-"]
 
-        root_table = term.tables[0]
-        h = root_table.headers[next(root_table.headers.__iter__())].columns
-        print(str(term))
-
-        term = self.dic.terms[sc([h[0], h[1]])]
-        print(str(term))
-
-        self.assertEqual(term.rank, 4)
+        self.assertEqual(t.rank, 4)
 
     def test_rank5_2d(self):
         term = self.dic.terms[sc("O:M:.M:M:.-+M:M:.O:M:.-")]
@@ -68,7 +50,7 @@ class RankComputationTest(unittest.TestCase):
 
     def test_paradigm_from_multiple_tables(self):
         term = self.dic.terms[sc("S:M:.e.-M:M:.u.-wa.e.-'+B:M:.e.-M:M:.a.-wa.e.-'+T:M:.e.-M:M:.i.-wa.e.-'")]
-        self.assertEquals(term.rank, 2)
+        self.assertEquals(term.rank, 1)
 
     def test_additive_parent_paradigm(self):
         term = self.dic.terms[sc("O:M:.M:M:.-")]

@@ -1,10 +1,11 @@
+import unittest
+
 from pymongo import MongoClient
 
 from ieml.exceptions import CannotParse
 from ieml.script import *
 from ieml.script.operator import sc
 from models.constants import TERMS_COLLECTION
-from testing.ieml.helper import *
 from config import DB_ADDRESS
 
 

@@ -1,23 +1,19 @@
 from unittest.case import TestCase
 
-from ieml.ieml_objects.dictionary import Dictionary
+from ieml.ieml_objects.dictionary import Dictionary, RELATION_TYPES_TO_INDEX
 from ieml.ieml_objects.tools import term
 from ieml.script.tools import inverse_relation
 
 
 class TestRelations(TestCase):
-    def setUp(self):
-        self.inhibitions = {rel['_id']: tc().get_inhibitions(rel['_id']) for rel in rc().relations.find()}
-        self.relations = {r: rq.relations(r) for r in self.inhibitions}
-
     def test_symmetry(self):
-        source = 'wa.'
-        r = rq.relations(source)
+        t = term('wa.')
+        r = t.relations
 
-        for reltype in r:
-            for s in r[reltype]:
-                if source not in rq.relations(s)[inverse_relation(reltype)]:
-                    self.fail('Missing link "%s" --> "%s" (%s) in relations db.'%(s, source, reltype))
+        for reltype in RELATION_TYPES_TO_INDEX:
+            for s in r[RELATION_TYPES_TO_INDEX[reltype]]:
+                if t not in s.relations[RELATION_TYPES_TO_INDEX[inverse_relation(reltype)]]:
+                    self.fail('Missing link "%s" --> "%s" (%s) in relations db.'%(s, t, reltype))
 
     def test_no_reflexive_relations(self):
         self.assertEqual(term('O:O:.O:O:.-').relations.opposed, [])

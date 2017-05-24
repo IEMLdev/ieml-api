@@ -1,6 +1,7 @@
+import unittest
+
 from ieml.script.parser import ScriptParser
 from ieml.script.tools import RemarkableSibling as rq
-from testing.ieml.helper import *
 
 
 class TestRelationScript(unittest.TestCase):

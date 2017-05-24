@@ -8,7 +8,7 @@ from ieml.ieml_objects.parser.parser import IEMLParser
 from ieml.ieml_objects.sentences import AbstractSentence, SuperSentence, Sentence
 from ieml.ieml_objects.terms import Term
 from ieml.ieml_objects.texts import Text
-from ieml.ieml_objects.tools import RandomPoolIEMLObjectGenerator
+from ieml.ieml_objects.tools import RandomPoolIEMLObjectGenerator, term
 from ieml.ieml_objects.words import Word
 from ieml.script.operator import sc
 from ieml.usl.tools import random_usl, replace_paths, usl
@@ -74,11 +74,11 @@ class TestTreeStructure(TestCase):
         self.assertTrue(c0 in text2)
         self.assertNotEqual(text2, text)
 
-        t = Term('wa.')
+        t = term('wa.')
         self.assertEqual(replace_paths(t, [('', sc('we.'))]), t)
 
 
-        t2 = Term('we.')
+        t2 = term('we.')
         self.assertEqual(t2, replace_paths(t, [('', t2)]))
 
         paths = random.sample(text.paths, random.randint(2, len(text.paths)))
