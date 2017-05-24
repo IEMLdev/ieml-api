@@ -68,7 +68,7 @@ class Word(IEMLObjects):
 
         self.cardinal = self.root.cardinal * (self.flexing.cardinal if self.flexing is not None else 1)
         if self.cardinal > MAX_SINGULAR_SEQUENCES:
-            raise ValueError("Too many word- singular sequences defined (max: 360) here: %d"%self.cardinal)
+            raise InvalidIEMLObjectArgument(Word, "Too many word- singular sequences defined (max: 360) here: %d"%self.cardinal)
 
     @property
     def grammatical_class(self):
