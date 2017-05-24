@@ -4,7 +4,6 @@ from ieml.ieml_objects.terms import Term
 from ieml.ieml_objects.words import Morpheme, Word
 from ieml.script.operator import sc
 from ieml.usl.tools import usl
-from models.terms import TermsConnector
 import numpy as np
 
 

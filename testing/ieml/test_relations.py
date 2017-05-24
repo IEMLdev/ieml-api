@@ -1,10 +1,8 @@
 from unittest.case import TestCase
 
+from ieml.ieml_objects.dictionary import Dictionary
+from ieml.ieml_objects.tools import term
 from ieml.script.tools import inverse_relation
-from models.relations.relations_queries import RelationsQueries as rq
-from models.relations.relations import RelationsConnector as rc
-
-from models.terms.terms import TermsConnector as tc
 
 
 class TestRelations(TestCase):
@@ -20,6 +18,13 @@ class TestRelations(TestCase):
             for s in r[reltype]:
                 if source not in rq.relations(s)[inverse_relation(reltype)]:
                     self.fail('Missing link "%s" --> "%s" (%s) in relations db.'%(s, source, reltype))
+
+    def test_no_reflexive_relations(self):
+        self.assertEqual(term('O:O:.O:O:.-').relations.opposed, [])
+
+    def test_index(self):
+        r0 = [t for t in Dictionary()]
+        self.assertListEqual(r0, sorted(r0))
 
     def test_inhibition(self):
         for term, rels in self.relations.items():

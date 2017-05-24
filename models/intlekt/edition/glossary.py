@@ -1,6 +1,7 @@
 import uuid
 
 from ieml.ieml_objects.terms import Term
+from ieml.ieml_objects.tools import term
 from models.commons import DBConnector
 from models.constants import GLOSSARIES_COLLECTION
 
@@ -83,7 +84,7 @@ class GlossaryConnector(DBConnector):
         except TypeError:
             raise ValueError("Must be a list of terms")
 
-        terms = list(map(str, map(Term, terms)))
+        terms = list(map(str, map(term, terms)))
 
         result = self.glossary.update_one({'_id': id}, {'$addToSet': {'terms': {'$each': terms}}})
 
@@ -101,7 +102,7 @@ class GlossaryConnector(DBConnector):
         except TypeError:
             raise ValueError("Must be a list of terms")
 
-        terms = list(map(str, map(Term, terms)))
+        terms = list(map(str, map(term, terms)))
 
         result = self.glossary.update_one({'_id': id}, {'$pull': {'terms': {'$in': terms}}})
 

@@ -61,16 +61,11 @@ class TableGenerationTest(unittest.TestCase):
         print(len(diff))
 
     def test_headers(self):
-        with open("../../data/dictionary/dictionary.yml", 'r') as fp:
-            dic = yaml.load(fp)
+        for p in Dictionary():
+            self.assertEqual(factorize((k.paradigm for k in p.tables)), p.script)
+            self.assertEqual(len(set(k.paradigm for k in p.tables)), len(p.tables))
 
-        tables_root = [(p, script(p).tables) for p in dic]
-
-        for p, tables in tables_root:
-            self.assertEqual(str(factorize((k.paradigm for k in tables))), p)
-            self.assertEqual(len(set(k.paradigm for k in tables)), len(tables))
-
-            for t in tables:
+            for t in p.tables:
                 for tab in t.headers.values():
                     if t.dim != 1:
                         self.assertTupleEqual((len(tab.rows), len(tab.columns)), tab.cells.shape)

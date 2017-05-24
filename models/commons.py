@@ -3,6 +3,7 @@ from itertools import islice
 from pymongo import MongoClient
 
 from config import DB_ADDRESS, DB_NAME, OLD_DB_NAME
+from ieml.commons import LANGUAGES
 from ieml.ieml_objects.terms import Term
 from metaclasses import Singleton
 from models.constants import TAG_LANGUAGES
@@ -45,11 +46,10 @@ def check_keywords(keywords):
 
 
 def generate_translations(usl):
-    from models.terms import TermsConnector
     result = {}
-    entries = [TermsConnector().get_term(t.script) for t in usl.ieml_object.tree_iter() if isinstance(t, Term)]
-    for l in TAG_LANGUAGES:
-        result[l] = ' '.join((e['TAGS'][l] for e in islice(entries, 10)))
+    entries = [t for p, t in usl.paths.items()]
+    for l in LANGUAGES:
+        result[l.upper()] = ' '.join((e.translation[l] for e in islice(entries, 10)))
 
     return result
 

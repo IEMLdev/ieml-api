@@ -10,17 +10,14 @@ from ieml.script.constants import MAX_LAYER
 class DictionaryTest(TestCase):
     def test_load_dictionary(self):
         dic = Dictionary()
-        NB_TERMS = 4235
-        NB_ROOTS = 54
+        NB_TERMS = len(dic)
 
-        self.assertEqual(len(dic), NB_TERMS)
+        self.assertEqual(len(dic.index), NB_TERMS)
         self.assertEqual(len(dic.terms), NB_TERMS)
         self.assertEqual(len(dic.ranks), NB_TERMS)
         # self.assertEqual(len(dic.relations), 12)
         for l in LANGUAGES:
             self.assertEqual(len(dic.translations[l]), NB_TERMS)
-
-        self.assertEqual(len(dic.roots), NB_ROOTS)
 
         self.assertEqual(len(dic.layers), MAX_LAYER + 1) # from 0
         self.assertEqual(sum(len(v) for v in dic.layers), NB_TERMS)

@@ -3,12 +3,12 @@ from _operator import mul
 from functools import reduce
 
 from ieml.ieml_objects.terms import Term
+from ieml.ieml_objects.tools import term
 from ieml.paths.tools import path
 from ieml.script.constants import CONTAINS_RELATION
-from ieml.usl.tools import usl, replace_paths
+from ieml.usl.tools import replace_paths
 from models.commons import DBConnector, generate_tags, check_tags
 from models.constants import TEMPLATES_COLLECTION, TAG_LANGUAGES, MAX_SIZE_TEMPLATE
-from models.terms import TermsConnector
 from models.usls.library import usl_index
 
 
@@ -60,8 +60,8 @@ class TemplatesConnector(DBConnector):
             }
 
         if tags_rule and check_tags(tags_rule):
-            terms_tags = {str(term): TermsConnector().get_term(term)['TAGS']
-                          for term in set(itertools.chain.from_iterable(paradigms.values()))}
+            terms_tags = {str(t): term(t).translations
+                          for t in set(itertools.chain.from_iterable(paradigms.values()))}
 
             for u in expansion:
                 tags = {l: tags_rule[l] for l in TAG_LANGUAGES}

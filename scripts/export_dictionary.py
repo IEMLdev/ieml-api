@@ -1,5 +1,4 @@
 import json
-import os
 from ieml.ieml_objects.dictionary import Dictionary, save_dictionary, DICTIONARY_FOLDER
 from ieml.script.operator import script
 from ieml.script.tools import factorize
