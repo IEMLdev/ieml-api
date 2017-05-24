@@ -109,7 +109,7 @@ class Dictionary(metaclass=Singleton):
             # print("Term %s already defined."%str(term))
             return
 
-        root_p = self.get_root(term)
+        root_p = self.get_root(script)
         if root_p is None:
             if root:
                 if not term.script.paradigm:
@@ -292,14 +292,17 @@ class Dictionary(metaclass=Singleton):
     def __contains__(self, item):
         return script(item) in self.terms
 
-    def get_root(self, term):
+    def __iter__(self):
+        return self.index.__iter__()
+
+    def get_root(self, script):
         try:
-            res = {self.singular_sequences_map[ss] for ss in term.script.singular_sequences}
+            res = {self.singular_sequences_map[ss] for ss in script.singular_sequences}
         except KeyError:
             return None
 
         if len(res) > 1:
-            raise ValueError("Term %s is in multiples root paradigms [%s]" % (str(term), ', '.join(map(str, res))))
+            raise ValueError("Script %s is in multiples root paradigms [%s]" % (str(script), ', '.join(map(str, res))))
 
         return next(res.__iter__())
 

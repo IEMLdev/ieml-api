@@ -4,10 +4,9 @@ import itertools
 
 import functools
 from ieml.ieml_objects.commons import IEMLObjects
-from ieml.ieml_objects.exceptions import InvalidIEMLObjectArgument
+from ieml.ieml_objects.exceptions import InvalidIEMLObjectArgument, TermNotFoundInDictionary
 from ieml.ieml_objects.parser.parser import IEMLParser
 from ieml.ieml_objects.terms import Term
-from ieml.script.operator import script
 
 from ieml.ieml_objects.sentences import Sentence, Clause, SuperSentence, SuperClause
 from ieml.ieml_objects.texts import Text
@@ -41,7 +40,7 @@ def term(arg):
             return d.terms[arg]
 
     print("Invalid argument for term creation %s (or not in dictionary)"%str(arg))
-    raise NotImplemented
+    raise TermNotFoundInDictionary(arg)
 
 
 def _loop_result(max_try):
@@ -84,9 +83,6 @@ class RandomPoolIEMLObjectGenerator:
         Slow method, retrieve all the terms from the database.
         :return:
         """
-        from models.terms.terms import TermsConnector as tc
-        self.terms_pool = set(term(script(t['_id'])) for t in tc().get_all_terms()[:self.pool_size])
-
         if self.level >= Word:
             # words
             self.words_pool = set(self.word() for i in range(self.pool_size))
@@ -105,15 +101,15 @@ class RandomPoolIEMLObjectGenerator:
 
     @_loop_result(10)
     def term(self):
-        return random.sample(self.terms_pool, 1)[0]
+        return random.sample(Dictionary().index, 1)[0]
 
     @_loop_result(10)
     def uniterm_word(self):
-        return Word(Morpheme(random.sample(self.terms_pool, 1)))
+        return Word(Morpheme(random.sample(Dictionary().index, 1)))
 
     @_loop_result(10)
     def word(self):
-        return Word(Morpheme(random.sample(self.terms_pool, 3)), Morpheme(random.sample(self.terms_pool, 2)))
+        return Word(Morpheme(random.sample(Dictionary().index, 3)), Morpheme(random.sample(Dictionary().index, 2)))
 
     def _build_graph_object(self, primitive, mode, object, max_nodes=6):
         nodes = {primitive()}
