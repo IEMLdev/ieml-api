@@ -41,7 +41,7 @@ def dictionary_dump():
 MAX_TERMS_DICTIONARY = 50000
 def _drupal_process(dico):
     all_uuid = {
-        d['IEML']: int(hashlib.sha1(d['IEML'].encode()).hexdigest(), 16) % MAX_TERMS_DICTIONARY for d in dico
+        d['IEML']: 1000 + int(hashlib.sha1(d['IEML'].encode()).hexdigest(), 16) % MAX_TERMS_DICTIONARY for d in dico
     }
 
     assert len(set(all_uuid.values())) == len(all_uuid)
@@ -51,7 +51,19 @@ def _drupal_process(dico):
         'IEML': d['IEML'],
         'FR': d['FR'],
         'EN': d['EN'],
-        'INDEX': d['INDEX']
+        'INDEX': d['INDEX'],
+        'relations': [
+            {
+                'category': 'Inclusion',
+                'type': 'Contained',
+                'terms': [all_uuid[k] for k in all_uuid if k != d['IEML']][:2]
+            },
+            {
+                'category': 'Inclusion',
+                'type': 'Contains',
+                'terms': [all_uuid[k] for k in all_uuid if k != d['IEML']][:2]
+            },
+        ]
     } for d in dico]
 
 
