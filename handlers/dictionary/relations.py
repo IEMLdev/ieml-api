@@ -60,23 +60,26 @@ def update_relations(body):
 
 @exception_handler
 def computation_status():
-    status = RelationsConnector().lock_status()
-    response = {'success': True, 'free': status is None}
-    if status is not None:
-        response['computing_relations'] = status['role'] == RELATION_COMPUTING
+    # status = RelationsConnector().lock_status()
+    # response = {'success': True, 'free': status is None}
+    # if status is not None:
+    #     response['computing_relations'] = status['role'] == RELATION_COMPUTING
+    #
+    # # get the error message if there is one
+    # global relation_compute_process_queue
+    # if status is None and relation_compute_process_queue is not None:
+    #     if not relation_compute_process_queue.empty():
+    #         try:
+    #             response['error_message'] = relation_compute_process_queue.get_nowait()
+    #         except queue.Empty:
+    #             pass
+    #
+    #     relation_compute_process_queue = None
 
-    # get the error message if there is one
-    global relation_compute_process_queue
-    if status is None and relation_compute_process_queue is not None:
-        if not relation_compute_process_queue.empty():
-            try:
-                response['error_message'] = relation_compute_process_queue.get_nowait()
-            except queue.Empty:
-                pass
-
-        relation_compute_process_queue = None
-
-    return response
+    return {
+        'success': True,
+        'free': True
+    }
 
 
 # @exception_handler

@@ -1,9 +1,9 @@
 import uuid
-from ieml.ieml_objects.dictionary import Dictionary
+from ieml.ieml_objects.dictionary import Dictionary, save_dictionary, DICTIONARY_FOLDER, load_dictionary
 
 from handlers.commons import exception_handler, ieml_term_model
 from ieml.ieml_objects.tools import term
-from ieml.script.operator import sc
+from ieml.script.operator import sc, script
 
 from ..caching import cached, flush_cache
 from handlers.dictionary.commons import relation_name_table
@@ -72,7 +72,7 @@ def drupal_dictionary_dump():
 
 
 @cached("all_ieml", 1000)
-@exception_handler
+# @exception_handlerexception_handler
 def all_ieml():
     """Returns a dump of all the terms contained in the DB, formatted for the JS client"""
     result = [{**_build_old_model_from_term_entry(t),
@@ -247,26 +247,47 @@ def _process_inhibits(body):
         try:
             inhibits = [relation_name_table[i] for i in body['INHIBITS']]
         except KeyError as e:
-            raise InvalidRelationTitle(e.args[0])
+            raise ValueError(e.args[0])
     else:
         inhibits = []
 
     return inhibits
 
 
+def _save_dictionary():
+    try:
+        Dictionary().compute_relations()
+        Dictionary().compute_ranks()
+        save_dictionary(DICTIONARY_FOLDER)
+    except ValueError as e:
+        load_dictionary(DICTIONARY_FOLDER, Dictionary())
+        raise ValueError("Unable to recompute the relations and ranks: " + str(e))
+
+
 @need_login
 @flush_cache
-@exception_handler
+# @exception_handler
 def new_ieml_script(body):
     script_ast = sc(body["IEML"])
-    terms_db().add_term(script_ast,  # the ieml parser's ast
-                        {"FR": body["FR"], "EN": body["EN"]},  # the
-                        inhibits=_process_inhibits(body), # no inhibitions at the parser's creation
-                        root=body["PARADIGM"] == "1",
-                        recompute_relations=False)
+    Dictionary().add_term(script_ast,
+                          root=body["PARADIGM"] == "1",
+                          inhibitions=_process_inhibits(body),
+                          translation={"fr": body["FR"], "en": body["EN"]})
 
-    entry = terms_db().get_term(script_ast)
-    return {"success" : True, "added": _build_old_model_from_term_entry(entry)}
+    if body["PARADIGM"] == "1":
+        for i, ss in enumerate(script_ast.singular_sequences):
+            Dictionary().add_term(ss,
+                                  translation={"fr": body["FR"] + " SS (%d)"%i,
+                                               "en": body["EN"] + " SS (%d)"%i})
+
+    for j, table in enumerate(script_ast.tables):
+        for i, tab in enumerate(table.headers):
+            Dictionary().add_term(tab,
+                                  translation={"fr": body["FR"] + " Table (%d) Tab (%d)" % (j,i),
+                                               "en": body["EN"] + " Table (%d) Tab (%d)" % (j,i)})
+
+    _save_dictionary()
+    return {"success" : True, "added": _build_old_model_from_term_entry(term(script_ast))}
 
 
 @need_login
@@ -274,7 +295,9 @@ def new_ieml_script(body):
 @exception_handler
 def remove_ieml_script(body):
     script_ast = sc(body['id'])
-    # Dictionary().remove_term()
+    Dictionary().remove_term(term(script_ast))
+    _save_dictionary()
+
     return {'success': True}
 
 
@@ -284,35 +307,40 @@ def remove_ieml_script(body):
 def update_ieml_script(body):
     """Updates an IEML Term's properties (mainly the tags, and the paradigm). If the IEML is changed,
     a new term is created"""
-    script_ast = sc(body["ID"]) # the ID refer to the parser being updated
+    script_ast = sc(body["ID"])
 
     inhibits = _process_inhibits(body)
 
     if body["IEML"] == body["ID"]:
         # no update on the ieml
-        terms_db().update_term(script_ast,
-                             tags={ "FR" : body["FR"], "EN" : body["EN"]},
-                             root=body["PARADIGM"] == "1", inhibits=inhibits, recompute_relations=False)
+        Dictionary().update_term(term(script_ast),
+                                 inhibitions=inhibits,
+                                 translation={"fr": body["FR"], "en": body["EN"]})
     else:
-        terms_db().remove_term(script_ast, recompute_relations=False)
-        terms_db().add_term(sc(body["IEML"]),  # the ieml parser's ast
-                          {"FR": body["FR"], "EN": body["EN"]},  # the
-                          root=body["PARADIGM"] == "1", inhibits=inhibits, recompute_relations=False)
+        Dictionary().remove_term(term(script_ast))
+        Dictionary().add_term(sc(body["IEML"]),
+                              root=body["PARADIGM"] == "1",
+                              inhibitions=inhibits,
+                              translation={"fr": body["FR"], "en": body["EN"]})
+    _save_dictionary()
+    return {"success" : True, "modified": _build_old_model_from_term_entry(term(body["IEML"]))}
 
-    entry = terms_db().get_term(script_ast)
-    return {"success" : True, "modified": _build_old_model_from_term_entry(entry)}
 
-
+@exception_handler
 def ieml_term_exists(ieml_term):
     """Tries to dig a term from the database"""
-    if ieml_term in Dictionary():
-        return [term(ieml_term)]
+    t = script(ieml_term)
+    if t in Dictionary():
+        return [str(t)]
     else:
         return []
 
+
+# @exception_handler
 def en_tag_exists(tag_en):
-    return list(terms_db().search_by_tag(tag_en, "EN"))
+    return [tag_en] if tag_en in Dictionary().translations['en'].inv else []
 
 
+# @exception_handler
 def fr_tag_exists(tag_fr):
-    return list(terms_db().search_by_tag(tag_fr, "FR"))
+    return [tag_fr] if tag_fr in Dictionary().translations['fr'].inv else []

@@ -1,18 +1,18 @@
 import importlib
 import random
+import sys
 import unittest
 from collections import namedtuple
 from string import ascii_lowercase
 from types import ModuleType
 
-import sys
 import config
 from ieml.script.operator import sc
 from models.constants import TAG_LANGUAGES
 from models.intlekt.edition.glossary import GlossaryConnector
 from models.intlekt.edition.lexicon import LexiconConnector
-from models.templates.templates import TemplatesConnector
 from models.usls.library import LibraryConnector
+from models.usls.templates.templates import TemplatesConnector
 
 
 def stub_db(module_model, connectors):
