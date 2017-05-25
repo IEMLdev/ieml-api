@@ -50,6 +50,12 @@ def _drupal_process(dico):
         d['IEML']: 1000 + int(hashlib.sha1(d['IEML'].encode()).hexdigest(), 16) % MAX_TERMS_DICTIONARY for d in dico
     }
 
+    def _relation_entry(term):
+        return {
+            'id': all_uuid[term],
+            'comment': "lorem ipsum %s"%term
+        }
+
     assert len(set(all_uuid.values())) == len(all_uuid)
 
     return [{
@@ -62,12 +68,12 @@ def _drupal_process(dico):
             {
                 'category': 'Inclusion',
                 'type': 'Contained',
-                'terms': [all_uuid[k] for k in all_uuid if k != d['IEML']][:2]
+                'terms': [_relation_entry(k) for k in all_uuid if k != d['IEML']][:2]
             },
             {
                 'category': 'Inclusion',
                 'type': 'Contains',
-                'terms': [all_uuid[k] for k in all_uuid if k != d['IEML']][:2]
+                'terms': [_relation_entry(k) for k in all_uuid if k != d['IEML']][:2]
             },
         ]
     } for d in dico]
