@@ -22,6 +22,7 @@ class Term(IEMLObjects):
         self.index = None
         self.relations = None
         self.rank = None
+        self.parent = None
 
         self._rank = None
 

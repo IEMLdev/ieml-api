@@ -28,6 +28,8 @@ def script(arg):
         except TypeError:
             pass
 
+    print(arg)
+
     raise NotImplemented
 
 

@@ -130,10 +130,77 @@ class Dictionary(metaclass=Singleton):
 
         self._index = None
 
+    def remove_term(self, term):
+        if not isinstance(term, Term) or not term.defined or term not in self.index:
+            raise ValueError("The term %s is not defined in the dictionary."%str(term))
+
+        to_remove = [term]
+
+        # can;t remove singular sequences
+        if not term.script.paradigm:
+            raise ValueError("Can't remove the singular sequence %s. Remove the root paradigm %s instead."%
+                             (str(term), str(self.get_root(term.script))))
+
+        if term in self.partitions:
+            raise ValueError("Can't remove the paradigm %s, remove his subtables first (%s)." %
+                             (str(term), ', '.join(map(str, self.partitions[term]))))
+
+        # if root make sure it is empty
+        if term in self.roots:
+            paradigms = [p for p in self.rel('CONTAINED', term) if p != term and p.script.paradigm]
+            if paradigms:
+                raise ValueError("Can't remove a non empty root paradigm, remove first the following terms : (%s)"%
+                                 ', '.join([str(p) for p in paradigms]))
+
+            to_remove.extend([self.terms[ss] for ss in term.script.singular_sequences])
+
+            del self.roots[term]
+            del self.inhibitions[term]
+
+        self._index = None
+        self._layers = None
+        self._singular_sequences = None
+
+        for t in to_remove:
+            del self.terms[t.script]
+            for l in LANGUAGES:
+                del self.translations[l][t]
+            if t.script in self.singular_sequences_map:
+                del self.singular_sequences_map[t.script]
+
+            if t.parent in self.partitions:
+                self.partitions[t.parent].remove(t)
+
+                if not self.partitions[t.parent]:
+                    del self.partitions[t.parent]
+
+        self.relations = None
+        self.ranks = None
+
+    def update_term(self, term, inhibitions=None, translation=None):
+        if term not in self.index:
+            raise ValueError("Term %s is not defined in the dictionary"%str(term))
+
+        if inhibitions is not None:
+            if term not in self.roots:
+                raise ValueError("Term %s is not root, can only update inhibitions on root paradigms"%str(term))
+
+            self.inhibitions[term] = inhibitions
+            self._do_inhibitions()
+
+        if translation is not None:
+            for l in translation:
+                if l not in LANGUAGES:
+                    continue
+                self.translations[l] = translation[l]
+
+        self.define_terms()
+
     def compute_ranks(self):
         print("\t[*] Computing ranks")
         tables = defaultdict(list)
         self.ranks = {}
+        self.partitions = {}
 
         def get_rank_partition(term0, term1):
             def is_connexe_tilling(coords, t):
@@ -320,8 +387,12 @@ class Dictionary(metaclass=Singleton):
 
             self.translations[l][term] = translation[l]
 
-    def rel(self, type):
-        return self.relations[RELATION_TYPES_TO_INDEX[type], :, :]
+    def rel(self, type, term=None):
+        if term:
+            return [self.index[j] for j in
+                    np.where(self.relations[RELATION_TYPES_TO_INDEX[type], term.index, :] == 1)[0]]
+        else:
+            return self.relations[RELATION_TYPES_TO_INDEX[type], :, :]
 
     def compute_relations(self):
         for i, t in enumerate(self.index):
@@ -393,16 +464,6 @@ class Dictionary(metaclass=Singleton):
                     _recurse_script(sub_s.children[i], res_indexes)
                     father[i, t.index, res_indexes] = 1
 
-                    # if isinstance(sub_s.children[i], NullScript):
-                    #     continue
-                    #
-                    # child = sub_s.children[i]
-                    # if isinstance(child, AdditiveScript):
-                    #     for c in child.children:
-                    #         if c in self.terms:
-                    #             father[i, t.index, self.terms[c].index] = 1
-                    # else:
-                    #     if child in self.terms:
         children = np.transpose(father, (0, 2, 1))
         return [father, children]
 
