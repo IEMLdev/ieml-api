@@ -206,12 +206,21 @@ def to_ieml(body):
                          "or the 'json' body attributes.")
 
     u = LibraryConnector().get(usl=response['ieml'])
+    trans = usl(response['ieml']).auto_translation()
+    response['translations'] = {
+        'default_EN': trans['EN'],
+        'default_FR': trans['FR']
+    }
+
     if u is None:
         response['defined'] = False
-        response['translations'] = usl(response['ieml']).auto_translation()
+        response['translations']['FR'] = ""
+        response['translations']['EN'] = ""
     else:
         response['defined'] = True
-        response['translations'] = u['TRANSLATIONS']
+        response['translations'] = {
+            **u['TRANSLATIONS'],
+            **response['translations']}
 
     return response
 
