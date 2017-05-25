@@ -56,12 +56,14 @@ def get_words_of_lexicon(lexicon_id):
             'name': lexicon['name']}
 
 
+@exception_handler
 def set_lexicon_favorite(lexicon_id, body):
     words = body['words']
     LexiconConnector().set_favorites(lexicon_id, words)
     return {'success': True}
 
 
+@exception_handler
 def get_lexicon_favorite(lexicon_id):
     return {'success': True,
             'words': [t for t in LexiconConnector().get_favorites(lexicon_id)]}
