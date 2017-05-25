@@ -1023,6 +1023,10 @@ definitions:
         type: string
       EN:
         type: string
+      default_EN:
+        type: string
+      default_FR:
+        type: string
 
   rule:
     required:
