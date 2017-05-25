@@ -685,6 +685,22 @@ paths:
             type: array
             items:
               $ref: '#/definitions/drupal_term'
+
+  /intlekt/relations/drupal:
+    get:
+      description: |
+        Return the relations for the drupal website
+      tags:
+        - Drupal
+      operationId: handlers.drupal_relations_dump
+      responses:
+        '200':
+          description: Successful response
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/drupal_relations'
+
   ##############################
   ## Library API              ##
   ##############################
@@ -983,6 +999,19 @@ definitions:
         type: string
       INDEX:
         type: number
+
+  drupal_relations:
+    properties:
+      term_src:
+        type: integer
+      term_dest:
+        type: integer
+      relation_name:
+        type: string
+      relation_type:
+        type: string
+      commentary:
+        type: string
 
   ieml_object_json:
     required:

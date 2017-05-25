@@ -1,5 +1,7 @@
 import hashlib
+import string
 import uuid
+import random
 
 from handlers.commons import exception_handler, ieml_term_model
 from ieml.script.operator import sc
@@ -45,46 +47,56 @@ def dictionary_dump():
             'terms': sorted((ieml_term_model(t['_id']) for t in terms_db().get_all_terms()), key=lambda c: c['INDEX'])}
 
 MAX_TERMS_DICTIONARY = 50000
-def _drupal_process(dico):
-    all_uuid = {
-        d['IEML']: 1000 + int(hashlib.sha1(d['IEML'].encode()).hexdigest(), 16) % MAX_TERMS_DICTIONARY for d in dico
-    }
-
-    def _relation_entry(term):
-        return {
-            'id': all_uuid[term],
-            'comment': "lorem ipsum %s"%term
-        }
-
-    assert len(set(all_uuid.values())) == len(all_uuid)
-
-    return [{
-        'id': all_uuid[d['IEML']],
-        'IEML': d['IEML'],
-        'FR': d['FR'],
-        'EN': d['EN'],
-        'INDEX': d['INDEX'],
-        'relations': [
-            {
-                'category': 'Inclusion',
-                'type': 'Contained',
-                'terms': [_relation_entry(k) for k in all_uuid if k != d['IEML']][:2]
-            },
-            {
-                'category': 'Inclusion',
-                'type': 'Contains',
-                'terms': [_relation_entry(k) for k in all_uuid if k != d['IEML']][:2]
-            },
-        ]
-    } for d in dico]
-
+Drupal_dico = [ieml_term_model(t['_id']) for t in terms_db().get_all_terms()][:30]
+all_uuid = {
+    d['IEML']: 1000 + int(hashlib.sha1(d['IEML'].encode()).hexdigest(), 16) % MAX_TERMS_DICTIONARY for d in
+    Drupal_dico
+}
 
 # @cached("dictionary_dump", 1000)
 @exception_handler
 def drupal_dictionary_dump():
-    dico = [ieml_term_model(t['_id']) for t in terms_db().get_all_terms()][:10]
-    return _drupal_process(dico)
+    return [{
+                'id': all_uuid[d['IEML']],
+                'IEML': d['IEML'],
+                'FR': d['FR'],
+                'EN': d['EN'],
+                'INDEX': d['INDEX']
+            } for d in Drupal_dico]
 
+RELATIONS = {
+    'Inclusion': [("Contained", "Contains")],
+    'Etymology': [("Father in substance", "Child in substance"), ("Father in attribute", "Child in attribute"), ("Father in mode", "Child in mode")],
+    'Siblings': [("Opposed", "Opposed"), ("Crossed", "Crossed"), ("Associated", "Associated"), ("Twin", "Twin")]
+}
+
+
+def drupal_relations_dump():
+    res = []
+    for rel_cat in RELATIONS:
+        for sym in RELATIONS[rel_cat]:
+            comment = ''.join([random.choice(string.ascii_lowercase) for i in range(100)])
+            term0 = random.choice(Drupal_dico)
+            term1 = random.choice(Drupal_dico)
+
+            print(term1)
+            res.append({
+                'term_src': all_uuid[term0['IEML']],
+                'term_dest': all_uuid[term1['IEML']],
+                'relation_name': sym[0],
+                'relation_type': rel_cat,
+                'commentary': comment
+            })
+
+            res.append({
+                'term_src': all_uuid[term1['IEML']],
+                'term_dest': all_uuid[term0['IEML']],
+                'relation_name': sym[1],
+                'relation_type': rel_cat,
+                'commentary': comment
+            })
+
+    return res
 
 
 @cached("all_ieml", 1000)
