@@ -79,7 +79,7 @@ def _drupal_process(dico):
     } for d in dico]
 
 
-@cached("dictionary_dump", 1000)
+# @cached("dictionary_dump", 1000)
 @exception_handler
 def drupal_dictionary_dump():
     dico = [ieml_term_model(t['_id']) for t in terms_db().get_all_terms()][:10]
