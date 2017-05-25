@@ -50,3 +50,14 @@ def get_terms_of_glossary(glossary_id):
                             key=lambda c: c['INDEX']),
             'id': glossary['id'],
             'name': glossary['name']}
+
+
+def set_glossary_favorite(glossary_id, body):
+    terms = body['terms']
+    GlossaryConnector().set_favorites(glossary_id, terms)
+    return {'success': True}
+
+
+def get_glossary_favorite(glossary_id):
+    return {'success': True,
+            'terms': [ieml_term_model(t) for t in GlossaryConnector().get_favorites(glossary_id)]}

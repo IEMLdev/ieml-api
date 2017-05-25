@@ -1,6 +1,4 @@
 from handlers.commons import exception_handler
-from handlers.intlekt.edition.visualisation import _ieml_object_to_json
-from ieml.ieml_objects.tools import ieml
 from models.intlekt.edition.lexicon import LexiconConnector
 
 
@@ -56,3 +54,14 @@ def get_words_of_lexicon(lexicon_id):
                 'last_modified': t['LAST_MODIFIED'] } for t in lexicon['words']],
             'id': lexicon['id'],
             'name': lexicon['name']}
+
+
+def set_lexicon_favorite(lexicon_id, body):
+    words = body['words']
+    LexiconConnector().set_favorites(lexicon_id, words)
+    return {'success': True}
+
+
+def get_lexicon_favorite(lexicon_id):
+    return {'success': True,
+            'words': [t for t in LexiconConnector().get_favorites(lexicon_id)]}
