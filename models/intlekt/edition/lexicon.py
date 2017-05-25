@@ -45,7 +45,8 @@ class LexiconConnector(DBConnector):
 
         return {'id': lexicon['_id'],
                 'name': lexicon['name'],
-                'words': [LibraryConnector().get(id=i) for i in lexicon['words']]}
+                'words': [LibraryConnector().get(id=i) for i in lexicon['words']],
+                'favorites': [LibraryConnector().get(id=i) for i in lexicon['favorites']]}
 
     def add_lexicon(self, name):
         """
@@ -56,10 +57,22 @@ class LexiconConnector(DBConnector):
         result = self.lexicon.insert_one({
             '_id': str(uuid.uuid4()),
             'name': name,
-            'words': []
+            'words': [],
+            'favorites': []
         })
 
         return result.inserted_id
+
+    def set_favorites(self, id, words):
+        lexicon = self.get(id=id)
+
+        if any(w not in [w['USL']['IEML'] for w in lexicon['words']] for w in words):
+            raise ValueError("Can't add word to the favorites if it is not already saved to the lexicon.")
+
+        self.lexicon.update_one({'_id': lexicon['id']}, {'$set': {'favorites': _to_library_id(words)}})
+
+    def get_favorites(self, id):
+        return self.get(id=id)['favorites']
 
     def remove_lexicon(self, name=None, id=None):
         """

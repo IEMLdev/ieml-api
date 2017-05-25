@@ -244,7 +244,6 @@ paths:
             properties:
               success:
                 type: boolean
-
     delete:
       operationId: handlers.remove_terms_to_glossary
       tags:
@@ -254,6 +253,69 @@ paths:
       description: |
         Remove a list of terms to the glossary with glossary_id. If a term is not present in this glossary,
         the term is ignored.
+      parameters:
+        - name: glossary_id
+          in: path
+          required: true
+          type: string
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            required:
+              - terms
+            properties:
+              terms:
+                type: array
+                items:
+                  type: string
+      responses:
+        '200':
+          description: Successful response
+          schema:
+            type: object
+            required:
+              - success
+            properties:
+              success:
+                type: boolean
+
+  '/intlekt/glossary/{glossary_id}/favorite':
+    get:
+      operationId: handlers.get_glossary_favorite
+      tags:
+        - Glossary
+      description: |
+        Get a list of all favorited term in this glossary.
+      parameters:
+        - name: glossary_id
+          in: path
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Successful response
+          schema:
+            type: object
+            required:
+              - success
+              - terms
+            properties:
+              success:
+                type: boolean
+              terms:
+                type: array
+                items:
+                  $ref: '#/definitions/term'
+    post:
+      operationId: handlers.set_glossary_favorite
+      tags:
+        - Glossary
+      consumes:
+        - application/json
+      description: |
+        Set the list of favorited term in this glossary.
       parameters:
         - name: glossary_id
           in: path
@@ -475,6 +537,83 @@ paths:
       description: |
         Remove a list of words from the lexicon with lexicon_id. If a word is not present in this lexicon,
         the word is ignored.
+      parameters:
+        - name: lexicon_id
+          in: path
+          required: true
+          type: string
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            required:
+              - words
+            properties:
+              words:
+                type: array
+                items:
+                  type: string
+      responses:
+        '200':
+          description: Successful response
+          schema:
+            type: object
+            required:
+              - success
+            properties:
+              success:
+                type: boolean
+
+  '/intlekt/lexicon/{lexicon_id}/favorite':
+    get:
+      operationId: handlers.get_lexicon_favorite
+      tags:
+        - Lexicon
+      description: |
+        Get a list of all words favorited in the lexicon with this id.
+      parameters:
+        - name: lexicon_id
+          in: path
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Successful response
+          schema:
+            type: object
+            required:
+              - success
+              - words
+            properties:
+              success:
+                type: boolean
+              words:
+                type: array
+                items:
+                  type: object
+                  required:
+                    - ieml
+                    - translations
+                    - id
+                    - last_modified
+                  properties:
+                    ieml:
+                      type: string
+                    id:
+                      type: string
+                    translations:
+                      $ref: "#/definitions/translations"
+                    last_modified:
+                      type: string
+    post:
+      operationId: handlers.set_lexicon_favorite
+      tags:
+        - Lexicon
+      consumes:
+        - application/json
+      description: |
+        Set the favorite list of words for this lexicon.
       parameters:
         - name: lexicon_id
           in: path

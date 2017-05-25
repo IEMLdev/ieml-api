@@ -43,7 +43,8 @@ class GlossaryConnector(DBConnector):
 
         return {'id': glossary['_id'],
                 'name': glossary['name'],
-                'terms': glossary['terms']}
+                'terms': glossary['terms'],
+                'favorites': glossary['favorites']}
 
     def add_glossary(self, name):
         """
@@ -54,7 +55,8 @@ class GlossaryConnector(DBConnector):
         result = self.glossary.insert_one({
             '_id': str(uuid.uuid4()),
             'name': name,
-            'terms': []
+            'terms': [],
+            'favorites': []
         })
 
         return result.inserted_id
@@ -70,6 +72,18 @@ class GlossaryConnector(DBConnector):
 
         result = self.glossary.delete_one({'_id': glossary['id']})
         return result.deleted_count == 1
+
+    def set_favorites(self, id, terms):
+        glossary = self.get(id=id)
+        terms = [str(Term(t)) for t in terms]
+
+        if any(t not in glossary['terms'] for t in terms):
+            raise ValueError("Can't add term to the favorites if it is not already saved to the glossary.")
+
+        self.glossary.update_one({'_id': glossary['id']}, {'$set': {'favorites': terms}})
+
+    def get_favorites(self, id):
+        return self.get(id=id)['favorites']
 
     def add_terms(self, terms, id):
         """
