@@ -1,3 +1,4 @@
+import hashlib
 import uuid
 
 from handlers.commons import exception_handler, ieml_term_model
@@ -43,37 +44,27 @@ def dictionary_dump():
     return {'success': True,
             'terms': sorted((ieml_term_model(t['_id']) for t in terms_db().get_all_terms()), key=lambda c: c['INDEX'])}
 
-
+MAX_TERMS_DICTIONARY = 50000
 def _drupal_process(dico):
     all_uuid = {
-        d['IEML']: uuid.uuid3(uuid.NAMESPACE_X500, d['IEML']) for d in dico
+        d['IEML']: int(hashlib.sha1(d['IEML'].encode()).hexdigest(), 16) % MAX_TERMS_DICTIONARY for d in dico
     }
 
+    assert len(set(all_uuid.values())) == len(all_uuid)
+
     return [{
-        'uuid': all_uuid[d['IEML']],
+        'id': all_uuid[d['IEML']],
         'IEML': d['IEML'],
         'FR': d['FR'],
         'EN': d['EN'],
-        'INDEX': d['INDEX'],
-        'relations': [
-            {
-                'category': 'Inclusion',
-                'type': 'Contained',
-                'terms': [all_uuid[k] for k in all_uuid if k != d['IEML']][:2]
-            },
-            {
-                'category': 'Inclusion',
-                'type': 'Contains',
-                'terms': [all_uuid[k] for k in all_uuid if k != d['IEML']][2:]
-            },
-        ]
+        'INDEX': d['INDEX']
     } for d in dico]
 
 
 @cached("dictionary_dump", 1000)
 @exception_handler
 def drupal_dictionary_dump():
-    dico = [ieml_term_model(t['_id']) for t in terms_db().get_all_terms()][:5]
+    dico = [ieml_term_model(t['_id']) for t in terms_db().get_all_terms()][:10]
     return _drupal_process(dico)
 
 

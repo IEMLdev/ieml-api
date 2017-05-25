@@ -834,8 +834,8 @@ definitions:
 
   drupal_term:
     properties:
-      uuid:
-        type: string
+      id:
+        type: integer
       EN:
         type: string
       FR:
