@@ -5,10 +5,10 @@ from functools import reduce
 from ieml.ieml_objects.terms import Term
 from ieml.ieml_objects.tools import term
 from ieml.paths.tools import path
-from ieml.script.constants import CONTAINS_RELATION
+from ieml.script.constants import CONTAINS_RELATION, MAX_SIZE_HEADER, MAX_SINGULAR_SEQUENCES
 from ieml.usl.tools import replace_paths
 from models.commons import DBConnector, generate_tags, check_tags
-from models.constants import TEMPLATES_COLLECTION, TAG_LANGUAGES, MAX_SIZE_TEMPLATE
+from models.constants import TEMPLATES_COLLECTION, TAG_LANGUAGES
 from models.usls.library import usl_index
 
 
@@ -43,9 +43,9 @@ class TemplatesConnector(DBConnector):
 
         template_size = reduce(mul, map(len, paradigms.values()))
 
-        if template_size > MAX_SIZE_TEMPLATE:
+        if template_size > MAX_SINGULAR_SEQUENCES:
             raise ValueError("Can't generate this template, maximum size of %d and the template size is %d."%
-                             (MAX_SIZE_TEMPLATE, template_size))
+                             (MAX_SINGULAR_SEQUENCES, template_size))
 
         if any(not rels for rels in paradigms.values()):
             errors = filter(lambda e: not paradigms[e], paradigms)
