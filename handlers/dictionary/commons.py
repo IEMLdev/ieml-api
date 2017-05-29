@@ -1,27 +1,26 @@
 from bidict import bidict
-from ieml.ieml_objects.dictionary import RELATION_TYPES_TO_INDEX
 
 
 relation_name_table = bidict({
-    "Crossed siblings": "CROSSED",
-    "Associated siblings": "ASSOCIATED",
-    "Twin siblings": "TWIN",
-    "Opposed siblings": "OPPOSED",
+    "Crossed siblings": "crossed",
+    "Associated siblings": "associated",
+    "Twin siblings": "twin",
+    "Opposed siblings": "opposed",
 
-    # ancestor : Etymologie
-    "Ancestors in mode": "FATHER.MODE",
-    "Ancestors in attribute": "FATHER.ATTRIBUTE",
-    "Ancestors in substance": "FATHER.SUBSTANCE",
+    # ancestor : Etymology
+    "Ancestors in mode": "father_mode",
+    "Ancestors in attribute": "father_attribute",
+    "Ancestors in substance": "father_substance",
 
-    "Descendents in mode": "CHILDREN.MODE",
-    "Descendents in attribute": "CHILDREN.ATTRIBUTE",
-    "Descendents in substance": "CHILDREN.SUBSTANCE",
+    "Descendents in mode": "child_mode",
+    "Descendents in attribute": "child_attribute",
+    "Descendents in substance": "child_substance",
 
     # Hyperonymes
-    "Contained in": "CONTAINED",
+    "Contained in": "contained",
     "Belongs to Paradigm": 'ROOT',
     # Hyponymes
-    "Contains": "CONTAINS"
+    "Contains": "contains"
 })
 
 relations_order = {

@@ -2,7 +2,6 @@ import json
 from ieml.ieml_objects.dictionary import Dictionary, save_dictionary, DICTIONARY_FOLDER
 from ieml.script.operator import script
 from ieml.script.tools import factorize
-from models.terms.terms import TermsConnector as tc
 
 
 def load_dictionary_from_db():
@@ -64,10 +63,31 @@ def add_terms_from_allieml(file):
     save_dictionary(DICTIONARY_FOLDER)
 
 
+def convert_inhibitions():
+    OLD_TO_NEW = {
+        'FATHER.SUBSTANCE': 'father_substance',
+        'FATHER.ATTRIBUTE': 'father_attribute',
+        'FATHER.MODE': 'father_mode',
+
+        'CHILDREN.SUBSTANCE': 'child_substance',
+        'CHILDREN.ATTRIBUTE': 'child_attribute',
+        'CHILDREN.MODE': 'child_mode',
+
+        'OPPOSED': 'opposed',
+        'CROSSED': "crossed",
+        'ASSOCIATED': "associated",
+        'TWIN': "twin"
+    }
+
+    Dictionary().inhibitions = {t: [OLD_TO_NEW[s] for s in Dictionary().inhibitions[t]] for t in Dictionary().inhibitions}
+    save_dictionary(DICTIONARY_FOLDER)
+
+
 
 if __name__ == '__main__':
-    load_dictionary_from_db()
-    # print(os.getcwd())
     # load_dictionary_from_db()
-    # save_dictionary("../data/dictionary")
-    add_terms_from_allieml('../data/allieml.1')
+    # # print(os.getcwd())
+    # # load_dictionary_from_db()
+    # # save_dictionary("../data/dictionary")
+    # add_terms_from_allieml('../data/allieml.1')
+    convert_inhibitions()

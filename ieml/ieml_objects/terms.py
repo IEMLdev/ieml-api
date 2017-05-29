@@ -1,5 +1,6 @@
 from ieml.ieml_objects.commons import IEMLObjects
 from ieml.script.operator import script
+from ieml.script.script import Script
 
 
 class Term(IEMLObjects):
@@ -52,3 +53,10 @@ class Term(IEMLObjects):
     @property
     def tables(self):
         return self.script.tables
+
+    def __contains__(self, item):
+        from ieml.ieml_objects.tools import term
+        if not isinstance(item, Term):
+            item = term(item)
+
+        return item.script in self.script

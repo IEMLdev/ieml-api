@@ -56,6 +56,8 @@ class RankComputationTest(unittest.TestCase):
         term = self.dic.terms[sc("O:M:.M:M:.-")]
         self.assertEquals(term.rank, 1)
 
+    def test_rank0(self):
+        self.assertListEqual([t for t in Dictionary() if t.rank == 0], sorted(Dictionary().roots))
 
 if __name__ == '__main__':
     unittest.main()

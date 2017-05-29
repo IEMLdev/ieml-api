@@ -41,3 +41,4 @@ class TestRelations(TestCase):
 
     def test_inhibit(self):
         rq._do_inhibition(rq._inhibitions())
+

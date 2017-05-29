@@ -1,34 +1,32 @@
 import json
-from collections import defaultdict, namedtuple
+from collections import defaultdict
 from bidict import bidict
 import numpy as np
 import os
 
 from ieml.commons import LANGUAGES
+from ieml.ieml_objects.relations import Relations, RELATIONS
 from ieml.ieml_objects.terms import Term
 from ieml.script.constants import MAX_LAYER
 from ieml.script.operator import script
 from ieml.script.script import AdditiveScript, NullScript, MultiplicativeScript
 from metaclasses import Singleton
 
-Relations = namedtuple('Relations', ['contains', 'contained', 'father', 'children',
-                                     'opposed', 'associated', 'twins', 'crossed'])
 
-
-RELATION_TYPES_TO_INDEX = bidict({
-    'CONTAINS': 0,
-    'CONTAINED': 1,
-    'FATHER.SUBSTANCE': 2,
-    'FATHER.ATTRIBUTE': 3,
-    'FATHER.MODE': 4,
-    'CHILDREN.SUBSTANCE': 5,
-    'CHILDREN.ATTRIBUTE': 6,
-    'CHILDREN.MODE': 7,
-    'OPPOSED': 8,
-    'ASSOCIATED':9,
-    'TWIN': 10,
-    'CROSSED': 11
-})
+# RELATION_TYPES_TO_INDEX = bidict({
+#     'CONTAINS': 0,
+#     'CONTAINED': 1,
+#     'FATHER.SUBSTANCE': 2,
+#     'FATHER.ATTRIBUTE': 3,
+#     'FATHER.MODE': 4,
+#     'CHILDREN.SUBSTANCE': 5,
+#     'CHILDREN.ATTRIBUTE': 6,
+#     'CHILDREN.MODE': 7,
+#     'OPPOSED': 8,
+#     'ASSOCIATED':9,
+#     'TWIN': 10,
+#     'CROSSED': 11
+# })
 
 DICTIONARY_FOLDER = os.path.join(os.path.dirname(__file__), "../../data/dictionary")
 
@@ -63,6 +61,7 @@ class Dictionary(metaclass=Singleton):
     def define_terms(self):
         for i, t in enumerate(self.index):
             t.index = i
+            t.relations = Relations(term=t, dictionary=self)
 
         for r, v in self.roots.items():
             for t in v:
@@ -78,7 +77,7 @@ class Dictionary(metaclass=Singleton):
             for t1 in v:
                 t1.parent = t0
 
-        self._set_terms_relations()
+
 
     @property
     def singular_sequences(self):
@@ -299,12 +298,14 @@ class Dictionary(metaclass=Singleton):
 
         def _define(term, rank, term_src, defined):
             self.ranks[term] = rank
+
             defined.add(term)
             self.partitions[term_src].add(term)
 
             for t in term.script.tables:
                 t_term = self.terms[t.paradigm]
                 tables[t_term] += [t]
+
                 self.ranks[t_term] = rank
                 defined.add(t_term)
                 self.partitions[term_src].add(t_term)
@@ -353,6 +354,9 @@ class Dictionary(metaclass=Singleton):
 
                 _define(term, rank, term1, defined)
 
+            self.ranks[root] = 0
+
+
     def __len__(self):
         return len(self.terms)
 
@@ -390,9 +394,9 @@ class Dictionary(metaclass=Singleton):
     def rel(self, type, term=None):
         if term:
             return [self.index[j] for j in
-                    np.where(self.relations[RELATION_TYPES_TO_INDEX[type], term.index, :] == 1)[0]]
+                    np.where(self.relations[RELATIONS.index(type), term.index, :] == 1)[0]]
         else:
-            return self.relations[RELATION_TYPES_TO_INDEX[type], :, :]
+            return self.relations[RELATIONS.index(type), :, :]
 
     def compute_relations(self):
         for i, t in enumerate(self.index):
@@ -402,13 +406,18 @@ class Dictionary(metaclass=Singleton):
         father, children = self._compute_father()
         siblings = self._compute_siblings()
 
-        self.relations = np.concatenate((contains[None, :, :],
-                                         contained[None, :, :],
-                                         father,
-                                         children,
-                                         siblings), axis=0).astype(np.bool)
+        self.relations = np.stack((contains,
+                                   contained,
+                                   father[0, :, :],
+                                   children[0, :, :],
+                                   father[1, :, :],
+                                   children[1, :, :],
+                                   father[2, :, :],
+                                   children[2, :, :],
+                                   *siblings), axis=0).astype(np.bool)
         self._do_inhibitions()
-        self._set_terms_relations()
+        for t in self:
+            t.relations.clear()
 
     def _do_inhibitions(self):
         print("\t[*] Performing inhibitions")
@@ -418,7 +427,7 @@ class Dictionary(metaclass=Singleton):
             indexes = [t.index for t in self.roots[r]]
 
             for rel in inhibitions:
-                self.relations[RELATION_TYPES_TO_INDEX[rel], indexes, indexes] = 0
+                self.relations[RELATIONS.index(rel), indexes, indexes] = 0
 
     def _compute_contains(self):
         print("\t[*] Computing contains/contained relations")
@@ -472,8 +481,8 @@ class Dictionary(metaclass=Singleton):
         # 1 dim => the sibling type
         #  -0 opposed
         #  -1 associated
-        #  -2 twin
-        #  -3 crossed
+        #  -2 crossed
+        #  -3 twin
         def _opposed_sibling(s0, s1):
             return s0.children[0] == s1.children[1] and s0.children[1] == s1.children[0]
 
@@ -511,41 +520,13 @@ class Dictionary(metaclass=Singleton):
                         siblings[1, t1.index, t0.index] = 1
 
                     if _crossed_sibling(t0.script, t1.script):
-                        siblings[3, t0.index, t1.index] = 1
-                        siblings[3, t1.index, t0.index] = 1
+                        siblings[2, t0.index, t1.index] = 1
+                        siblings[2, t1.index, t0.index] = 1
 
         twin_indexes = [t.index for t in _twins]
-        siblings[2, twin_indexes, twin_indexes] = 1
+        siblings[3, twin_indexes, twin_indexes] = 1
 
         return siblings
-
-    def _set_terms_relations(self):
-        _res = defaultdict(dict)
-
-        for i in range(len(self)):
-            t = self.index[i]
-            _res[t]['contained'] = [self.index[j] for j in np.where(self.rel('CONTAINED')[i, :] == 1)[0]]
-            _res[t]['contains'] = [self.index[j] for j in np.where(self.rel('CONTAINS')[i, :] == 1)[0]]
-
-            _res[t]['father'] = [[], [], []]
-            _res[t]['children'] = [[], [], []]
-            for k in range(3):
-                _res[t]['father'][k] = [self.index[j] for j in
-                               np.where(self.relations[RELATION_TYPES_TO_INDEX['FATHER.SUBSTANCE'] + k, i, :] == 1)[0]]
-                _res[t]['children'][k] = [self.index[j] for j in
-                                 np.where(self.relations[RELATION_TYPES_TO_INDEX['CHILDREN.SUBSTANCE'] + k, i, :] == 1)[0]]
-
-            _res[t]['opposed'] = [self.index[j] for j in np.where(self.rel("OPPOSED")[i, :] == 1)[0]]
-            _res[t]['associated'] = [self.index[j] for j in np.where(self.rel("ASSOCIATED")[i, :] == 1)[0]]
-            _res[t]['crossed'] = [self.index[j] for j in np.where(self.rel("CROSSED")[i, :] == 1)[0]]
-            _res[t]['twins'] = []
-
-        _twins = [self.index[j] for j in np.where(self.rel('TWIN')[:, :] == 1)[0]]
-        for t in _twins:
-            _res[t]['twins'] = _twins
-
-        for t in _res:
-            t.relations = Relations(**_res[t])
 
     def _add_term(self, term, root_p, translation):
         self.set_translation(term, translation)

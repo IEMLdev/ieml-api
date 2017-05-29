@@ -9,11 +9,7 @@ class InvalidPathException(Exception):
         return "Can't access %s in %s, the path is invalid."%(str(self.path), str(self.element))
 
 
-class ParserErrors(Exception):
-    pass
-
-
-class CannotParse(ParserErrors):
+class CannotParse(Exception):
     def __init__(self, s):
         self.s = s
 
