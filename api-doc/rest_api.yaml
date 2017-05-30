@@ -725,7 +725,6 @@ paths:
             type: object
             required:
               - ieml
-              - translations
             properties:
               ieml:
                 type: string
