@@ -96,6 +96,7 @@ class TestUSLsModel(ModelTestCase):
         self.assertEqual(self.library.query(translations=tags).count(), 1)
 
     def test_add_notranslations(self):
+        self.library.drop()
         _usl0 = random_usl()
         self.library.save(_usl0, {"FR":"", "EN": ""})
         _usl1 = random_usl()
