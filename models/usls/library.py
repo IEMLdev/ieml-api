@@ -6,7 +6,7 @@ import uuid
 import itertools
 
 from ieml.usl.tools import usl as _usl
-from models.commons import DBConnector, check_tags, create_translations_indexes
+from models.commons import DBConnector, check_tags, create_translations_indexes, TAG_LANGUAGES
 from models.constants import LIBRARY_COLLECTION
 
 
@@ -29,9 +29,13 @@ class LibraryConnector(DBConnector):
 
         self._check_tags(translations)
 
+        for l in TAG_LANGUAGES:
+            if translations[l] == "":
+                translations[l] = None
+
         usl_id = self._generate_id()
 
-        self.usls.insert({
+        self.usls.insert_one({
             '_id': usl_id,
             'USL': {
                 'INDEX': usl_index(usl),
@@ -185,7 +189,7 @@ class LibraryConnector(DBConnector):
         if translations:
             self._check_tags(translations, all_present=False)
             for l in translations:
-                update['TRANSLATIONS.%s'%l] = translations[l]
+                update['TRANSLATIONS.%s'%l] = translations[l] if translations[l] != "" else None
 
         entry = self.get(id=str(id))
         if entry is None:
