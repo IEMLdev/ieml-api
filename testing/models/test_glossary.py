@@ -35,3 +35,8 @@ class TestModel(ModelTestCase):
         self.assertSetEqual(set(ids), set(g['id'] for g in glossaries))
 
 
+    def test_double_add(self):
+        self.glossary.drop()
+        self.glossary.add_glossary('test')
+        with self.assertRaises(ValueError):
+            self.glossary.add_glossary('test')

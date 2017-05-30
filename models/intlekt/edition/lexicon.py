@@ -54,6 +54,9 @@ class LexiconConnector(DBConnector):
         :param name: name of the new lexicon
         :return: the id of the newly created lexicon
         """
+        if self.lexicon.find({'name':name}).count() != 0:
+            raise ValueError("Lexicon with name '%s' is already present."%name)
+
         result = self.lexicon.insert_one({
             '_id': str(uuid.uuid4()),
             'name': name,
