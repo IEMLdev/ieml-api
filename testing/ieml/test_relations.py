@@ -1,6 +1,7 @@
 from unittest.case import TestCase
 
-from ieml.ieml_objects.dictionary import Dictionary, RELATION_TYPES_TO_INDEX
+from ieml.ieml_objects.dictionary import Dictionary
+from ieml.ieml_objects.relations import RELATIONS
 from ieml.ieml_objects.tools import term
 from ieml.script.tools import inverse_relation
 
@@ -42,3 +43,22 @@ class TestRelations(TestCase):
     def test_inhibit(self):
         rq._do_inhibition(rq._inhibitions())
 
+
+    def test_relations_graph(self):
+        m = Dictionary().relations_graph(['etymology', 'inclusion'])
+        s = len(Dictionary())
+        self.assertEqual(m.shape, (s, s))
+
+
+    def test_inhibitions(self):
+        for t in Dictionary():
+            # if Dictionary().inhibitions[t]:
+            for reltype in t.inhibitions:
+                self.assertTupleEqual(t.relations[reltype], (),
+                                     "Term %s has relations %s. Must be inhibited"%(str(t), reltype))
+
+    def test_relations_matrix(self):
+        for reltype in RELATIONS:
+            self.assertEqual(Dictionary().rel(reltype).min(), 0)
+            self.assertEqual(Dictionary().rel(reltype).max(), 1,
+                             "%s -> max %d"%(reltype, Dictionary().rel(reltype).max()))

@@ -1,8 +1,12 @@
 import json
 from collections import defaultdict
+from itertools import product
+
 from bidict import bidict
 import numpy as np
 import os
+
+from scipy.sparse.csr import csr_matrix
 
 from ieml.commons import LANGUAGES
 from ieml.ieml_objects.relations import Relations, RELATIONS
@@ -64,20 +68,19 @@ class Dictionary(metaclass=Singleton):
             t.relations = Relations(term=t, dictionary=self)
 
         for r, v in self.roots.items():
+            r.inhibitions = self.inhibitions[r]
             for t in v:
                 t.root = r
 
         for t in self.terms.values():
             t.translation = {l: self.translations[l][t] for l in self.translations}
-            t.inhibitions = []
+            t.inhibitions = t.root.inhibitions
             t.rank = self.ranks[t]
 
         for t0, v in self.partitions.items():
             t0.partitions = v
             for t1 in v:
                 t1.parent = t0
-
-
 
     @property
     def singular_sequences(self):
@@ -129,71 +132,70 @@ class Dictionary(metaclass=Singleton):
 
         self._index = None
 
-    def remove_term(self, term):
-        if not isinstance(term, Term) or not term.defined or term not in self.index:
-            raise ValueError("The term %s is not defined in the dictionary."%str(term))
+    # def remove_term(self, term):
+    #     if not isinstance(term, Term) or not term.defined or term not in self.index:
+    #         raise ValueError("The term %s is not defined in the dictionary."%str(term))
+    #
+    #     to_remove = [term]
+    #
+    #     # can;t remove singular sequences
+    #     if not term.script.paradigm:
+    #         raise ValueError("Can't remove the singular sequence %s. Remove the root paradigm %s instead."%
+    #                          (str(term), str(self.get_root(term.script))))
+    #
+    #     if term in self.partitions:
+    #         raise ValueError("Can't remove the paradigm %s, remove his subtables first (%s)." %
+    #                          (str(term), ', '.join(map(str, self.partitions[term]))))
+    #
+    #     # if root make sure it is empty
+    #     if term in self.roots:
+    #         paradigms = [p for p in self.rel('CONTAINED', term) if p != term and p.script.paradigm]
+    #         if paradigms:
+    #             raise ValueError("Can't remove a non empty root paradigm, remove first the following terms : (%s)"%
+    #                              ', '.join([str(p) for p in paradigms]))
+    #
+    #         to_remove.extend([self.terms[ss] for ss in term.script.singular_sequences])
+    #
+    #         del self.roots[term]
+    #         del self.inhibitions[term]
+    #
+    #     self._index = None
+    #     self._layers = None
+    #     self._singular_sequences = None
+    #
+    #     for t in to_remove:
+    #         del self.terms[t.script]
+    #         for l in LANGUAGES:
+    #             del self.translations[l][t]
+    #         if t.script in self.singular_sequences_map:
+    #             del self.singular_sequences_map[t.script]
+    #
+    #         if t.parent in self.partitions:
+    #             self.partitions[t.parent].remove(t)
+    #
+    #             if not self.partitions[t.parent]:
+    #                 del self.partitions[t.parent]
+    #
+    #     self.relations = None
+    #     self.ranks = None
 
-        to_remove = [term]
-
-        # can;t remove singular sequences
-        if not term.script.paradigm:
-            raise ValueError("Can't remove the singular sequence %s. Remove the root paradigm %s instead."%
-                             (str(term), str(self.get_root(term.script))))
-
-        if term in self.partitions:
-            raise ValueError("Can't remove the paradigm %s, remove his subtables first (%s)." %
-                             (str(term), ', '.join(map(str, self.partitions[term]))))
-
-        # if root make sure it is empty
-        if term in self.roots:
-            paradigms = [p for p in self.rel('CONTAINED', term) if p != term and p.script.paradigm]
-            if paradigms:
-                raise ValueError("Can't remove a non empty root paradigm, remove first the following terms : (%s)"%
-                                 ', '.join([str(p) for p in paradigms]))
-
-            to_remove.extend([self.terms[ss] for ss in term.script.singular_sequences])
-
-            del self.roots[term]
-            del self.inhibitions[term]
-
-        self._index = None
-        self._layers = None
-        self._singular_sequences = None
-
-        for t in to_remove:
-            del self.terms[t.script]
-            for l in LANGUAGES:
-                del self.translations[l][t]
-            if t.script in self.singular_sequences_map:
-                del self.singular_sequences_map[t.script]
-
-            if t.parent in self.partitions:
-                self.partitions[t.parent].remove(t)
-
-                if not self.partitions[t.parent]:
-                    del self.partitions[t.parent]
-
-        self.relations = None
-        self.ranks = None
-
-    def update_term(self, term, inhibitions=None, translation=None):
-        if term not in self.index:
-            raise ValueError("Term %s is not defined in the dictionary"%str(term))
-
-        if inhibitions is not None:
-            if term not in self.roots:
-                raise ValueError("Term %s is not root, can only update inhibitions on root paradigms"%str(term))
-
-            self.inhibitions[term] = inhibitions
-            self._do_inhibitions()
-
-        if translation is not None:
-            for l in translation:
-                if l not in LANGUAGES:
-                    continue
-                self.translations[l] = translation[l]
-
-        self.define_terms()
+    # def update_term(self, term, inhibitions=None, translation=None):
+    #     if term not in self.index:
+    #         raise ValueError("Term %s is not defined in the dictionary"%str(term))
+    #
+    #     if inhibitions is not None:
+    #         if term not in self.roots:
+    #             raise ValueError("Term %s is not root, can only update inhibitions on root paradigms"%str(term))
+    #
+    #         self.inhibitions[term] = inhibitions
+    #
+    #     if translation is not None:
+    #         for l in translation:
+    #             if l not in LANGUAGES:
+    #                 continue
+    #             self.translations[l] = translation[l]
+    #
+    #     self.define_terms()
 
     def compute_ranks(self):
         print("\t[*] Computing ranks")
@@ -356,7 +358,6 @@ class Dictionary(metaclass=Singleton):
 
             self.ranks[root] = 0
 
-
     def __len__(self):
         return len(self.terms)
 
@@ -393,44 +394,89 @@ class Dictionary(metaclass=Singleton):
 
     def rel(self, type, term=None):
         if term:
-            return [self.index[j] for j in
-                    np.where(self.relations[RELATIONS.index(type), term.index, :] == 1)[0]]
+            return [self.index[j] for j in self.relations[RELATIONS.index(type)][term.index, :].indices]
         else:
-            return self.relations[RELATIONS.index(type), :, :]
+            return self.relations[RELATIONS.index(type)][:, :]
+
+    def relations_graph(self, relations_types):
+        return np.sum([self.relations[RELATIONS.index(reltype)] for reltype in relations_types])
 
     def compute_relations(self):
+        print("\t[*] Computing relations")
+
         for i, t in enumerate(self.index):
             t.index = i
 
-        contains, contained = self._compute_contains()
-        father, children = self._compute_father()
+        _relations = {}
+        contains = self._compute_contains()
+        _relations['contains'] = contains
+        _relations['contained'] = np.transpose(_relations['contains'])
+
+        father = self._compute_father()
+
+        for i, r in enumerate(['_substance', '_attribute', '_mode']):
+            _relations['father' + r] = father[i, :, :]
+            # _relations['child' + r] = children[i, :, :]
+
         siblings = self._compute_siblings()
+        _relations['opposed'] = siblings[0]
+        _relations['associated'] = siblings[1]
+        _relations['crossed'] = siblings[2]
+        _relations['twin'] = siblings[3]
 
-        self.relations = np.stack((contains,
-                                   contained,
-                                   father[0, :, :],
-                                   children[0, :, :],
-                                   father[1, :, :],
-                                   children[1, :, :],
-                                   father[2, :, :],
-                                   children[2, :, :],
-                                   *siblings), axis=0).astype(np.bool)
-        self._do_inhibitions()
-        for t in self:
-            t.relations.clear()
+        self._do_inhibitions(_relations)
 
-    def _do_inhibitions(self):
-        print("\t[*] Performing inhibitions")
+        for i, r in enumerate(['_substance', '_attribute', '_mode']):
+            _relations['child' + r] = np.transpose(_relations['father' + r])
+
+        _relations['siblings'] = sum(siblings)
+        _relations['inclusion'] = _relations['contains'] + _relations['contained']
+        _relations['father'] = _relations['father_substance'] + _relations['father_attribute'] + _relations['father_mode']
+        _relations['child'] = _relations['child_substance'] + _relations['child_attribute'] + _relations['child_mode']
+        _relations['etymology'] = _relations['father'] + _relations['child']
+
+        for i, t in enumerate(self._compute_table_rank(_relations['contains'])):
+            _relations['table_%d'%i] = t
+
+        missing = {s for s in RELATIONS if s not in _relations}
+        if missing:
+            raise ValueError("Missing relations : {%s}"%", ".join(missing))
+
+        self.relations = []
+        for reltype in RELATIONS:
+            self.relations.append(csr_matrix(_relations[reltype]))
+
+    def _compute_table_rank(self, contains):
+        print("\t\t[*] Computing tables relations")
+
+        _tables_rank = np.zeros((6, len(self), len(self)))
+
+        for i, t in enumerate(self.index):
+            if t.script.paradigm and len(t.script.tables) == 1 and t.script.tables[0].dim < 3:
+                contained_terms = np.where(contains[i, :] == 1)[0]
+                index0, index1 = list(zip(*product(contained_terms, repeat=2)))
+                _tables_rank[t.rank, index0, index1] = 1
+
+        for root in self.roots:
+            indexes = [p.index for p in self.roots[root]]
+            index0, index1 = list(zip(*product(indexes, repeat=2)))
+            _tables_rank[0,index0, index1] = 1
+
+        return _tables_rank
+
+    def _do_inhibitions(self, _relations):
+        print("\t\t[*] Performing inhibitions")
 
         for r in self.roots:
             inhibitions = self.inhibitions[r]
             indexes = [t.index for t in self.roots[r]]
+            # index0, index1 = list(zip(*product(indexes, repeat=2)))
 
             for rel in inhibitions:
-                self.relations[RELATIONS.index(rel), indexes, indexes] = 0
+                _relations[rel][indexes, :] = 0
 
     def _compute_contains(self):
-        print("\t[*] Computing contains/contained relations")
+        print("\t\t[*] Computing contains/contained relations")
         # contain/contained
         contains = np.diag(np.ones(len(self), dtype=np.int8))
         for r_p, v in self.roots.items():
@@ -441,11 +487,10 @@ class Dictionary(metaclass=Singleton):
                            [k.index for k in paradigms if k.script in p.script]
                 contains[p.index, _contains] = 1
 
-        contained = contains.transpose()
-        return [contains, contained]
+        return contains
 
     def _compute_father(self):
-        print("\t[*] Computing father/child relations")
+        print("\t\t[*] Computing father/child relations")
 
         def _recurse_script(script, res_indexes):
             if isinstance(script, NullScript):
@@ -460,7 +505,7 @@ class Dictionary(metaclass=Singleton):
             for c in script.children:
                 _recurse_script(c, res_indexes)
 
-        father = np.zeros((3, len(self), len(self)))
+        father = np.zeros((3, len(self), len(self)), dtype=np.int8)
         for t in self.terms.values():
             s = t.script
 
@@ -471,10 +516,11 @@ class Dictionary(metaclass=Singleton):
                 for i in range(3):
                     res_indexes = []
                     _recurse_script(sub_s.children[i], res_indexes)
-                    father[i, t.index, res_indexes] = 1
+                    for j in res_indexes:
+                        father[i, t.index, j] = 1
 
-        children = np.transpose(father, (0, 2, 1))
-        return [father, children]
+        # children = np.transpose(father, (0, 2, 1))
+        return father
 
     def _compute_siblings(self):
         # siblings
@@ -484,7 +530,8 @@ class Dictionary(metaclass=Singleton):
         #  -2 crossed
         #  -3 twin
         def _opposed_sibling(s0, s1):
-            return s0.children[0] == s1.children[1] and s0.children[1] == s1.children[0]
+            return not s0.empty and not s1.empty and\
+                   s0.children[0] == s1.children[1] and s0.children[1] == s1.children[0]
 
         def _associated_sibling(s0, s1):
             return s0.children[0] == s1.children[0] and \
@@ -492,25 +539,28 @@ class Dictionary(metaclass=Singleton):
                    s0.children[2] != s1.children[2]
 
         def _crossed_sibling(s0, s1):
-            return s0.layer > 2 and \
+            return s0.layer >= 2 and \
                    _opposed_sibling(s0.children[0], s1.children[1]) and \
                    _opposed_sibling(s0.children[1], s1.children[0])
 
-        siblings = np.zeros((4, len(self), len(self)))
+        siblings = np.zeros((4, len(self), len(self)), dtype=np.int8)
 
-        print("\t[*] Computing siblings relations")
+        print("\t\t[*] Computing siblings relations")
 
-        _twins = []
-        for l in self.layers[1:]:
-            for i, t0 in enumerate(l):
+        for root in self.roots:
+            if root.script.layer == 0:
+                continue
+            _twins = []
+
+            for i, t0 in enumerate(self.roots[root]):
                 if not isinstance(t0.script, MultiplicativeScript):
                     continue
 
                 if t0.script.children[0] == t0.script.children[1]:
                     _twins.append(t0)
 
-                for t1 in [t for t in l[i:] if isinstance(t.script, MultiplicativeScript)]:
-
+                for t1 in [t for j, t in enumerate(self.roots[root])
+                           if j > i and isinstance(t.script, MultiplicativeScript)]:
                     if _opposed_sibling(t0.script, t1.script):
                         siblings[0, t0.index, t1.index] = 1
                         siblings[0, t1.index, t0.index] = 1
@@ -523,8 +573,11 @@ class Dictionary(metaclass=Singleton):
                         siblings[2, t0.index, t1.index] = 1
                         siblings[2, t1.index, t0.index] = 1
 
-        twin_indexes = [t.index for t in _twins]
-        siblings[3, twin_indexes, twin_indexes] = 1
+            twin_indexes = [t.index for t in _twins]
+
+            if twin_indexes:
+                index0, index1 = list(zip(*product(twin_indexes, repeat=2)))
+                siblings[3, index0, index1] = 1
 
         return siblings
 
@@ -617,5 +670,7 @@ def load_dictionary(directory, dictionary):
 
 if __name__ == '__main__':
     Dictionary().compute_relations()
+    Dictionary().compute_ranks()
+
     save_dictionary(DICTIONARY_FOLDER)
-    print(list(map(str, Dictionary().terms["i.B:.-+u.M:.-O:.-'"].relations.father[0])))
+    # print(list(map(str, Dictionary().terms["i.B:.-+u.M:.-O:.-'"].relations.father[0])))
