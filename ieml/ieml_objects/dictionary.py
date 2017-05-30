@@ -399,6 +399,12 @@ class Dictionary(metaclass=Singleton):
             return self.relations[RELATIONS.index(type)][:, :]
 
     def relations_graph(self, relations_types):
+        if isinstance(relations_types, dict):
+            res = np.zeros((len(self), len(self)), dtype=np.float)
+            for reltype in relations_types:
+                res += self.relations[RELATIONS.index(reltype)] * relations_types[reltype]
+            return res
+
         return np.sum([self.relations[RELATIONS.index(reltype)] for reltype in relations_types])
 
     def compute_relations(self):
@@ -505,7 +511,7 @@ class Dictionary(metaclass=Singleton):
             for c in script.children:
                 _recurse_script(c, res_indexes)
 
-        father = np.zeros((3, len(self), len(self)), dtype=np.int8)
+        father = np.zeros((3, len(self), len(self)), dtype=np.float32)
         for t in self.terms.values():
             s = t.script
 
@@ -517,9 +523,8 @@ class Dictionary(metaclass=Singleton):
                     res_indexes = []
                     _recurse_script(sub_s.children[i], res_indexes)
                     for j in res_indexes:
-                        father[i, t.index, j] = 1
+                        father[i, t.index, j] = 1.0/abs(t.script.layer - self.index[j].script.layer)
 
-        # children = np.transpose(father, (0, 2, 1))
         return father
 
     def _compute_siblings(self):

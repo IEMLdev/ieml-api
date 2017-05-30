@@ -41,7 +41,7 @@ def dictionary_dump():
             'terms': sorted((ieml_term_model(t) for t in Dictionary()), key=lambda c: c['INDEX'])}
 
 MAX_TERMS_DICTIONARY = 50000
-Drupal_dico = [ieml_term_model(t['_id']) for t in Dictionary()][:30]
+Drupal_dico = [ieml_term_model(t) for t in Dictionary()][:30]
 all_uuid = {
     d['IEML']: 1000 + int(hashlib.sha1(d['IEML'].encode()).hexdigest(), 16) % MAX_TERMS_DICTIONARY for d in
     Drupal_dico

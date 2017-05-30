@@ -23,7 +23,21 @@ def get_distance_m():
     if os.path.isfile(FILE) and os.path.isfile(FILE_w):
         return np.load(FILE), np.load(FILE_w)
     else:
-        graph_ethy = Dictionary().relations_graph(['etymology', 'inclusion', 'siblings', 'table_0', 'table_1', 'table_2', 'table_3', 'table_4', 'table_5']).astype(np.float32).todense()
+        graph_ethy = Dictionary().relations_graph({
+            'etymology': 2.0,
+            'inclusion': 1.0,
+            'siblings' : 1.0,
+            'table_0'  : 0.5,
+            'table_1'  : 1.0,
+            'table_2'  : 1.0,
+            'table_3'  : 1.0,
+            'table_4'  : 1.0,
+            'table_5'  : 1.0
+        }).astype(np.float32)
+        # graph_ethy_m = Dictionary().relations_graph(['etymology', 'inclusion', 'siblings',
+        #                                            'table_0', 'table_1', 'table_2', 'table_3',
+        #                                            'table_4', 'table_5']).astype(np.float32).todense()
+
         graph_ethy = 1.0/graph_ethy
         graph_ethy[graph_ethy == np.inf] = 0
 
@@ -69,15 +83,16 @@ def _max_rank(term0, term1):
     if 'table_1' in rel_table:
         return 3
 
-    return 4 + abs(term0.script.layer - term1.script.layer)
+    return 4
+    # return 4 + abs(term0.script.layer - term1.script.layer)
 
 
 def distance(term0, term1):
     if term0 == term1:
         return 0.,0.,0.
 
-    if term0.script.paradigm or term1.script.paradigm:
-        raise ValueError("Not implemented for paradigms")
+    # if term0.script.paradigm or term1.script.paradigm:
+    #     raise ValueError("Not implemented for paradigms")
 
     return _distance_etymology(term0, term1), _nb_relations(term0, term1), _max_rank(term0, term1)
 
@@ -86,7 +101,7 @@ def distance(term0, term1):
 
 
 
-def test_term(t):
+def _test_term(t):
     print("Distance from term %s -- %s"%(str(t), t.translation['fr']))
     other = sorted((distance(t, t1) ,t1) for t1 in Dictionary() if not t1.script.paradigm)
     kkk = [t for t in other if t[0][0] <= 1]
@@ -97,7 +112,9 @@ def test_term(t):
 
 if __name__ == '__main__':
 
-    test_term(term("j.-'U:.-'k.o.-t.o.-',"))
+    _test_term(term("c.-'A:M:.-'n.o.-s.o.-',"))
+    print(term("j.-'U:.-'k.o.-t.o.-',").relations.to(term("[j.-'B:.-'k.o.-t.o.-',]")))
+    print(distance(term("j.-'U:.-'k.o.-t.o.-',"), term("k.o.-t.o.-'")))
 
 
     # print(distance(term("E:U:.k.-"), term("E:U:.m.-")))
