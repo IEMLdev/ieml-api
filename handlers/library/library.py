@@ -5,7 +5,12 @@ from models.usls.library import LibraryConnector
 
 @exception_handler
 def save_to_library(body):
-    id = LibraryConnector().save(body['ieml'], body['translations'])
+    if 'translations' in body:
+        translations = body['translations']
+    else:
+        translations = {'FR': '', 'EN': ''}
+
+    id = LibraryConnector().save(body['ieml'], translations)
     return {'success': True, 'id': id}
 
 
