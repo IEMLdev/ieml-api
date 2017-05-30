@@ -53,6 +53,10 @@ class GlossaryConnector(DBConnector):
         :param name: name of the new glossary
         :return: the id of the newly created glossary
         """
+
+        if self.glossary.find({'name':name}).count() != 0:
+            raise ValueError("Glossary with name '%s' is already present."%name)
+
         result = self.glossary.insert_one({
             '_id': str(uuid.uuid4()),
             'name': name,

@@ -1,7 +1,6 @@
 from ieml.ieml_objects.tools import RandomPoolIEMLObjectGenerator
 from ieml.usl.tools import usl
 from models.commons import generate_translations
-from models.intlekt.edition.glossary import GlossaryConnector
 from testing.models.stub_db import ModelTestCase
 
 
@@ -42,5 +41,11 @@ class TestModel(ModelTestCase):
         self.assertTrue(all(g['nb_words'] == 0 for g in lexicons))
         self.assertSetEqual(set(names), set(g['name'] for g in lexicons))
         self.assertSetEqual(set(ids), set(g['id'] for g in lexicons))
+
+    def test_double_creation(self):
+        self.lexicon.drop()
+        self.lexicon.add_lexicon("test")
+        with self.assertRaises(ValueError):
+            self.lexicon.add_lexicon("test")
 
 
