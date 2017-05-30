@@ -1,4 +1,5 @@
 from handlers.commons import exception_handler
+from ieml.usl.tools import usl
 from models.intlekt.edition.lexicon import LexiconConnector
 
 
@@ -49,7 +50,10 @@ def get_words_of_lexicon(lexicon_id):
     return {'success': True,
             'words': [{
                 'ieml': str(t['USL']['IEML']),
-                'translations': t['TRANSLATIONS'],
+                'translations': {
+                    **t['TRANSLATIONS'],
+                    **{'default_%s'%k: v for k,v in usl(t['USL']['IEML']).auto_translation().items()}
+                },
                 'id': t['_id'],
                 'last_modified': t['LAST_MODIFIED'] } for t in lexicon['words']],
             'id': lexicon['id'],
