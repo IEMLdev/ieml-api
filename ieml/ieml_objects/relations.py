@@ -73,7 +73,9 @@ class Relations:
         else:
             return self._all_tuple
 
-    def to(self, term, relations_types=()):
+    def to(self, term, relations_types=None):
+        if relations_types is None:
+            relations_types = RELATIONS
 
         result = []
         for reltype in relations_types:

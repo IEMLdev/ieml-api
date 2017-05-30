@@ -34,27 +34,19 @@ def computation_status():
 def get_relations(body):
     t = term(body["ieml"])
 
-    relations = list(t.relations)
-    _relations = []
-    for l in relations:
-        if l == [] or isinstance(l[0], Term):
-            _relations.append(l)
-        else:
-            _relations.extend(l)
-
     all_relations = [
         {
-            "reltype": relation_name_table.inv[RELATION_TYPES_TO_INDEX.inv[i]],
+            "reltype": rel_api,
             "rellist": [
                 {
                     "exists": True,
                     "visible": True,
                     "ieml": str(r.script)
-                } for r in reversed(rels)
+                } for r in reversed(t.relations[reltype])
             ],
             "exists": True,
             "visible": True
-        } for i, rels in enumerate(_relations) if rels != []
+        } for rel_api, reltype in relation_name_table.items() if reltype != 'ROOT' and t.relations[reltype] != ()
     ]
 
     all_relations.append({

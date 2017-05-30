@@ -41,7 +41,7 @@ def dictionary_dump():
             'terms': sorted((ieml_term_model(t) for t in Dictionary()), key=lambda c: c['INDEX'])}
 
 MAX_TERMS_DICTIONARY = 50000
-Drupal_dico = [ieml_term_model(t['_id']) for t in terms_db().get_all_terms()][:30]
+Drupal_dico = [ieml_term_model(t['_id']) for t in Dictionary()][:30]
 all_uuid = {
     d['IEML']: 1000 + int(hashlib.sha1(d['IEML'].encode()).hexdigest(), 16) % MAX_TERMS_DICTIONARY for d in
     Drupal_dico
@@ -64,6 +64,11 @@ RELATIONS = {
     'Siblings': [("Opposed", "Opposed"), ("Crossed", "Crossed"), ("Associated", "Associated"), ("Twin", "Twin")]
 }
 
+# @cached("dictionary_dump", 1000)
+# @exception_handler
+# def drupal_dictionary_dump():
+#     dico = [ieml_term_model(t) for t in Dictionary()][:5]
+#     return _drupal_process(dico)
 
 def drupal_relations_dump():
     res = []

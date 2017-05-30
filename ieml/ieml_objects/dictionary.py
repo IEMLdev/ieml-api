@@ -430,7 +430,7 @@ class Dictionary(metaclass=Singleton):
             _relations['child' + r] = np.transpose(_relations['father' + r])
 
         _relations['siblings'] = sum(siblings)
-        _relations['inclusion'] = _relations['contains'] + _relations['contained']
+        _relations['inclusion'] = np.clip(_relations['contains'] + _relations['contained'], 0, 1)
         _relations['father'] = _relations['father_substance'] + _relations['father_attribute'] + _relations['father_mode']
         _relations['child'] = _relations['child_substance'] + _relations['child_attribute'] + _relations['child_mode']
         _relations['etymology'] = _relations['father'] + _relations['child']
@@ -639,7 +639,7 @@ class Dictionary(metaclass=Singleton):
         self.inhibitions = {self.terms[r]: v for r, v in state['inhibitions'].items()}
 
         self.define_terms()
-        print("\t[*] Dictionary loaded")
+        print("\t[*] Dictionary loaded (nb_roots: %d, nb_terms: %d)"%(len(self.roots), len(self)))
 
 
 def save_dictionary(directory):

@@ -30,6 +30,9 @@ def term(arg):
     if isinstance(arg, Term):
         return arg
 
+    if isinstance(arg, int):
+        return Dictionary().index[arg]
+
     if isinstance(arg, str):
         if arg[0] == '[' and arg[-1] == ']':
             arg = arg[1:-1]

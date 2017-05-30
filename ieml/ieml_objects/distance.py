@@ -18,17 +18,23 @@ import numpy as np
 
 def get_distance_m():
     FILE = '/tmp/dist_m.npy'
-    if os.path.isfile(FILE):
-        return np.load(FILE)
+    FILE_w = '/tmp/dist_m_w.npy'
+
+    if os.path.isfile(FILE) and os.path.isfile(FILE_w):
+        return np.load(FILE), np.load(FILE_w)
     else:
-        graph_ethy = Dictionary().relations_graph(['etymology', 'inclusion', 'siblings']).astype(np.float32)
+        graph_ethy = Dictionary().relations_graph(['etymology', 'inclusion', 'siblings', 'table_0', 'table_1', 'table_2', 'table_3', 'table_4', 'table_5']).astype(np.float32).todense()
+        graph_ethy = 1.0/graph_ethy
+        graph_ethy[graph_ethy == np.inf] = 0
+
         # for x, y in zip(*np.where(graph_ethy != 0)):
         #     graph_ethy[x, y] = 1/graph_ethy[x, y]
         # graph_ethy.tocsr()
-
-        dist_m = shortest_path(graph_ethy, directed=True, unweighted=False)
+        dist_m = shortest_path(graph_ethy, directed=False, unweighted=True)
+        dist_m_w = shortest_path(graph_ethy, directed=False, unweighted=False)
         np.save(FILE, dist_m)
-        return dist_m
+        np.save(FILE_w, dist_m_w)
+        return dist_m, dist_m_w
 
 
 # dist_m_nb_rel = shortest_path(graph_nb_rel, directed=True, unweighted=True)
@@ -36,13 +42,14 @@ def get_distance_m():
 # dist_table = shortest_path(graph_table, directed=True, unweighted=False)
 
 
-distance_m = get_distance_m()
+distance_m, distance_m_w = get_distance_m()
 def _distance_etymology(term0, term1):
     return distance_m[term0.index, term1.index]
 
 def _nb_relations(term0, term1):
     # print(term0.relations.to(term1, table=False))
-    return 5 - len(term0.relations.to(term1, ['opposed', 'associated', 'crossed', 'twin', 'table_0']))
+    return distance_m_w[term0.index, term1.index]
+    # 5 - len(term0.relations.to(term1, ['opposed', 'associated', 'crossed', 'twin', 'table_0']))
 
 def _max_rank(term0, term1):
     rel_table = term0.relations.to(term1, ['table_%d'%i for i in range(1, 6)])
@@ -51,23 +58,23 @@ def _max_rank(term0, term1):
         return 0
 
     if 'table_4' in rel_table:
-        return 1
+        return 0
 
     if 'table_3' in rel_table:
-        return 2
+        return 1
 
     if 'table_2' in rel_table:
-        return 3
+        return 2
 
     if 'table_1' in rel_table:
-        return 4
+        return 3
 
-    return 5
+    return 4 + abs(term0.script.layer - term1.script.layer)
 
 
 def distance(term0, term1):
     if term0 == term1:
-        return 0,0,0
+        return 0.,0.,0.
 
     if term0.script.paradigm or term1.script.paradigm:
         raise ValueError("Not implemented for paradigms")
@@ -81,14 +88,16 @@ def distance(term0, term1):
 
 def test_term(t):
     print("Distance from term %s -- %s"%(str(t), t.translation['fr']))
+    other = sorted((distance(t, t1) ,t1) for t1 in Dictionary() if not t1.script.paradigm)
+    kkk = [t for t in other if t[0][0] <= 1]
 
-    for d, tt in sorted((distance(t, t1) ,t1) for t1 in Dictionary() if not t1.script.paradigm)[:30]:
-        print("%s (%d, %d, %d) - %s"%(str(tt), d[0], d[1], d[2], tt.translation['fr']))
+    for d, tt in kkk[:30]:
+        print("%s (%.2f, %.2f, %.2f) - %s"%(str(tt), d[0], d[1], d[2], tt.translation['fr']))
 
 
 if __name__ == '__main__':
 
-    test_term(term("y."))
+    test_term(term("j.-'U:.-'k.o.-t.o.-',"))
 
 
     # print(distance(term("E:U:.k.-"), term("E:U:.m.-")))
