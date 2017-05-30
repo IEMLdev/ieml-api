@@ -95,6 +95,17 @@ class TestUSLsModel(ModelTestCase):
         self.library.update(entry['_id'], translations={'EN': tags['EN']})
         self.assertEqual(self.library.query(translations=tags).count(), 1)
 
+    def test_add_notranslations(self):
+        _usl0 = random_usl()
+        self.library.save(_usl0, {"FR":"", "EN": ""})
+        _usl1 = random_usl()
+        self.library.save(_usl1, {"FR":"", "EN": ""})
+
+        self.assertEqual(self.library.get(usl=_usl0)['USL']['IEML'], str(_usl0))
+        self.assertEqual(self.library.get(usl=_usl1)['USL']['IEML'], str(_usl1))
+
+
+
     # def test_templates(self):
     #     while True:
     #         try:
