@@ -19,8 +19,8 @@ class DBConnector(object, metaclass=Singleton):
 
 def create_translations_indexes(collection):
     for language in TAG_LANGUAGES:
-        collection.create_index('TRANSLATIONS.%s'%language, unique=True)
-
+        collection.create_index('TRANSLATIONS.%s'%language, unique=True,
+                                partialFilterExpression={'TRANSLATIONS.%s'%language: { '$ne': "" }})
 
 def check_tags(tags, all_present=True):
     return isinstance(tags, dict) and (all(lang in tags for lang in TAG_LANGUAGES) or not all_present) \
