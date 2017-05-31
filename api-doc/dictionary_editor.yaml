@@ -6,7 +6,7 @@ info:
   title: IEML Library API
   description : API for both the IEML dictionary and the IEML library
 
-basePath : /api
+basePath : /dictionary_api
 produces :
   - application/json
 paths:
