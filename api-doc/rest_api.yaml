@@ -363,26 +363,19 @@ paths:
             type: object
             required:
               - success
-              - lexicons
+              - favorites
+              - others
             properties:
               success:
                 type: boolean
-              lexicons:
+              favorites:
                 type: array
                 items:
-                  type: object
-                  required:
-                    - id
-                    - name
-                    - nb_words
-                  properties:
-                    id:
-                      type: string
-                    name:
-                      type: string
-                    nb_words:
-                      type: integer
-
+                  $ref: "#/definitions/lexicon"
+              others:
+                type: array
+                items:
+                  $ref: "#/definitions/lexicon"
     post:
       operationId: handlers.new_lexicon
       consumes:
@@ -565,47 +558,7 @@ paths:
               success:
                 type: boolean
 
-  '/intlekt/lexicon/{lexicon_id}/favorite':
-    get:
-      operationId: handlers.get_lexicon_favorite
-      tags:
-        - Lexicon
-      description: |
-        Get a list of all words favorited in the lexicon with this id.
-      parameters:
-        - name: lexicon_id
-          in: path
-          required: true
-          type: string
-      responses:
-        '200':
-          description: Successful response
-          schema:
-            type: object
-            required:
-              - success
-              - words
-            properties:
-              success:
-                type: boolean
-              words:
-                type: array
-                items:
-                  type: object
-                  required:
-                    - ieml
-                    - translations
-                    - id
-                    - last_modified
-                  properties:
-                    ieml:
-                      type: string
-                    id:
-                      type: string
-                    translations:
-                      $ref: "#/definitions/translations"
-                    last_modified:
-                      type: string
+  '/intlekt/lexicon/favorite':
     post:
       operationId: handlers.set_lexicon_favorite
       tags:
@@ -613,21 +566,17 @@ paths:
       consumes:
         - application/json
       description: |
-        Set the favorite list of words for this lexicon.
+        Set the favorite list of lexicons.
       parameters:
-        - name: lexicon_id
-          in: path
-          required: true
-          type: string
         - name: body
           in: body
           required: true
           schema:
             type: object
             required:
-              - words
+              - names
             properties:
-              words:
+              names:
                 type: array
                 items:
                   type: string
@@ -1065,3 +1014,16 @@ definitions:
         type: string
       path:
         type: string
+
+  lexicon:
+    required:
+      - id
+      - name
+      - nb_words
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      nb_words:
+        type: integer
