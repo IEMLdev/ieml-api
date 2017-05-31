@@ -40,3 +40,15 @@ class TestModel(ModelTestCase):
         self.glossary.add_glossary('test')
         with self.assertRaises(ValueError):
             self.glossary.add_glossary('test')
+
+    def test_favorite(self):
+        for name in range(10):
+            self.glossary.add_glossary(str(name))
+
+        self.glossary.set_favorites(list(map(str, range(0, 10,2))))
+
+        self.assertListEqual([int(k['name']) for k in self.glossary.all_glossaries(favorite=True)],
+                             list(range(0, 10,2)))
+
+        self.assertTrue(all(int(k['name']) not in list(range(0, 10,2)) for k in self.glossary.all_glossaries(favorite=False)))
+

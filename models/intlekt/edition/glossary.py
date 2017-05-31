@@ -1,5 +1,7 @@
 import uuid
 
+import pymongo
+
 from ieml.ieml_objects.terms import Term
 from models.commons import DBConnector
 from models.constants import GLOSSARIES_COLLECTION
@@ -15,12 +17,21 @@ class GlossaryConnector(DBConnector):
                         "name_index" not in self.glossary.index_information():
             self.glossary.create_index('name', unique=True, name="name_index")
 
-    def all_glossaries(self):
+    def all_glossaries(self, favorite=None):
+
+        if favorite is not None:
+            if favorite:
+                iter = self.glossary.find({'favorite': {'$ne': None}}).sort([('favorite', pymongo.ASCENDING)])
+            else:
+                iter = self.glossary.find({'favorite': {'$eq': None}}).sort([('name', pymongo.ASCENDING)])
+        else:
+            iter = self.glossary.find()
+
         return [{
             'id': g['_id'],
             'name': g['name'],
             'nb_terms': len(g['terms'])
-                } for g in self.glossary.find()]
+                } for g in iter]
 
     def get(self, name=None, id=None):
         """
@@ -44,7 +55,7 @@ class GlossaryConnector(DBConnector):
         return {'id': glossary['_id'],
                 'name': glossary['name'],
                 'terms': glossary['terms'],
-                'favorites': glossary['favorites']}
+                'favorite': glossary['favorite']}
 
     def add_glossary(self, name):
         """
@@ -60,7 +71,7 @@ class GlossaryConnector(DBConnector):
             '_id': str(uuid.uuid4()),
             'name': name,
             'terms': [],
-            'favorites': []
+            'favorite': None
         })
 
         return result.inserted_id
@@ -77,17 +88,11 @@ class GlossaryConnector(DBConnector):
         result = self.glossary.delete_one({'_id': glossary['id']})
         return result.deleted_count == 1
 
-    def set_favorites(self, id, terms):
-        glossary = self.get(id=id)
-        terms = [str(Term(t)) for t in terms]
+    def set_favorites(self, name_list):
+        self.glossary.update_many({}, {'$set': {'favorite': None}})
 
-        if any(t not in glossary['terms'] for t in terms):
-            raise ValueError("Can't add term to the favorites if it is not already saved to the glossary.")
-
-        self.glossary.update_one({'_id': glossary['id']}, {'$set': {'favorites': terms}})
-
-    def get_favorites(self, id):
-        return self.get(id=id)['favorites']
+        for i, name in enumerate(name_list):
+            self.glossary.update_one({'name': name}, {'$set': {'favorite': i}})
 
     def add_terms(self, terms, id):
         """
@@ -126,4 +131,4 @@ class GlossaryConnector(DBConnector):
         return result.modified_count == 1
 
     def drop(self):
-        self.glossary.drop()
+        self.glossary.delete_many({})
