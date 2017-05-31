@@ -1,6 +1,6 @@
 import json
 from collections import defaultdict
-from itertools import product
+from itertools import product, groupby
 
 from bidict import bidict
 import numpy as np
@@ -61,6 +61,10 @@ class Dictionary(metaclass=Singleton):
 
         if cache:
             load_dictionary(DICTIONARY_FOLDER, dictionary=self)
+
+    def build(self):
+        self.compute_ranks()
+        self.compute_relations()
 
     def define_terms(self):
         for i, t in enumerate(self.index):
@@ -441,8 +445,10 @@ class Dictionary(metaclass=Singleton):
         _relations['child'] = _relations['child_substance'] + _relations['child_attribute'] + _relations['child_mode']
         _relations['etymology'] = _relations['father'] + _relations['child']
 
+        _relations['table'] = np.zeros((len(self), len(self)), dtype=np.float32)
         for i, t in enumerate(self._compute_table_rank(_relations['contains'])):
             _relations['table_%d'%i] = t
+            _relations['table'] = np.maximum((i + 1.0) * t, _relations['table'])
 
         missing = {s for s in RELATIONS if s not in _relations}
         if missing:
@@ -523,7 +529,7 @@ class Dictionary(metaclass=Singleton):
                     res_indexes = []
                     _recurse_script(sub_s.children[i], res_indexes)
                     for j in res_indexes:
-                        father[i, t.index, j] = 1.0/abs(t.script.layer - self.index[j].script.layer)
+                        father[i, t.index, j] = 1.0/ (t.script.layer - self.index[j].script.layer)**2
 
         return father
 
@@ -536,15 +542,18 @@ class Dictionary(metaclass=Singleton):
         #  -3 twin
         def _opposed_sibling(s0, s1):
             return not s0.empty and not s1.empty and\
+                   s0.cardinal == s1.cardinal and\
                    s0.children[0] == s1.children[1] and s0.children[1] == s1.children[0]
 
         def _associated_sibling(s0, s1):
-            return s0.children[0] == s1.children[0] and \
+            return s0.cardinal == s1.cardinal and\
+                   s0.children[0] == s1.children[0] and \
                    s0.children[1] == s1.children[1] and \
                    s0.children[2] != s1.children[2]
 
         def _crossed_sibling(s0, s1):
             return s0.layer >= 2 and \
+                   s0.cardinal == s1.cardinal and \
                    _opposed_sibling(s0.children[0], s1.children[1]) and \
                    _opposed_sibling(s0.children[1], s1.children[0])
 
@@ -578,11 +587,13 @@ class Dictionary(metaclass=Singleton):
                         siblings[2, t0.index, t1.index] = 1
                         siblings[2, t1.index, t0.index] = 1
 
-            twin_indexes = [t.index for t in _twins]
+            _twins = sorted(_twins, key=lambda t: t.script.cardinal)
+            for card, g in groupby(_twins, key=lambda t: t.script.cardinal):
+                twin_indexes = [t.index for t in g]
 
-            if twin_indexes:
-                index0, index1 = list(zip(*product(twin_indexes, repeat=2)))
-                siblings[3, index0, index1] = 1
+                if len(twin_indexes) > 1:
+                    index0, index1 = list(zip(*product(twin_indexes, repeat=2)))
+                    siblings[3, index0, index1] = 1
 
         return siblings
 
@@ -674,8 +685,5 @@ def load_dictionary(directory, dictionary):
 
 
 if __name__ == '__main__':
-    Dictionary().compute_relations()
-    Dictionary().compute_ranks()
-
+    Dictionary().build()
     save_dictionary(DICTIONARY_FOLDER)
-    # print(list(map(str, Dictionary().terms["i.B:.-+u.M:.-O:.-'"].relations.father[0])))

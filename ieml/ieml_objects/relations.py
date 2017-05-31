@@ -27,7 +27,8 @@ RELATIONS = ['contains',         # 0
              'father',           # 13
              'child',            # 14
              'etymology',        # 15
-             'siblings'          # 16
+             'siblings',         # 16
+             'table'             # 17
              ]
 
 
