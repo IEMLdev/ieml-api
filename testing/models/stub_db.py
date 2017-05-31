@@ -79,7 +79,7 @@ def reload_model_package(module, reloaded, seen, connectors):
         if len(p) == 2 and not hasattr(sys.modules[m], '__path__'):
             # direct module in the model package
             to_reload.add(m)
-        if len(p) >= 2 and p[1] in connectors:
+        if len(p) >= 2 and p[-1] in connectors:
             to_reload.add(m)
 
     if module in seen:
