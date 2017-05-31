@@ -38,7 +38,7 @@ class TestUSLsModel(ModelTestCase):
         _entry = self.save_random_usl()
 
         self.assertDictEqual(
-            _drop_date(list(self.library.usls.find())[0]),
+            _drop_date(list(self.library.library.find())[0]),
             _entry,
             "Entry in db doesn't match.")
 
@@ -53,16 +53,16 @@ class TestUSLsModel(ModelTestCase):
     def test_remove_usl(self):
         _entry = self.save_random_usl()
         self.library.remove(usl=_entry['USL']['IEML'])
-        self.assertEqual(self.library.usls.count(), 0)
+        self.assertEqual(self.library.library.count(), 0)
 
         _entry = self.save_random_usl()
         self.library.remove(id=_entry['_id'])
-        self.assertEqual(self.library.usls.count(), 0)
+        self.assertEqual(self.library.library.count(), 0)
 
     def test_multi_add(self):
         _entry0 = self.save_random_usl()
         _entry1 = self.save_random_usl()
-        _db_entries = sorted(self.library.usls.find(), key=lambda e: e['_id'])
+        _db_entries = sorted(self.library.library.find(), key=lambda e: e['_id'])
         _entries = sorted((_entry0, _entry1), key=lambda e: e['_id'])
         for e0, e1 in zip(_entries, _db_entries):
             self.assertDictEqual(e0, _drop_date(e1))
@@ -104,6 +104,12 @@ class TestUSLsModel(ModelTestCase):
 
         self.assertEqual(self.library.get(usl=_usl0)['USL']['IEML'], str(_usl0))
         self.assertEqual(self.library.get(usl=_usl1)['USL']['IEML'], str(_usl1))
+
+    def test_indexes(self):
+        _usl0 = random_usl()
+        self.library.save(_usl0, {"FR": "", "EN": ""})
+        with self.assertRaises(ValueError):
+            self.library.save(_usl0, _usl0.auto_translation())
 
 
 

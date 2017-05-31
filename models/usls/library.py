@@ -5,6 +5,9 @@ import re
 import uuid
 import itertools
 
+import pymongo
+from pymongo import errors
+
 from ieml.usl.tools import usl as _usl
 from models.commons import DBConnector, check_tags, create_translations_indexes, TAG_LANGUAGES
 from models.constants import LIBRARY_COLLECTION
@@ -18,11 +21,12 @@ class LibraryConnector(DBConnector):
     def __init__(self):
         super().__init__()
         collections = self.db.collection_names()
-        self.usls = self.db[LIBRARY_COLLECTION]
+        self.library = self.db[LIBRARY_COLLECTION]
 
-        if LIBRARY_COLLECTION not in collections:
-            self.usls.create_index('USL.INDEX', unique=True)
-            create_translations_indexes(self.usls)
+        if LIBRARY_COLLECTION not in collections or \
+           "USL.INDEX" not in self.library.index_information():
+            self.library.create_index('USL.INDEX', unique=True)
+            # create_translations_indexes(self.usls)
 
     def save(self, usl, translations):
         usl = _usl(usl)
@@ -31,22 +35,23 @@ class LibraryConnector(DBConnector):
 
         for l in TAG_LANGUAGES:
             if translations[l] == "":
-                translations[l] = None
+                del translations[l]
 
         usl_id = self._generate_id()
 
-        self.usls.insert_one({
-            '_id': usl_id,
-            'USL': {
-                'INDEX': usl_index(usl),
-                'IEML': str(usl),
-                'TYPE': str(usl.ieml_object.__class__.__name__)
-            },
-            'TRANSLATIONS': {
-                "FR": translations['FR'],
-                "EN": translations['EN']},
-            'LAST_MODIFIED': datetime.datetime.utcnow()
-        })
+        try:
+            self.library.insert_one({
+                '_id': usl_id,
+                'USL': {
+                    'INDEX': usl_index(usl),
+                    'IEML': str(usl),
+                    'TYPE': str(usl.ieml_object.__class__.__name__)
+                },
+                'TRANSLATIONS': translations,
+                'LAST_MODIFIED': datetime.datetime.utcnow()
+            })
+        except errors.DuplicateKeyError:
+            raise ValueError("USL already saved in the library")
 
         return usl_id
 
@@ -151,25 +156,25 @@ class LibraryConnector(DBConnector):
 
     def get(self, id=None, usl=None, translation=None, language=None):
         if id:
-            return self.usls.find_one({'_id': str(id)})
+            return self.library.find_one({'_id': str(id)})
 
         if usl:
             usl = _usl(usl)
-            return self.usls.find_one({'USL.INDEX': usl_index(usl)})
+            return self.library.find_one({'USL.INDEX': usl_index(usl)})
 
         if translation and language:
-            return self.usls.find_one({'TRANSLATIONS.%s'%str(language): str(translation)})
+            return self.library.find_one({'TRANSLATIONS.%s'%str(language): str(translation)})
 
         raise ValueError("Must specify at least one of the following arguments : "
                          "id, usl or (translation and language).")
 
     def remove(self, id=None, usl=None):
         if id:
-            self.usls.remove({'_id': str(id)})
+            self.library.remove({'_id': str(id)})
             return
 
         if usl:
-            self.usls.remove({'USL.INDEX': usl_index(_usl(usl))})
+            self.library.remove({'USL.INDEX': usl_index(_usl(usl))})
             return
 
         raise ValueError("Must specify a id or an usl to remove.")
@@ -200,7 +205,7 @@ class LibraryConnector(DBConnector):
 
         if update:
             update['LAST_MODIFIED'] = datetime.datetime.utcnow()
-            self.usls.update_one({'_id': str(id)}, {'$set': update})
+            self.library.update_one({'_id': str(id)}, {'$set': update})
 
     def query(self, translations=None, union=False):
         query = {}
@@ -213,10 +218,10 @@ class LibraryConnector(DBConnector):
         if union:
             query = {'$or': [{k: query[k]} for k in query]}
 
-        return self.usls.find(query)
+        return self.library.find(query)
 
     def most_recent(self, number):
-        return list(itertools.islice(self.usls.find().sort("LAST_MODIFIED", 1), number))
+        return list(itertools.islice(self.library.find().sort("LAST_MODIFIED", 1), number))
 
     def _check_tags(self, tags, all_present=True):
         if not check_tags(tags, all_present=all_present):
@@ -224,14 +229,14 @@ class LibraryConnector(DBConnector):
                              'incorrect.' % json.dumps(tags))
 
     def drop(self):
-        self.usls.drop()
+        self.library.remove({}, multi=True)
 
     def _generate_id(self):
         free = False
         _id = None
         while not free:
             _id = uuid.uuid4().hex
-            free = self.usls.find_one({'_id': _id}) is None
+            free = self.library.find_one({'_id': _id}) is None
         return _id
 
     def _is_editable(self, entry):
