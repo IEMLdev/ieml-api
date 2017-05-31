@@ -12,7 +12,7 @@ def rand_string():
 
 
 class TestUslHandler(ModelTestCase):
-    connectors = ('usls',)
+    connectors = ('library',)
 
     def _assert_success(self, m):
         if not isinstance(m, dict) or 'success' not in m:
@@ -53,8 +53,7 @@ class TestUslHandler(ModelTestCase):
         }))
         return {'id': m['id'],
                 'ieml': str(_usl),
-                'tags': {'FR': fr, 'EN': en},
-                'keywords': {'FR': [key_fr], 'EN': [key_en]}}
+                'translations': {'FR': fr, 'EN': en}}
 
     def test_save_usl(self):
         entry = self._save_usl()
@@ -69,7 +68,7 @@ class TestUslHandler(ModelTestCase):
 
     def test_update_usl(self):
         entry = self._save_usl()
-        self._assert_success(h.update_usl(entry['id'], {'tags': {'fr': 'test', 'en': 'test'}}))
+        self._assert_success(h.update_usl(entry['id'], {'translations': {'fr': 'test', 'en': 'test'}}))
 
         e = self._assert_success(h.query_usl(fr='test'))
         self.assertEqual(len(e['match']), 1)
@@ -91,9 +90,5 @@ class TestUslHandler(ModelTestCase):
         self.assertEqual(res['match'][0]['id'], str(entry['id']))
 
         res = self._assert_success(h.query_usl(query='query'))
-        self.assertEqual(len(res['match']), 2)
-        self.assertSetEqual({res['match'][0]['id'], res['match'][1]['id']}, {str(entry['id']), str(entry1['id'])})
-
-        res = self._assert_success(h.query_usl(query='key_query'))
         self.assertEqual(len(res['match']), 2)
         self.assertSetEqual({res['match'][0]['id'], res['match'][1]['id']}, {str(entry['id']), str(entry1['id'])})
