@@ -1,42 +1,36 @@
 import hashlib
+import random
 import string
 import uuid
-import random
+from ieml.ieml_objects.dictionary import Dictionary, save_dictionary, DICTIONARY_FOLDER, load_dictionary
 
 from handlers.commons import exception_handler, ieml_term_model
-from ieml.script.operator import sc
-from models.exceptions import InvalidRelationCollectionState, InvalidRelationTitle, TermNotFound, RootParadigmMissing
-from models.relations.relations import RelationsConnector
-from models.relations.relations_queries import RelationsQueries
+from ieml.ieml_objects.tools import term
+from ieml.script.operator import sc, script
+
 from ..caching import cached, flush_cache
-from handlers.dictionary.commons import terms_db, relation_name_table
+from handlers.dictionary.commons import relation_name_table
 from ieml.exceptions import CannotParse
 from ieml.script.constants import AUXILIARY_CLASS, VERB_CLASS, NOUN_CLASS
 from ieml.script import MultiplicativeScript, NullScript
-from ieml.script.tables import generate_tables
 from ieml.script.tools import old_canonical, factorize
 from .client import need_login
 
 
-def _build_old_model_from_term_entry(term_db_entry):
-    terms_ast = sc(term_db_entry["_id"])
-    try:
-        rank = RelationsQueries.rank(term_db_entry["_id"]) if terms_ast.paradigm else 0
-    except (InvalidRelationCollectionState, TermNotFound):
-        rank = 'n/a'
+def _build_old_model_from_term_entry(t):
 
     return {
-        "_id": term_db_entry["_id"],
-        "IEML": term_db_entry["_id"],
-        "CLASS": terms_ast.script_class,
-        "EN": term_db_entry["TAGS"]["EN"],
-        "FR": term_db_entry["TAGS"]["FR"],
-        "PARADIGM": "1" if terms_ast.paradigm else "0",
-        "LAYER": terms_ast.layer,
-        "TAILLE": terms_ast.cardinal,
-        "CANONICAL": old_canonical(terms_ast),
-        "ROOT_PARADIGM": term_db_entry["ROOT"],
-        "RANK": rank
+        "_id": str(t.script),
+        "IEML": str(t.script),
+        "CLASS": t.grammatical_class,
+        "EN": t.translation['en'],
+        "FR": t.translation['fr'],
+        "PARADIGM": "1" if t.script.paradigm else "0",
+        "LAYER": t.script.layer,
+        "TAILLE": t.script.cardinal,
+        "CANONICAL": old_canonical(t.script),
+        "ROOT_PARADIGM": t.root == t,
+        "RANK": t.rank
     }
 
 
@@ -44,10 +38,10 @@ def _build_old_model_from_term_entry(term_db_entry):
 @exception_handler
 def dictionary_dump():
     return {'success': True,
-            'terms': sorted((ieml_term_model(t['_id']) for t in terms_db().get_all_terms()), key=lambda c: c['INDEX'])}
+            'terms': sorted((ieml_term_model(t) for t in Dictionary()), key=lambda c: c['INDEX'])}
 
 MAX_TERMS_DICTIONARY = 50000
-Drupal_dico = [ieml_term_model(t['_id']) for t in terms_db().get_all_terms()][:30]
+Drupal_dico = [ieml_term_model(t) for t in Dictionary()][:30]
 all_uuid = {
     d['IEML']: 1000 + int(hashlib.sha1(d['IEML'].encode()).hexdigest(), 16) % MAX_TERMS_DICTIONARY for d in
     Drupal_dico
@@ -70,6 +64,11 @@ RELATIONS = {
     'Siblings': [("Opposed", "Opposed"), ("Crossed", "Crossed"), ("Associated", "Associated"), ("Twin", "Twin")]
 }
 
+# @cached("dictionary_dump", 1000)
+# @exception_handler
+# def drupal_dictionary_dump():
+#     dico = [ieml_term_model(t) for t in Dictionary()][:5]
+#     return _drupal_process(dico)
 
 def drupal_relations_dump():
     res = []
@@ -98,39 +97,35 @@ def drupal_relations_dump():
 
     return res
 
-
 @cached("all_ieml", 1000)
-@exception_handler
+# @exception_handlerexception_handler
 def all_ieml():
     """Returns a dump of all the terms contained in the DB, formatted for the JS client"""
-    result = [{**_build_old_model_from_term_entry(entry),
-              'INDEX': i} for i, entry in enumerate(sorted(terms_db().get_all_terms(), key=lambda d: sc(d["_id"])))]
+    result = [{**_build_old_model_from_term_entry(t),
+              'INDEX': i} for i, t in enumerate(Dictionary())]
     return result
 
 
 @exception_handler
 def get_term(script):
-    return _build_old_model_from_term_entry(terms_db().get_term(script))
+    return _build_old_model_from_term_entry(term(script))
 
-
+@exception_handler
 def parse_ieml(iemltext):
-    try:
-        script_ast = sc(iemltext)
-        return {
-            "factorization": str(factorize(script_ast)),
-            "success" : True,
-            "level" : script_ast.layer,
-            "taille" : script_ast.cardinal,
-            "class" : script_ast.script_class,
-            "canonical" : old_canonical(script_ast),
-            "rootIntersections" : RelationsConnector().root_intersections(script_ast),
-            "containsSize": RelationsConnector().relations.
-                find({'_id': {'$ne': str(script_ast)},
-                      'SINGULAR_SEQUENCES': {'$in': [str(seq) for seq in script_ast.singular_sequences]}}).count()
-        }
-    except CannotParse:
-        return {"success" : False,
-                "exception" : "Invalid parser"}
+    script_ast = sc(iemltext)
+    root = Dictionary().get_root(script_ast)
+    containsSize = len([s for s in Dictionary().layers[script_ast.layer] if s.script in script_ast])
+
+    return {
+        "factorization": str(factorize(script_ast)),
+        "success" : True,
+        "level" : script_ast.layer,
+        "taille" : script_ast.cardinal,
+        "class" : script_ast.script_class,
+        "canonical" : old_canonical(script_ast),
+        "rootIntersections" : [str(root.script)] if root is not None else [],
+        "containsSize": containsSize
+    }
 
 
 def script_table(iemltext):
@@ -174,44 +169,26 @@ def script_table(iemltext):
             }
         }
 
-    def _slice_array(table, col=False, dim=None, tab_header=None):
-        if col:
+    def _slice_array(tab, dim):
+        shape = tab.cells.shape
+        if dim == 1:
             result = [
-                _table_entry(1, ieml=tab_header if tab_header else table.headers[0][0], header=True, top_header=True)
+                _table_entry(1, ieml=tab.paradigm, header=True, top_header=True)
             ]
-            result.extend([_table_entry(ieml=e) for e in table.cells])
-
-        elif dim is None:
-            col_size = len(table.headers[1])
-
+            result.extend([_table_entry(ieml=e) for e in tab.paradigm.singular_sequences])
+        else:
             result = [
-                _table_entry(col_size + 1, ieml=tab_header if tab_header else table.paradigm, header=True,
-                             top_header=True),
+                _table_entry(shape[1] + 1, ieml=tab.paradigm, header=True, top_header=True),
                 _table_entry(top_header=True)  # grey square
             ]
 
-            for col in table.headers[1]:
+            for col in tab.columns:
                 result.append(_table_entry(ieml=col, header=True))
 
-            for i, line in enumerate(table.cells):
-                result.append(_table_entry(ieml=table.headers[0][i], header=True))
+            for i, line in enumerate(tab.cells):
+                result.append(_table_entry(ieml=tab.rows[i], header=True))
                 for cell in line:
                     result.append(_table_entry(ieml=cell))
-        else:
-            col_size = len(table.headers[1][0])
-
-            result = [
-                _table_entry(col_size + 1, ieml=tab_header if tab_header else table.paradigm, header=True, top_header=True),
-                _table_entry(top_header=True)  # grey square
-            ]
-
-            for col in table.headers[1][dim]:
-                result.append(_table_entry(ieml=col, header=True))
-
-            for i, line in enumerate(table.cells[dim]):
-                result.append(_table_entry(ieml=table.headers[0][dim][i], header=True))
-                for cell in line:
-                    result.append(_table_entry(ieml=cell[0]))
 
         return result
 
@@ -219,35 +196,23 @@ def script_table(iemltext):
         result = []
         for table in tables:
             tabs = []
-            if table.dimension != 3:
-                result.append({
-                    'Col': len(table.headers[1]) + 1,
-                    'table': [{
-                        'tabTitle': '',
-                        'slice': _slice_array(table, col=table.dimension == 1)
-                    }]
-                })
-            else:
-                # if the table is 3D, we don't want a true 3D table
-                table.split_tabs = True
 
-                # multiple tabs
-                for i, tab in enumerate(table.headers[2]):
-                    tabs.append({
-                        'tabTitle': str(tab),
-                        'slice': _slice_array(table, dim=i, tab_header=tab)
-                    })
-
-                result.append({
-                    'Col': len(table.headers[1][0]) + 1,
-                    'table': tabs
+            for i, tab in enumerate(table.headers):
+                tabs.append({
+                    'tabTitle': str(tab),
+                    'slice': _slice_array(table.headers[tab], dim=table.dim)
                 })
+
+            result.append({
+                'Col': len(table.headers[tab].columns) + 1 if table.dim != 1 else 1,
+                'table': tabs
+            })
 
         return result
 
     try:
-        script_ast = sc(iemltext)
-        tables = generate_tables(script_ast)
+        s = sc(iemltext)
+        tables = s.tables
 
         if tables is None:
             return {
@@ -257,7 +222,7 @@ def script_table(iemltext):
             }
         return {
             'tree': {
-                'input': str(script_ast),
+                'input': str(s),
                 'Tables': _build_tables(tables)
             },
             'success': True
@@ -308,26 +273,47 @@ def _process_inhibits(body):
         try:
             inhibits = [relation_name_table[i] for i in body['INHIBITS']]
         except KeyError as e:
-            raise InvalidRelationTitle(e.args[0])
+            raise ValueError(e.args[0])
     else:
         inhibits = []
 
     return inhibits
 
 
+def _save_dictionary():
+    try:
+        Dictionary().compute_relations()
+        Dictionary().compute_ranks()
+        save_dictionary(DICTIONARY_FOLDER)
+    except ValueError as e:
+        load_dictionary(DICTIONARY_FOLDER, Dictionary())
+        raise ValueError("Unable to recompute the relations and ranks: " + str(e))
+
+
 @need_login
 @flush_cache
-@exception_handler
+# @exception_handler
 def new_ieml_script(body):
     script_ast = sc(body["IEML"])
-    terms_db().add_term(script_ast,  # the ieml parser's ast
-                        {"FR": body["FR"], "EN": body["EN"]},  # the
-                        inhibits=_process_inhibits(body), # no inhibitions at the parser's creation
-                        root=body["PARADIGM"] == "1",
-                        recompute_relations=False)
+    Dictionary().add_term(script_ast,
+                          root=body["PARADIGM"] == "1",
+                          inhibitions=_process_inhibits(body),
+                          translation={"fr": body["FR"], "en": body["EN"]})
 
-    entry = terms_db().get_term(script_ast)
-    return {"success" : True, "added": _build_old_model_from_term_entry(entry)}
+    if body["PARADIGM"] == "1":
+        for i, ss in enumerate(script_ast.singular_sequences):
+            Dictionary().add_term(ss,
+                                  translation={"fr": body["FR"] + " SS (%d)"%i,
+                                               "en": body["EN"] + " SS (%d)"%i})
+
+    for j, table in enumerate(script_ast.tables):
+        for i, tab in enumerate(table.headers):
+            Dictionary().add_term(tab,
+                                  translation={"fr": body["FR"] + " Table (%d) Tab (%d)" % (j,i),
+                                               "en": body["EN"] + " Table (%d) Tab (%d)" % (j,i)})
+
+    _save_dictionary()
+    return {"success" : True, "added": _build_old_model_from_term_entry(term(script_ast))}
 
 
 @need_login
@@ -335,7 +321,9 @@ def new_ieml_script(body):
 @exception_handler
 def remove_ieml_script(body):
     script_ast = sc(body['id'])
-    terms_db().remove_term(script_ast, recompute_relations=False)
+    Dictionary().remove_term(term(script_ast))
+    _save_dictionary()
+
     return {'success': True}
 
 
@@ -345,38 +333,40 @@ def remove_ieml_script(body):
 def update_ieml_script(body):
     """Updates an IEML Term's properties (mainly the tags, and the paradigm). If the IEML is changed,
     a new term is created"""
-    script_ast = sc(body["ID"]) # the ID refer to the parser being updated
+    script_ast = sc(body["ID"])
 
     inhibits = _process_inhibits(body)
 
     if body["IEML"] == body["ID"]:
         # no update on the ieml
-        terms_db().update_term(script_ast,
-                             tags={ "FR" : body["FR"], "EN" : body["EN"]},
-                             root=body["PARADIGM"] == "1", inhibits=inhibits, recompute_relations=False)
+        Dictionary().update_term(term(script_ast),
+                                 inhibitions=inhibits,
+                                 translation={"fr": body["FR"], "en": body["EN"]})
     else:
-        terms_db().remove_term(script_ast, recompute_relations=False)
-        terms_db().add_term(sc(body["IEML"]),  # the ieml parser's ast
-                          {"FR": body["FR"], "EN": body["EN"]},  # the
-                          root=body["PARADIGM"] == "1", inhibits=inhibits, recompute_relations=False)
+        Dictionary().remove_term(term(script_ast))
+        Dictionary().add_term(sc(body["IEML"]),
+                              root=body["PARADIGM"] == "1",
+                              inhibitions=inhibits,
+                              translation={"fr": body["FR"], "en": body["EN"]})
+    _save_dictionary()
+    return {"success" : True, "modified": _build_old_model_from_term_entry(term(body["IEML"]))}
 
-    entry = terms_db().get_term(script_ast)
-    return {"success" : True, "modified": _build_old_model_from_term_entry(entry)}
 
-
+@exception_handler
 def ieml_term_exists(ieml_term):
     """Tries to dig a term from the database"""
-    try:
-        s = sc(ieml_term)
-    except CannotParse:
+    t = script(ieml_term)
+    if t in Dictionary():
+        return [str(t)]
+    else:
         return []
-    found_term = terms_db().get_term(factorize(s))
-    return [found_term] if found_term is not None else []
 
 
+# @exception_handler
 def en_tag_exists(tag_en):
-    return list(terms_db().search_by_tag(tag_en, "EN"))
+    return [tag_en] if tag_en in Dictionary().translations['en'].inv else []
 
 
+# @exception_handler
 def fr_tag_exists(tag_fr):
-    return list(terms_db().search_by_tag(tag_fr, "FR"))
+    return [tag_fr] if tag_fr in Dictionary().translations['fr'].inv else []

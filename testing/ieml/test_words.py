@@ -1,21 +1,19 @@
 import unittest
 
-from ieml.ieml_objects.terms import Term
-from ieml.ieml_objects.tools import RandomPoolIEMLObjectGenerator, ieml
+from ieml.ieml_objects.exceptions import InvalidIEMLObjectArgument
+from ieml.ieml_objects.tools import ieml, term
 from ieml.ieml_objects.words import Word, Morpheme
 
 
 class WordsTest(unittest.TestCase):
     def test_create_word(self):
-        a = Word(Morpheme([Term('wa.'), Term('we.')]))
-        b = Word(Morpheme(reversed([Term('wa.'), Term('we.')])))
+        a = Word(Morpheme([term('wa.'), term('we.')]))
+        b = Word(Morpheme(reversed([term('wa.'), term('we.')])))
         self.assertEqual(a, b)
         self.assertEqual(str(a), str(b))
 
     def test_word_instanciation(self):
-        words = [RandomPoolIEMLObjectGenerator().word() for _ in range(10)]
-
-        with self.assertRaises(ValueError):
+        with self.assertRaises(InvalidIEMLObjectArgument):
             # "Too many singular sequences"
             ieml("[([O:M:.]+[wa.]+[M:M:.])*([O:O:.M:O:.-])]")
 

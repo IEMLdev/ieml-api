@@ -2,7 +2,7 @@ import unittest
 
 from ieml.script.exceptions import TooManySingularSequences
 from ieml.script.operator import sc
-from ieml.script.constants import AUXILIARY_CLASS, VERB_CLASS, NOUN_CLASS, PRIMITVES
+from ieml.script.constants import AUXILIARY_CLASS, VERB_CLASS, NOUN_CLASS, PRIMITIVES
 from ieml.script import MultiplicativeScript
 from ieml.script.script import AdditiveScript
 
@@ -26,7 +26,7 @@ class TestScript(unittest.TestCase):
                 self.assertEqual(m.children, [], msg='Script %s have multiplicative node of layer 0 with children'%str(s))
 
     def test_order_primitive(self):
-        primitives = [sc(p + ':') for p in PRIMITVES]
+        primitives = [sc(p + ':') for p in PRIMITIVES]
         primitives.sort()
         res = ''.join([str(p)[0:1] for p in primitives])
         self.assertEqual(res, 'EUASBT', msg='Primitives not correctly sorted.')

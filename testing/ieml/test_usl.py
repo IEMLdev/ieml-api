@@ -1,5 +1,6 @@
 import random
 import re
+import unittest
 
 from ieml.ieml_objects import RandomPoolIEMLObjectGenerator, Sentence, Hypertext, Text, Word, PropositionPath
 from ieml.ieml_objects.hypertexts import Hyperlink
@@ -53,9 +54,9 @@ class TestUsl(unittest.TestCase):
 
 class TextUslToots(unittest.TestCase):
     def test_replace(self):
-        u = usl(Word(Morpheme([Term('M:')])))
+        u = usl(Word(Morpheme([term('M:')])))
         u2 = replace_paths(u, [('r0', '[S:]')])
-        self.assertEqual(u2, usl(Word(Morpheme([Term('S:')]))))
+        self.assertEqual(u2, usl(Word(Morpheme([term('S:')]))))
 
     def test_deference_path(self):
         u = random_usl(rank_type=Text)

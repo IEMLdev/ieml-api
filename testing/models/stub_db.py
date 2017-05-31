@@ -1,20 +1,18 @@
 import importlib
 import random
+import sys
 import unittest
 from collections import namedtuple
 from string import ascii_lowercase
 from types import ModuleType
 
-import sys
 import config
 from ieml.script.operator import sc
 from models.constants import TAG_LANGUAGES
 from models.intlekt.edition.glossary import GlossaryConnector
 from models.intlekt.edition.lexicon import LexiconConnector
-from models.relations.relations import RelationsConnector
-from models.templates.templates import TemplatesConnector
-from models.terms.terms import TermsConnector
 from models.usls.library import LibraryConnector
+from models.usls.templates.templates import TemplatesConnector
 
 
 def stub_db(module_model, connectors):
@@ -105,7 +103,6 @@ class ModelTestCase(unittest.TestCase):
     The Test case that stub the db before executing the test. The connectors that must be stubbed should be specified
       as a class attribute connectors:
 
-    connectors = ('terms', 'relations') # stubb the terms and relations connectors
     """
 
     # default stub to no class, must override the property in child class
@@ -119,8 +116,6 @@ class ModelTestCase(unittest.TestCase):
         # init all the connectors (to instantiate all non stubbed connectors, otherwise, if we instanciate for the 1st
         # time a non stubbed connector after the stubbing of the other connector, it will be stubbed)
         # because of the stub of the singleton DbConnector in models.commons
-        self.terms = TermsConnector()
-        self.relations = RelationsConnector()
         self.library = LibraryConnector()
         self.templates = TemplatesConnector()
         self.glossary = GlossaryConnector()
@@ -134,8 +129,6 @@ class ModelTestCase(unittest.TestCase):
         normal_db(cls.__module__, cls.connectors)
 
     def setUp(self):
-        self.terms = TermsConnector()
-        self.relations = RelationsConnector()
         self.library = LibraryConnector()
         self.templates = TemplatesConnector()
         self.glossary = GlossaryConnector()
@@ -144,10 +137,6 @@ class ModelTestCase(unittest.TestCase):
         self._clear()
 
     def _clear(self):
-        if 'terms' in self.connectors:
-            self.terms.drop()
-        if 'relations' in self.connectors:
-            self.relations.drop()
         if 'library' in self.connectors:
             self.library.drop()
         if 'logins' in self.connectors:
@@ -159,28 +148,6 @@ class ModelTestCase(unittest.TestCase):
             self.glossary.drop()
         if 'lexicon' in self.connectors:
             self.lexicon.drop()
-
-    def _save_paradigm(self, paradigm, recompute_relations=True):
-        list_terms = [{
-                          'AST': s,
-                          'ROOT': False,
-                          'TAGS': _tag(),
-                          'INHIBITS': [],
-                          'METADATA': {}
-                      } for s in paradigm.paradigms]
-
-        list_terms.append({
-            'AST': paradigm.root,
-            'ROOT': True,
-            'TAGS': _tag(),
-            'INHIBITS': [],
-            'METADATA': {}
-        })
-        self.terms.save_multiple_terms(list_terms, recompute_relations=recompute_relations)
-
-    def _count(self):
-        return self.terms.terms.find().count() + self.relations.relations.find().count()
-
 
 def _tag():
     return {l: ''.join(random.sample(ascii_lowercase, 20)) for l in TAG_LANGUAGES}

@@ -1,21 +1,23 @@
-import unittest
-from ieml.ieml_objects import Term, Morpheme, Word, Clause, Sentence
+from ieml.ieml_objects.sentences import Sentence, Clause
+from ieml.ieml_objects.tools import term
+from ieml.ieml_objects.words import Morpheme, Word
+
 
 def get_test_word_instance():
-    morpheme_subst = Morpheme([Term("a.i.-"), Term("i.i.-")])
-    morpheme_attr = Morpheme([Term("E:A:T:."), Term("E:S:.wa.-"),Term("E:S:.o.-")])
+    morpheme_subst = Morpheme([term("a.i.-"), term("i.i.-")])
+    morpheme_attr = Morpheme([term("E:A:T:."), term("E:S:.wa.-"),term("E:S:.o.-")])
     return Word(morpheme_subst, morpheme_attr)
 
 def get_test_morpheme_instance():
-    morpheme = Morpheme([Term("E:A:T:."), Term("E:S:.wa.-"),Term("E:S:.o.-")])
+    morpheme = Morpheme([term("E:A:T:."), term("E:S:.wa.-"),term("E:S:.o.-")])
     return morpheme
 
 def get_words_list():
     #this list is already sorted
-    terms_list = [Term("E:A:T:."), Term("E:S:.wa.-"), Term("E:S:.o.-"), Term("a.i.-"), Term("i.i.-"),  Term("u.M:M:.-")]
+    terms_list = [term("E:A:T:."), term("E:S:.wa.-"), term("E:S:.o.-"), term("a.i.-"), term("i.i.-"),  term("u.M:M:.-")]
     # a small yield to check the word before returning it :-°
-    for term in terms_list:
-        word_obj = Word(Morpheme(term))
+    for t in terms_list:
+        word_obj = Word(Morpheme(t))
         yield word_obj
 
 def get_test_sentence():

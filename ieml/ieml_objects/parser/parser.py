@@ -4,9 +4,9 @@ import ply.yacc as yacc
 
 from ieml.exceptions import CannotParse
 from ieml.ieml_objects import Word, Morpheme, Clause, SuperClause, Sentence, SuperSentence, Term, Text, Hypertext
+from ieml.ieml_objects.dictionary import Dictionary
 from ieml.ieml_objects.hypertexts import Hyperlink, PropositionPath
 from ieml.ieml_objects.parser.lexer import get_lexer, tokens
-from ieml.script.operator import script
 from metaclasses import Singleton
 
 
@@ -78,7 +78,7 @@ class IEMLParser(metaclass=Singleton):
 
     def p_term(self, p):
         """term : LBRACKET TERM RBRACKET"""
-        p[0] = _build(Term(script(p[2])))
+        p[0] = _build(Dictionary().terms[p[2]])
 
     def p_proposition_sum(self, p):
         """terms_sum : terms_sum PLUS term

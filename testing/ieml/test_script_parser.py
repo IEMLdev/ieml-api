@@ -1,11 +1,11 @@
+import unittest
+from _dbus_bindings import Dictionary
+
 from pymongo import MongoClient
 
 from ieml.exceptions import CannotParse
 from ieml.script import *
 from ieml.script.operator import sc
-from models.constants import TERMS_COLLECTION
-from testing.ieml.helper import *
-from config import DB_ADDRESS
 
 
 class TestTermParser(unittest.TestCase):
@@ -71,14 +71,10 @@ class TestTermParser(unittest.TestCase):
             self.assertEqual(s.cardinal, 1)
 
     def test_all_db_term(self):
-        terms_db = MongoClient(DB_ADDRESS)['old_db'][TERMS_COLLECTION]
-        terms = [term['IEML'] for term in terms_db.find({})]
-
         parser = ScriptParser()
+        terms = [str(term.script) for term in Dictionary()]
         terms_ast = [parser.parse(term) for term in terms]
-        self.assertListEqual([str(t) for t in terms_ast], list(map(lambda s: s.replace(' ',''), terms)))
-
-        terms_ast.sort()
+        self.assertListEqual([str(t) for t in terms_ast], terms)
 
     def test_reduction_single_add(self):
         script = self.parser.parse("M:.-',M:.-',S:.-'B:.-'n.-S:.U:.-',_")

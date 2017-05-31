@@ -1,5 +1,5 @@
-from models.intlekt.constants import LANGUAGES
-from models.intlekt.usl.usl_connector import UslConnector
+from models.intlekt.old.constants import LANGUAGES
+from models.intlekt.old.usl_connector import UslConnector
 
 #faire les champs Spanish et portuguese même vide pour ne retourner qu'un seul objet python : JSON
 connector = UslConnector()

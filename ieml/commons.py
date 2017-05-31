@@ -48,3 +48,8 @@ GRAMMATICAL_CLASS_NAMES = bidict.bidict({
     1: 'VERB',
     2: 'NOUN'
 })
+
+LANGUAGES = {
+    'fr',
+    'en'
+}

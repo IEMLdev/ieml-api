@@ -74,3 +74,4 @@ data/usl.json
 flask_session/
 parser/*
 scripts/lambda
+data/dictionary/*

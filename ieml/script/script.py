@@ -1,10 +1,13 @@
 import itertools
+from collections import namedtuple
+from itertools import chain
 
 from ieml.script.exceptions import InvalidScriptCharacter, InvalidScript, IncompatiblesScriptsLayers, TooManySingularSequences
 from ieml.commons import TreeStructure, LAYER_MARKS
-from ieml.script.constants import MAX_LAYER, MAX_SINGULAR_SEQUENCES
-from ieml.script.constants import PRIMITVES, remarkable_multiplication_lookup_table, REMARKABLE_ADDITION, \
+from ieml.script.constants import MAX_LAYER, MAX_SINGULAR_SEQUENCES, MAX_SIZE_HEADER
+from ieml.script.constants import PRIMITIVES, remarkable_multiplication_lookup_table, REMARKABLE_ADDITION, \
     character_value, AUXILIARY_CLASS, VERB_CLASS, NOUN_CLASS
+import numpy as np
 
 
 class Script(TreeStructure):
@@ -38,15 +41,19 @@ class Script(TreeStructure):
 
         # The singular sequences
         self._singular_sequences = None
+        self._singular_sequences_set = None
 
         # The contained paradigms (tables)
-        self._tables = []
+        self._tables = None
+        self._cells = None
 
         # The canonical string to compare same layer and cardinal parser (__lt__)
         self.canonical = None
 
         # class of the parser, one of the following : VERB (1), AUXILIARY (0), and NOUN (2)
         self.script_class = None
+
+        self._hash = None
 
     def __add__(self, other):
         if not isinstance(other, Script):
@@ -55,17 +62,13 @@ class Script(TreeStructure):
         return AdditiveScript(children=[self, other])
 
     def __eq__(self, other):
-        if not isinstance(other, Script):
-            return False
-
-        if self._str is None or other._str is None:
-            return NotImplemented
-
-        return self._str == other._str
+        return self.__hash__() == other.__hash__()
 
     def __hash__(self):
         """Since the IEML string for any proposition AST is supposed to be unique, it can be used as a hash"""
-        return self.__str__().__hash__()
+        if self._hash is None:
+            self._hash = self.__str__().__hash__()
+        return self._hash
 
     def __lt__(self, other):
         if not isinstance(self, Script) or not isinstance(other, Script):
@@ -132,22 +135,55 @@ class Script(TreeStructure):
     def __getitem__(self, index):
         return self.children[index]
 
-    def _compute_singular_sequences(self):
-        pass
-
     def __contains__(self, item):
         if not isinstance(item, Script):
             return False
 
-        return set(item.singular_sequences).issubset(set(self.singular_sequences))
+        if item.layer != self.layer:
+            return False
+
+        return item.singular_sequences_set.issubset(self.singular_sequences_set)
+
+    @property
+    def cells(self):
+        if self._cells is None:
+            if self.cardinal == 1:
+                self._cells = [np.array([[[self]]])]
+            else:
+                self._cells = self._compute_cells()
+
+        return self._cells
 
     @property
     def singular_sequences(self):
-        if self._singular_sequences:
-            return self._singular_sequences
+        if self._singular_sequences is None:
+            self._singular_sequences = self._compute_singular_sequences()
 
-        self._singular_sequences = self._compute_singular_sequences()
         return self._singular_sequences
+
+    @property
+    def singular_sequences_set(self):
+        if self._singular_sequences_set is None:
+            self._singular_sequences_set = set(self.singular_sequences)
+
+        return self._singular_sequences_set
+
+    @property
+    def tables(self):
+        if self._tables is None:
+            from ieml.script.tables import Table
+            self._tables = [Table(cell) for cell in self.cells]
+
+        return self._tables
+
+    def _compute_tables(self):
+        pass
+
+    def _compute_cells(self):
+        pass
+
+    def _compute_singular_sequences(self):
+        pass
 
 
 class AdditiveScript(Script):
@@ -244,6 +280,16 @@ class AdditiveScript(Script):
             s.sort()
             return s
 
+    def _compute_cells(self):
+        # we generate one table per children, unless one children is a singular sequence.
+        # if so, we generate one column instead
+
+        if any(not c.paradigm for c in self.children):
+            # layer 0 -> column paradigm (like I: F: M: O:)
+            return [np.array([[[s]] for s in self.singular_sequences])]
+
+        return [t for c in self.children for t in c.cells]
+
 
 class MultiplicativeScript(Script):
     """ Represent a multiplication of three scripts of the same layer."""
@@ -269,7 +315,7 @@ class MultiplicativeScript(Script):
                 raise InvalidScript()
 
             _character = character
-            if _character in PRIMITVES:
+            if _character in PRIMITIVES:
                 _children = []
                 layer = 0
             elif _character in REMARKABLE_MULTIPLICATION_SCRIPT:
@@ -292,7 +338,7 @@ class MultiplicativeScript(Script):
                 _children[i] = NullScript(layer=c.layer)
 
         # Fill the children to get a size of 3
-        if _character not in PRIMITVES:
+        if _character not in PRIMITIVES:
             for i in range(len(_children), 3):
                 _children.append(NullScript(layer=layer))
 
@@ -305,7 +351,7 @@ class MultiplicativeScript(Script):
 
         # Compute the attributes of this parser
         if self.character:
-            self.layer = 0 if self.character in PRIMITVES else 1
+            self.layer = 0 if self.character in PRIMITIVES else 1
             self.paradigm = False
             self.cardinal = 1
             self.empty = self.character == 'E'
@@ -387,6 +433,44 @@ class MultiplicativeScript(Script):
             s.sort()
             return s
 
+    def _compute_cells(self):
+        # check how many plurals child
+        plurals_child = [(c, i) for i, c in enumerate(self.children) if c.cardinal != 1]
+        if len(plurals_child) == 1:
+            # only one plural child, we recurse
+            v = plurals_child[0]
+
+            # translate the child ss as ours
+            map_seq = {s.children[v[1]]: s for s in self.singular_sequences}
+
+            def resolve_ss(s):
+                return map_seq[s]
+
+            return [np.vectorize(resolve_ss)(c) for c in v[0].cells]
+
+        # more than one plural var, we build a multidimensional array
+        # Check the table dimension
+        if any(c.cardinal > MAX_SIZE_HEADER for c, _ in plurals_child):
+            raise ValueError("The table defined by the script %s produce a table with more than %d headers."%
+                             (str(self), MAX_SIZE_HEADER))
+
+        # 1st dim the rows
+        # 2nd dim the columns
+        # 3rd dim the tabs
+        result = np.zeros(shape=[plurals_child[i][0].cardinal if i < len(plurals_child)
+                                 else 1 for i in range(3)], dtype=object)
+
+        seq_index = [{s:i for i, s in enumerate(v[0].singular_sequences)} for v in plurals_child]
+
+        for s in self.singular_sequences:
+            res = [None, None, None]
+            for i, v in enumerate(plurals_child):
+                res[i] = seq_index[i][s.children[v[1]]]
+
+            result[res[0], res[1], res[2]] = s
+
+        return [result]
+
 
 class NullScript(Script):
     def __init__(self, layer):
@@ -455,3 +539,4 @@ REMARKABLE_MULTIPLICATION_SCRIPT = {
 
 # Building the remarkable addition to parser
 REMARKABLE_ADDITION_SCRIPT = {key: [MultiplicativeScript(character=c) if c != 'E' else NullScript(layer=0) for c in REMARKABLE_ADDITION[key]] for key in REMARKABLE_ADDITION}
+

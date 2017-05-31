@@ -1,12 +1,8 @@
 import unittest
 
-from ieml.ieml_objects.hypertexts import Hypertext
 from ieml.ieml_objects.parser.parser import IEMLParser
-from ieml.ieml_objects.sentences import Sentence, SuperSentence
-from ieml.ieml_objects.terms import Term
 from ieml.ieml_objects.texts import Text
-from ieml.ieml_objects.tools import RandomPoolIEMLObjectGenerator
-from ieml.ieml_objects.words import Morpheme, Word
+from ieml.ieml_objects.tools import RandomPoolIEMLObjectGenerator, term
 
 
 class TestPropositionParser(unittest.TestCase):
@@ -26,9 +22,9 @@ class TestPropositionParser(unittest.TestCase):
             self.assertEqual(self.parser.parse(str(o)), o)
 
     def test_parse_term_plus(self):
-        term = Term("f.-O:M:.+M:O:.-s.y.-'")
+        t = term("f.-O:M:.+M:O:.-s.y.-'")
         to_check = self.parser.parse("[f.-O:M:.+M:O:.-s.y.-']")
-        self.assertEqual(to_check, term)
+        self.assertEqual(to_check, t)
 
     def test_parse_sentence(self):
         for i in range(10):

@@ -1,39 +1,31 @@
-from ieml.ieml_objects.exceptions import TermNotFoundInDictionary
 from ieml.ieml_objects.commons import IEMLObjects
 from ieml.script.operator import script
+from ieml.script.script import Script
 
 
 class Term(IEMLObjects):
     closable = True
 
-    def __init__(self, s):
-        if isinstance(s, str) and s[0] == '[' and s[-1] == ']':
-            s = s[1:-1]
-
-        if isinstance(s, Term):
-            self.script = s.script
-        else:
-            self.script = script(s)
+    def __init__(self, s, dictionary):
+        self.dictionary = dictionary
+        self.script = script(s)
 
         self.grammatical_class = self.script.script_class
-
-        from models.terms.terms import TermsConnector
-        term = TermsConnector().get_term(self.script)
-        if term is None:
-            raise TermNotFoundInDictionary(str(self.script))
 
         super().__init__([])
 
         self._relations = {}
 
-    def relations(self, relation_name):
-        if relation_name not in self._relations:
-            from models.relations import RelationsQueries
-            self._relations[relation_name] = \
-                [Term(s) for s in RelationsQueries.relations(self.script, relation_title=relation_name)]
+        # if term in a dictionary, those values will be set
+        self.translation = None
+        self.inhibitions = None
+        self.root = None
+        self.index = None
+        self.relations = None
+        self.rank = None
+        self.parent = None
 
-        return self._relations[relation_name]
-
+        self._rank = None
 
     __hash__ = IEMLObjects.__hash__
 
@@ -52,3 +44,19 @@ class Term(IEMLObjects):
     @property
     def empty(self):
         return self.script.empty
+
+    @property
+    def defined(self):
+        return all(self.__getattribute__(p) is not None for p in
+                   ['translation', 'inhibitions', 'root', 'index', 'relations', 'rank'])
+
+    @property
+    def tables(self):
+        return self.script.tables
+
+    def __contains__(self, item):
+        from ieml.ieml_objects.tools import term
+        if not isinstance(item, Term):
+            item = term(item)
+
+        return item.script in self.script

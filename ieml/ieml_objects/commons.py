@@ -1,7 +1,6 @@
 from ieml.commons import TreeStructure
 from ieml.ieml_objects.exceptions import InvalidIEMLObjectArgument
 
-
 class IEMLType(type):
     """This metaclass enables the comparison of class times, such as (Sentence > Word) == True"""
 

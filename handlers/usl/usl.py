@@ -1,12 +1,9 @@
-from collections import defaultdict
-
-from models.exceptions import USLNotFound
 from handlers.commons import exception_handler
 from ieml.usl import usl
 from models.usls.library import LibraryConnector
 
 
-@exception_handler
+# @exception_handler
 def save_usl(body):
     _usl = usl(body['ieml'])
     tags = {'FR': body['tags']['fr'], 'EN': body['tags']['en']}
@@ -14,7 +11,7 @@ def save_usl(body):
     return {'success': True, 'id': _id}
 
 
-@exception_handler
+# @exception_handler
 def get_usl_ieml(ieml):
     _usl = LibraryConnector().get(usl=ieml)
     if not _usl:
@@ -81,7 +78,7 @@ def update_usl(id, body):
             query['translations'] = {}
             if 'fr' in body['translations']:
                 query['translations']['FR'] = body['translations']['fr']
-            if 'en' in body['tags']:
+            if 'en' in body['translations']:
                 query['translations']['EN'] = body['translations']['en']
 
         LibraryConnector().update(id=id, **query)

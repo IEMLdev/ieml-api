@@ -1,5 +1,4 @@
 from testing.models.stub_db import ModelTestCase, _tag, paradigms
-from models.exceptions import RootParadigmMissing, RootParadigmIntersection, InvalidTags, DuplicateTag
 from ieml.script.operator import sc
 
 

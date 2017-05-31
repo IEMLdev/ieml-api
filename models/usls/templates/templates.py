@@ -3,12 +3,12 @@ from _operator import mul
 from functools import reduce
 
 from ieml.ieml_objects.terms import Term
+from ieml.ieml_objects.tools import term
 from ieml.paths.tools import path
-from ieml.script.constants import CONTAINS_RELATION
-from ieml.usl.tools import usl, replace_paths
+from ieml.script.constants import MAX_SINGULAR_SEQUENCES
+from ieml.usl.tools import replace_paths
 from models.commons import DBConnector, generate_tags, check_tags
-from models.constants import TEMPLATES_COLLECTION, TAG_LANGUAGES, MAX_SIZE_TEMPLATE
-from models.terms import TermsConnector
+from models.constants import TEMPLATES_COLLECTION, TAG_LANGUAGES
 from models.usls.library import usl_index
 
 
@@ -30,7 +30,7 @@ class TemplatesConnector(DBConnector):
 
         terms = [_usl[p] for p in paths]
 
-        if any(not isinstance(t, Term) or len(t) != 1 for t in terms):
+        if any(not isinstance(t, Term) or t.script.cardinal != 1 for t in terms):
             raise ValueError("Invalids path, lead to multiple elements.")
 
         terms = [t for s in terms for t in s]
@@ -39,13 +39,13 @@ class TemplatesConnector(DBConnector):
             raise ValueError("Template only support Term variation.")
 
         # path -> []
-        paradigms = {p: t.relations(CONTAINS_RELATION) for p, t in zip(paths, terms)}
+        paradigms = {p: t.relations.contains for p, t in zip(paths, terms)}
 
         template_size = reduce(mul, map(len, paradigms.values()))
 
-        if template_size > MAX_SIZE_TEMPLATE:
+        if template_size > MAX_SINGULAR_SEQUENCES:
             raise ValueError("Can't generate this template, maximum size of %d and the template size is %d."%
-                             (MAX_SIZE_TEMPLATE, template_size))
+                             (MAX_SINGULAR_SEQUENCES, template_size))
 
         if any(not rels for rels in paradigms.values()):
             errors = filter(lambda e: not paradigms[e], paradigms)
@@ -60,8 +60,8 @@ class TemplatesConnector(DBConnector):
             }
 
         if tags_rule and check_tags(tags_rule):
-            terms_tags = {str(term): TermsConnector().get_term(term)['TAGS']
-                          for term in set(itertools.chain.from_iterable(paradigms.values()))}
+            terms_tags = {str(t): term(t).translations
+                          for t in set(itertools.chain.from_iterable(paradigms.values()))}
 
             for u in expansion:
                 tags = {l: tags_rule[l] for l in TAG_LANGUAGES}
