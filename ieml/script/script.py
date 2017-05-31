@@ -5,7 +5,7 @@ from itertools import chain
 from ieml.script.exceptions import InvalidScriptCharacter, InvalidScript, IncompatiblesScriptsLayers, TooManySingularSequences
 from ieml.commons import TreeStructure, LAYER_MARKS
 from ieml.script.constants import MAX_LAYER, MAX_SINGULAR_SEQUENCES, MAX_SIZE_HEADER
-from ieml.script.constants import PRIMITVES, remarkable_multiplication_lookup_table, REMARKABLE_ADDITION, \
+from ieml.script.constants import PRIMITIVES, remarkable_multiplication_lookup_table, REMARKABLE_ADDITION, \
     character_value, AUXILIARY_CLASS, VERB_CLASS, NOUN_CLASS
 import numpy as np
 
@@ -315,7 +315,7 @@ class MultiplicativeScript(Script):
                 raise InvalidScript()
 
             _character = character
-            if _character in PRIMITVES:
+            if _character in PRIMITIVES:
                 _children = []
                 layer = 0
             elif _character in REMARKABLE_MULTIPLICATION_SCRIPT:
@@ -338,7 +338,7 @@ class MultiplicativeScript(Script):
                 _children[i] = NullScript(layer=c.layer)
 
         # Fill the children to get a size of 3
-        if _character not in PRIMITVES:
+        if _character not in PRIMITIVES:
             for i in range(len(_children), 3):
                 _children.append(NullScript(layer=layer))
 
@@ -351,7 +351,7 @@ class MultiplicativeScript(Script):
 
         # Compute the attributes of this parser
         if self.character:
-            self.layer = 0 if self.character in PRIMITVES else 1
+            self.layer = 0 if self.character in PRIMITIVES else 1
             self.paradigm = False
             self.cardinal = 1
             self.empty = self.character == 'E'

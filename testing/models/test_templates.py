@@ -1,10 +1,6 @@
-import operator
 import random
-from functools import reduce
 
 from ieml.ieml_objects.texts import Text
-from ieml.ieml_objects.words import Word
-from ieml.script.constants import CONTAINS_RELATION
 from ieml.usl.tools import random_usl
 from testing.models.stub_db import ModelTestCase
 

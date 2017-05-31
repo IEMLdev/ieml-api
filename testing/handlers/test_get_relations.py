@@ -14,7 +14,7 @@ class TestGetRelations(TestCase):
         self.assertIsInstance(result, list)
 
         # root is counted as a relation -> +1
-        self.assertEqual(len(result), len(t.relations) + 1)
+        self.assertEqual(len(result), 9)
 
         for rel_e in result:
             self.assertListEqual(sorted(rel_e['rellist'], key=lambda e: sc(e['ieml']), reverse=True), rel_e['rellist'])

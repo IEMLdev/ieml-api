@@ -13,8 +13,8 @@ class RankComputationTest(unittest.TestCase):
         self.dic = Dictionary()
 
     def test_rank1_2d(self):
-        term = self.dic.terms[sc("O:M:.M:M:.-+M:M:.O:M:.-")]
-        self.assertTrue(term.rank == 1, "The rank of a root paradigm is 1")
+        for t in Dictionary().roots:
+            self.assertTrue(t.rank == 0, "The rank of a root paradigm is not 0")
 
     def test_rank2_2d(self):
         term = self.dic.terms[sc("O:M:.M:M:.-+M:M:.O:M:.-")]

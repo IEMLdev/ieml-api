@@ -7,7 +7,7 @@ import numpy as np
 from ieml.ieml_objects.dictionary import Dictionary
 
 from ieml.ieml_objects.tools import term
-from ieml.script.operator import sc, script
+from ieml.script.operator import sc
 from ieml.script.parser import ScriptParser
 from ieml.script.tools import factorize
 
@@ -29,7 +29,7 @@ class TableGenerationTest(unittest.TestCase):
         t = term(scripts[0])
         self.assertEqual(len(t.script.tables), 1)
         self.assertEqual(t.script.tables[0].dim, 3)
-        self.assertEqual(t.rank, 1)
+        self.assertEqual(t.rank, 0)
 
         t = term(scripts[1])
         self.assertEqual(len(t.script.tables), 1)
@@ -38,20 +38,20 @@ class TableGenerationTest(unittest.TestCase):
 
 
     def test_rank(self):
-        with open('../../data/ranks.json', 'r') as fp:
+        with open('data/ranks.json', 'r') as fp:
             old_ranks = json.load(fp)
 
         diff = defaultdict(list)
-        for s in Dictionary().terms:
+        for _term in Dictionary():
             ranks = set()
-            for t in s.tables:
+            for t in _term.tables:
                 ranks.add(t.rank)
 
-            if s.paradigm:
-                self.assertEqual(len(ranks), 1, "Too many ranks for %s"%str(s))
+            if _term.script.paradigm:
+                self.assertEqual(len(ranks), 1, "Too many ranks for %s"%str(_term.script))
                 r = list(ranks)[0]
-                if r != old_ranks[str(s)]:
-                    diff[str(s)].extend([r, old_ranks[str(s)]])
+                if r != old_ranks[str(_term.script)]:
+                    diff[str(_term.script)].extend([r, old_ranks[str(_term.script)]])
             else:
                 self.assertSetEqual(ranks, {6})
 

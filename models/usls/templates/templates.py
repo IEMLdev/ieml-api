@@ -5,7 +5,7 @@ from functools import reduce
 from ieml.ieml_objects.terms import Term
 from ieml.ieml_objects.tools import term
 from ieml.paths.tools import path
-from ieml.script.constants import CONTAINS_RELATION, MAX_SIZE_HEADER, MAX_SINGULAR_SEQUENCES
+from ieml.script.constants import MAX_SINGULAR_SEQUENCES
 from ieml.usl.tools import replace_paths
 from models.commons import DBConnector, generate_tags, check_tags
 from models.constants import TEMPLATES_COLLECTION, TAG_LANGUAGES
@@ -30,7 +30,7 @@ class TemplatesConnector(DBConnector):
 
         terms = [_usl[p] for p in paths]
 
-        if any(not isinstance(t, Term) or len(t) != 1 for t in terms):
+        if any(not isinstance(t, Term) or t.script.cardinal != 1 for t in terms):
             raise ValueError("Invalids path, lead to multiple elements.")
 
         terms = [t for s in terms for t in s]
@@ -39,7 +39,7 @@ class TemplatesConnector(DBConnector):
             raise ValueError("Template only support Term variation.")
 
         # path -> []
-        paradigms = {p: t.relations(CONTAINS_RELATION) for p, t in zip(paths, terms)}
+        paradigms = {p: t.relations.contains for p, t in zip(paths, terms)}
 
         template_size = reduce(mul, map(len, paradigms.values()))
 

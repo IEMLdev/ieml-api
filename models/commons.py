@@ -36,7 +36,7 @@ def check_keywords(keywords):
 
 def generate_translations(usl):
     result = {}
-    entries = [t for p, t in usl.paths.items()]
+    entries = sorted([t for p, t in usl.paths.items()])
     for l in LANGUAGES:
         result[l.upper()] = ' '.join((e.translation[l] for e in islice(entries, 10)))
 

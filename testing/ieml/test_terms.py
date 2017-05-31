@@ -13,4 +13,4 @@ class TermsTest(unittest.TestCase):
 
     def test_relations_order(self):
         t = term('M:M:.O:O:.-')
-        self.assertListEqual(t.relations.contains, sorted(t.relations.contains))
+        self.assertTupleEqual(t.relations.contains, tuple(sorted(t.relations.contains)))

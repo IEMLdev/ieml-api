@@ -31,6 +31,33 @@ RELATIONS = ['contains',         # 0
              'table'             # 17
              ]
 
+INVERSE_RELATIONS = {
+    'father_substance': 'child_substance',
+    'child_substance': 'father_substance',  # 3
+    'father_attribute': 'child_attribute', # 4
+    'child_attribute': 'father_attribute',  # 5
+    'father_mode': 'child_mode',      # 6
+    'child_mode': 'father_mode',
+    'contains': 'contained',
+    'contained': 'contains',
+    'opposed':'opposed',          # 8
+    'associated':'associated',       # 9
+    'crossed': 'crossed',        # 10
+    'twin': 'twin',
+    'table_0': 'table_0',
+    'table_1': 'table_1',
+    'table_2': 'table_2',
+    'table_3': 'table_3',
+    'table_4': 'table_4',
+    'table_5': 'table_5',
+    'father': 'child',
+    'child': 'father',
+    'inclusion': 'inclusion',
+    'etymology': 'etymology',        # 15
+    'siblings': 'siblings',         # 16
+    'table': 'table'
+}
+
 
 class Relations:
     def __init__(self, term, dictionary):
@@ -38,6 +65,7 @@ class Relations:
 
         self.dictionary = dictionary
         self.term = term
+        self._all = None
 
         def get_relation(reltype):
             def getter(self):
@@ -57,10 +85,9 @@ class Relations:
         if self._all is None:
             rels = defaultdict(list)
 
-            for i in range(NB_RELATIONS):
-                relname = RELATIONS[i]
-                for t in self[i]:
-                    rels[t].append(relname)
+            for reltype in RELATIONS:
+                for t in self[reltype]:
+                    rels[t].append(reltype)
 
             self._all = OrderedDict()
 
@@ -78,33 +105,13 @@ class Relations:
         if relations_types is None:
             relations_types = RELATIONS
 
+        relations = self.all(dict=True)[term]
         result = []
-        for reltype in relations_types:
-            if term in getattr(self, reltype):
+        for reltype in relations:
+            if reltype in relations_types:
                 result.append(reltype)
 
         return result
-
-
-
-
-
-        # if table:
-        #     if self._all_table is None:
-        #         self._all_table = defaultdict(list)
-        #         for relname in ["table_%d"%i for i in range(6)]:
-        #             for t in self[relname]:
-        #                 self._all_table[t].append(relname)
-        #
-        #     return self._all_table[term]
-        # else:
-        #     if self._all_relations is None:
-        #         self._all_relations = defaultdict(list)
-        #         for relname in ['opposed', 'associated', 'crossed', 'twin', 'root']:
-        #             for t in self[relname]:
-        #                 self._all_relations[t].append(relname)
-        #
-        #     return self._all_relations[term]
 
     def __iter__(self):
         return self.all().__iter__()
