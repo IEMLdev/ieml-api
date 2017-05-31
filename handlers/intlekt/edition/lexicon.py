@@ -5,7 +5,9 @@ from models.intlekt.edition.lexicon import LexiconConnector
 
 @exception_handler
 def get_lexicon_list():
-    return {'success': True, 'lexicons': LexiconConnector().all_lexicons()}
+    return {'success': True,
+            'favorites': LexiconConnector().all_lexicons(favorite=True),
+            'others': LexiconConnector().all_lexicons(favorite=False)}
 
 
 @exception_handler
@@ -22,6 +24,13 @@ def delete_lexicon(body):
     success = LexiconConnector().remove_lexicon(id=id)
 
     return {'success': success}
+
+
+@exception_handler
+def set_lexicon_favorite(body):
+    names = body['names']
+    LexiconConnector().set_favorites(names)
+    return {'success': True}
 
 
 @exception_handler
@@ -58,16 +67,3 @@ def get_words_of_lexicon(lexicon_id):
                 'last_modified': t['LAST_MODIFIED'] } for t in lexicon['words']],
             'id': lexicon['id'],
             'name': lexicon['name']}
-
-
-@exception_handler
-def set_lexicon_favorite(lexicon_id, body):
-    words = body['words']
-    LexiconConnector().set_favorites(lexicon_id, words)
-    return {'success': True}
-
-
-@exception_handler
-def get_lexicon_favorite(lexicon_id):
-    return {'success': True,
-            'words': [t for t in LexiconConnector().get_favorites(lexicon_id)]}

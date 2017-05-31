@@ -229,7 +229,7 @@ class LibraryConnector(DBConnector):
                              'incorrect.' % json.dumps(tags))
 
     def drop(self):
-        self.library.remove({}, multi=True)
+        self.library.delete_many({})
 
     def _generate_id(self):
         free = False

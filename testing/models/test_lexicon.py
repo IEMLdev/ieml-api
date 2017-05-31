@@ -48,4 +48,14 @@ class TestModel(ModelTestCase):
         with self.assertRaises(ValueError):
             self.lexicon.add_lexicon("test")
 
+    def test_favorite(self):
+        for name in range(10):
+            self.lexicon.add_lexicon(str(name))
+
+        self.lexicon.set_favorites(list(map(str, range(0, 10,2))))
+
+        self.assertListEqual([int(k['name']) for k in self.lexicon.all_lexicons(favorite=True)],
+                             list(range(0, 10,2)))
+
+        self.assertTrue(all(int(k['name']) not in list(range(0, 10,2)) for k in self.lexicon.all_lexicons(favorite=False)))
 

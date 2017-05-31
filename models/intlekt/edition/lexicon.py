@@ -1,5 +1,7 @@
 import uuid
 
+import pymongo
+
 from ieml.ieml_objects.tools import ieml
 from models.commons import DBConnector
 from models.constants import LEXICONS_COLLECTION
@@ -17,12 +19,21 @@ class LexiconConnector(DBConnector):
 
             self.lexicon.create_index('name', unique=True, name="name_index")
 
-    def all_lexicons(self):
+    def all_lexicons(self, favorite=None):
+
+        if favorite is not None:
+            if favorite:
+                iter = self.lexicon.find({'favorite': {'$ne': None}}).sort([('favorite', pymongo.ASCENDING)])
+            else:
+                iter = self.lexicon.find({'favorite': {'$eq': None}}).sort([('name', pymongo.ASCENDING)])
+        else:
+            iter = self.lexicon.find()
+
         return [{
             'id': g['_id'],
             'name': g['name'],
             'nb_words': len(g['words'])
-                } for g in self.lexicon.find()]
+                } for g in iter]
 
     def get(self, name=None, id=None):
         """
@@ -46,7 +57,7 @@ class LexiconConnector(DBConnector):
         return {'id': lexicon['_id'],
                 'name': lexicon['name'],
                 'words': [LibraryConnector().get(id=i) for i in lexicon['words']],
-                'favorites': [LibraryConnector().get(id=i) for i in lexicon['favorites']]}
+                'favorite': lexicon['favorite']}
 
     def add_lexicon(self, name):
         """
@@ -61,21 +72,10 @@ class LexiconConnector(DBConnector):
             '_id': str(uuid.uuid4()),
             'name': name,
             'words': [],
-            'favorites': []
+            'favorite': None
         })
 
         return result.inserted_id
-
-    def set_favorites(self, id, words):
-        lexicon = self.get(id=id)
-
-        if any(w not in [w['USL']['IEML'] for w in lexicon['words']] for w in words):
-            raise ValueError("Can't add word to the favorites if it is not already saved to the lexicon.")
-
-        self.lexicon.update_one({'_id': lexicon['id']}, {'$set': {'favorites': _to_library_id(words)}})
-
-    def get_favorites(self, id):
-        return self.get(id=id)['favorites']
 
     def remove_lexicon(self, name=None, id=None):
         """
@@ -125,8 +125,14 @@ class LexiconConnector(DBConnector):
 
         return result.modified_count == 1
 
+    def set_favorites(self, name_list):
+        self.lexicon.update_many({}, {'$set': {'favorite': None}})
+
+        for i, name in enumerate(name_list):
+            self.lexicon.update_one({'name': name}, {'$set': {'favorite': i}})
+
     def drop(self):
-        self.lexicon.drop()
+        self.lexicon.delete_many({})
 
 
 def _to_library_id(it):
