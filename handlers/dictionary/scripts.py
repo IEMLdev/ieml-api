@@ -1,7 +1,6 @@
 import hashlib
 import random
 import string
-import uuid
 from ieml.ieml_objects.dictionary import Dictionary, save_dictionary, DICTIONARY_FOLDER, load_dictionary
 
 from handlers.commons import exception_handler, ieml_term_model
