@@ -24,7 +24,7 @@ def create_app():
 
     app = connexion.App(__name__, specification_dir='../api-doc/')
     app.add_api('dictionary_editor.yaml')
-    app.add_api('rest_api.yaml')
+    app.add_api('intlekt.yaml')
 
     app.after_request = lambda *args: None # a dirty hack so flask_cors doesn't screw up
     cors = CORS(app.app, resources={r"/*": {"origins": "*"}})
