@@ -16,3 +16,4 @@ eventlet
 gevent-websocket
 beautifulsoup4
 lxml
+scipy
