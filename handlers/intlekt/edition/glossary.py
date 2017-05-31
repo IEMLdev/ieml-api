@@ -4,7 +4,16 @@ from models.intlekt.edition.glossary import GlossaryConnector
 
 @exception_handler
 def get_glossary_list():
-    return {'success': True, 'glossaries': GlossaryConnector().all_glossaries()}
+    return {'success': True,
+            'favorites': GlossaryConnector().all_glossaries(favorite=True),
+            'others': GlossaryConnector().all_glossaries(favorite=False)}
+
+
+@exception_handler
+def set_glossary_favorite(body):
+    names = body['names']
+    GlossaryConnector().set_favorites(names)
+    return {'success': True}
 
 
 @exception_handler
@@ -51,15 +60,3 @@ def get_terms_of_glossary(glossary_id):
             'id': glossary['id'],
             'name': glossary['name']}
 
-
-@exception_handler
-def set_glossary_favorite(glossary_id, body):
-    terms = body['terms']
-    GlossaryConnector().set_favorites(glossary_id, terms)
-    return {'success': True}
-
-
-@exception_handler
-def get_glossary_favorite(glossary_id):
-    return {'success': True,
-            'terms': [ieml_term_model(t) for t in GlossaryConnector().get_favorites(glossary_id)]}

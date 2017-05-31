@@ -95,25 +95,19 @@ paths:
             type: object
             required:
               - success
-              - glossaries
+              - favorites
+              - others
             properties:
               success:
                 type: boolean
-              glossaries:
+              favorites:
                 type: array
                 items:
-                  type: object
-                  required:
-                    - id
-                    - name
-                    - nb_terms
-                  properties:
-                    id:
-                      type: string
-                    name:
-                      type: string
-                    nb_terms:
-                      type: integer
+                  $ref: "#/definitions/glossary"
+              others:
+                type: array
+                items:
+                  $ref: "#/definitions/glossary"
 
     post:
       operationId: handlers.new_glossary
@@ -281,33 +275,7 @@ paths:
               success:
                 type: boolean
 
-  '/intlekt/glossary/{glossary_id}/favorite':
-    get:
-      operationId: handlers.get_glossary_favorite
-      tags:
-        - Glossary
-      description: |
-        Get a list of all favorited term in this glossary.
-      parameters:
-        - name: glossary_id
-          in: path
-          required: true
-          type: string
-      responses:
-        '200':
-          description: Successful response
-          schema:
-            type: object
-            required:
-              - success
-              - terms
-            properties:
-              success:
-                type: boolean
-              terms:
-                type: array
-                items:
-                  $ref: '#/definitions/term'
+  '/intlekt/glossary/favorite':
     post:
       operationId: handlers.set_glossary_favorite
       tags:
@@ -315,21 +283,17 @@ paths:
       consumes:
         - application/json
       description: |
-        Set the list of favorited term in this glossary.
+        Set the list of favorited glossaries.
       parameters:
-        - name: glossary_id
-          in: path
-          required: true
-          type: string
         - name: body
           in: body
           required: true
           schema:
             type: object
             required:
-              - terms
+              - names
             properties:
-              terms:
+              names:
                 type: array
                 items:
                   type: string
@@ -1026,4 +990,17 @@ definitions:
       name:
         type: string
       nb_words:
+        type: integer
+
+  glossary:
+    required:
+      - id
+      - name
+      - nb_terms
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      nb_terms:
         type: integer
