@@ -88,7 +88,7 @@ paths:
       description: |
         Return the list of defined glossaries. A glossary is defined by his id. All glossary have a name unique for all
         the glossaries. If the split parameter is set, return two list, one for the favorited glossaries, the other for
-        the non-favorited. Otherwise return a list with all the glossaries (sorted with the favorited first).
+        the non-favorited. Otherwise return a list with all the glossaries (sorted in alphabetical order).
       parameters:
         - in: query
           name: split
@@ -328,7 +328,7 @@ paths:
       description: |
         Return the list of defined lexicons. A lexicon is defined by his id. Each lexicon have a name unique for all
         the lexicons. If the split parameter is set, return two list, one for the favorited lexicons, the other for
-        the non-favorited. Otherwise return a list with all the lexicons (sorted with the favorited first).
+        the non-favorited. Otherwise return a list with all the lexicons (sorted in alphabetical order).
       parameters:
         - in: query
           name: split

@@ -13,8 +13,7 @@ def get_lexicon_list(split=None):
     else:
         return {
             'success': True,
-            'lexicons': sorted(LexiconConnector().all_lexicons(),
-                            key=lambda g: g['favorite'] if g['favorite'] is not None else 10000)}
+            'lexicons': sorted(LexiconConnector().all_lexicons(), key=lambda g: g['name'])}
 
 
 

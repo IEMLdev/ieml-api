@@ -13,8 +13,7 @@ def get_glossary_list(split=None):
     else:
         return {
             'success': True,
-            'glossaries': sorted(GlossaryConnector().all_glossaries(),
-                            key=lambda g: g['favorite'] if g['favorite'] is not None else 10000)}
+            'glossaries': sorted(GlossaryConnector().all_glossaries(), key=lambda g: g['name'])}
 
 
 @exception_handler
