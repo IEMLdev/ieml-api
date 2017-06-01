@@ -1,9 +1,12 @@
 import hashlib
 import random
 import string
+from collections import defaultdict
+
 from ieml.ieml_objects.dictionary import Dictionary, save_dictionary, DICTIONARY_FOLDER, load_dictionary
 
 from handlers.commons import exception_handler, ieml_term_model
+from ieml.ieml_objects.relations import INVERSE_RELATIONS
 from ieml.ieml_objects.tools import term
 from ieml.script.operator import sc, script
 
@@ -40,10 +43,9 @@ def dictionary_dump():
             'terms': sorted((ieml_term_model(t) for t in Dictionary()), key=lambda c: c['INDEX'])}
 
 MAX_TERMS_DICTIONARY = 50000
-Drupal_dico = [ieml_term_model(t) for t in Dictionary()][:30]
+Drupal_dico = [ieml_term_model(t) for t in Dictionary()]
 all_uuid = {
-    d['IEML']: 1000 + int(hashlib.sha1(d['IEML'].encode()).hexdigest(), 16) % MAX_TERMS_DICTIONARY for d in
-    Drupal_dico
+    d['IEML']: 1000 + int(hashlib.sha1(d['IEML'].encode()).hexdigest(), 16) % MAX_TERMS_DICTIONARY for d in Drupal_dico
 }
 
 # @cached("dictionary_dump", 1000)
@@ -57,11 +59,6 @@ def drupal_dictionary_dump():
                 'INDEX': d['INDEX']
             } for d in Drupal_dico]
 
-RELATIONS = {
-    'Inclusion': [("Contained", "Contains")],
-    'Etymology': [("Father in substance", "Child in substance"), ("Father in attribute", "Child in attribute"), ("Father in mode", "Child in mode")],
-    'Siblings': [("Opposed", "Opposed"), ("Crossed", "Crossed"), ("Associated", "Associated"), ("Twin", "Twin")]
-}
 
 # @cached("dictionary_dump", 1000)
 # @exception_handler
@@ -69,31 +66,71 @@ RELATIONS = {
 #     dico = [ieml_term_model(t) for t in Dictionary()][:5]
 #     return _drupal_process(dico)
 
+
+_RELATIONS = {'contains': 'inclusion',         # 0
+             'contained': 'inclusion',        # 1
+             'father_substance': 'etymology', # 2
+             'child_substance': 'etymology',  # 3
+             'father_attribute': 'etymology', # 4
+             'child_attribute': 'etymology',  # 5
+             'father_mode': 'etymology',      # 6
+             'child_mode': 'etymology',       # 7
+             'opposed': 'sibling',          # 8
+             'associated': 'sibling',       # 9
+             'crossed': 'sibling',          # 10
+             'twin': 'sibling'}
+
+
 def drupal_relations_dump():
+    root = term("O:M:.O:M:.-+M:O:.M:O:.-")
+
+    paradigm = sorted(Dictionary().roots[root])
+
+    relations = defaultdict(set)
+
+    def add_rel(t0, t1, relname):
+        if t1 > t0:
+            q = t0
+            t0 = t1
+            t1 = q
+
+        relations[(t0, t1)].add(relname)
+
+    REL = list(_RELATIONS)
+
+    for i, t0 in enumerate(paradigm):
+        for t1 in paradigm[i:]:
+            for r in t0.relations.to(t1, relations_types=REL):
+                add_rel(t0, t1, r)
+
     res = []
-    for rel_cat in RELATIONS:
-        for sym in RELATIONS[rel_cat]:
+
+    for t0, t1 in relations:
+        for rel_cat in relations[(t0, t1)]:
             comment = ''.join([random.choice(string.ascii_lowercase) for i in range(100)])
-            term0 = random.choice(Drupal_dico)
-            term1 = random.choice(Drupal_dico)
-
-            print(term1)
             res.append({
-                'term_src': all_uuid[term0['IEML']],
-                'term_dest': all_uuid[term1['IEML']],
-                'relation_name': sym[0],
-                'relation_type': rel_cat,
+                'term_src': all_uuid[str(t0.script)],
+                'term_dest': all_uuid[str(t1.script)],
+                'relation_name': rel_cat,
+                'relation_type': _RELATIONS[rel_cat],
                 'commentary': comment
             })
 
             res.append({
-                'term_src': all_uuid[term1['IEML']],
-                'term_dest': all_uuid[term0['IEML']],
-                'relation_name': sym[1],
-                'relation_type': rel_cat,
+                'term_src': all_uuid[str(t1.script)],
+                'term_dest': all_uuid[str(t0.script)],
+                'relation_name': INVERSE_RELATIONS[rel_cat],
+                'relation_type': _RELATIONS[rel_cat],
                 'commentary': comment
             })
 
+        # for sym in RELATIONS[rel_cat]:
+        #     comment = ''.join([random.choice(string.ascii_lowercase) for i in range(100)])
+        #     term0 = random.choice(Drupal_dico)
+        #     term1 = random.choice(Drupal_dico)
+        #
+        #     print(term1)
+    print(len(res))
     return res
 
 @cached("all_ieml", 1000)
