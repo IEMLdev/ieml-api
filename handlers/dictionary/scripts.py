@@ -369,3 +369,7 @@ def en_tag_exists(tag_en):
 # @exception_handler
 def fr_tag_exists(tag_fr):
     return [tag_fr] if tag_fr in Dictionary().translations['fr'].inv else []
+
+
+def get_terms_ranking(ieml):
+    return {'success': True}

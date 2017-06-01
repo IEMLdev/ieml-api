@@ -504,18 +504,19 @@ class Dictionary(metaclass=Singleton):
     def _compute_father(self):
         print("\t\t[*] Computing father/child relations")
 
-        def _recurse_script(script, res_indexes):
+        def _recurse_script(script, res_indexes, depth):
             if isinstance(script, NullScript):
                 return
 
             if script in self.terms:
-                res_indexes.append(self.terms[script].index)
+                depth += 1
+                res_indexes.append((self.terms[script].index, depth))
 
             if script.layer == 0:
                 return
 
             for c in script.children:
-                _recurse_script(c, res_indexes)
+                _recurse_script(c, res_indexes, depth)
 
         father = np.zeros((3, len(self), len(self)), dtype=np.float32)
         for t in self.terms.values():
@@ -527,9 +528,9 @@ class Dictionary(metaclass=Singleton):
 
                 for i in range(3):
                     res_indexes = []
-                    _recurse_script(sub_s.children[i], res_indexes)
-                    for j in res_indexes:
-                        father[i, t.index, j] = 1.0/ (t.script.layer - self.index[j].script.layer)**2
+                    _recurse_script(sub_s.children[i], res_indexes, 0)
+                    for j, d in res_indexes:
+                        father[i, t.index, j] = 1.0/d**2
 
         return father
 

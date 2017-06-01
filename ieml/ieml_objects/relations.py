@@ -66,20 +66,8 @@ class Relations:
         self.dictionary = dictionary
         self.term = term
         self._all = None
-
-        def get_relation(reltype):
-            def getter(self):
-                if getattr(self, "_%s" % reltype) is None:
-                    relations = tuple(self.dictionary.rel(reltype, term=self.term))
-                    setattr(self, "_%s" % reltype, relations)
-
-                return getattr(self, "_%s" % reltype)
-
-            return getter
-
         for reltype in RELATIONS:
-            setattr(self, "_%s"%reltype, None)
-            setattr(self.__class__, reltype, property(fget=get_relation(reltype)))
+            setattr(self, "_%s" % reltype, None)
 
     def all(self, dict=False):
         if self._all is None:
@@ -104,6 +92,9 @@ class Relations:
     def to(self, term, relations_types=None):
         if relations_types is None:
             relations_types = RELATIONS
+
+        if term not in self.all(dict=True):
+            return []
 
         relations = self.all(dict=True)[term]
         result = []
@@ -130,6 +121,20 @@ class Relations:
             return self.__getattribute__(item)
 
         raise NotImplemented
+
+
+def get_relation(reltype):
+    def getter(self):
+        if getattr(self, "_%s" % reltype) is None:
+            relations = tuple(self.dictionary.rel(reltype, term=self.term))
+            setattr(self, "_%s" % reltype, relations)
+
+        return getattr(self, "_%s" % reltype)
+
+    return getter
+
+for reltype in RELATIONS:
+    setattr(Relations, reltype, property(fget=get_relation(reltype)))
 
 
 if __name__ == '__main__':

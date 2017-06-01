@@ -381,6 +381,19 @@ paths:
         '200':
           description: Successful response
 
+  /ranking:
+    get:
+      operationId: handlers.get_terms_ranking
+      parameters:
+        - in: path
+          name: ieml
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Successful response
+
+
   ##############################
   ## FOR THE DICTIONARY'S API ##
   ##############################

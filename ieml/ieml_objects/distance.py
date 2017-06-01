@@ -1,4 +1,5 @@
 import os
+from collections import defaultdict
 
 from ieml.ieml_objects.dictionary import Dictionary
 from scipy.sparse.csgraph._shortest_path import shortest_path
@@ -26,7 +27,7 @@ def get_distance_m():
         graph_ethy = Dictionary().relations_graph({
             'etymology': 1.0, # 1 to 0 (1/(layer0 - layer1)**2
             'inclusion': 1.0, # 0 or 1
-            'siblings' : 1.0, # 0 or 1
+            'siblings' : 2.0, # 0 or 1
             'table'    : 1/3 # 0 to 6
         })
         # graph_ethy_m = Dictionary().relations_graph(['etymology', 'inclusion', 'siblings',
@@ -104,6 +105,25 @@ def distance(term0, term1):
     # print(term1.relations.to(term0))
 
 
+def _test_diagram(t):
+    print("Diagram for term %s -- %s"%(str(t), t.translation['fr']))
+
+    other = sorted((distance(t, t1) ,t1) for t1 in Dictionary() if t1 != t)
+
+    cat = defaultdict(list)
+    for d, tt in other:
+        for rel in t.relations.to(tt, relations_types=['father', 'child', 'contains', 'contained', 'table', 'siblings']):
+            cat[rel].append((d, tt))
+
+    for rel in cat:
+        cat[rel] = [(d,tt) for d, tt in sorted(cat[rel]) if d[1] <= 1.0]
+
+    for k, v in cat.items():
+        print("\t[%s]"%k)
+        for d, tt in v:
+            print("%s (%.2f, %.2f, %.2f) - %s [%s]" % (str(tt), d[0], d[1], d[2], tt.translation['fr'],
+                                                       ', '.join(t.relations.to(tt))))
+
 
 def _test_term(t):
     print("Distance from term %s -- %s"%(str(t), t.translation['fr']))
@@ -116,8 +136,8 @@ def _test_term(t):
 
 if __name__ == '__main__':
 
-    _test_term(term(2000))
-
+    # _test_term(term("wa."))
+    _test_diagram(term("l.-y.-s.y.-'"))
     # print(term("j.-'U:.-'k.o.-t.o.-',").relations.to(term("[j.-'B:.-'k.o.-t.o.-',]")))
     # print(distance(term("j.-'U:.-'k.o.-t.o.-',"), term("k.o.-t.o.-'")))
 
