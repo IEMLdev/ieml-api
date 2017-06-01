@@ -4,10 +4,18 @@ from models.intlekt.edition.lexicon import LexiconConnector
 
 
 @exception_handler
-def get_lexicon_list():
-    return {'success': True,
-            'favorites': LexiconConnector().all_lexicons(favorite=True),
-            'others': LexiconConnector().all_lexicons(favorite=False)}
+def get_lexicon_list(split=None):
+
+    if split is not None:
+        return {'success': True,
+                'favorites': LexiconConnector().all_lexicons(favorite=True),
+                'others': LexiconConnector().all_lexicons(favorite=False)}
+    else:
+        return {
+            'success': True,
+            'lexicons': sorted(LexiconConnector().all_lexicons(),
+                            key=lambda g: g['favorite'] if g['favorite'] is not None else 10000)}
+
 
 
 @exception_handler

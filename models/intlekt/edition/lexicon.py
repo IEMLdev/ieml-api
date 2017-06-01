@@ -32,7 +32,8 @@ class LexiconConnector(DBConnector):
         return [{
             'id': g['_id'],
             'name': g['name'],
-            'nb_words': len(g['words'])
+            'nb_words': len(g['words']),
+            'favorite': g['favorite']
                 } for g in iter]
 
     def get(self, name=None, id=None):

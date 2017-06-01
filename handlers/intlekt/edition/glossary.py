@@ -3,10 +3,18 @@ from models.intlekt.edition.glossary import GlossaryConnector
 
 
 @exception_handler
-def get_glossary_list():
-    return {'success': True,
-            'favorites': GlossaryConnector().all_glossaries(favorite=True),
-            'others': GlossaryConnector().all_glossaries(favorite=False)}
+def get_glossary_list(split=None):
+    # print(split)
+
+    if split is not None:
+        return {'success': True,
+                'favorites': GlossaryConnector().all_glossaries(favorite=True),
+                'others': GlossaryConnector().all_glossaries(favorite=False)}
+    else:
+        return {
+            'success': True,
+            'glossaries': sorted(GlossaryConnector().all_glossaries(),
+                            key=lambda g: g['favorite'] if g['favorite'] is not None else 10000)}
 
 
 @exception_handler

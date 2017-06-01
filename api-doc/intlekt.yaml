@@ -87,7 +87,12 @@ paths:
         - Glossary
       description: |
         Return the list of defined glossaries. A glossary is defined by his id. All glossary have a name unique for all
-        the glossaries.
+        the glossaries. If the split parameter is set, return two list, one for the favorited glossaries, the other for
+        the non-favorited. Otherwise return a list with all the glossaries (sorted with the favorited first).
+      parameters:
+        - in: query
+          name: split
+          type: string
       responses:
         '200':
           description: Successful response
@@ -95,8 +100,6 @@ paths:
             type: object
             required:
               - success
-              - favorites
-              - others
             properties:
               success:
                 type: boolean
@@ -108,6 +111,11 @@ paths:
                 type: array
                 items:
                   $ref: "#/definitions/glossary"
+              glossaries:
+                type: array
+                items:
+                  $ref: "#/definitions/glossary"
+
 
     post:
       operationId: handlers.new_glossary
@@ -319,7 +327,13 @@ paths:
         - Lexicon
       description: |
         Return the list of defined lexicons. A lexicon is defined by his id. Each lexicon have a name unique for all
-        the lexicons.
+        the lexicons. If the split parameter is set, return two list, one for the favorited lexicons, the other for
+        the non-favorited. Otherwise return a list with all the lexicons (sorted with the favorited first).
+      parameters:
+        - in: query
+          name: split
+          type: string
+
       responses:
         '200':
           description: Successful response
@@ -327,8 +341,6 @@ paths:
             type: object
             required:
               - success
-              - favorites
-              - others
             properties:
               success:
                 type: boolean
@@ -340,6 +352,11 @@ paths:
                 type: array
                 items:
                   $ref: "#/definitions/lexicon"
+              lexicons:
+                type: array
+                items:
+                  $ref: "#/definitions/lexicon"
+
     post:
       operationId: handlers.new_lexicon
       consumes:
@@ -958,6 +975,7 @@ definitions:
       - id
       - name
       - nb_words
+      - favorite
     properties:
       id:
         type: string
@@ -965,16 +983,21 @@ definitions:
         type: string
       nb_words:
         type: integer
+      favorite:
+        type: integer
 
   glossary:
     required:
       - id
       - name
       - nb_terms
+      - favorite
     properties:
       id:
         type: string
       name:
         type: string
       nb_terms:
+        type: integer
+      favorite:
         type: integer

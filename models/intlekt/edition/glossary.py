@@ -31,7 +31,8 @@ class GlossaryConnector(DBConnector):
         return [{
             'id': g['_id'],
             'name': g['name'],
-            'nb_terms': len(g['terms'])
+            'nb_terms': len(g['terms']),
+            'favorite': g['favorite']
                 } for g in iter]
 
     def get(self, name=None, id=None):
