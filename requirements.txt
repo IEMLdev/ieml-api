@@ -19,3 +19,8 @@ lxml
 scipy
 flask-mongoengine
 pillow
+pytz
+cleancat
+flask_views
+mimerender
+Flask-MongoRest
