@@ -17,3 +17,5 @@ gevent-websocket
 beautifulsoup4
 lxml
 scipy
+flask-mongoengine
+pillow
