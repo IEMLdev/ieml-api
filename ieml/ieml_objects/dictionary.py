@@ -2,6 +2,7 @@ import json
 from collections import defaultdict
 from itertools import product, groupby
 
+import itertools
 from bidict import bidict
 import numpy as np
 import os
@@ -465,9 +466,17 @@ class Dictionary(metaclass=Singleton):
 
         for i, t in enumerate(self.index):
             if t.script.paradigm and len(t.script.tables) == 1 and t.script.tables[0].dim < 3:
-                contained_terms = np.where(contains[i, :] == 1)[0]
-                index0, index1 = list(zip(*product(contained_terms, repeat=2)))
+
+                contained_ss = [self.terms[ss].index for ss in t.script.singular_sequences]
+                index0, index1 = list(zip(*product(contained_ss, repeat=2)))
                 _tables_rank[t.rank, index0, index1] = 1
+
+                h = t.script.tables[0].headers[t.script]
+                contained_r_c = [self.terms[s].index for s in itertools.chain(h.rows, h.columns) if s in self.terms]
+
+                if contained_r_c:
+                    index0, index1 = list(zip(*product(contained_r_c, repeat=2)))
+                    _tables_rank[t.rank, index0, index1] = 1
 
         for root in self.roots:
             indexes = [p.index for p in self.roots[root]]

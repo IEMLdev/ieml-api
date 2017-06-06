@@ -43,3 +43,9 @@ class TestRelations(TestCase):
             self.assertEqual(Dictionary().rel(reltype).min(), 0)
             self.assertEqual(Dictionary().rel(reltype).max(), 1,
                              "%s -> max %d"%(reltype, Dictionary().rel(reltype).max()))
+
+    def test_table_relations(self):
+        t_p = term("M:M:.u.-")
+        t_ss = term("s.u.-")
+
+        self.assertFalse(t_p.relations.to(t_ss, relations_types=['table_2']))

@@ -1,6 +1,5 @@
 from ieml.ieml_objects.commons import IEMLObjects
 from ieml.script.operator import script
-from ieml.script.script import Script
 
 
 class Term(IEMLObjects):
