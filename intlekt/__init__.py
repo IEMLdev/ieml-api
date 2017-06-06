@@ -15,3 +15,4 @@ db = MongoEngine(app)
 api = MongoRest(app)
 
 from . import models, routes
+app.register_blueprint(routes.ui)
