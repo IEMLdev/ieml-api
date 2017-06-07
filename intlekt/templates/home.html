@@ -1,5 +1,38 @@
 {% extends "layout.html" %}
 
+{% block css %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" type="text/css" />
+{% endblock %}
+
 {% block body %}
-fdshsfhfdi
+<h1>Collections</h1>
+
+<div id="messages">Loading...</div>
+
+<div id="main">
+    <div id="create-collection">
+        <h2>Create a collection</h2>
+
+        <form method="POST" action="">
+            <label>Title:</label>
+            <input type="text" name="title" />
+            <br/>
+            <label>Authors (comma-separated):</label>
+            <input type="text" name="authors" />
+            <br/>
+            <input type="submit" value="Create" />
+        </form>
+    </div>
+
+    <div id="collections">
+        <h2>Collections</h2>
+
+        <ul></ul>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+    <script src="{{ url_for('static', filename='collections.js') }}"></script>
 {% endblock %}
