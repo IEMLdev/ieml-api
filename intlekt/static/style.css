@@ -1,3 +1,11 @@
 #main {
   display: none;
 }
+
+#collections ul li {
+    cursor: pointer;
+}
+
+#collection {
+    display: none;
+}
