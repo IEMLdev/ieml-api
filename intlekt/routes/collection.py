@@ -18,4 +18,5 @@ class CollectionView(ResourceView):
     related_resources = {
         'documents': DocumentResource,
     }
+    save_related_fields = ['documents']
     methods = [methods.Create, methods.Update, methods.Fetch, methods.List]

@@ -39,6 +39,39 @@
 
         <div id="collection-created-on">Created on: <span></span></div>
         <div id="collection-updated-on">Updated on: <span></span></div>
+
+        <form id="create-document-form" method="POST" action="">
+            <label>Title:</label>
+            <input type="text" name="title" />
+            <br/>
+            <label>Source:</label>
+            <input type="text" name="source" />
+            <br/>
+            <label>Authors (comma-separated):</label>
+            <input type="text" name="authors" />
+            <br/>
+            <label>Created on:</label>
+            <input type="date" name="created_on" />
+            <br/>
+            <label>URL:</label>
+            <input type="url" name="url" />
+            <br/>
+            <!--
+            <label>USL:</label>
+            <input type="text" name="usl" />
+            <br/>
+            -->
+            <label>Description:</label>
+            <textarea name="description"></textarea>
+            <br/>
+            <label>Tags (comma-separated):</label>
+            <input type="text" name="tags" />
+            <br/>
+            <label>Image:</label>
+            <input type="url" name="image" />
+            <br/>
+            <input type="submit" value="Create" />
+        </form>
     </div>
 </div>
 {% endblock %}
