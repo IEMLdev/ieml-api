@@ -82,7 +82,7 @@ _RELATIONS = {'contains': 'inclusion',         # 0
              'twin': 'sibling'}
 
 
-def drupal_relations_dump():
+def drupal_relations_dump(number=None):
     root = term("O:M:.O:M:.-+M:O:.M:O:.-")
 
     paradigm = sorted(Dictionary().roots[root])
@@ -131,8 +131,11 @@ def drupal_relations_dump():
         #     term1 = random.choice(Drupal_dico)
         #
         #     print(term1)
-    print(len(res))
-    return res
+    # print(len(res))
+    if number:
+        return res[:number]
+    else:
+        return res
 
 @cached("all_ieml", 1000)
 # @exception_handlerexception_handler

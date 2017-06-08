@@ -623,6 +623,11 @@ paths:
       tags:
         - Drupal
       operationId: handlers.drupal_relations_dump
+      parameters:
+        - name: number
+          in: query
+          required: false
+          type: integer
       responses:
         '200':
           description: Successful response
