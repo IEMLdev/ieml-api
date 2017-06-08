@@ -1,6 +1,6 @@
 from django.utils import timezone
-from django.db.models import signals
 from django_mongoengine import Document, fields
+from mongoengine import signals
 
 
 class Collection(Document):
