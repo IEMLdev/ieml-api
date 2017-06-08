@@ -10,13 +10,12 @@ from ..models import Collection
 
 class CollectionResource(Resource):
     document = Collection
+    related_resources = {
+        'documents': DocumentResource,
+    }
 
 
 @api.register(name='collections', url='/collections/')
 class CollectionView(ResourceView):
     resource = CollectionResource
-    related_resources = {
-        'documents': DocumentResource,
-    }
-    save_related_fields = ['documents']
     methods = [methods.Create, methods.Update, methods.Fetch, methods.List]
