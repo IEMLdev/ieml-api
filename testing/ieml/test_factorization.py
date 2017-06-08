@@ -1,4 +1,4 @@
-from ieml.ieml_objects.dictionary import Dictionary
+from ieml.ieml_objects.terms import Dictionary
 from ieml.script.tools import factorize
 import unittest
 

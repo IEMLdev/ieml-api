@@ -22,6 +22,10 @@ paths:
         - IEML
       description: |
         Returns a list of all the `IEML term` objects.
+#      parameters:
+#        - name: version
+#          in: query
+
       responses:
         '200':
           description: Successful response
@@ -383,9 +387,9 @@ paths:
 
   /ranking:
     get:
-      operationId: handlers.get_terms_ranking
+      operationId: handlers.get_ranking_from_term
       parameters:
-        - in: path
+        - in: query
           name: ieml
           required: true
           type: string

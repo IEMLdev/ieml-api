@@ -2,8 +2,7 @@ import itertools
 from _operator import mul
 from functools import reduce
 
-from ieml.ieml_objects.terms import Term
-from ieml.ieml_objects.tools import term
+from ieml.ieml_objects.terms import Term, term
 from ieml.paths.tools import path
 from ieml.script.constants import MAX_SINGULAR_SEQUENCES
 from ieml.usl.tools import replace_paths

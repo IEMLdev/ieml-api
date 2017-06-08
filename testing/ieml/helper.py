@@ -1,5 +1,5 @@
 from ieml.ieml_objects.sentences import Sentence, Clause
-from ieml.ieml_objects.tools import term
+from ieml.ieml_objects.terms import term
 from ieml.ieml_objects.words import Morpheme, Word
 
 

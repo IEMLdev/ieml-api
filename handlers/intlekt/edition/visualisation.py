@@ -3,7 +3,7 @@ from functools import partial
 from ieml.exceptions import CannotParse
 from ieml.ieml_objects.hypertexts import Hyperlink, Hypertext
 from ieml.ieml_objects.sentences import Clause, SuperClause
-from ieml.ieml_objects.tools import term
+from ieml.ieml_objects.terms import term
 from ieml.ieml_objects.words import Word, Morpheme
 from ieml.paths.exceptions import IEMLObjectResolutionError
 from ieml.usl.tools import usl as _usl, usl

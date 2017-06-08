@@ -1,5 +1,4 @@
-from ieml.ieml_objects.commons import IEMLObjects
-from ieml.ieml_objects.constants import MORPHEME_SIZE_LIMIT
+from ieml.ieml_objects.commons import IEMLObjects, MORPHEME_SIZE_LIMIT
 from ieml.ieml_objects.exceptions import InvalidIEMLObjectArgument
 from ieml.ieml_objects.terms import Term
 from ieml.script.constants import MAX_SINGULAR_SEQUENCES

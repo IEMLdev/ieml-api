@@ -3,8 +3,8 @@ import logging
 import ply.yacc as yacc
 
 from ieml.exceptions import CannotParse
-from ieml.ieml_objects import Word, Morpheme, Clause, SuperClause, Sentence, SuperSentence, Term, Text, Hypertext
-from ieml.ieml_objects.dictionary import Dictionary
+from ieml.ieml_objects import Word, Morpheme, Clause, SuperClause, Sentence, SuperSentence, Text, Hypertext
+from ieml.ieml_objects.terms.dictionary import Dictionary
 from ieml.ieml_objects.hypertexts import Hyperlink, PropositionPath
 from ieml.ieml_objects.parser.lexer import get_lexer, tokens
 from metaclasses import Singleton

@@ -1,7 +1,7 @@
 import functools
 
 from ieml.commons import GRAMMATICAL_CLASS_NAMES
-from ieml.ieml_objects.tools import term as _term
+from ieml.ieml_objects.terms.tools import term as _term
 
 
 def exception_handler(func):
@@ -24,8 +24,8 @@ def ieml_term_model(term):
 
     return {
         'CLASS': GRAMMATICAL_CLASS_NAMES[term.grammatical_class],
-        'EN': term.translation["en"],
-        'FR': term.translation["fr"],
+        'EN': term.translations.en,
+        'FR': term.translations.fr,
         'IEML': str(term.script),
         'LAYER': term.script.layer,
         'PARADIGM': term.script.paradigm,

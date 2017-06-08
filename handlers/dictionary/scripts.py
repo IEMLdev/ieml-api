@@ -3,11 +3,11 @@ import random
 import string
 from collections import defaultdict
 
-from ieml.ieml_objects.dictionary import Dictionary, save_dictionary, DICTIONARY_FOLDER, load_dictionary
+from ieml.ieml_objects.terms import Dictionary, term
 
 from handlers.commons import exception_handler, ieml_term_model
-from ieml.ieml_objects.relations import INVERSE_RELATIONS
-from ieml.ieml_objects.tools import term
+from ieml.ieml_objects.terms.relations import INVERSE_RELATIONS
+from ieml.ieml_objects.terms.version import DictionaryVersion, create_dictionary_version
 from ieml.script.operator import sc, script
 
 from ..caching import cached, flush_cache
@@ -25,8 +25,8 @@ def _build_old_model_from_term_entry(t):
         "_id": str(t.script),
         "IEML": str(t.script),
         "CLASS": t.grammatical_class,
-        "EN": t.translation['en'],
-        "FR": t.translation['fr'],
+        "EN": t.translations['en'],
+        "FR": t.translations['fr'],
         "PARADIGM": "1" if t.script.paradigm else "0",
         "LAYER": t.script.layer,
         "TAILLE": t.script.cardinal,
@@ -36,11 +36,12 @@ def _build_old_model_from_term_entry(t):
     }
 
 
-@cached("dictionary_dump", 1000)
 @exception_handler
-def dictionary_dump():
+def dictionary_dump(dictionary_version):
+    version = DictionaryVersion.from_file_name(dictionary_version)
+
     return {'success': True,
-            'terms': sorted((ieml_term_model(t) for t in Dictionary()), key=lambda c: c['INDEX'])}
+            'terms': sorted((ieml_term_model(t) for t in Dictionary(version)), key=lambda c: c['INDEX'])}
 
 MAX_TERMS_DICTIONARY = 50000
 Drupal_dico = [ieml_term_model(t) for t in Dictionary()]
@@ -146,6 +147,7 @@ def all_ieml():
 def get_term(script):
     return _build_old_model_from_term_entry(term(script))
 
+
 @exception_handler
 def parse_ieml(iemltext):
     script_ast = sc(iemltext)
@@ -158,7 +160,6 @@ def parse_ieml(iemltext):
         "level" : script_ast.layer,
         "taille" : script_ast.cardinal,
         "class" : script_ast.script_class,
-        "canonical" : old_canonical(script_ast),
         "rootIntersections" : [str(root.script)] if root is not None else [],
         "containsSize": containsSize
     }
@@ -317,13 +318,14 @@ def _process_inhibits(body):
 
 
 def _save_dictionary():
-    try:
-        Dictionary().compute_relations()
-        Dictionary().compute_ranks()
-        save_dictionary(DICTIONARY_FOLDER)
-    except ValueError as e:
-        load_dictionary(DICTIONARY_FOLDER, Dictionary())
-        raise ValueError("Unable to recompute the relations and ranks: " + str(e))
+    pass
+    # try:
+    #     Dictionary().compute_relations()
+    #     Dictionary().compute_ranks()
+    #     save_dictionary(DICTIONARY_FOLDER)
+    # except ValueError as e:
+    #     load_dictionary(DICTIONARY_FOLDER, Dictionary())
+    #     raise ValueError("Unable to recompute the relations and ranks: " + str(e))
 
 
 @need_login
@@ -331,24 +333,29 @@ def _save_dictionary():
 # @exception_handler
 def new_ieml_script(body):
     script_ast = sc(body["IEML"])
-    Dictionary().add_term(script_ast,
-                          root=body["PARADIGM"] == "1",
-                          inhibitions=_process_inhibits(body),
-                          translation={"fr": body["FR"], "en": body["EN"]})
+    to_add = {
+        'terms': [str(script_ast)],
+        'roots': [str(script_ast)] if body["PARADIGM"] == "1" else [],
+        'inhibitions': {str(script_ast): _process_inhibits(body)} if body["PARADIGM"] == "1" else {},
+        'translations': {"fr": {str(script_ast): body["FR"]},
+                         "en": {str(script_ast): body["EN"]}}
+    }
 
     if body["PARADIGM"] == "1":
         for i, ss in enumerate(script_ast.singular_sequences):
-            Dictionary().add_term(ss,
-                                  translation={"fr": body["FR"] + " SS (%d)"%i,
-                                               "en": body["EN"] + " SS (%d)"%i})
+            to_add['terms'].append(str(ss))
+            to_add['translations']['fr'][str(ss)] = body["FR"] + " SS (%d)"%i
+            to_add['translations']['en'][str(ss)] = body["EN"] + " SS (%d)"%i
 
     for j, table in enumerate(script_ast.tables):
         for i, tab in enumerate(table.headers):
-            Dictionary().add_term(tab,
-                                  translation={"fr": body["FR"] + " Table (%d) Tab (%d)" % (j,i),
-                                               "en": body["EN"] + " Table (%d) Tab (%d)" % (j,i)})
+            to_add['terms'].append(str(tab))
+            to_add['translations']['fr'][str(ss)] = body["FR"] + " Table (%d) Tab (%d)" % (j,i)
+            to_add['translations']['en'][str(ss)] = body["EN"] + " Table (%d) Tab (%d)" % (j,i),
 
-    _save_dictionary()
+
+    version = create_dictionary_version(DictionaryVersion(), add=to_add)
+
     return {"success" : True, "added": _build_old_model_from_term_entry(term(script_ast))}
 
 

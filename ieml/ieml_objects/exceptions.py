@@ -9,14 +9,6 @@ class InvalidIEMLObjectArgument(Exception):
         return 'Invalid arguments to create a %s object. %s'%(self.type.__name__, str(self.message))
 
 
-class TermNotFoundInDictionary(InvalidIEMLObjectArgument):
-    def __init__(self, term):
-        self.message = "Cannot find term %s in the dictionary" % str(term)
-
-    def __str__(self):
-        return self.message
-
-
 class InvalidTreeStructure(Exception):
     def __init__(self, msg):
         self.message = msg
