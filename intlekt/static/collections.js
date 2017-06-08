@@ -85,7 +85,10 @@ $(function() {
             contentType: 'application/json'
         })
         .done(function(data) {
-            alert('TODO: link to collection');
+            if(currentCollection.documents.indexOf(data) == -1) {
+                currentCollection.documents.push(data);
+            }
+            writeCollection(currentCollection, currentCollection.id);
         })
         .fail(function(jqXHR, textStatus, errorThrown) {
             $('#messages').html('Unable to create document, sorry. Message: ' + jqXHR.responseText);
@@ -126,12 +129,13 @@ $(function() {
         data.authors = authorsToArray(createDocumentForm.find('*[name="authors"]').val());
         data.created_on = createDocumentForm.find('*[name="created_on"]').val();
         data.url = createDocumentForm.find('*[name="url"]').val();
-        // data.usl = createDocumentForm.find('*[name="usl"]').val();
+        data.usl = createDocumentForm.find('*[name="usl"]').val();
         data.description = createDocumentForm.find('*[name="created_on"]').val();
         data.tags = tagsToArray(createDocumentForm.find('*[name="tags"]').val());
         data.image = createDocumentForm.find('*[name="image"]').val();
 
         if(!data.created_on) data.created_on = null;
+        if(!data.usl) data.usl = null;
         if(!data.image) data.image = null;
 
         writeDocument(data, null, $('#collection').data('id'));
