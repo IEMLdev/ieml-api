@@ -44,13 +44,13 @@ class Table:
         return all(self.__getattribute__(p) is not None for p in ['rank', 'term'])
 
     def build_headers(self):
-        self.headers = OrderedDict()
+        self.headers = []
 
         for t in self.cells.transpose(2,0,1):
             rows = [script(c) for c in t]
             columns = [script(c) for c in t.transpose()]
             tabs_sc = script(rows)
-            self.headers[tabs_sc] = Tab(rows=rows, columns=columns, paradigm=tabs_sc, cells=t)
+            self.headers.append(Tab(rows=rows, columns=columns, paradigm=tabs_sc, cells=t))
 
     def index(self, s):
         if s not in self.paradigm:

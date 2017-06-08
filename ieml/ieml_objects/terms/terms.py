@@ -43,7 +43,10 @@ class Term(IEMLObjects):
 
     @property
     def parent(self):
-        return self.dictionary.parents[self]
+        if self in self.dictionary.parents:
+            return self.dictionary.parents[self]
+
+        return None
 
     @property
     def partitions(self):
