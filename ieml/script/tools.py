@@ -130,7 +130,7 @@ def factorize(script):
 
 
 def inverse_relation(relation_name):
-    from ieml.ieml_objects.relations import INVERSE_RELATIONS
+    from ieml.ieml_objects.terms.relations import INVERSE_RELATIONS
     return INVERSE_RELATIONS[relation_name]
 
 

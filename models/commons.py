@@ -38,7 +38,7 @@ def generate_translations(usl):
     result = {}
     entries = sorted([t for p, t in usl.paths.items()])
     for l in LANGUAGES:
-        result[l.upper()] = ' '.join((e.translation[l] for e in islice(entries, 10)))
+        result[l.upper()] = ' '.join((e.translations[l] for e in islice(entries, 10)))
 
     return result
 

@@ -1,10 +1,10 @@
 import os
 from collections import defaultdict
 
-from ieml.ieml_objects.dictionary import Dictionary
+from ieml.ieml_objects.terms.dictionary import Dictionary
 from scipy.sparse.csgraph._shortest_path import shortest_path
 
-from ieml.ieml_objects.tools import term
+from ieml.ieml_objects.terms.tools import term
 
 import numpy as np
 
@@ -113,7 +113,7 @@ def ranking_from_term(term0, nb_terms=30):
 
 
 def _test_diagram(t):
-    print("Diagram for term %s -- %s"%(str(t), t.translation['fr']))
+    print("Diagram for term %s -- %s"%(str(t), t.translations.fr))
 
     other = sorted((distance(t, t1) ,t1) for t1 in Dictionary() if t1 != t)
 
@@ -128,7 +128,7 @@ def _test_diagram(t):
     for k, v in cat.items():
         print("\t[%s]"%k)
         for d, tt in v:
-            print("%s (%.2f, %.2f, %.2f) - %s [%s]" % (str(tt), d[0], d[1], d[2], tt.translation['fr'],
+            print("%s (%.2f, %.2f, %.2f) - %s [%s]" % (str(tt), d[0], d[1], d[2], tt.translations.fr,
                                                        ', '.join(t.relations.to(tt))))
 
 

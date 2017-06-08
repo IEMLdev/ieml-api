@@ -4,7 +4,8 @@ import unittest
 import numpy as np
 
 from ieml.ieml_objects import Text, SuperSentence
-from ieml.ieml_objects.exceptions import InvalidIEMLObjectArgument, TermNotFoundInDictionary
+from ieml.ieml_objects.exceptions import InvalidIEMLObjectArgument
+from ieml.ieml_objects.terms.tools import TermNotFoundInDictionary
 from ieml.ieml_objects.parser.parser import IEMLParser
 from ieml.ieml_objects.sentences import SuperClause
 from ieml.ieml_objects.tools import RandomPoolIEMLObjectGenerator
@@ -15,11 +16,11 @@ from testing.ieml.helper import *
 class TestIEMLType(unittest.TestCase):
     def test_rank(self):
         r = RandomPoolIEMLObjectGenerator(level=Text)
-        self.assertEqual(r.term().__class__.rank(), 1)
-        self.assertEqual(r.word().__class__.rank(), 3)
-        self.assertEqual(r.sentence().__class__.rank(), 5)
-        self.assertEqual(r.super_sentence().__class__.rank(), 7)
-        self.assertEqual(r.text().__class__.rank(), 8)
+        self.assertEqual(r.term().__class__.ieml_rank(), 1)
+        self.assertEqual(r.word().__class__.ieml_rank(), 3)
+        self.assertEqual(r.sentence().__class__.ieml_rank(), 5)
+        self.assertEqual(r.super_sentence().__class__.ieml_rank(), 7)
+        self.assertEqual(r.text().__class__.ieml_rank(), 8)
 
 
 class TestPropositionsInclusion(unittest.TestCase):

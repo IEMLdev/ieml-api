@@ -1,7 +1,8 @@
 import unittest
 
 from ieml.ieml_objects.exceptions import InvalidIEMLObjectArgument
-from ieml.ieml_objects.tools import ieml, term
+from ieml.ieml_objects.terms import term
+from ieml.ieml_objects.tools import ieml
 from ieml.ieml_objects.words import Word, Morpheme
 
 

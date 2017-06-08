@@ -1,6 +1,5 @@
-from ieml.ieml_objects.distance import ranking_from_term
-from ieml.ieml_objects.tools import term
-
+from ieml.ieml_objects.terms.distance import ranking_from_term
+from ieml.ieml_objects.terms import term
 
 
 def get_ranking_from_term(ieml):

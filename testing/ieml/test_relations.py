@@ -1,8 +1,7 @@
 from unittest.case import TestCase
 
-from ieml.ieml_objects.dictionary import Dictionary
-from ieml.ieml_objects.relations import RELATIONS
-from ieml.ieml_objects.tools import term
+from ieml.ieml_objects.terms import Dictionary, term
+from ieml.ieml_objects.terms.relations import RELATIONS
 from ieml.script.tools import inverse_relation
 
 

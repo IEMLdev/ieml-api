@@ -5,11 +5,10 @@ import re
 import uuid
 import itertools
 
-import pymongo
 from pymongo import errors
 
 from ieml.usl.tools import usl as _usl
-from models.commons import DBConnector, check_tags, create_translations_indexes, TAG_LANGUAGES
+from models.commons import DBConnector, check_tags, TAG_LANGUAGES
 from models.constants import LIBRARY_COLLECTION
 
 
@@ -241,3 +240,4 @@ class LibraryConnector(DBConnector):
 
     def _is_editable(self, entry):
         return True
+    

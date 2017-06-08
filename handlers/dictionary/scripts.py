@@ -3,11 +3,10 @@ import random
 import string
 from collections import defaultdict
 
-from ieml.ieml_objects.dictionary import Dictionary, save_dictionary, DICTIONARY_FOLDER, load_dictionary
+from ieml.ieml_objects.terms import Dictionary, term
 
 from handlers.commons import exception_handler, ieml_term_model
-from ieml.ieml_objects.relations import INVERSE_RELATIONS
-from ieml.ieml_objects.tools import term
+from ieml.ieml_objects.terms.relations import INVERSE_RELATIONS
 from ieml.script.operator import sc, script
 
 from ..caching import cached, flush_cache
@@ -317,13 +316,14 @@ def _process_inhibits(body):
 
 
 def _save_dictionary():
-    try:
-        Dictionary().compute_relations()
-        Dictionary().compute_ranks()
-        save_dictionary(DICTIONARY_FOLDER)
-    except ValueError as e:
-        load_dictionary(DICTIONARY_FOLDER, Dictionary())
-        raise ValueError("Unable to recompute the relations and ranks: " + str(e))
+    pass
+    # try:
+    #     Dictionary().compute_relations()
+    #     Dictionary().compute_ranks()
+    #     save_dictionary(DICTIONARY_FOLDER)
+    # except ValueError as e:
+    #     load_dictionary(DICTIONARY_FOLDER, Dictionary())
+    #     raise ValueError("Unable to recompute the relations and ranks: " + str(e))
 
 
 @need_login

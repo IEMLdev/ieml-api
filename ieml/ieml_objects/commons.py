@@ -1,6 +1,12 @@
 from ieml.commons import TreeStructure
 from ieml.ieml_objects.exceptions import InvalidIEMLObjectArgument
 
+MORPHEME_SIZE_LIMIT = 12
+MAX_NODES_IN_SENTENCE = 20
+# TODO put the good value
+MAX_DEPTH_IN_HYPERTEXT = 8
+MAX_NODES_IN_HYPERTEXT = 20
+
 class IEMLType(type):
     """This metaclass enables the comparison of class times, such as (Sentence > Word) == True"""
 
@@ -38,7 +44,7 @@ class IEMLType(type):
     def __lt__(self, other):
         return self.__rank < other.__rank
 
-    def rank(self):
+    def ieml_rank(self):
         return self.__rank
 
 

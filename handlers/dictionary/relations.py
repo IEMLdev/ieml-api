@@ -3,7 +3,7 @@ from handlers.dictionary.client import need_login
 from handlers.dictionary.commons import relation_name_table, relations_order
 
 from ieml.exceptions import CannotParse
-from ieml.ieml_objects.tools import term
+from ieml.ieml_objects.terms import term
 
 
 def get_relation_visibility(body):
