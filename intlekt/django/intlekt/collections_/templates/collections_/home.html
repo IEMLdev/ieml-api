@@ -19,7 +19,7 @@
             <input type="text" name="title" />
             <br/>
             <label>Authors (comma-separated):</label>
-            <input type="text" name="authors" />
+            <input type="text" name="authors" placeholder="a b, c d, ..." />
             <br/>
             <input type="submit" value="Create" />
         </form>
@@ -28,7 +28,7 @@
     <div id="collections">
         <h2>Collections</h2>
 
-        <ul></ul>
+        <ul id="collection-list"></ul>
     </div>
 
     <h2>Collection courante</h2>
@@ -42,6 +42,10 @@
 
         <div id="collection-created-on">Created on: <span></span></div>
         <div id="collection-updated-on">Updated on: <span></span></div>
+
+        <h3>Documents</h3>
+
+        <ul id="collection-documents"></ul>
 
         <h3>Ajouter un document</h3>
 
@@ -81,5 +85,6 @@
 
 {% block js %}
     <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
-    <script src="{% static "collections_/collections.js" %}"></script>
+    <script src="{% static "collections_/api.js" %}"></script>
+    <script src="{% static "collections_/ui.js" %}"></script>
 {% endblock %}
