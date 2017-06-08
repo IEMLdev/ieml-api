@@ -17,10 +17,9 @@ gevent-websocket
 beautifulsoup4
 lxml
 scipy
-flask-mongoengine
 pillow
 pytz
-cleancat
-flask_views
-mimerender
-Flask-MongoRest
+django
+django-mongoengine
+django-rest-framework-mongoengine
+djangorestframework

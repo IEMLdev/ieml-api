@@ -1,0 +1,15 @@
+h1 {
+    color: blue;
+}
+
+#main {
+  display: none;
+}
+
+#collections ul li {
+    cursor: pointer;
+}
+
+#collection {
+    display: none;
+}
