@@ -16,7 +16,7 @@ def __build_parallel_table(main_term, parallel_terms):
     assert all(len(t.tables) == 1 and t.tables[0].dim == main_term.tables[0].dim and t.tables[0].dim <= 2
                for t in [main_term, *parallel_terms])
 
-    main_tab = main_term.tables[0].headers[0]
+    main_tab = main_term.tables[0].tabs[0]
     dim = main_term.tables[0].dim
 
     headers = {

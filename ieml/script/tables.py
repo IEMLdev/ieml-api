@@ -17,6 +17,7 @@ class Table:
         self.cells = cells
 
         self.headers = None
+        self.tabs = None
         self.build_headers()
 
         self.paradigm = script(self.headers)
@@ -44,13 +45,16 @@ class Table:
         return all(self.__getattribute__(p) is not None for p in ['rank', 'term'])
 
     def build_headers(self):
-        self.headers = []
+        self.headers = {}
+        self.tabs = []
 
         for t in self.cells.transpose(2,0,1):
             rows = [script(c) for c in t]
             columns = [script(c) for c in t.transpose()]
             tabs_sc = script(rows)
-            self.headers.append(Tab(rows=rows, columns=columns, paradigm=tabs_sc, cells=t))
+            tab = Tab(rows=rows, columns=columns, paradigm=tabs_sc, cells=t)
+            self.headers[tabs_sc] = tab
+            self.tabs.append(tab)
 
     def index(self, s):
         if s not in self.paradigm:

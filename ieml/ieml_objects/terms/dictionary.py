@@ -70,7 +70,7 @@ class Dictionary:
             cache_relations = os.path.join(cache_folder, 'cache_%s_relations.npy'%(str(self.version)))
 
             if not os.path.isdir(cache_folder):
-                os.mkdir(cache_folder)
+                os.makedirs(cache_folder)
 
             if not os.path.isfile(cache_json) or not os.path.isfile(cache_relations) or not self.cache:
                 self.build()
