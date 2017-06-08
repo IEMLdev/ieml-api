@@ -8,6 +8,7 @@ import os
 
 from config import DICTIONARY_BUCKET_URL, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, DICTIONARY_FOLDER, \
     DICTIONARY_DEFAULT_VERSION
+from ieml.commons import LANGUAGES
 
 
 def get_available_dictionary_version():
@@ -55,6 +56,8 @@ class DictionaryVersion:
         return 'dictionary_%s_%d' % (str(self.date), self.version_id)
 
     def __getstate__(self):
+        self.load()
+
         return {
             'version': [str(self.date), str(self.version_id)],
             'terms': self.terms,
@@ -131,6 +134,30 @@ def get_default_dictionary_version():
         _default_version = DictionaryVersion()
 
     return _default_version
+
+
+def create_dictionary_version(old_version, add=None, update=None):
+    v = get_available_dictionary_version()[-1]
+    last_date, last_version_id = v.date, v.version_id
+
+    date = datetime.datetime.today()
+    if last_date == date:
+        version_id = last_version_id + 1
+    else:
+        version_id = 0
+
+    state = {
+        'version': [str(date), str(version_id)],
+        'terms': list(set(old_version.terms).union(add['terms'])),
+        'roots': list(set(old_version.roots).union(add['roots'])),
+        'inhibitions': {**old_version.inhibitions, **add['inhibitions']},
+        'translations': {l: {**old_version.translations[l], **add['translations'][l]} for l in LANGUAGES}
+    }
+
+    dictionary_version = DictionaryVersion(date, version_id)
+    dictionary_version.__setstate__(state)
+
+    return dictionary_version
 
 
 if __name__ == '__main__':

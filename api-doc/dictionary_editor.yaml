@@ -22,6 +22,10 @@ paths:
         - IEML
       description: |
         Returns a list of all the `IEML term` objects.
+#      parameters:
+#        - name: version
+#          in: query
+
       responses:
         '200':
           description: Successful response
