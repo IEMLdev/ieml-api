@@ -6,6 +6,13 @@ $(function() {
     var documents = [];
     var currentCollection = null;
     
+    function formatDate(date) {
+        var dt = date.split('T');
+        var time = dt[1].split('.');
+
+        return dt[0] + ' ' + time[0];
+    }
+
     function authorsToStr(authors) {
         return authors.join(', ');
     }
@@ -50,18 +57,18 @@ $(function() {
 
         $('#edit-collection-form input[name="title"]').val(collection.title);
         $('#edit-collection-form input[name="authors"]').val(authorsToStr(collection.authors));
-        $('#collection-created-on span').html(collection.created_on);
-        $('#collection-updated-on span').html(collection.updated_on);
+        $('#collection-created-on span').html(formatDate(collection.created_on));
+        $('#collection-updated-on span').html(formatDate(collection.updated_on));
 
-        var li, id;
+        var li, doc;
         $('#collection-documents').empty();
 
-        for(var i in collection.documents) {
-            id = collection.documents[i];
+        for(let docId of collection.documents) {
+            doc = documents[docId];
 
             li = document.createElement('li');
-            li.setAttribute('data-id', id);
-            li.innerHTML = id;
+            li.setAttribute('data-id', docId);
+            li.innerHTML = doc.title;
             
             $('#collection-documents').append(li);
         }
@@ -75,12 +82,39 @@ $(function() {
         renderCollection(currentCollection);
     }
 
+    function displayFormErrors(form, errors) {
+        var errDiv;
+
+        for(let fieldName in errors) {
+            console.log(fieldName);
+            errDiv = form.find('*[name="' + fieldName + '"]').next('div');
+            errDiv.html(errors[fieldName]);
+        }
+    }
+
     function displayMessage(msg) {
         $('#messages').html(msg);
     }
 
     displayError = displayMessage;
+
+    function cleanMessages() {
+        $('#messages').html('');
+    }
     
+    function cleanFormErrors(form) {
+        form.find('.field-errors').html('');
+    }
+
+    function cleanFormFields(form) {
+        form.find('input[type!="submit"], textarea').val('');
+    }
+
+    $('form').submit(function(e) {
+        cleanFormErrors($(this));
+        cleanMessages();
+    });
+
     var createCollectionForm = $('#create-collection form');
     createCollectionForm.submit(function(e) {
         e.preventDefault();
@@ -92,10 +126,12 @@ $(function() {
         api.createCollection(data, function(data) {
             collections.push(data);
             currentCollection = data;
+            cleanFormFields(createCollectionForm);
 
             collectionUpdated();
-        }, function(err) {
+        }, function(err, details) {
             displayError('Unable to create collection: ' + err);
+            displayFormErrors(createCollectionForm, details);
         });
     });
     
@@ -121,8 +157,11 @@ $(function() {
             }
 
             collectionUpdated();
-        }, function(err) {
+            cleanFormFields(editCollectionForm);
+            displayMessage('Collection updated successfully!');
+        }, function(err, details) {
             displayError('Unable to update collection: ' + err);
+            displayFormErrors(editCollectionForm, details);
         });
 
     });
@@ -146,24 +185,44 @@ $(function() {
         if(!data.usl) data.usl = null;
         if(!data.image) data.image = null;
 
+        createCollectionForm.find('.field-errors').html('');
 
         api.createDocument(data, currentCollection, function(doc) {
             currentCollection.documents.push(doc.id);
             documents[doc.id] = doc;
             collectionUpdated();
-        }, function(err) {
+            cleanFormFields(createDocumentForm);
+        }, function(err, details) {
             displayError('Unable to create document: ' + err);
+            displayFormErrors(createDocumentForm, details);
         });
     });
 
+    $('#add-collection-button').click(function(e) {
+        $('#create-collection').toggle();
+    });
+
+    $('#add-document-button').click(function(e) {
+        $('#create-document-form').toggle();
+    });
 
     api.listCollections(function(data) {
         collections = data;
         collectionUpdated();
 
         $('#messages').html('');
-        $('#main').show();
+        $('#sidebar').css('display', 'inline-block');
+        $('#main').css('display', 'inline-block');
     }, function(err) {
         displayError('Unable to load collections: ' + err); 
     });
+    
+    api.listDocuments(function(data) {
+        for(let doc of data) {
+            documents[doc.id] = doc;
+        }
+    }, function(err) {
+        displayError('Unable to load documents: ' + err); 
+    });
+
 });

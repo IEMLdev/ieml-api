@@ -14,4 +14,3 @@ class DocumentSerializer(mongoserializers.DocumentSerializer):
     class Meta:
         model = models.Document
         fields = '__all__'
-        read_only_fields = ('created_on',)

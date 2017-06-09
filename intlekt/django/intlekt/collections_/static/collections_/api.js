@@ -7,7 +7,7 @@ var API = function(API_ROOT) {
         })
         .done(success)
         .fail(function(jqXHR, textStatus, errorThrown) {
-            error(errorThrown); 
+            error(errorThrown, JSON.parse(jqXHR.responseText));
         });
     };
 
@@ -17,7 +17,7 @@ var API = function(API_ROOT) {
         })
         .done(success)
         .fail(function(jqXHR, textStatus, errorThrown) {
-            error(errorThrown); 
+            error(errorThrown, JSON.parse(jqXHR.responseText));
         });
     };
 
@@ -30,7 +30,7 @@ var API = function(API_ROOT) {
         })
         .done(success)
         .fail(function(jqXHR, textStatus, errorThrown) {
-            error(errorThrown);
+            error(errorThrown, JSON.parse(jqXHR.responseText));
         });
     };
     
@@ -43,10 +43,20 @@ var API = function(API_ROOT) {
         })
         .done(success)
         .fail(function(jqXHR, textStatus, errorThrown) {
-            error(errorThrown);
+            error(errorThrown, JSON.parse(jqXHR.responseText));
         });
     };
-    
+
+    module.listDocuments = function(success, error) {
+        $.ajax({
+            url: API_ROOT + 'documents/',
+        })
+        .done(success)
+        .fail(function(jqXHR, textStatus, errorThrown) {
+            error(errorThrown, JSON.parse(jqXHR.responseText));
+        });
+    };
+
     module.createDocument = function(doc, collection, success, error) {
         $.ajax({
             url: API_ROOT + 'documents/',
@@ -60,7 +70,7 @@ var API = function(API_ROOT) {
             }, error);
         })
         .fail(function(jqXHR, textStatus, errorThrown) {
-            error(errorThrown);
+            error(errorThrown, JSON.parse(jqXHR.responseText));
         });
     };
 
