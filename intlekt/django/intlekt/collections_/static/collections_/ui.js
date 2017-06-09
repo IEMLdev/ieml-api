@@ -2,8 +2,8 @@ $(function() {
     var API_ROOT = 'http://127.0.0.1:8000/collections/';
     var api = API(API_ROOT);
 
-    var collections = [];
-    var documents = [];
+    var collections = {};
+    var documents = {};
     var currentCollection = null;
     
     function formatDate(date) {
@@ -31,22 +31,41 @@ $(function() {
         var list = $('#collection-list');
         list.empty();
         
-        var li;
+        var li, collection;
 
-        for(let collection of collections) {
+        for(let collectionId in collections) {
+            collection = collections[collectionId];
+
             li = document.createElement('li');
             li.setAttribute('data-id', collection.id);
             li.innerHTML = collection.title;
 
             $(li).click(function() {
                 var id = $(this).data('id');
-
-                api.getCollection(id, renderCollection, function(err) {
-                    displayError('Unable to read collection: ' + err); 
-                });
+                renderCollection(collections[id]);
             });
 
             list.append(li);
+        }
+    }
+
+    function renderDocumentList(docIds) {
+        var li, doc;
+        $('#collection-documents').empty();
+
+        for(let docId of docIds) {
+            doc = documents[docId];
+
+            li = document.createElement('li');
+            li.setAttribute('data-id', docId);
+            li.innerHTML = doc.title;
+
+            $(li).click(function() {
+                var id = $(this).data('id');
+                renderDocument(documents[id]);
+            });
+
+            $('#collection-documents').append(li);
         }
     }
 
@@ -60,21 +79,22 @@ $(function() {
         $('#collection-created-on span').html(formatDate(collection.created_on));
         $('#collection-updated-on span').html(formatDate(collection.updated_on));
 
-        var li, doc;
-        $('#collection-documents').empty();
-
-        for(let docId of collection.documents) {
-            doc = documents[docId];
-
-            li = document.createElement('li');
-            li.setAttribute('data-id', docId);
-            li.innerHTML = doc.title;
-            
-            $('#collection-documents').append(li);
-        }
-
+        renderDocumentList(collection.documents);
+        
+        $('#document').hide();
         $('#collection').show();
         $('#collection').data('id', collection.id);
+    }
+
+    function renderDocument(doc) {
+        var form = $('#edit-document-form');
+
+        for(let key in doc) {
+            form.find('*[name="' + key + '"]').val(doc[key]);
+        }
+
+        $('#document').show();
+        $('#document').data('id', doc.id);
     }
 
     function collectionUpdated() {
@@ -86,7 +106,6 @@ $(function() {
         var errDiv;
 
         for(let fieldName in errors) {
-            console.log(fieldName);
             errDiv = form.find('*[name="' + fieldName + '"]').next('div');
             errDiv.html(errors[fieldName]);
         }
@@ -163,7 +182,6 @@ $(function() {
             displayError('Unable to update collection: ' + err);
             displayFormErrors(editCollectionForm, details);
         });
-
     });
 
     var createDocumentForm = $('#create-document-form');
@@ -197,6 +215,45 @@ $(function() {
             displayFormErrors(createDocumentForm, details);
         });
     });
+    
+    var editDocumentForm = $('#edit-document-form');
+    editDocumentForm.submit(function(e) {
+        e.preventDefault();
+        var data = {};
+    
+        data.id = $('#document').data('id');
+        data.title = editDocumentForm.find('*[name="title"]').val().trim();
+        data.source = editDocumentForm.find('*[name="source"]').val().trim();
+        data.authors = authorsToArray(editDocumentForm.find('*[name="authors"]').val());
+        data.created_on = editDocumentForm.find('*[name="created_on"]').val().trim();
+        data.url = editDocumentForm.find('*[name="url"]').val().trim();
+        data.usl = editDocumentForm.find('*[name="usl"]').val().trim();
+        data.description = editDocumentForm.find('*[name="description"]').val().trim();
+        data.tags = tagsToArray(editDocumentForm.find('*[name="tags"]').val());
+        data.image = editDocumentForm.find('*[name="image"]').val().trim();
+
+        if(!data.created_on) data.created_on = null;
+        if(!data.usl) data.usl = null;
+        if(!data.image) data.image = null;
+
+        api.updateDocument(data, function(data) {
+            var doc;
+
+            for(let docId in documents) {
+                doc = documents[docId];
+                if(doc.id == data.id) {
+                    documents[docId] = data;
+                    break;
+                }
+            }
+
+            renderDocument(data);
+            displayMessage('Document updated successfully!');
+        }, function(err, details) {
+            displayError('Unable to update document: ' + err);
+            displayFormErrors(editDocumentForm, details);
+        });
+    });
 
     $('#add-collection-button').click(function(e) {
         $('#create-collection').toggle();
@@ -207,7 +264,9 @@ $(function() {
     });
 
     api.listCollections(function(data) {
-        collections = data;
+        for(let col of data) {
+            collections[col.id] = col;
+        }
         collectionUpdated();
 
         $('#messages').html('');

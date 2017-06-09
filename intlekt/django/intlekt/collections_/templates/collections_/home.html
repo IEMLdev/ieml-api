@@ -96,6 +96,48 @@
         </form>
 
         <ul id="collection-documents"></ul>
+
+        <div id="document" data-id="">
+            <form id="edit-document-form" method="POST" action="">
+                <label>Title:</label>
+                <input type="text" name="title" />
+                <div class="field-errors"></div>
+
+                <label>Source:</label>
+                <input type="text" name="source" />
+                <div class="field-errors"></div>
+
+                <label>Authors (comma-separated):</label>
+                <input type="text" name="authors" placeholder="Name, Last First, ..." />
+                <div class="field-errors"></div>
+
+                <label>Created on:</label>
+                <input type="date" name="created_on" placeholder="YYYY-MM-DDThh:mm" />
+                <div class="field-errors"></div>
+
+                <label>URL:</label>
+                <input type="url" name="url" />
+                <div class="field-errors"></div>
+
+                <label>USL:</label>
+                <input type="text" name="usl" />
+                <div class="field-errors"></div>
+
+                <label>Description:</label>
+                <textarea name="description"></textarea>
+                <div class="field-errors"></div>
+
+                <label>Tags (comma-separated):</label>
+                <input type="text" name="tags" placeholder="tag0, tag1, ..." />
+                <div class="field-errors"></div>
+
+                <label>Image:</label>
+                <input type="url" name="image" />
+                <div class="field-errors"></div>
+
+                <input type="submit" value="Update" />
+            </form>
+        </div>
     </div>
 </div>
 {% endblock %}

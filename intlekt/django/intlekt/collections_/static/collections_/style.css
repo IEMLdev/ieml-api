@@ -12,11 +12,11 @@ h1 {
     padding: 10px;
 }
 
-#collections ul li {
+#collections li, #collection-documents li {
     cursor: pointer;
 }
 
-#collection {
+#collection, #document {
     display: none;
 }
 

@@ -1,62 +1,52 @@
 var API = function(API_ROOT) {
     var module = {};
 
-    module.listCollections = function(success, error) {
-        $.ajax({
-            url: API_ROOT + 'collections/',
-        })
-        .done(success)
-        .fail(function(jqXHR, textStatus, errorThrown) {
-            error(errorThrown, JSON.parse(jqXHR.responseText));
-        });
-    };
+    function list(name) {
+        return function(success, error) {
+            $.ajax({
+                url: API_ROOT + name + '/',
+            })
+            .done(success)
+            .fail(function(jqXHR, textStatus, errorThrown) {
+                error(errorThrown, JSON.parse(jqXHR.responseText));
+            });
+        };
+    }
 
-    module.getCollection = function(id, success, error) {
-        $.ajax({
-            url: API_ROOT + 'collections/' + id + '/',
-        })
-        .done(success)
-        .fail(function(jqXHR, textStatus, errorThrown) {
-            error(errorThrown, JSON.parse(jqXHR.responseText));
-        });
-    };
+    module.listCollections = list('collections');
+    module.listDocuments = list('documents');
 
-    module.createCollection = function(collection, success, error) {
-        $.ajax({
-            url: API_ROOT + 'collections/',
-            method: 'POST',
-            data: JSON.stringify(collection),
-            contentType: 'application/json'
-        })
-        .done(success)
-        .fail(function(jqXHR, textStatus, errorThrown) {
-            error(errorThrown, JSON.parse(jqXHR.responseText));
-        });
-    };
-    
-    module.updateCollection = function(collection, success, error) {
-        $.ajax({
-            url: API_ROOT + 'collections/' + collection.id + '/',
-            method: 'PUT',
-            data: JSON.stringify(collection),
-            contentType: 'application/json'
-        })
-        .done(success)
-        .fail(function(jqXHR, textStatus, errorThrown) {
-            error(errorThrown, JSON.parse(jqXHR.responseText));
-        });
-    };
+    function get(name) {
+        return function(id, success, error) {
+            $.ajax({
+                url: API_ROOT + name + '/' + id + '/',
+            })
+            .done(success)
+            .fail(function(jqXHR, textStatus, errorThrown) {
+                error(errorThrown, JSON.parse(jqXHR.responseText));
+            });
+        };
+    }
 
-    module.listDocuments = function(success, error) {
-        $.ajax({
-            url: API_ROOT + 'documents/',
-        })
-        .done(success)
-        .fail(function(jqXHR, textStatus, errorThrown) {
-            error(errorThrown, JSON.parse(jqXHR.responseText));
-        });
-    };
+    module.getCollection = get('collections');
+    module.getDocument = get('documents');
 
+    function create(name) {
+        return function(obj, success, error) {
+            $.ajax({
+                url: API_ROOT + name + '/',
+                method: 'POST',
+                data: JSON.stringify(obj),
+                contentType: 'application/json'
+            })
+            .done(success)
+            .fail(function(jqXHR, textStatus, errorThrown) {
+                error(errorThrown, JSON.parse(jqXHR.responseText));
+            });
+        };
+    }
+
+    module.createCollection = create('collections');
     module.createDocument = function(doc, collection, success, error) {
         $.ajax({
             url: API_ROOT + 'documents/',
@@ -73,6 +63,24 @@ var API = function(API_ROOT) {
             error(errorThrown, JSON.parse(jqXHR.responseText));
         });
     };
+
+    function update(name) {
+        return function(obj, success, error) {
+            $.ajax({
+                url: API_ROOT + name + '/' + obj.id + '/',
+                method: 'PUT',
+                data: JSON.stringify(obj),
+                contentType: 'application/json'
+            })
+            .done(success)
+            .fail(function(jqXHR, textStatus, errorThrown) {
+                error(errorThrown, JSON.parse(jqXHR.responseText));
+            });
+        };
+    }
+    
+    module.updateCollection = update('collections');
+    module.updateDocument = update('documents');
 
     return module;
 };
