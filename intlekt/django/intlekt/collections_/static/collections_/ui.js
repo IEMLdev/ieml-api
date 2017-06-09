@@ -30,40 +30,80 @@ $(function() {
         var list = $('#collection-list');
         list.empty();
         
-        var li, collection;
+        var li, a, collection;
 
         for(let collectionId in collections) {
             collection = collections[collectionId];
 
             li = document.createElement('li');
-            li.setAttribute('data-id', collection.id);
-            li.innerHTML = collection.title;
+            a = document.createElement('a');
+            a.setAttribute('data-id', collection.id);
+            a.setAttribute('href', '');
+            a.innerHTML = collection.title;
 
-            $(li).click(function() {
+            $(a).click(function(e) {
+                e.preventDefault();
+
                 var id = $(this).data('id');
                 renderCollection(collections[id]);
             });
+            li.appendChild(a);
 
             list.append(li);
         }
     }
 
+    function removeDocument(docId, collection) {
+        var index = collection.documents.indexOf(docId);
+        if(index != -1) {
+            collection.documents.splice(index, 1);
+        }
+
+        api.updateCollection(
+            collection,
+            function(data) {
+                collections[data.id] = data;
+                renderDocumentList(data.documents);
+                displayMessage('Document removed from collection successfully!');
+            },
+            function(err, details) {
+                displayError('Unable to update collection: ' + err);
+            }
+        );
+    }
+
     function renderDocumentList(docIds) {
-        var li, doc;
+        var li, a, doc;
         $('#collection-documents').empty();
 
         for(let docId of docIds) {
             doc = documents[docId];
 
             li = document.createElement('li');
-            li.setAttribute('data-id', docId);
-            li.innerHTML = doc.title;
+            a = document.createElement('a');
+            a.setAttribute('data-id', docId);
+            a.setAttribute('href', '');
+            a.innerHTML = doc.title;
 
-            $(li).click(function() {
+            $(a).click(function(e) {
+                e.preventDefault();
                 var id = $(this).data('id');
                 renderDocument(documents[id]);
             });
+            li.appendChild(a);
 
+            a = document.createElement('a');
+            a.setAttribute('data-id', docId);
+            a.setAttribute('href', '');
+            a.setAttribute('class', 'remove');
+            a.innerHTML = 'X';
+            $(a).click(function(e) {
+                e.preventDefault();
+                var id = $(this).data('id');
+                removeDocument(id, currentCollection());
+            });
+            li.appendChild(a);
+            
             $('#collection-documents').append(li);
         }
     }

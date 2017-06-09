@@ -12,7 +12,7 @@ h1 {
     padding: 10px;
 }
 
-#collections li, #collection-documents li {
+#collection-documents li {
     cursor: pointer;
 }
 
@@ -30,5 +30,9 @@ h1 {
 
 .field-errors {
     margin: 5px 0;
+    color: red;
+}
+
+a.remove {
     color: red;
 }
