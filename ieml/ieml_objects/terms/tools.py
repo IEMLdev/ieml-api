@@ -4,29 +4,30 @@ from ieml.ieml_objects.terms.dictionary import Dictionary
 
 
 class TermNotFoundInDictionary(Exception):
-    def __init__(self, term):
-        self.message = "Cannot find term %s in the dictionary" % str(term)
+    def __init__(self, term, dictionary):
+        self.message = "Cannot find term %s in the dictionary %s" % (str(term), str(dictionary.version))
 
     def __str__(self):
         return self.message
 
 
-def term(arg):
+def term(arg, dictionary=None):
     if isinstance(arg, Term):
         return arg
 
+    if not isinstance(dictionary, Dictionary):
+        dictionary = Dictionary()
+
     if isinstance(arg, int):
-        return Dictionary().index[arg]
+        return dictionary.index[arg]
 
     if isinstance(arg, str):
         if arg[0] == '[' and arg[-1] == ']':
             arg = arg[1:-1]
 
     if isinstance(arg, Script) or isinstance(arg, str):
-        d = Dictionary()
-        if arg in d.terms:
-            return d.terms[arg]
+        if arg in dictionary:
+            return dictionary.terms[arg]
 
-    print("Invalid argument for term creation %s (or not in dictionary)"%str(arg))
-    raise TermNotFoundInDictionary(arg)
+    raise TermNotFoundInDictionary(arg, dictionary)
 

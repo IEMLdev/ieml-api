@@ -1,9 +1,12 @@
+from ieml.ieml_objects.terms import Dictionary
+
 from ieml.ieml_objects.terms.distance import ranking_from_term
 from ieml.ieml_objects.terms import term
 
 
-def get_ranking_from_term(ieml):
-    _tt = term(ieml)
+def get_ranking_from_term(ieml, version):
+    _tt = term(ieml, dictionary=Dictionary(version))
+
     return [{
         'ieml': str(t[2].script),
         'ranking': [t[0], t[1]],

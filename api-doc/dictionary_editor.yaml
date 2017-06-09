@@ -22,9 +22,11 @@ paths:
         - IEML
       description: |
         Returns a list of all the `IEML term` objects.
-#      parameters:
-#        - name: version
-#          in: query
+      parameters:
+        - name: version
+          in: query
+          required: false
+          type: string
 
       responses:
         '200':
@@ -34,23 +36,33 @@ paths:
             items:
               $ref: '#/definitions/ieml_term'
 
-  /get_term:
+  /version:
     get:
-      operationId: handlers.get_term
-      tags:
-        - IEML
-      description: |
-        Return a specific term object.
-      parameters:
-        - name: script
-          in: query
-          type: string
-          required: true
+      operationId: handlers.get_last_version
       responses:
         '200':
-          description: Successful response
+          description: the version
           schema:
-            $ref: '#/definitions/ieml_term'
+            type: string
+
+
+#  /get_term:
+#    get:
+#      operationId: handlers.get_term
+#      tags:
+#        - IEML
+#      description: |
+#        Return a specific term object.
+#      parameters:
+#        - name: script
+#          in: query
+#          type: string
+#          required: true
+#      responses:
+#        '200':
+#          description: Successful response
+#          schema:
+#            $ref: '#/definitions/ieml_term'
 
   /client/authenticate:
     post:
@@ -123,7 +135,7 @@ paths:
       description: |
         Compute the tables for an `IEML paradigm`
       parameters:
-        - name: iemltext
+        - name: ieml
           in: query
           description: The `IEML paradigm` for which we want to get the computed table.
           type: string
@@ -146,43 +158,43 @@ paths:
                   input:
                     type: string
 
-  /scriptparser/tree:
-    get:
-      operationId: handlers.script_tree
-      tags:
-        - Parsing
-      description: |
-        Computes the tree of a given `IEML term`
-      parameters:
-        - name: iemltext
-          in: query
-          description: The `IEML term` for which we want to get the computed tree.
-          type: string
-          required: true
-      responses:
-        '200':
-          description: Successful response
+#  /scriptparser/tree:
+#    get:
+#      operationId: handlers.script_tree
+#      tags:
+#        - Parsing
+#      description: |
+#        Computes the tree of a given `IEML term`
+#      parameters:
+#        - name: iemltext
+#          in: query
+#          description: The `IEML term` for which we want to get the computed tree.
+#          type: string
+#          required: true
+#      responses:
+#        '200':
+#          description: Successful response
 
-  /getRelVisibility:
-    post:
-      operationId: handlers.get_relation_visibility
-      description: |
-        TODO
-      parameters:
-        - name: body
-          in: body
-          required: True
-          schema:
-            type: object
-            properties:
-              ieml:
-                type: string
-      responses:
-        '200':
-          description: Successful response
+#  /getRelVisibility:
+#    post:
+#      operationId: handlers.get_relation_visibility
+#      description: |
+#        TODO
+#      parameters:
+#        - name: body
+#          in: body
+#          required: True
+#          schema:
+#            type: object
+#            properties:
+#              ieml:
+#                type: string
+#      responses:
+#        '200':
+#          description: Successful response
 
   /rels:
-    post:
+    get:
       operationId: handlers.get_relations
       tags:
         - Relations
@@ -190,19 +202,24 @@ paths:
         Returns a list of all the relations associated with the `IEML term`
         given in the payload
       parameters:
-        - name: body
-          in: body
+        - name: ieml
+          in: query
           description: >
             The `IEML term` for which we want to get its associated
             relationships.
           required: true
-          schema:
-            type: object
-            properties:
-              ieml:
-                type: string
-              factorize_descendant:
-                type: boolean
+          type: string
+
+        - name: version
+          in: query
+          required: true
+          type: string
+
+        - name: factorize_descendant
+          in: query
+          required: false
+          type: boolean
+
       responses:
         '200':
           description: Successful response
@@ -245,6 +262,7 @@ paths:
               - IEML
               - PARADIGM
               - token
+              - version
             properties:
               IEML:
                 type : string
@@ -256,6 +274,8 @@ paths:
                 type : array
                 items :
                   type : string
+              version:
+                type: string
       responses:
         '200':
           description: Successful response
@@ -293,15 +313,15 @@ paths:
       responses:
         '200':
           description: Successful response
-
-  /update_status:
-    get:
-      operationId: handlers.computation_status
-      description: |
-        Get the status of the computation.
-      responses:
-        '200':
-          description: Successful response
+#
+#  /update_status:
+#    get:
+#      operationId: handlers.computation_status
+#      description: |
+#        Get the status of the computation.
+#      responses:
+#        '200':
+#          description: Successful response
 
   /remieml:
     post:
@@ -325,25 +345,25 @@ paths:
       responses:
         '200':
           description: Successful response
-  '/updaterelations':
-    post:
-      operationId: handlers.update_relations
-      description: |
-        Recompute the relations in the dictionary. This operation may take a long time (~2min).
-      parameters:
-        - in : body
-          name : body
-          required : true
-          schema :
-            type: object
-            required:
-              - token
-            properties:
-              token:
-                type : string
-      responses:
-        '200':
-          description: Successful response
+#  '/updaterelations':
+#    post:
+#      operationId: handlers.update_relations
+#      description: |
+#        Recompute the relations in the dictionary. This operation may take a long time (~2min).
+#      parameters:
+#        - in : body
+#          name : body
+#          required : true
+#          schema :
+#            type: object
+#            required:
+#              - token
+#            properties:
+#              token:
+#                type : string
+#      responses:
+#        '200':
+#          description: Successful response
 
   '/exists/ieml/{ieml_term}':
     get:
@@ -391,6 +411,10 @@ paths:
       parameters:
         - in: query
           name: ieml
+          required: true
+          type: string
+        - in: query
+          name: version
           required: true
           type: string
       responses:

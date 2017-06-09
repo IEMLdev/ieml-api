@@ -3,11 +3,13 @@ import random
 import string
 from collections import defaultdict
 
+from handlers.caching import memoized
 from ieml.ieml_objects.terms import Dictionary, term
 
 from handlers.commons import exception_handler, ieml_term_model
 from ieml.ieml_objects.terms.relations import INVERSE_RELATIONS
-from ieml.ieml_objects.terms.version import DictionaryVersion, create_dictionary_version
+from ieml.ieml_objects.terms.version import DictionaryVersion, create_dictionary_version, \
+    get_available_dictionary_version
 from ieml.script.operator import sc, script
 
 from ..caching import cached, flush_cache
@@ -32,7 +34,8 @@ def _build_old_model_from_term_entry(t):
         "TAILLE": t.script.cardinal,
         "CANONICAL": old_canonical(t.script),
         "ROOT_PARADIGM": t.root == t,
-        "RANK": t.rank
+        "RANK": t.rank,
+        "INDEX": t.index
     }
 
 
@@ -137,19 +140,12 @@ def drupal_relations_dump(number=None):
     else:
         return res
 
-@cached("all_ieml", 1000)
-# @exception_handlerexception_handler
-def all_ieml():
+@memoized("all_ieml", 1000)
+# @exception_handler
+def all_ieml(version):
     """Returns a dump of all the terms contained in the DB, formatted for the JS client"""
-    result = [{**_build_old_model_from_term_entry(t),
-              'INDEX': i} for i, t in enumerate(Dictionary())]
+    result = [_build_old_model_from_term_entry(t) for t in Dictionary(version)]
     return result
-
-
-@exception_handler
-def get_term(script):
-    return _build_old_model_from_term_entry(term(script))
-
 
 @exception_handler
 def parse_ieml(iemltext):
@@ -168,7 +164,7 @@ def parse_ieml(iemltext):
     }
 
 
-def script_table(iemltext):
+def script_table(ieml):
     class_to_color = {
         AUXILIARY_CLASS: 'auxiliary',
         VERB_CLASS: 'verb',
@@ -245,13 +241,14 @@ def script_table(iemltext):
 
             result.append({
                 'Col': len(table.headers[tab].columns) + 1 if table.dim != 1 else 1,
-                'table': tabs
+                'table': tabs,
+                'dim': table.dim
             })
 
         return result
 
     try:
-        s = sc(iemltext)
+        s = sc(ieml)
         tables = s.tables
 
         if tables is None:
@@ -270,42 +267,42 @@ def script_table(iemltext):
     except CannotParse:
         pass
 
-
-@exception_handler
-def script_tree(iemltext):
-    def _tree_entry(script):
-        if script.layer == 0:
-            return {
-                'op': 'none',
-                'name': str(script),
-                'children': []
-            }
-
-        if isinstance(script, NullScript):
-            n = NullScript(script.layer - 1)
-            return {
-                'op': '*',
-                'name': str(script),
-                'children': [
-                    _tree_entry(n) for i in range(3)
-                ]
-            }
-        return {
-            'op': '*' if isinstance(script, MultiplicativeScript) else '+',
-            'name': str(script),
-            'children': [
-                _tree_entry(s) for s in script
-            ]
-        }
-
-    script = sc(iemltext)
-    return {
-        'level': script.layer,
-        'tree': _tree_entry(script),
-        'taille': script.cardinal,
-        'success': True,
-        'canonical': old_canonical(script)
-    }
+#
+# @exception_handler
+# def script_tree(iemltext):
+#     def _tree_entry(script):
+#         if script.layer == 0:
+#             return {
+#                 'op': 'none',
+#                 'name': str(script),
+#                 'children': []
+#             }
+#
+#         if isinstance(script, NullScript):
+#             n = NullScript(script.layer - 1)
+#             return {
+#                 'op': '*',
+#                 'name': str(script),
+#                 'children': [
+#                     _tree_entry(n) for i in range(3)
+#                 ]
+#             }
+#         return {
+#             'op': '*' if isinstance(script, MultiplicativeScript) else '+',
+#             'name': str(script),
+#             'children': [
+#                 _tree_entry(s) for s in script
+#             ]
+#         }
+#
+#     script = sc(iemltext)
+#     return {
+#         'level': script.layer,
+#         'tree': _tree_entry(script),
+#         'taille': script.cardinal,
+#         'success': True,
+#         'canonical': old_canonical(script)
+#     }
 
 
 def _process_inhibits(body):
@@ -353,13 +350,15 @@ def new_ieml_script(body):
     for j, table in enumerate(script_ast.tables):
         for i, tab in enumerate(table.headers):
             to_add['terms'].append(str(tab))
-            to_add['translations']['fr'][str(ss)] = body["FR"] + " Table (%d) Tab (%d)" % (j,i)
-            to_add['translations']['en'][str(ss)] = body["EN"] + " Table (%d) Tab (%d)" % (j,i),
+            to_add['translations']['fr'][str(tab)] = body["FR"] + " Table (%d) Tab (%d)" % (j,i)
+            to_add['translations']['en'][str(tab)] = body["EN"] + " Table (%d) Tab (%d)" % (j,i),
 
 
-    version = create_dictionary_version(DictionaryVersion(), add=to_add)
+    version = create_dictionary_version(DictionaryVersion.from_file_name(body['version']), add=to_add)
+    d = Dictionary(version)
+    version.upload_to_s3()
 
-    return {"success" : True, "added": _build_old_model_from_term_entry(term(script_ast))}
+    return {"success" : True, "added": _build_old_model_from_term_entry(term(script_ast, dictionary=d))}
 
 
 @need_login
@@ -418,5 +417,5 @@ def fr_tag_exists(tag_fr):
     return [tag_fr] if tag_fr in Dictionary().translations['fr'].inv else []
 
 
-def get_terms_ranking(ieml):
-    return {'success': True}
+def get_last_version():
+    return str(sorted(get_available_dictionary_version())[-1])

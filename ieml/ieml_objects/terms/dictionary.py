@@ -36,6 +36,9 @@ class Dictionary:
         def __init__(self, version, cache=True):
             super().__init__()
 
+            if isinstance(version, str):
+                version = DictionaryVersion(version)
+
             self.version = version
 
             self.cache = cache

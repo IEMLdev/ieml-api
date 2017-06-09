@@ -75,6 +75,9 @@ class Table:
             if self.cells.shape[1] == 1:
                 self._dim -= 1
 
+            if self.cells.shape[0] == 1:
+                self._dim -= 1
+
         return self._dim
 
     def __eq__(self, other):

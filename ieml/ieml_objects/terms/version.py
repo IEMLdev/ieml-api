@@ -10,21 +10,25 @@ from config import DICTIONARY_BUCKET_URL, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_K
     DICTIONARY_DEFAULT_VERSION
 from ieml.commons import LANGUAGES
 
+__available_versions = None
 
 def get_available_dictionary_version():
-    s3 = boto3.resource(
-        's3',
-        aws_access_key_id=AWS_ACCESS_KEY_ID,
-        aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
-    )
-    bucket_name = 'ieml-dictionary-versions'
-    bucket = s3.Bucket(bucket_name)
+    global __available_versions
+    if __available_versions is None:
+        s3 = boto3.resource(
+            's3',
+            aws_access_key_id=AWS_ACCESS_KEY_ID,
+            aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+        )
+        bucket_name = 'ieml-dictionary-versions'
+        bucket = s3.Bucket(bucket_name)
 
-    result = []
-    for obj in bucket.objects.all():
-        result.append(DictionaryVersion.from_file_name(obj.key))
+        result = []
+        for obj in bucket.objects.all():
+            result.append(DictionaryVersion.from_file_name(obj.key))
+        __available_versions = result
 
-    return result
+    return __available_versions
 
 
 class DictionaryVersion:
@@ -118,12 +122,17 @@ class DictionaryVersion:
     def __hash__(self):
         return str(self).__hash__()
 
+    def __lt__(self, other):
+        return self.date < other.date or self.version_id < other.version_id
+
+    def __gt__(self, other):
+        return self.date > other.date or self.version_id > other.version_id
+
     @staticmethod
     def from_file_name(file_name):
         date, version_id = file_name.split('.')[0].split('_')[1:3]
         date = datetime.datetime.strptime(date, '%Y-%m-%d').date()
         return DictionaryVersion(date=date, version_id=int(version_id))
-
 
 _default_version = None
 
@@ -140,11 +149,13 @@ def create_dictionary_version(old_version, add=None, update=None):
     v = get_available_dictionary_version()[-1]
     last_date, last_version_id = v.date, v.version_id
 
-    date = datetime.datetime.today()
+    date = datetime.datetime.today().date()
     if last_date == date:
         version_id = last_version_id + 1
     else:
         version_id = 0
+
+    old_version.load()
 
     state = {
         'version': [str(date), str(version_id)],
