@@ -15,6 +15,125 @@ paths:
   ##          INTLEKT         ##
   ##############################
 
+  /intlekt/tables:
+    get:
+      operationId: handlers.get_table_for_term
+      description: |
+        Get the table for the specified term
+      tags:
+        - Dictionary
+      parameters:
+        - name: ieml
+          in: query
+          required: true
+          type: string
+      responses:
+        '200':
+          description: |
+            The tables for this script.
+          schema:
+            type: object
+            required:
+              - relations
+              - tables
+              - success
+            properties:
+              success:
+                type: boolean
+              relations:
+                type: object
+                required:
+                  - etymology
+                  - inclusion
+                  - sibling
+                properties:
+                  etymology:
+                    type: object
+                    properties:
+                      father:
+                        type: array
+                        items:
+                          type: string
+                      child:
+                        type: array
+                        items:
+                          type: string
+                  inclusion:
+                    type: object
+                    properties:
+                      contained:
+                        type: array
+                        items:
+                          type: string
+                      contains:
+                        type: array
+                        items:
+                          type: string
+                  sibling:
+                    type: object
+                    properties:
+                      twin:
+                        type: array
+                        items:
+                          type: string
+                      opposed:
+                        type: array
+                        items:
+                          type: string
+                      associated:
+                        type: array
+                        items:
+                          type: string
+                      crossed:
+                        type: array
+                        items:
+                          type: string
+              tables:
+                type: array
+                items:
+                  type: object
+                  required:
+                    - parent
+                    - styles
+                    - dimension
+                    - header
+                    - cells_lines
+                    - rows
+                    - columns
+                  properties:
+                    parent:
+                      type: string
+                    styles:
+                      type: array
+                      items:
+                        type: string
+                    dimension:
+                      type: integer
+                    header:
+                      $ref: "#/definitions/multi_cell"
+                    cells_lines:
+                      type: array
+                      items:
+                        type: array
+                        items:
+                          $ref: "#/definitions/multi_cell"
+                    rows:
+                      type: array
+                      items:
+                        $ref: "#/definitions/multi_cell"
+                    columns:
+                      type: array
+                      items:
+                        $ref: "#/definitions/multi_cell"
+
+
+
+
+
+
+
+
+
   /intlekt/collection/get_tags:
     post:
       operationId: handlers.collection_get_tags
@@ -1006,3 +1125,15 @@ definitions:
         type: integer
       favorite:
         type: integer
+
+  multi_cell:
+    required:
+      - main
+      - others
+    properties:
+      main:
+        type: string
+      others:
+        type: array
+        items:
+          type: string
