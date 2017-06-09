@@ -55,8 +55,10 @@ var API = function(API_ROOT) {
             contentType: 'application/json'
         })
         .done(function(doc) {
+            collection.documents.push(doc.id);
+
             module.updateCollection(collection, function(col) {
-                success(doc);
+                success(doc, collection);
             }, error);
         })
         .fail(function(jqXHR, textStatus, errorThrown) {

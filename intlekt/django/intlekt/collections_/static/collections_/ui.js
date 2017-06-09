@@ -4,7 +4,6 @@ $(function() {
 
     var collections = {};
     var documents = {};
-    var currentCollection = null;
     
     function formatDate(date) {
         var dt = date.split('T');
@@ -70,8 +69,6 @@ $(function() {
     }
 
     function renderCollection(collection) {
-        currentCollection = collection;
-
         if(collection == null) return;
 
         $('#edit-collection-form input[name="title"]').val(collection.title);
@@ -97,9 +94,33 @@ $(function() {
         $('#document').data('id', doc.id);
     }
 
-    function collectionUpdated() {
-        renderCollectionList();
-        renderCollection(currentCollection);
+    function parseCollectionForm(form) {
+        var data = {};
+
+        data.title = form.find('*[name="title"]').val().trim();
+        data.authors = authorsToArray(form.find('*[name="authors"]').val());
+
+        return data;
+    }
+
+    function parseDocumentForm(form) {
+        var data = {};
+        
+        data.title = form.find('*[name="title"]').val().trim();
+        data.source = form.find('*[name="source"]').val().trim();
+        data.authors = authorsToArray(form.find('*[name="authors"]').val());
+        data.created_on = form.find('*[name="created_on"]').val();
+        data.url = form.find('*[name="url"]').val();
+        data.usl = form.find('*[name="usl"]').val();
+        data.description = form.find('*[name="description"]').val();
+        data.tags = tagsToArray(form.find('*[name="tags"]').val());
+        data.image = form.find('*[name="image"]').val();
+
+        if(!data.created_on) data.created_on = null;
+        if(!data.usl) data.usl = null;
+        if(!data.image) data.image = null;
+
+        return data;
     }
 
     function displayFormErrors(form, errors) {
@@ -129,129 +150,109 @@ $(function() {
         form.find('input[type!="submit"], textarea').val('');
     }
 
+    function cleanForm(form) {
+        cleanFormFields(form);
+        cleanFormErrors(form);
+    }
+
+    function currentCollection() {
+        var id = $('#collection').data('id');
+        return collections[id];
+    }
+
+    function currentDocument() {
+        var id = $('#document').data('id');
+        return documents[id];
+    }
+
     $('form').submit(function(e) {
         cleanFormErrors($(this));
         cleanMessages();
     });
 
-    var createCollectionForm = $('#create-collection form');
-    createCollectionForm.submit(function(e) {
+    $('#create-collection form').submit(function(e) {
         e.preventDefault();
-        var data = {};
+        var form = $(this);
 
-        data.title = createCollectionForm.find('input[name="title"]').val().trim();
-        data.authors = authorsToArray(createCollectionForm.find('input[name="authors"]').val());
+        api.createCollection(
+            parseCollectionForm(form),
+            function(data) {
+                collections[data.id] = data;
+                cleanForm(form);
+                $('#create-collection').hide();
 
-        api.createCollection(data, function(data) {
-            collections.push(data);
-            currentCollection = data;
-            cleanFormFields(createCollectionForm);
-
-            collectionUpdated();
-        }, function(err, details) {
-            displayError('Unable to create collection: ' + err);
-            displayFormErrors(createCollectionForm, details);
-        });
-    });
-    
-    var editCollectionForm = $('#edit-collection-form');
-    editCollectionForm.submit(function(e) {
-        e.preventDefault();
-        var data = {};
-    
-        data.id = currentCollection.id;
-        data.title = editCollectionForm.find('input[name="title"]').val().trim();
-        data.authors = authorsToArray(editCollectionForm.find('input[name="authors"]').val());
-
-        api.updateCollection(data, function(data) {
-            var collection;
-
-            for(let i in collections) {
-                collection = collections[i];
-                if(collection.id == data.id) {
-                    collections[i] = data;
-                    currentCollection = data;
-                    break;
-                }
+                renderCollection(data);
+                renderCollectionList();
+                displayMessage('Collection created successfully!');
+            },
+            function(err, details) {
+                displayError('Unable to create collection: ' + err);
+                displayFormErrors(form, details);
             }
-
-            collectionUpdated();
-            cleanFormFields(editCollectionForm);
-            displayMessage('Collection updated successfully!');
-        }, function(err, details) {
-            displayError('Unable to update collection: ' + err);
-            displayFormErrors(editCollectionForm, details);
-        });
-    });
-
-    var createDocumentForm = $('#create-document-form');
-    createDocumentForm.submit(function(e) {
-        e.preventDefault();
-        var data = {};
-
-        data.title = createDocumentForm.find('*[name="title"]').val().trim();
-        data.source = createDocumentForm.find('*[name="source"]').val().trim();
-        data.authors = authorsToArray(createDocumentForm.find('*[name="authors"]').val());
-        data.created_on = createDocumentForm.find('*[name="created_on"]').val();
-        data.url = createDocumentForm.find('*[name="url"]').val();
-        data.usl = createDocumentForm.find('*[name="usl"]').val();
-        data.description = createDocumentForm.find('*[name="description"]').val();
-        data.tags = tagsToArray(createDocumentForm.find('*[name="tags"]').val());
-        data.image = createDocumentForm.find('*[name="image"]').val();
-
-        if(!data.created_on) data.created_on = null;
-        if(!data.usl) data.usl = null;
-        if(!data.image) data.image = null;
-
-        createCollectionForm.find('.field-errors').html('');
-
-        api.createDocument(data, currentCollection, function(doc) {
-            currentCollection.documents.push(doc.id);
-            documents[doc.id] = doc;
-            collectionUpdated();
-            cleanFormFields(createDocumentForm);
-        }, function(err, details) {
-            displayError('Unable to create document: ' + err);
-            displayFormErrors(createDocumentForm, details);
-        });
+        );
     });
     
-    var editDocumentForm = $('#edit-document-form');
-    editDocumentForm.submit(function(e) {
+    $('#edit-collection-form').submit(function(e) {
         e.preventDefault();
-        var data = {};
+        var form = $(this);
+
+        var data = parseCollectionForm(form);
+        data.id = $('#collection').data('id');
+
+        api.updateCollection(
+            data,
+            function(data) {
+                collections[data.id] = data;
+                renderCollectionList();
+                renderCollection(data);
+                displayMessage('Collection updated successfully!');
+            },
+            function(err, details) {
+                displayError('Unable to update collection: ' + err);
+                displayFormErrors(form, details);
+            }
+        );
+    });
+
+    $('#create-document-form').submit(function(e) {
+        e.preventDefault();
+        var form = $(this);
+
+        form.find('.field-errors').html('');
+
+        api.createDocument(
+            parseDocumentForm(form),
+            currentCollection(),
+            function(doc, collection) {
+                collections[collection.id] = collection;
+                documents[doc.id] = doc;
+                renderDocumentList(collection.documents);
+                cleanForm(form);
+                $('#create-document-form').hide();
+            },
+            function(err, details) {
+                displayError('Unable to create document: ' + err);
+                displayFormErrors(form, details);
+            }
+        );
+    });
     
+    $('#edit-document-form').submit(function(e) {
+        e.preventDefault();
+
+        var form = $(this);
+        var data = parseDocumentForm(form);
         data.id = $('#document').data('id');
-        data.title = editDocumentForm.find('*[name="title"]').val().trim();
-        data.source = editDocumentForm.find('*[name="source"]').val().trim();
-        data.authors = authorsToArray(editDocumentForm.find('*[name="authors"]').val());
-        data.created_on = editDocumentForm.find('*[name="created_on"]').val().trim();
-        data.url = editDocumentForm.find('*[name="url"]').val().trim();
-        data.usl = editDocumentForm.find('*[name="usl"]').val().trim();
-        data.description = editDocumentForm.find('*[name="description"]').val().trim();
-        data.tags = tagsToArray(editDocumentForm.find('*[name="tags"]').val());
-        data.image = editDocumentForm.find('*[name="image"]').val().trim();
-
-        if(!data.created_on) data.created_on = null;
-        if(!data.usl) data.usl = null;
-        if(!data.image) data.image = null;
 
         api.updateDocument(data, function(data) {
-            var doc;
-
-            for(let docId in documents) {
-                doc = documents[docId];
-                if(doc.id == data.id) {
-                    documents[docId] = data;
-                    break;
-                }
-            }
-
+            documents[data.id] = data; 
+            cleanForm(form);
+            renderDocumentList(currentCollection().documents);
             renderDocument(data);
             displayMessage('Document updated successfully!');
         }, function(err, details) {
             displayError('Unable to update document: ' + err);
-            displayFormErrors(editDocumentForm, details);
+            displayFormErrors(form, details);
         });
     });
 
@@ -267,7 +268,7 @@ $(function() {
         for(let col of data) {
             collections[col.id] = col;
         }
-        collectionUpdated();
+        renderCollectionList();
 
         $('#messages').html('');
         $('#sidebar').css('display', 'inline-block');
