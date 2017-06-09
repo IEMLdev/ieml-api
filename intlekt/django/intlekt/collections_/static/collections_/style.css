@@ -20,11 +20,7 @@ h1 {
     display: none;
 }
 
-#create-collection {
-    display: none;
-}
-
-#create-document-form {
+#create-collection, #add-document {
     display: none;
 }
 

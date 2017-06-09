@@ -26,6 +26,18 @@ $(function() {
         return authorsToArray(tags);
     }
 
+    function unlinkedDocuments(collection) {
+        var docs = [];
+
+        for(let id in documents) {
+            if(collection.documents.indexOf(id) == -1) {
+                docs.push(id);
+            }
+        }
+
+        return docs;
+    }
+
     function renderCollectionList() {
         var list = $('#collection-list');
         list.empty();
@@ -119,6 +131,7 @@ $(function() {
         renderDocumentList(collection.documents);
         
         $('#document').hide();
+        $('#add-document').hide();
         $('#collection').show();
         $('#collection').data('id', collection.id);
     }
@@ -132,6 +145,25 @@ $(function() {
 
         $('#document').show();
         $('#document').data('id', doc.id);
+    }
+
+    function renderLinkDocumentForm() {
+        var docs = unlinkedDocuments(currentCollection());
+
+        var select = $('#link-document-form select');
+        select.empty();
+
+        var option, doc;
+        
+        for(let docId of docs) {
+            doc = documents[docId];
+
+            option = document.createElement('option');
+            option.setAttribute('value', doc.id);
+            option.innerHTML = doc.title;
+
+            select.append(option);
+        }
     }
 
     function parseCollectionForm(form) {
@@ -162,6 +194,15 @@ $(function() {
 
         return data;
     }
+    
+    function parseLinkDocumentForm(form) {
+        var data = {};
+
+        data.id = form.find('*[name="documents"]').val();
+
+        return data;
+    }
+
 
     function displayFormErrors(form, errors) {
         var errDiv;
@@ -268,10 +309,34 @@ $(function() {
                 documents[doc.id] = doc;
                 renderDocumentList(collection.documents);
                 cleanForm(form);
-                $('#create-document-form').hide();
+                displayMessage('Document created successfully!');
+                $('#add-document').hide();
             },
             function(err, details) {
                 displayError('Unable to create document: ' + err);
+                displayFormErrors(form, details);
+            }
+        );
+    });
+    
+    $('#link-document-form').submit(function(e) {
+        e.preventDefault();
+
+        var form = $(this);
+        var data = parseLinkDocumentForm(form);
+
+        currentCollection().documents.push(data.id);
+
+        api.updateCollection(
+            currentCollection(),
+            function(data) {
+                collections[data.id] = data; 
+                cleanForm(form);
+                renderDocumentList(currentCollection().documents);
+                displayMessage('Document linked successfully!');
+                $('#add-document').hide();
+            }, function(err, details) {
+                displayError('Unable to link document: ' + err);
                 displayFormErrors(form, details);
             }
         );
@@ -301,7 +366,8 @@ $(function() {
     });
 
     $('#add-document-button').click(function(e) {
-        $('#create-document-form').toggle();
+        renderLinkDocumentForm();
+        $('#add-document').toggle();
     });
 
     api.listCollections(function(data) {

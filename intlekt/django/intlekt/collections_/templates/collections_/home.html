@@ -55,45 +55,55 @@
 
         <input type="button" id="add-document-button" value="Add" />
 
-        <form id="create-document-form" method="POST" action="">
-            <label>Title:</label>
-            <input type="text" name="title" />
-            <div class="field-errors"></div>
+        <div id="add-document">
+            <form id="link-document-form" method="POST" action="">
+                <select name="documents">
+                </select>
+                <div class="field-errors"></div>
 
-            <label>Source:</label>
-            <input type="text" name="source" />
-            <div class="field-errors"></div>
+                <input type="submit" value="Link" />
+            </form>
 
-            <label>Authors (comma-separated):</label>
-            <input type="text" name="authors" placeholder="Name, Last First, ..." />
-            <div class="field-errors"></div>
+            <form id="create-document-form" method="POST" action="">
+                <label>Title:</label>
+                <input type="text" name="title" />
+                <div class="field-errors"></div>
 
-            <label>Created on:</label>
-            <input type="date" name="created_on" placeholder="YYYY-MM-DDThh:mm" />
-            <div class="field-errors"></div>
+                <label>Source:</label>
+                <input type="text" name="source" />
+                <div class="field-errors"></div>
 
-            <label>URL:</label>
-            <input type="url" name="url" />
-            <div class="field-errors"></div>
+                <label>Authors (comma-separated):</label>
+                <input type="text" name="authors" placeholder="Name, Last First, ..." />
+                <div class="field-errors"></div>
 
-            <label>USL:</label>
-            <input type="text" name="usl" />
-            <div class="field-errors"></div>
+                <label>Created on:</label>
+                <input type="date" name="created_on" placeholder="YYYY-MM-DDThh:mm" />
+                <div class="field-errors"></div>
 
-            <label>Description:</label>
-            <textarea name="description"></textarea>
-            <div class="field-errors"></div>
+                <label>URL:</label>
+                <input type="url" name="url" />
+                <div class="field-errors"></div>
 
-            <label>Tags (comma-separated):</label>
-            <input type="text" name="tags" placeholder="tag0, tag1, ..." />
-            <div class="field-errors"></div>
+                <label>USL:</label>
+                <input type="text" name="usl" />
+                <div class="field-errors"></div>
 
-            <label>Image:</label>
-            <input type="url" name="image" />
-            <div class="field-errors"></div>
+                <label>Description:</label>
+                <textarea name="description"></textarea>
+                <div class="field-errors"></div>
 
-            <input type="submit" value="Create" />
-        </form>
+                <label>Tags (comma-separated):</label>
+                <input type="text" name="tags" placeholder="tag0, tag1, ..." />
+                <div class="field-errors"></div>
+
+                <label>Image:</label>
+                <input type="url" name="image" />
+                <div class="field-errors"></div>
+
+                <input type="submit" value="Create" />
+            </form>
+        </div>
 
         <ul id="collection-documents"></ul>
 
