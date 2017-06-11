@@ -23,7 +23,7 @@ class CollectionViewSet(viewsets.ModelViewSet):
 
 
 class DocumentViewSet(viewsets.ModelViewSet):
-    """A document to be indexed. Can be a tweet, an article, a pdf..."""
+    """A document to be collected. Can be a tweet, an article, a pdf..."""
 
     queryset = models.Document.objects.all()
     lookup_field = 'id'
@@ -31,3 +31,12 @@ class DocumentViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return models.Document.objects.all()
+
+
+class TagViewSet(viewsets.ModelViewSet):
+    queryset = models.Tag.objects.all()
+    lookup_field = 'id'
+    serializer_class = serializers.TagSerializer
+
+    def get_queryset(self):
+        return models.Tag.objects.all()

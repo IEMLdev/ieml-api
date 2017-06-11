@@ -8,7 +8,7 @@ class Collection(Document):
     authors = fields.ListField(fields.StringField(), required=False, blank=True, default=list,)
     created_on = fields.DateTimeField(default=timezone.now, blank=True,)
     updated_on = fields.DateTimeField(default=timezone.now, blank=True,)
-    documents = fields.ListField(fields.ReferenceField('Document'), blank=True, default=list,)
+    documents = fields.EmbeddedDocumentListField('CollectedDocument', blank=True,)
 
     @classmethod
     def pre_save(cls, sender, document, **kwargs):

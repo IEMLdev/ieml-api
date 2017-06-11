@@ -14,3 +14,9 @@ class DocumentSerializer(mongoserializers.DocumentSerializer):
     class Meta:
         model = models.Document
         fields = '__all__'
+
+
+class TagSerializer(mongoserializers.DocumentSerializer):
+    class Meta:
+        model = models.Tag
+        fields = '__all__'
