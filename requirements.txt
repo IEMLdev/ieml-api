@@ -20,6 +20,7 @@ scipy
 pillow
 pytz
 django
-django-mongoengine
-django-rest-framework-mongoengine
+-e git+https://github.com/MongoEngine/django-mongoengine#egg=django-mongoengine
 djangorestframework
+django-rest-framework-mongoengine
+blinker
