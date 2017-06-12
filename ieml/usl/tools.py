@@ -36,10 +36,13 @@ def usl(arg):
     raise ValueError("Invalid argument to create an usl object.")
 
 _ieml_objects_types = [Term, Word, Sentence, SuperSentence]
-_ieml_object_generator = RandomPoolIEMLObjectGenerator(level=Text)
-
+_ieml_object_generator = None
 
 def random_usl(rank_type=None):
+    global _ieml_object_generator
+    if _ieml_object_generator is None:
+        _ieml_object_generator = RandomPoolIEMLObjectGenerator(level=Text)
+
     if rank_type and not isinstance(rank_type, IEMLType):
         raise ValueError('The wanted type for the generated usl object must be a IEMLType, here : '
                          '%s'%rank_type.__class__.__name__)

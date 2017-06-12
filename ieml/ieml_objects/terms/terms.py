@@ -6,7 +6,7 @@ from ieml.ieml_objects.terms.relations import Relations
 from ieml.script.operator import script
 
 Translations = namedtuple('Translations', list(LANGUAGES))
-Translations.__getitem__ = lambda self, item: self.__getattribute__(item) if isinstance(item, str) \
+Translations.__getitem__ = lambda self, item: self.__getattribute__(item) if item in LANGUAGES \
     else tuple.__getitem__(self, item)
 
 

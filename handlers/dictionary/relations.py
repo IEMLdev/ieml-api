@@ -1,4 +1,4 @@
-from ieml.ieml_objects.terms import Dictionary
+from ieml.ieml_objects.terms import Dictionary, term
 
 from handlers.commons import exception_handler
 from handlers.dictionary.client import need_login
@@ -50,3 +50,8 @@ def get_relations(ieml, version, factorize_descendant=False):
         "visible": True
     })
     return sorted(all_relations, key=lambda rel_entry: relations_order[rel_entry['reltype']])
+
+
+def get_rel_visibility(ieml, version):
+    t = term(ieml, dictionary=version)
+    return [relation_name_table.inv[rel] for rel in t.inhibitions]

@@ -4,6 +4,7 @@ import string
 from collections import defaultdict
 
 from handlers.caching import memoized
+from ieml.commons import LANGUAGES
 from ieml.ieml_objects.terms import Dictionary, term
 
 from handlers.commons import exception_handler, ieml_term_model
@@ -12,11 +13,10 @@ from ieml.ieml_objects.terms.version import DictionaryVersion, create_dictionary
     get_available_dictionary_version
 from ieml.script.operator import sc, script
 
-from ..caching import cached, flush_cache
+from ..caching import flush_cache
 from handlers.dictionary.commons import relation_name_table
 from ieml.exceptions import CannotParse
 from ieml.script.constants import AUXILIARY_CLASS, VERB_CLASS, NOUN_CLASS
-from ieml.script import MultiplicativeScript, NullScript
 from ieml.script.tools import old_canonical, factorize
 from .client import need_login
 
@@ -47,28 +47,34 @@ def dictionary_dump(dictionary_version):
             'terms': sorted((ieml_term_model(t) for t in Dictionary(version)), key=lambda c: c['INDEX'])}
 
 MAX_TERMS_DICTIONARY = 50000
-Drupal_dico = [ieml_term_model(t) for t in Dictionary()]
-all_uuid = {
-    d['IEML']: 1000 + int(hashlib.sha1(d['IEML'].encode()).hexdigest(), 16) % MAX_TERMS_DICTIONARY for d in Drupal_dico
-}
+_drupal_utils = None
+
+
+def _get_drupal_utils():
+    global _drupal_utils
+    if _drupal_utils is None:
+        _drupal_utils = {
+            'drupal_dico': [ieml_term_model(t) for t in Dictionary()]
+        }
+        _drupal_utils['all_uuid'] = {
+                d['IEML']: 1000 + int(hashlib.sha1(d['IEML'].encode()).hexdigest(), 16) % MAX_TERMS_DICTIONARY for d in _drupal_utils['drupal_dico']
+        }
+
+    return _drupal_utils
+
 
 # @cached("dictionary_dump", 1000)
 @exception_handler
 def drupal_dictionary_dump():
+    _drupal_utils = _get_drupal_utils()
+
     return [{
-                'id': all_uuid[d['IEML']],
+                'id': _drupal_utils['all_uuid'][d['IEML']],
                 'IEML': d['IEML'],
                 'FR': d['FR'],
                 'EN': d['EN'],
                 'INDEX': d['INDEX']
-            } for d in Drupal_dico]
-
-
-# @cached("dictionary_dump", 1000)
-# @exception_handler
-# def drupal_dictionary_dump():
-#     dico = [ieml_term_model(t) for t in Dictionary()][:5]
-#     return _drupal_process(dico)
+            } for d in _drupal_utils['drupal_dico']]
 
 
 _RELATIONS = {'contains': 'inclusion',         # 0
@@ -86,6 +92,8 @@ _RELATIONS = {'contains': 'inclusion',         # 0
 
 
 def drupal_relations_dump(number=None):
+    _drupal_utils = _get_drupal_utils()
+
     root = term("O:M:.O:M:.-+M:O:.M:O:.-")
 
     paradigm = sorted(Dictionary().roots[root])
@@ -113,16 +121,16 @@ def drupal_relations_dump(number=None):
         for rel_cat in relations[(t0, t1)]:
             comment = ''.join([random.choice(string.ascii_lowercase) for i in range(100)])
             res.append({
-                'term_src': all_uuid[str(t0.script)],
-                'term_dest': all_uuid[str(t1.script)],
+                'term_src': _drupal_utils['all_uuid'][str(t0.script)],
+                'term_dest': _drupal_utils['all_uuid'][str(t1.script)],
                 'relation_name': rel_cat,
                 'relation_type': _RELATIONS[rel_cat],
                 'commentary': comment
             })
 
             res.append({
-                'term_src': all_uuid[str(t1.script)],
-                'term_dest': all_uuid[str(t0.script)],
+                'term_src': _drupal_utils['all_uuid'][str(t1.script)],
+                'term_dest': _drupal_utils['all_uuid'][str(t0.script)],
                 'relation_name': INVERSE_RELATIONS[rel_cat],
                 'relation_type': _RELATIONS[rel_cat],
                 'commentary': comment
@@ -148,10 +156,10 @@ def all_ieml(version):
     return result
 
 @exception_handler
-def parse_ieml(iemltext):
+def parse_ieml(iemltext, version):
     script_ast = sc(iemltext)
-    root = Dictionary().get_root(script_ast)
-    containsSize = len([s for s in Dictionary().layers[script_ast.layer] if s.script in script_ast])
+    root = Dictionary(version).get_root(script_ast)
+    containsSize = len([s for s in Dictionary(version).layers[script_ast.layer] if s.script in script_ast])
 
     return {
         "factorization": str(factorize(script_ast)),
@@ -305,10 +313,10 @@ def script_table(ieml):
 #     }
 
 
-def _process_inhibits(body):
+def _process_inhibits(body, t):
     if 'INHIBITS' in body:
         try:
-            inhibits = [relation_name_table[i] for i in body['INHIBITS']]
+            inhibits = [relation_name_table[i] for i in body['INHIBITS'] if relation_name_table[i] not in t.inhibitions]
         except KeyError as e:
             raise ValueError(e.args[0])
     else:
@@ -317,26 +325,15 @@ def _process_inhibits(body):
     return inhibits
 
 
-def _save_dictionary():
-    pass
-    # try:
-    #     Dictionary().compute_relations()
-    #     Dictionary().compute_ranks()
-    #     save_dictionary(DICTIONARY_FOLDER)
-    # except ValueError as e:
-    #     load_dictionary(DICTIONARY_FOLDER, Dictionary())
-    #     raise ValueError("Unable to recompute the relations and ranks: " + str(e))
-
-
 @need_login
 @flush_cache
-# @exception_handler
-def new_ieml_script(body):
+@exception_handler
+def new_ieml_script(body, version):
     script_ast = sc(body["IEML"])
     to_add = {
         'terms': [str(script_ast)],
         'roots': [str(script_ast)] if body["PARADIGM"] == "1" else [],
-        'inhibitions': {str(script_ast): _process_inhibits(body)} if body["PARADIGM"] == "1" else {},
+        'inhibitions': {str(script_ast): _process_inhibits(body, term(script_ast, dictionary=version))} if body["PARADIGM"] == "1" else {},
         'translations': {"fr": {str(script_ast): body["FR"]},
                          "en": {str(script_ast): body["EN"]}}
     }
@@ -348,73 +345,95 @@ def new_ieml_script(body):
             to_add['translations']['en'][str(ss)] = body["EN"] + " SS (%d)"%i
 
     for j, table in enumerate(script_ast.tables):
-        for i, tab in enumerate(table.headers):
-            to_add['terms'].append(str(tab))
-            to_add['translations']['fr'][str(tab)] = body["FR"] + " Table (%d) Tab (%d)" % (j,i)
-            to_add['translations']['en'][str(tab)] = body["EN"] + " Table (%d) Tab (%d)" % (j,i),
+        for i, tab in enumerate(table.tabs):
+            if tab.paradigm != script_ast:
+                to_add['terms'].append(str(tab.paradigm))
+                to_add['translations']['fr'][str(tab.paradigm)] = body["FR"] + " Table (%d) Tab (%d)" % (j,i)
+                to_add['translations']['en'][str(tab.paradigm)] = body["EN"] + " Table (%d) Tab (%d)" % (j,i)
 
+    new_version = create_dictionary_version(DictionaryVersion.from_file_name(version), add=to_add)
+    new_version.upload_to_s3()
 
-    version = create_dictionary_version(DictionaryVersion.from_file_name(body['version']), add=to_add)
-    d = Dictionary(version)
-    version.upload_to_s3()
-
-    return {"success" : True, "added": _build_old_model_from_term_entry(term(script_ast, dictionary=d))}
+    return {"success" : True, "added": _build_old_model_from_term_entry(term(script_ast, dictionary=new_version))}
 
 
 @need_login
 @flush_cache
 @exception_handler
-def remove_ieml_script(body):
+def remove_ieml_script(body, version):
     script_ast = sc(body['id'])
-    Dictionary().remove_term(term(script_ast))
-    _save_dictionary()
+    if script_ast.cardinal == 1:
+        raise ValueError("Can't remove %s, it is a singular sequence."%str(script_ast))
+
+    t = term(script_ast, dictionary=Dictionary(version))
+    if t.root == t:
+        to_remove = [str(tt.script) for tt in t.relations.contains]
+    else:
+        to_remove = [script_ast]
+
+    new_version = create_dictionary_version(DictionaryVersion(version), remove=to_remove)
+    new_version.upload_to_s3()
 
     return {'success': True}
 
 
 @need_login
 @flush_cache
-@exception_handler
-def update_ieml_script(body):
+# @exception_handler
+def update_ieml_script(body, version):
     """Updates an IEML Term's properties (mainly the tags, and the paradigm). If the IEML is changed,
     a new term is created"""
     script_ast = sc(body["ID"])
-
-    inhibits = _process_inhibits(body)
+    inhibits = _process_inhibits(body, term(script_ast, dictionary=version))
 
     if body["IEML"] == body["ID"]:
-        # no update on the ieml
-        Dictionary().update_term(term(script_ast),
-                                 inhibitions=inhibits,
-                                 translation={"fr": body["FR"], "en": body["EN"]})
+        # no update on the ieml only update the translations or inhibitions
+        to_update = {
+            'translations': {"fr": {str(script_ast): body["FR"]},
+                             "en": {str(script_ast): body["EN"]}},
+            'inhibitions': {str(script_ast): inhibits}
+        }
+        to_remove = []
+        to_add = {}
+
     else:
-        Dictionary().remove_term(term(script_ast))
-        Dictionary().add_term(sc(body["IEML"]),
-                              root=body["PARADIGM"] == "1",
-                              inhibitions=inhibits,
-                              translation={"fr": body["FR"], "en": body["EN"]})
-    _save_dictionary()
-    return {"success" : True, "modified": _build_old_model_from_term_entry(term(body["IEML"]))}
+        t = term(script_ast, dictionary=Dictionary(version))
+        if script_ast.cardinal == 1 or t.root == t:
+            raise ValueError("Can only update the script of a non-root paradigm.")
+
+        to_update = {}
+        to_remove = [script_ast]
+
+        new_script = script(body["IEML"])
+        to_add = {
+            'terms': [str(new_script)],
+            'translations': {l: {str(new_script): t.translations[l]} for l in LANGUAGES}
+        }
+
+    new_version = create_dictionary_version(DictionaryVersion(version), remove=to_remove, add=to_add, update=to_update)
+    new_version.upload_to_s3()
+
+    return {"success": True, "modified": _build_old_model_from_term_entry(term(body["IEML"], dictionary=new_version))}
 
 
 @exception_handler
-def ieml_term_exists(ieml_term):
+def ieml_term_exists(ieml_term, version):
     """Tries to dig a term from the database"""
     t = script(ieml_term)
-    if t in Dictionary():
+    if t in Dictionary(version):
         return [str(t)]
     else:
         return []
 
 
 # @exception_handler
-def en_tag_exists(tag_en):
-    return [tag_en] if tag_en in Dictionary().translations['en'].inv else []
+def en_tag_exists(tag_en, version):
+    return [tag_en] if tag_en in Dictionary(version).translations['en'].inv else []
 
 
 # @exception_handler
-def fr_tag_exists(tag_fr):
-    return [tag_fr] if tag_fr in Dictionary().translations['fr'].inv else []
+def fr_tag_exists(tag_fr, version):
+    return [tag_fr] if tag_fr in Dictionary(version).translations['fr'].inv else []
 
 
 def get_last_version():

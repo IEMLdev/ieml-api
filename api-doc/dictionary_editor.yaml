@@ -25,7 +25,7 @@ paths:
       parameters:
         - name: version
           in: query
-          required: false
+          required: true
           type: string
 
       responses:
@@ -97,6 +97,11 @@ paths:
           description: The `IEML term` for which we want to get the computed tree.
           type: string
           required: true
+        - name: version
+          in: query
+          required: true
+          type: string
+
       responses:
         '200':
           description: Successful response
@@ -253,6 +258,10 @@ paths:
       description: |
         Add a new `IEML` term to the dictionary
       parameters:
+        - in: query
+          name: version
+          required: true
+          type: string
         - in : body
           name : body
           required : true
@@ -285,6 +294,10 @@ paths:
       description: |
         Modify an `IEML` term from the dictionary
       parameters:
+        - in: query
+          name: version
+          required: true
+          type: string
         - name : body
           in: body
           required : true
@@ -342,9 +355,33 @@ paths:
                 type : string
               token:
                 type : string
+        - in: query
+          name: version
+          required: true
+          type: string
       responses:
         '200':
           description: Successful response
+
+  /get_rel_visibility:
+    get:
+      operationId: handlers.get_rel_visibility
+      description: |
+        Return the inhibited relations
+      parameters:
+        - in: query
+          name: ieml
+          required: true
+          type: string
+        - in: query
+          name: version
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Successful response
+
+
 #  '/updaterelations':
 #    post:
 #      operationId: handlers.update_relations
@@ -375,6 +412,10 @@ paths:
           name: ieml_term
           required: true
           type: string
+        - in: query
+          name: version
+          required: true
+          type: string
       responses:
         '200':
           description: Successful response
@@ -388,6 +429,10 @@ paths:
           name: tag_fr
           required: true
           type: string
+        - in: query
+          name: version
+          required: true
+          type: string
       responses:
         '200':
           description: Successful response
@@ -399,6 +444,10 @@ paths:
       parameters:
         - in: path
           name: tag_en
+          required: true
+          type: string
+        - in: query
+          name: version
           required: true
           type: string
       responses:

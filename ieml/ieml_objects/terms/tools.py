@@ -1,3 +1,4 @@
+from ieml.ieml_objects.terms.version import DictionaryVersion
 from ieml.script import Script
 from ieml.ieml_objects.terms.terms import Term
 from ieml.ieml_objects.terms.dictionary import Dictionary
@@ -16,7 +17,10 @@ def term(arg, dictionary=None):
         return arg
 
     if not isinstance(dictionary, Dictionary):
-        dictionary = Dictionary()
+        if isinstance(dictionary, (str, DictionaryVersion)):
+            dictionary = Dictionary(dictionary)
+        else:
+            dictionary = Dictionary()
 
     if isinstance(arg, int):
         return dictionary.index[arg]

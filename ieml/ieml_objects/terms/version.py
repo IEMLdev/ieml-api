@@ -12,9 +12,10 @@ from ieml.commons import LANGUAGES
 
 __available_versions = None
 
-def get_available_dictionary_version():
+
+def get_available_dictionary_version(update=False):
     global __available_versions
-    if __available_versions is None:
+    if __available_versions is None or update:
         s3 = boto3.resource(
             's3',
             aws_access_key_id=AWS_ACCESS_KEY_ID,
@@ -31,11 +32,19 @@ def get_available_dictionary_version():
     return __available_versions
 
 
+def _date_to_str(date):
+    return date.strftime('%Y-%m-%d_%H:%M:%S')
+
+
+def _str_to_date(string):
+    return datetime.datetime.strptime(string, '%Y-%m-%d_%H:%M:%S')
+
+
 class DictionaryVersion:
     """
     Track the available versions
     """
-    def __init__(self, date=None, version_id=0):
+    def __init__(self, date=None):
         super(DictionaryVersion, self).__init__()
 
         self.terms = None
@@ -45,25 +54,26 @@ class DictionaryVersion:
         self.loaded = False
 
         if date is None:
-            date, version_id = DICTIONARY_DEFAULT_VERSION
+            date = DICTIONARY_DEFAULT_VERSION
 
         if isinstance(date, str):
-            self.date = datetime.datetime.strptime(date, '%Y-%m-%d').date()
+            if date.startswith('dictionary_'):
+                self.date = self.from_file_name(date).date
+            else:
+                self.date = _str_to_date(date)
         elif isinstance(date, datetime.date):
             self.date = date
         else:
-            raise ValueError("Invalid date format for dictionary version %s." % str(date))
-
-        self.version_id = int(version_id)
+            raise ValueError("Invalid date format for dictionary version %s." % _date_to_str(date))
 
     def __str__(self):
-        return 'dictionary_%s_%d' % (str(self.date), self.version_id)
+        return 'dictionary_%s' % _date_to_str(self.date)
 
     def __getstate__(self):
         self.load()
 
         return {
-            'version': [str(self.date), str(self.version_id)],
+            'version': _date_to_str(self.date),
             'terms': self.terms,
             'roots': self.roots,
             'inhibitions': self.inhibitions,
@@ -71,9 +81,7 @@ class DictionaryVersion:
         }
 
     def __setstate__(self, state):
-        self.date = datetime.datetime.strptime(state['version'][0], '%Y-%m-%d').date()
-        self.version_id = int(state['version'][1])
-
+        self.date = _str_to_date(state['version'])
         self.terms = state['terms']
         self.roots = state['roots']
         self.inhibitions = state['inhibitions']
@@ -96,6 +104,8 @@ class DictionaryVersion:
 
         obj.upload_fileobj(io.BytesIO(bytes(self.json(), 'utf-8')))
         obj.Acl().put(ACL='public-read')
+
+        assert self in get_available_dictionary_version(update=True)
 
     def load(self):
         if self.loaded:
@@ -123,16 +133,15 @@ class DictionaryVersion:
         return str(self).__hash__()
 
     def __lt__(self, other):
-        return self.date < other.date or self.version_id < other.version_id
+        return self.date < other.date
 
     def __gt__(self, other):
-        return self.date > other.date or self.version_id > other.version_id
+        return self.date > other.date
 
     @staticmethod
     def from_file_name(file_name):
-        date, version_id = file_name.split('.')[0].split('_')[1:3]
-        date = datetime.datetime.strptime(date, '%Y-%m-%d').date()
-        return DictionaryVersion(date=date, version_id=int(version_id))
+        date = _str_to_date(file_name.split('.')[0].split('_', maxsplit=1)[1])
+        return DictionaryVersion(date=date)
 
 _default_version = None
 
@@ -145,28 +154,79 @@ def get_default_dictionary_version():
     return _default_version
 
 
-def create_dictionary_version(old_version, add=None, update=None):
-    v = get_available_dictionary_version()[-1]
-    last_date, last_version_id = v.date, v.version_id
+def create_dictionary_version(old_version, add=None, update=None, remove=None):
+    """
 
-    date = datetime.datetime.today().date()
-    if last_date == date:
-        version_id = last_version_id + 1
-    else:
-        version_id = 0
+    :param old_version: the dictionary version to build the new version from
+    :param add: a dict with the element to add {'terms': list of script to add,
+                                                'roots': list of script to add root paradigm,
+                                                'inhibitions': dict {root_p: list of relations to inhibits in this root p}
+                                                'translations': dict {language: {script: traduction}}}
+    :param update: a dict to update the translations and inhibtions
+    :param remove: a list of term to remove, they are removed from root, terms, inhibitions and translations
+    :return:
+    """
+    v = get_available_dictionary_version()[-1]
+    last_date = v.date
+
+    while True:
+        new_date = datetime.datetime.today()
+        if new_date != last_date:
+            break
 
     old_version.load()
 
     state = {
-        'version': [str(date), str(version_id)],
-        'terms': list(set(old_version.terms).union(add['terms'])),
-        'roots': list(set(old_version.roots).union(add['roots'])),
-        'inhibitions': {**old_version.inhibitions, **add['inhibitions']},
-        'translations': {l: {**old_version.translations[l], **add['translations'][l]} for l in LANGUAGES}
+        'version': _date_to_str(new_date),
+        'terms': old_version.terms,
+        'roots': old_version.roots,
+        'inhibitions': old_version.inhibitions,
+        'translations': old_version.translations
     }
 
-    dictionary_version = DictionaryVersion(date, version_id)
+    if add is not None:
+        if 'terms' in add:
+            state['terms'] = list(set(state['terms']).union(add['terms']))
+        if 'roots' in add:
+            state['roots'] = list(set(state['roots']).union(add['roots']))
+        if 'inhibitions' in add:
+            state['inhibitions'] = {**state['inhibitions'], **add['inhibitions']}
+        if 'translations' in add:
+            state['translations'] = {l: {**state['translations'][l], **add['translations'][l]} for l in LANGUAGES}
+
+    if remove is not None:
+        state['terms'] = list(set(state['terms']).difference(remove))
+        state['roots'] = list(set(state['roots']).difference(remove))
+        for r in remove:
+            if r in state['inhibitions']:
+                del state['inhibitions'][r]
+
+            for l in LANGUAGES:
+                if r in state['translations'][l]:
+                    del state['translations'][l][r]
+
+    if update is not None:
+        if 'inhibitions' in update:
+            for s, l in update['inhibitions'].items():
+                state['inhibitions'][s].extend(l)
+        if 'translations' in update:
+            state['translations'] = {l: {**state['translations'][l], **update['translations'][l]} for l in LANGUAGES}
+
+    dictionary_version = DictionaryVersion(new_date)
     dictionary_version.__setstate__(state)
+
+    from ieml.ieml_objects.terms.dictionary import Dictionary
+
+    if set(old_version.terms) == set(state['terms']) and set(old_version.roots) == set(state['roots']) and \
+       all(not v for v in update['inhibitions'].values()):
+
+        old_dict_state = Dictionary(old_version).__getstate__()
+        d = Dictionary(dictionary_version, load=False)
+        d.__setstate__(old_dict_state)
+        d.load()
+    else:
+        # graph is updated, must check the coherence
+        Dictionary(dictionary_version)
 
     return dictionary_version
 
