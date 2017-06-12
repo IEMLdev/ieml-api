@@ -12,10 +12,6 @@ h1 {
     padding: 10px;
 }
 
-#collection-documents li {
-    cursor: pointer;
-}
-
 #collection, #document {
     display: none;
 }
@@ -29,8 +25,12 @@ h1 {
     color: red;
 }
 
-a.remove {
+#collection-documents a.hide {
     color: red;
+}
+
+#collection-documents a.show{
+    color: green;
 }
 
 #collect-document td {

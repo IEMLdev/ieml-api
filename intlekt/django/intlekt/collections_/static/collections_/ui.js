@@ -65,8 +65,8 @@ $(function() {
         }
     }
 
-    function removeDocument(index, collection) {
-        collection.documents.splice(index, 1);
+    function toggleDocumentVisibility(index, collection, visible) {
+        collection.documents[index].hidden = !visible;
 
         api.updateCollection(
             collection,
@@ -82,36 +82,54 @@ $(function() {
     }
 
     function renderDocumentList(collection) {
-        var li, a, collectedDoc;
+        var li, a, span, collectedDoc;
         $('#collection-documents').empty();
 
         for(let i in collection.documents) {
             collectedDoc = collection.documents[i];
 
             li = document.createElement('li');
-            a = document.createElement('a');
-            a.setAttribute('data-index', i);
-            a.setAttribute('href', '');
-            a.innerHTML = documents[collectedDoc.document].title;
 
-            $(a).click(function(e) {
-                e.preventDefault();
-                var i = $(this).data('index');
-                renderCollectedDocument(i, collection);
-            });
-            li.appendChild(a);
+            if(!collectedDoc.hidden) {
+                a = document.createElement('a');
+                a.setAttribute('data-index', i);
+                a.setAttribute('href', '');
+                a.innerHTML = documents[collectedDoc.document].title;
+                $(a).click(function(e) {
+                    e.preventDefault();
+                    var i = $(this).data('index');
+                    renderCollectedDocument(i, collection);
+                });
+                li.appendChild(a);
 
-            a = document.createElement('a');
-            a.setAttribute('data-index', i);
-            a.setAttribute('href', '');
-            a.setAttribute('class', 'remove');
-            a.innerHTML = 'X';
-            $(a).click(function(e) {
-                e.preventDefault();
-                var index = $(this).data('index');
-                removeDocument(index, currentCollection());
-            });
-            li.appendChild(a);
+                a = document.createElement('a');
+                a.setAttribute('data-index', i);
+                a.setAttribute('href', '');
+                a.setAttribute('class', 'hide');
+                a.innerHTML = 'hide';
+                $(a).click(function(e) {
+                    e.preventDefault();
+                    var index = $(this).data('index');
+                    toggleDocumentVisibility(index, currentCollection(), false);
+                });
+                li.appendChild(a);
+            } else {
+                span = document.createElement('span');
+                span.innerHTML = documents[collectedDoc.document].title + ' ';
+                li.appendChild(span);
+                
+                a = document.createElement('a');
+                a.setAttribute('data-index', i);
+                a.setAttribute('href', '');
+                a.setAttribute('class', 'show');
+                a.innerHTML = 'show';
+                $(a).click(function(e) {
+                    e.preventDefault();
+                    var index = $(this).data('index');
+                    toggleDocumentVisibility(index, currentCollection(), true);
+                });
+                li.appendChild(a);
+            }
             
             $('#collection-documents').append(li);
         }
