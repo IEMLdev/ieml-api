@@ -30,8 +30,8 @@ $(function() {
         var docs = Object.keys(documents);
         var index;
 
-        for(let collectedDoc of collection.documents) {
-            index = docs.indexOf(collectedDoc.document);
+        for(let doc in collection.documents) {
+            index = docs.indexOf(doc);
             docs.splice(index, 1);
         }
 
@@ -65,8 +65,8 @@ $(function() {
         }
     }
 
-    function toggleDocumentVisibility(index, collection, visible) {
-        collection.documents[index].hidden = !visible;
+    function toggleDocumentVisibility(id, collection, visible) {
+        collection.documents[id].hidden = !visible;
 
         api.updateCollection(
             collection,
@@ -85,48 +85,48 @@ $(function() {
         var li, a, span, collectedDoc;
         $('#collection-documents').empty();
 
-        for(let i in collection.documents) {
-            collectedDoc = collection.documents[i];
+        for(let docId in collection.documents) {
+            collectedDoc = collection.documents[docId];
 
             li = document.createElement('li');
 
             if(!collectedDoc.hidden) {
                 a = document.createElement('a');
-                a.setAttribute('data-index', i);
+                a.setAttribute('data-id', docId);
                 a.setAttribute('href', '');
-                a.innerHTML = documents[collectedDoc.document].title;
+                a.innerHTML = documents[docId].title;
                 $(a).click(function(e) {
                     e.preventDefault();
-                    var i = $(this).data('index');
-                    renderCollectedDocument(i, collection);
+                    var id = $(this).data('id');
+                    renderCollectedDocument(id, collection);
                 });
                 li.appendChild(a);
 
                 a = document.createElement('a');
-                a.setAttribute('data-index', i);
+                a.setAttribute('data-id', docId);
                 a.setAttribute('href', '');
                 a.setAttribute('class', 'hide');
                 a.innerHTML = 'hide';
                 $(a).click(function(e) {
                     e.preventDefault();
-                    var index = $(this).data('index');
-                    toggleDocumentVisibility(index, currentCollection(), false);
+                    var id = $(this).data('id');
+                    toggleDocumentVisibility(id, currentCollection(), false);
                 });
                 li.appendChild(a);
             } else {
                 span = document.createElement('span');
-                span.innerHTML = documents[collectedDoc.document].title + ' ';
+                span.innerHTML = documents[docId].title + ' ';
                 li.appendChild(span);
                 
                 a = document.createElement('a');
-                a.setAttribute('data-index', i);
+                a.setAttribute('data-id', docId);
                 a.setAttribute('href', '');
                 a.setAttribute('class', 'show');
                 a.innerHTML = 'show';
                 $(a).click(function(e) {
                     e.preventDefault();
-                    var index = $(this).data('index');
-                    toggleDocumentVisibility(index, currentCollection(), true);
+                    var id = $(this).data('id');
+                    toggleDocumentVisibility(id, currentCollection(), true);
                 });
                 li.appendChild(a);
             }
@@ -151,16 +151,16 @@ $(function() {
         $('#collection').data('id', collection.id);
     }
 
-    function renderCollectedDocument(index, collection) {
+    function renderCollectedDocument(id, collection) {
         var form = $('#edit-document-form');
-        var doc = collection.documents[index];
+        var doc = collection.documents[id];
 
         for(let key in doc) {
             form.find('*[name="' + key + '"]').val(doc[key]);
         }
 
         $('#document').show();
-        $('#document').data('index', index);
+        $('#document').data('id', id);
     }
 
     function renderCollectDocumentForm() {
@@ -332,10 +332,9 @@ $(function() {
 
         function createDocumentCallback(doc) {
             documents[doc.id] = doc;
-            collectedDoc.document = doc.id;
 
             var col = currentCollection();
-            col.documents.push(collectedDoc);
+            col.documents[doc.id] = collectedDoc;
 
 
             api.updateCollection(
@@ -370,44 +369,20 @@ $(function() {
         }
     });
     
-    $('#link-document-form').submit(function(e) {
-        e.preventDefault();
-
-        var form = $(this);
-        var data = parseLinkDocumentForm(form);
-
-        currentCollection().documents.push(data.id);
-
-        api.updateCollection(
-            currentCollection(),
-            function(data) {
-                collections[data.id] = data; 
-                cleanForm(form);
-                renderDocumentList(currentCollection());
-                displayMessage('Document linked successfully!');
-                $('#add-document').hide();
-            }, function(err, details) {
-                displayError('Unable to link document: ' + err);
-                displayFormErrors(form, details);
-            }
-        );
-    });
-    
     $('#edit-document-form').submit(function(e) {
         e.preventDefault();
 
         var form = $(this);
         var data = parseCollectedDocumentForm(form);
-        var index = $('#document').data('index');
+        var id = $('#document').data('id');
         var col = currentCollection();
 
-        data.document = col.documents[index].document;
-        col.documents[index] = data;
+        col.documents[id] = data;
 
         api.updateCollection(col, function(collection) {
             collections[collection.id] = collection; 
             cleanForm(form);
-            renderCollectedDocument(index, collection);
+            renderCollectedDocument(id, collection);
             displayMessage('Document updated successfully!');
         }, function(err, details) {
             displayError('Unable to update document: ' + err);
