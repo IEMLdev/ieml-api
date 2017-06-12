@@ -20,3 +20,15 @@ class TagSerializer(mongoserializers.DocumentSerializer):
     class Meta:
         model = models.Tag
         fields = '__all__'
+
+
+class SourceSerializer(mongoserializers.DocumentSerializer):
+    class Meta:
+        model = models.Source
+        fields = '__all__'
+
+
+class SourceDriverSerializer(mongoserializers.DocumentSerializer):
+    class Meta:
+        model = models.SourceDriver
+        fields = '__all__'

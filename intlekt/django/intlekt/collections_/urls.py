@@ -7,6 +7,8 @@ from . import views
 router = DefaultRouter()
 router.register(r'collections', views.CollectionViewSet)
 router.register(r'documents', views.DocumentViewSet)
+router.register(r'sources', views.SourceViewSet)
+router.register(r'source_drivers', views.SourceDriverViewSet)
 router.register(r'tags', views.TagViewSet)
 
 urlpatterns = [

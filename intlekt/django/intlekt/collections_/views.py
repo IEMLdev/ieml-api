@@ -40,3 +40,21 @@ class TagViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return models.Tag.objects.all()
+
+
+class SourceViewSet(viewsets.ModelViewSet):
+    queryset = models.Source.objects.all()
+    lookup_field = 'id'
+    serializer_class = serializers.SourceSerializer
+
+    def get_queryset(self):
+        return models.Source.objects.all()
+
+
+class SourceDriverViewSet(viewsets.ModelViewSet):
+    queryset = models.SourceDriver.objects.all()
+    lookup_field = 'id'
+    serializer_class = serializers.SourceDriverSerializer
+
+    def get_queryset(self):
+        return models.SourceDriver.objects.all()

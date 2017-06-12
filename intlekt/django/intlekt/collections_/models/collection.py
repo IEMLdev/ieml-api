@@ -9,6 +9,7 @@ class Collection(Document):
     created_on = fields.DateTimeField(default=timezone.now, blank=True,)
     updated_on = fields.DateTimeField(default=timezone.now, blank=True,)
     documents = fields.MapField(fields.EmbeddedDocumentField('CollectedDocument'), blank=True,)
+    sources = fields.EmbeddedDocumentListField('CollectedSource', blank=True, required=False,)
 
     @classmethod
     def pre_save(cls, sender, document, **kwargs):
