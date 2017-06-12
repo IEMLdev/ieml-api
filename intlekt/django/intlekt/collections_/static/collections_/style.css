@@ -20,7 +20,7 @@ h1 {
     display: none;
 }
 
-#create-collection, #add-document {
+#create-collection, #collect-document {
     display: none;
 }
 
@@ -31,4 +31,8 @@ h1 {
 
 a.remove {
     color: red;
+}
+
+#collect-document td {
+    border: 1px solid #000;
 }

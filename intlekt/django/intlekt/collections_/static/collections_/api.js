@@ -47,9 +47,10 @@ var API = function(API_ROOT) {
     }
 
     module.createCollection = create('collections');
-    module.createDocument = function(doc, collection, success, error) {
+    module.createDocument = create('documents');
+    module.createCollectedDocument = function(doc, collection, success, error) {
         $.ajax({
-            url: API_ROOT + 'documents/',
+            url: API_ROOT + 'collected_documents/',
             method: 'POST',
             data: JSON.stringify(doc),
             contentType: 'application/json'

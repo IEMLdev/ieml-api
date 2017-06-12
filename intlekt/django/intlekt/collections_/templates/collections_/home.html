@@ -53,55 +53,69 @@
 
         <h3>Documents</h3>
 
-        <input type="button" id="add-document-button" value="Add" />
+        <input type="button" id="collect-document-button" value="Collect" />
 
-        <div id="add-document">
-            <form id="link-document-form" method="POST" action="">
-                <select name="documents">
-                </select>
-                <div class="field-errors"></div>
+        <div id="collect-document">
+            <form id="collect-document-form" method="POST" action="">
+                <table>
+                    <tr>
+                        <td>
+                            <p>An existing document:</p>
 
-                <input type="submit" value="Link" />
-            </form>
+                            <select name="documents"></select>
+                            <div class="field-errors"></div>
 
-            <form id="create-document-form" method="POST" action="">
-                <label>Title:</label>
-                <input type="text" name="title" />
-                <div class="field-errors"></div>
+                            <p>Or a new one:</p>
+                            
+                            <label>Title:</label>
+                            <input type="text" name="title" />
+                            <div class="field-errors"></div>
 
-                <label>Source:</label>
-                <input type="text" name="source" />
-                <div class="field-errors"></div>
+                            <label>Authors (comma-separated):</label>
+                            <input type="text" name="authors" placeholder="Name, Last First, ..." />
+                            <div class="field-errors"></div>
 
-                <label>Authors (comma-separated):</label>
-                <input type="text" name="authors" placeholder="Name, Last First, ..." />
-                <div class="field-errors"></div>
+                            <label>Created on:</label>
+                            <input type="date" name="created_on" placeholder="YYYY-MM-DDThh:mm" />
+                            <div class="field-errors"></div>
 
-                <label>Created on:</label>
-                <input type="date" name="created_on" placeholder="YYYY-MM-DDThh:mm" />
-                <div class="field-errors"></div>
+                            <label>URL:</label>
+                            <input type="url" name="url" />
+                            <div class="field-errors"></div>
 
-                <label>URL:</label>
-                <input type="url" name="url" />
-                <div class="field-errors"></div>
+                            <label>Description:</label>
+                            <textarea name="description"></textarea>
+                            <div class="field-errors"></div>
+                        </td>
+                        <td>
+                            <label>Collected on:</label>
+                            <input type="date" name="collected_on" placeholder="YYYY-MM-DDThh:mm" />
+                            <div class="field-errors"></div>
 
-                <label>USL:</label>
-                <input type="text" name="usl" />
-                <div class="field-errors"></div>
+                            <label>USL:</label>
+                            <input type="text" name="usl" />
+                            <div class="field-errors"></div>
 
-                <label>Description:</label>
-                <textarea name="description"></textarea>
-                <div class="field-errors"></div>
+                            <label>Tags (comma-separated):</label>
+                            <input type="text" name="tags" placeholder="tag0, tag1, ..." />
+                            <div class="field-errors"></div>
 
-                <label>Tags (comma-separated):</label>
-                <input type="text" name="tags" placeholder="tag0, tag1, ..." />
-                <div class="field-errors"></div>
+                            <label>Image:</label>
+                            <input type="url" name="image" />
+                            <div class="field-errors"></div>
 
-                <label>Image:</label>
-                <input type="url" name="image" />
-                <div class="field-errors"></div>
+                            <label>URL:</label>
+                            <input type="url" name="url_collected" />
+                            <div class="field-errors"></div>
 
-                <input type="submit" value="Create" />
+                            <label>Comments:</label>
+                            <textarea name="comments"></textarea>
+                            <div class="field-errors"></div>
+
+                            <input type="submit" value="Collect" />
+                        </td>
+                    </tr>
+                </table>
             </form>
         </div>
 
@@ -109,32 +123,12 @@
 
         <div id="document" data-id="">
             <form id="edit-document-form" method="POST" action="">
-                <label>Title:</label>
-                <input type="text" name="title" />
-                <div class="field-errors"></div>
-
-                <label>Source:</label>
-                <input type="text" name="source" />
-                <div class="field-errors"></div>
-
-                <label>Authors (comma-separated):</label>
-                <input type="text" name="authors" placeholder="Name, Last First, ..." />
-                <div class="field-errors"></div>
-
-                <label>Created on:</label>
-                <input type="date" name="created_on" placeholder="YYYY-MM-DDThh:mm" />
-                <div class="field-errors"></div>
-
-                <label>URL:</label>
-                <input type="url" name="url" />
+                <label>Collected on:</label>
+                <input type="date" name="collected_on" placeholder="YYYY-MM-DDThh:mm" />
                 <div class="field-errors"></div>
 
                 <label>USL:</label>
                 <input type="text" name="usl" />
-                <div class="field-errors"></div>
-
-                <label>Description:</label>
-                <textarea name="description"></textarea>
                 <div class="field-errors"></div>
 
                 <label>Tags (comma-separated):</label>
@@ -143,6 +137,14 @@
 
                 <label>Image:</label>
                 <input type="url" name="image" />
+                <div class="field-errors"></div>
+
+                <label>URL:</label>
+                <input type="url" name="url_collected" />
+                <div class="field-errors"></div>
+
+                <label>Comments:</label>
+                <textarea name="comments"></textarea>
                 <div class="field-errors"></div>
 
                 <input type="submit" value="Update" />

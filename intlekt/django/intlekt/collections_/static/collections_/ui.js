@@ -27,12 +27,12 @@ $(function() {
     }
 
     function unlinkedDocuments(collection) {
-        var docs = [];
+        var docs = Object.keys(documents);
+        var index;
 
-        for(let id in documents) {
-            if(collection.documents.indexOf(id) == -1) {
-                docs.push(id);
-            }
+        for(let collectedDoc of collection.documents) {
+            index = docs.indexOf(collectedDoc.document);
+            docs.splice(index, 1);
         }
 
         return docs;
@@ -65,17 +65,14 @@ $(function() {
         }
     }
 
-    function removeDocument(docId, collection) {
-        var index = collection.documents.indexOf(docId);
-        if(index != -1) {
-            collection.documents.splice(index, 1);
-        }
+    function removeDocument(index, collection) {
+        collection.documents.splice(index, 1);
 
         api.updateCollection(
             collection,
             function(data) {
                 collections[data.id] = data;
-                renderDocumentList(data.documents);
+                renderDocumentList(data);
                 displayMessage('Document removed from collection successfully!');
             },
             function(err, details) {
@@ -84,35 +81,35 @@ $(function() {
         );
     }
 
-    function renderDocumentList(docIds) {
-        var li, a, doc;
+    function renderDocumentList(collection) {
+        var li, a, collectedDoc;
         $('#collection-documents').empty();
 
-        for(let docId of docIds) {
-            doc = documents[docId];
+        for(let i in collection.documents) {
+            collectedDoc = collection.documents[i];
 
             li = document.createElement('li');
             a = document.createElement('a');
-            a.setAttribute('data-id', docId);
+            a.setAttribute('data-index', i);
             a.setAttribute('href', '');
-            a.innerHTML = doc.title;
+            a.innerHTML = documents[collectedDoc.document].title;
 
             $(a).click(function(e) {
                 e.preventDefault();
-                var id = $(this).data('id');
-                renderDocument(documents[id]);
+                var i = $(this).data('index');
+                renderCollectedDocument(i, collection);
             });
             li.appendChild(a);
 
             a = document.createElement('a');
-            a.setAttribute('data-id', docId);
+            a.setAttribute('data-index', i);
             a.setAttribute('href', '');
             a.setAttribute('class', 'remove');
             a.innerHTML = 'X';
             $(a).click(function(e) {
                 e.preventDefault();
-                var id = $(this).data('id');
-                removeDocument(id, currentCollection());
+                var index = $(this).data('index');
+                removeDocument(index, currentCollection());
             });
             li.appendChild(a);
             
@@ -128,7 +125,7 @@ $(function() {
         $('#collection-created-on span').html(formatDate(collection.created_on));
         $('#collection-updated-on span').html(formatDate(collection.updated_on));
 
-        renderDocumentList(collection.documents);
+        renderDocumentList(collection);
         
         $('#document').hide();
         $('#add-document').hide();
@@ -136,25 +133,30 @@ $(function() {
         $('#collection').data('id', collection.id);
     }
 
-    function renderDocument(doc) {
+    function renderCollectedDocument(index, collection) {
         var form = $('#edit-document-form');
+        var doc = collection.documents[index];
 
         for(let key in doc) {
             form.find('*[name="' + key + '"]').val(doc[key]);
         }
 
         $('#document').show();
-        $('#document').data('id', doc.id);
+        $('#document').data('index', index);
     }
 
-    function renderLinkDocumentForm() {
+    function renderCollectDocumentForm() {
         var docs = unlinkedDocuments(currentCollection());
 
-        var select = $('#link-document-form select');
+        var select = $('#collect-document-form select');
         select.empty();
 
         var option, doc;
         
+        option = document.createElement('option');
+        option.setAttribute('value', '');
+        select.append(option);
+
         for(let docId of docs) {
             doc = documents[docId];
 
@@ -175,35 +177,41 @@ $(function() {
         return data;
     }
 
-    function parseDocumentForm(form) {
-        var data = {};
+    function parseCollectedDocumentForm(form) {
+        var collectedDoc = {};
         
-        data.title = form.find('*[name="title"]').val().trim();
-        data.source = form.find('*[name="source"]').val().trim();
-        data.authors = authorsToArray(form.find('*[name="authors"]').val());
-        data.created_on = form.find('*[name="created_on"]').val();
-        data.url = form.find('*[name="url"]').val();
-        data.usl = form.find('*[name="usl"]').val();
-        data.description = form.find('*[name="description"]').val();
-        data.tags = tagsToArray(form.find('*[name="tags"]').val());
-        data.image = form.find('*[name="image"]').val();
+        collectedDoc.collected_on = form.find('*[name="collected_on"]').val();
+        collectedDoc.usl = form.find('*[name="usl"]').val();
+        collectedDoc.url = form.find('*[name="url_collected"]').val();
+        collectedDoc.tags = tagsToArray(form.find('*[name="tags"]').val());
+        collectedDoc.image = form.find('*[name="image"]').val();
+        collectedDoc.comments = form.find('*[name="comments"]').val();
 
-        if(!data.created_on) data.created_on = null;
-        if(!data.usl) data.usl = null;
-        if(!data.image) data.image = null;
+        if(!collectedDoc.usl) collectedDoc.usl = null;
+        if(!collectedDoc.image) collectedDoc.image = null;
+        if(!collectedDoc.url) collectedDoc.url = null;
 
-        return data;
+        return collectedDoc;
+    }
+
+    function parseCollectDocumentForm(form) {
+        var doc = {};
+        
+        doc.id = form.find('*[name="documents"]').val();
+        doc.title = form.find('*[name="title"]').val().trim();
+        doc.authors = authorsToArray(form.find('*[name="authors"]').val());
+        doc.created_on = form.find('*[name="created_on"]').val();
+        doc.url = form.find('*[name="url"]').val();
+        doc.description = form.find('*[name="description"]').val();
+
+        if(!doc.created_on) doc.created_on = null;
+
+        return {
+            doc: doc,
+            collectedDoc: parseCollectedDocumentForm(form)
+        };
     }
     
-    function parseLinkDocumentForm(form) {
-        var data = {};
-
-        data.id = form.find('*[name="documents"]').val();
-
-        return data;
-    }
-
-
     function displayFormErrors(form, errors) {
         var errDiv;
 
@@ -295,28 +303,53 @@ $(function() {
         );
     });
 
-    $('#create-document-form').submit(function(e) {
+    $('#collect-document-form').submit(function(e) {
         e.preventDefault();
         var form = $(this);
 
-        form.find('.field-errors').html('');
+        cleanFormErrors(form);
+        var parsedForm = parseCollectDocumentForm(form);
+        var doc = parsedForm.doc;
+        var collectedDoc = parsedForm.collectedDoc;
 
-        api.createDocument(
-            parseDocumentForm(form),
-            currentCollection(),
-            function(doc, collection) {
-                collections[collection.id] = collection;
-                documents[doc.id] = doc;
-                renderDocumentList(collection.documents);
-                cleanForm(form);
-                displayMessage('Document created successfully!');
-                $('#add-document').hide();
-            },
-            function(err, details) {
-                displayError('Unable to create document: ' + err);
-                displayFormErrors(form, details);
-            }
-        );
+        function createDocumentCallback(doc) {
+            documents[doc.id] = doc;
+            collectedDoc.document = doc.id;
+
+            var col = currentCollection();
+            col.documents.push(collectedDoc);
+
+
+            api.updateCollection(
+                col,
+                function(collection) {
+                    collections[collection.id] = collection;
+
+                    renderDocumentList(collection);
+                    cleanForm(form);
+                    displayMessage('Document collected successfully!');
+                    $('#collect-document').hide();
+                },
+                function(err, details) {
+                    displayError('Unable to create document: ' + err);
+                    displayFormErrors(form, details);
+                }
+            );
+        }
+
+        if(doc.id != '') {
+            createDocumentCallback(documents[doc.id]);
+        }
+        else {
+            api.createDocument(
+                doc,
+                createDocumentCallback,
+                function(err, details) {
+                    displayError('Unable to create document: ' + err);
+                    displayFormErrors(form, details);
+                }
+            );
+        }
     });
     
     $('#link-document-form').submit(function(e) {
@@ -332,7 +365,7 @@ $(function() {
             function(data) {
                 collections[data.id] = data; 
                 cleanForm(form);
-                renderDocumentList(currentCollection().documents);
+                renderDocumentList(currentCollection());
                 displayMessage('Document linked successfully!');
                 $('#add-document').hide();
             }, function(err, details) {
@@ -346,14 +379,17 @@ $(function() {
         e.preventDefault();
 
         var form = $(this);
-        var data = parseDocumentForm(form);
-        data.id = $('#document').data('id');
+        var data = parseCollectedDocumentForm(form);
+        var index = $('#document').data('index');
+        var col = currentCollection();
 
-        api.updateDocument(data, function(data) {
-            documents[data.id] = data; 
+        data.document = col.documents[index].document;
+        col.documents[index] = data;
+
+        api.updateCollection(col, function(collection) {
+            collections[collection.id] = collection; 
             cleanForm(form);
-            renderDocumentList(currentCollection().documents);
-            renderDocument(data);
+            renderCollectedDocument(index, collection);
             displayMessage('Document updated successfully!');
         }, function(err, details) {
             displayError('Unable to update document: ' + err);
@@ -365,9 +401,9 @@ $(function() {
         $('#create-collection').toggle();
     });
 
-    $('#add-document-button').click(function(e) {
-        renderLinkDocumentForm();
-        $('#add-document').toggle();
+    $('#collect-document-button').click(function(e) {
+        renderCollectDocumentForm();
+        $('#collect-document').toggle();
     });
 
     api.listCollections(function(data) {
@@ -390,5 +426,4 @@ $(function() {
     }, function(err) {
         displayError('Unable to load documents: ' + err); 
     });
-
 });
