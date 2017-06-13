@@ -34,60 +34,11 @@ paths:
           schema:
             type: object
             required:
-              - relations
               - tables
               - success
             properties:
               success:
                 type: boolean
-              relations:
-                type: object
-                required:
-                  - etymology
-                  - inclusion
-                  - sibling
-                properties:
-                  etymology:
-                    type: object
-                    properties:
-                      father:
-                        type: array
-                        items:
-                          type: string
-                      child:
-                        type: array
-                        items:
-                          type: string
-                  inclusion:
-                    type: object
-                    properties:
-                      contained:
-                        type: array
-                        items:
-                          type: string
-                      contains:
-                        type: array
-                        items:
-                          type: string
-                  sibling:
-                    type: object
-                    properties:
-                      twin:
-                        type: array
-                        items:
-                          type: string
-                      opposed:
-                        type: array
-                        items:
-                          type: string
-                      associated:
-                        type: array
-                        items:
-                          type: string
-                      crossed:
-                        type: array
-                        items:
-                          type: string
               tables:
                 type: array
                 items:
@@ -102,7 +53,7 @@ paths:
                     - columns
                   properties:
                     parent:
-                      type: string
+                      $ref: "#/definitions/term_entry"
                     styles:
                       type: array
                       items:
@@ -125,14 +76,78 @@ paths:
                       type: array
                       items:
                         $ref: "#/definitions/multi_cell"
-
-
-
-
-
-
-
-
+  /intlekt/relations:
+    get:
+      operationId: handlers.get_relations_for_term
+      description: |
+        Get the table for the specified term
+      tags:
+        - Dictionary
+      parameters:
+        - name: ieml
+          in: query
+          required: true
+          type: string
+      responses:
+        '200':
+          description: |
+            The relations for this script.
+          schema:
+            type: object
+            required:
+              - relations
+              - success
+            properties:
+              success:
+                type: boolean
+              relations:
+                type: object
+                required:
+                  - etymology
+                  - inclusion
+                  - sibling
+                properties:
+                  etymology:
+                    type: object
+                    properties:
+                      father:
+                        type: array
+                        items:
+                          $ref: "#/definitions/term_entry"
+                      child:
+                        type: array
+                        items:
+                          $ref: "#/definitions/term_entry"
+                  inclusion:
+                    type: object
+                    properties:
+                      contained:
+                        type: array
+                        items:
+                          $ref: "#/definitions/term_entry"
+                      contains:
+                        type: array
+                        items:
+                          $ref: "#/definitions/term_entry"
+                  sibling:
+                    type: object
+                    properties:
+                      twin:
+                        type: array
+                        items:
+                          $ref: "#/definitions/term_entry"
+                      opposed:
+                        type: array
+                        items:
+                          $ref: "#/definitions/term_entry"
+                      associated:
+                        type: array
+                        items:
+                          $ref: "#/definitions/term_entry"
+                      crossed:
+                        type: array
+                        items:
+                          $ref: "#/definitions/term_entry"
 
   /intlekt/collection/get_tags:
     post:
@@ -1132,8 +1147,22 @@ definitions:
       - others
     properties:
       main:
-        type: string
+        $ref: '#/definitions/term_entry'
       others:
         type: array
         items:
-          type: string
+          $ref: '#/definitions/term_entry'
+
+
+  term_entry:
+    required:
+      - fr
+      - en
+      - ieml
+    properties:
+      fr:
+        type: string
+      en:
+        type: string
+      ieml:
+        type: string

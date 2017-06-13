@@ -6,6 +6,15 @@ RELATIONS_CATEGORIES = {
     'sibling': ['twin', 'associated', 'crossed', 'opposed']
 }
 
+
+def _term_entry(s):
+    return {
+        'ieml': str(s),
+        'fr': term(s).translations.fr,
+        'en': term(s).translations.en
+    }
+
+
 def __build_parallel_table(main_term, parallel_terms):
     """
     Must match the tables geometry
@@ -13,6 +22,8 @@ def __build_parallel_table(main_term, parallel_terms):
     :param parallel_terms:
     :return:
     """
+
+
     assert all(len(t.tables) == 1 and t.tables[0].dim == main_term.tables[0].dim and t.tables[0].dim <= 2
                for t in [main_term, *parallel_terms])
 
@@ -22,29 +33,29 @@ def __build_parallel_table(main_term, parallel_terms):
     others_tab = [t.tables[0].tabs[0] for t in parallel_terms]
 
     headers = {
-        'main': str(main_tab.paradigm),
-        'others': [str(tab.paradigm) for tab in others_tab]
+        'main': _term_entry(main_tab.paradigm),
+        'others': [_term_entry(tab.paradigm) for tab in others_tab]
     }
 
     cells = [
         [
             {
-                'main': str(main_tab.cells[i, j]),
-                'others': [str(tab.cells[i, j]) for tab in others_tab]
+                'main': _term_entry(main_tab.cells[i, j]),
+                'others': [_term_entry(tab.cells[i, j]) for tab in others_tab]
             } for j in range(main_tab.cells.shape[1])
         ] for i in range(main_tab.cells.shape[0])
     ]
 
     columns = [{
-        'main': str(main_tab.columns[i]),
-        'others': [str(tab.columns[i]) for tab in others_tab]
+        'main': _term_entry(main_tab.columns[i]),
+        'others': [_term_entry(tab.columns[i]) for tab in others_tab]
     } for i in range(main_tab.cells.shape[1])]
 
     styles = []
     if dim == 2:
         rows = [{
-            'main': str(main_tab.rows[i]),
-            'others': [str(tab.rows[i]) for tab in others_tab]
+            'main': _term_entry(main_tab.rows[i]),
+            'others': [_term_entry(tab.rows[i]) for tab in others_tab]
         } for i in range(main_tab.cells.shape[0])]
 
         ss = main_tab.paradigm
@@ -55,7 +66,7 @@ def __build_parallel_table(main_term, parallel_terms):
         rows = []
 
     return {
-        'parent': str(main_term.parent.script) if main_term.parent is not None else None,
+        'parent': _term_entry(main_term.parent.script) if main_term.parent is not None else None,
         'styles': styles,
         'dimension': dim, # 1 or 2,
 
@@ -66,17 +77,10 @@ def __build_parallel_table(main_term, parallel_terms):
     }
 
 
-
 def get_table_for_term(ieml):
     t = term(ieml)
-    # first check if
 
-    relations = {
-        relcat: {
-            reltype: [str(tt.script) for tt in t.relations[reltype]]
-            for reltype in RELATIONS_CATEGORIES[relcat] if len(t.relations[reltype]) != 0
-        } for relcat in RELATIONS_CATEGORIES
-    }
+
 
     tables = []
     for table in t.tables:
@@ -92,5 +96,21 @@ def get_table_for_term(ieml):
     return {
         'success': True,
         'tables': tables,
+    }
+
+
+def get_relations_for_term(ieml):
+    t = term(ieml)
+    # first check if
+
+    relations = {
+        relcat: {
+            reltype: [_term_entry(tt.script) for tt in t.relations[reltype]]
+            for reltype in RELATIONS_CATEGORIES[relcat] if len(t.relations[reltype]) != 0
+        } for relcat in RELATIONS_CATEGORIES
+    }
+
+    return {
+        'success': True,
         'relations': relations
     }
