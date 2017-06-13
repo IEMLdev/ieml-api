@@ -1,3 +1,4 @@
+import copy
 from urllib.request import urlretrieve
 import datetime
 import urllib.parse
@@ -170,7 +171,7 @@ def create_dictionary_version(old_version, add=None, update=None, remove=None):
     last_date = v.date
 
     while True:
-        new_date = datetime.datetime.today()
+        new_date = datetime.datetime.utcnow()
         if new_date != last_date:
             break
 
@@ -178,10 +179,10 @@ def create_dictionary_version(old_version, add=None, update=None, remove=None):
 
     state = {
         'version': _date_to_str(new_date),
-        'terms': old_version.terms,
-        'roots': old_version.roots,
-        'inhibitions': old_version.inhibitions,
-        'translations': old_version.translations
+        'terms': copy.deepcopy(old_version.terms),
+        'roots': copy.deepcopy(old_version.roots),
+        'inhibitions': copy.deepcopy(old_version.inhibitions),
+        'translations': copy.deepcopy(old_version.translations)
     }
 
     if add is not None:
@@ -210,7 +211,7 @@ def create_dictionary_version(old_version, add=None, update=None, remove=None):
             for s, l in update['inhibitions'].items():
                 if s not in state['inhibitions']:
                     continue
-                state['inhibitions'][s].extend(l)
+                state['inhibitions'][s] = l
         if 'translations' in update:
             state['translations'] = {l: {**state['translations'][l], **update['translations'][l]} for l in LANGUAGES}
 

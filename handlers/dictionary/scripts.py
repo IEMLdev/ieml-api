@@ -276,11 +276,10 @@ def script_table(ieml):
         pass
 
 
-def _process_inhibits(body, t=None):
+def _process_inhibits(body):
     if 'INHIBITS' in body:
         try:
-            inhibits = [relation_name_table[i] for i in body['INHIBITS'] if t is None or
-                        (t is not None and relation_name_table[i] not in t.inhibitions)]
+            inhibits = [relation_name_table[i] for i in body['INHIBITS']]
         except KeyError as e:
             raise ValueError(e.args[0])
     else:
@@ -348,24 +347,27 @@ def update_ieml_script(body, version):
     """Updates an IEML Term's properties (mainly the tags, and the paradigm). If the IEML is changed,
     a new term is created"""
     script_ast = sc(body["ID"])
-    inhibits = _process_inhibits(body, term(script_ast, dictionary=version))
+    inhibits = _process_inhibits(body)
 
     if body["IEML"] == body["ID"]:
         # no update on the ieml only update the translations or inhibitions
         to_update = {
             'translations': {"fr": {str(script_ast): body["FR"]},
                              "en": {str(script_ast): body["EN"]}},
-            'inhibitions': {str(script_ast): inhibits}
         }
-        to_remove = []
-        to_add = {}
+
+        if inhibits:
+            to_update['inhibitions'] =  {str(script_ast): inhibits}
+
+        to_remove = None
+        to_add = None
 
     else:
         t = term(script_ast, dictionary=Dictionary(version))
         if script_ast.cardinal == 1 or t.root == t:
             raise ValueError("Can only update the script of a non-root paradigm.")
 
-        to_update = {}
+        to_update = None
         to_remove = [script_ast]
 
         new_script = script(body["IEML"])
