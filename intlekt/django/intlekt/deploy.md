@@ -9,6 +9,7 @@
 * `cd intlekt/django/intlekt`
 * Edit `intlekt/settings.py`: set `ALLOWED_HOSTS` to `['*']`
 * Create Mongo database: `mongo` then `use ieml`
+* Customize consts at the beginning of `static/collections_/ui.js`
 
 # Update the repo
 
