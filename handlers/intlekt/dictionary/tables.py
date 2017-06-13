@@ -65,6 +65,10 @@ def __build_parallel_table(main_term, parallel_terms):
         'columns': columns
     }
 
+def _build_parralel_mapping(t_src, t_dest, reltype):
+    # reltype one of ['
+    pass
+
 
 
 def get_table_for_term(ieml):
@@ -82,7 +86,7 @@ def get_table_for_term(ieml):
     for table in t.tables:
         main = term(table.tabs[0].paradigm)
         if table.dim == 3:
-            others = [term(tab.paradigm) for tab in  table.tabs[1:]]
+            others = [term(tab.paradigm) for tab in table.tabs[1:]]
         else:
             # todo, add the siblings relationships
             others = []
