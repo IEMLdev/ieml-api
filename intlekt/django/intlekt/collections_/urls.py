@@ -13,5 +13,8 @@ router.register(r'tags', views.TagViewSet)
 
 urlpatterns = [
     url(r'^', include(router.urls)),
+
+    # TODO: to be removed, for testing
     url(r'^ui/$', views.home),
+    url(r'^scoopit/$', views.scoopit),
 ]

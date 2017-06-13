@@ -51,6 +51,30 @@
         <div id="collection-created-on">Created on: <span></span></div>
         <div id="collection-updated-on">Updated on: <span></span></div>
 
+        <h3>Sources</h3>
+
+        <input type="button" id="add-source-button" value="Add" />
+        
+        <div id="add-source">
+            <h4>Scoopit</h4>
+
+            <form id="add-scoopit-url-source-form" method="POST" action="">
+                <label>Collection url:</label>
+                <input type="url" name="url" />
+
+                <input type="submit" value="Add" />
+            </form>
+            
+            <form id="add-scoopit-user-source-form" method="POST" action="">
+                <label>User:</label>
+                <input type="text" name="user" />
+
+                <input type="submit" value="Add" />
+            </form>
+        </div>
+
+        <ul id="collection-sources"></ul>
+
         <h3>Documents</h3>
 
         <input type="button" id="collect-document-button" value="Collect" />

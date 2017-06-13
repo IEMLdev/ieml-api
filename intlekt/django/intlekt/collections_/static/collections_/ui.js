@@ -1,9 +1,12 @@
 $(function() {
     var API_ROOT = 'http://127.0.0.1:8000/collections/';
+    var SCOOPIT_DRIVER_ID = '593ef18cb15ab3332c49c945';
     var api = API(API_ROOT);
 
     var collections = {};
     var documents = {};
+    var sources = {};
+    var sourceDrivers = {};
     
     function authorsToStr(authors) {
         return authors.join(', ');
@@ -127,6 +130,38 @@ $(function() {
             $('#collection-documents').append(li);
         }
     }
+    
+    function renderSourceList(collection) {
+        var li, a, span, src;
+        $('#collection-sources').empty();
+
+        for(let i in collection.sources) {
+            src = collection.sources[i];
+
+            li = document.createElement('li');
+            li.innerHTML = sources[sourceDrivers[src.driver].source].name;
+            
+            (function(i) {
+                $(li).click(function(e) {
+                    e.preventDefault();
+
+                    api.requestSource(
+                        collection,
+                        sourceDrivers[collection.sources[i].driver],
+                        collection.sources[i].params,
+                        function(resp) {
+                            displayMessage('Source being collected... Reload the page to see new documents.');
+                        },
+                        function(err, details) {
+                            displayError('Unable to request source: ' + err);
+                        }
+                    );
+                });
+            })(i);
+
+            $('#collection-sources').append(li);
+        }
+    }
 
     function renderCollection(collection) {
         if(collection == null) return;
@@ -136,6 +171,7 @@ $(function() {
         $('#collection-created-on span').html(collection.created_on);
         $('#collection-updated-on span').html(collection.updated_on);
 
+        renderSourceList(collection);
         renderDocumentList(collection);
         
         $('#document').hide();
@@ -222,6 +258,22 @@ $(function() {
             doc: doc,
             collectedDoc: parseCollectedDocumentForm(form)
         };
+    }
+
+    function parseAddScoopitByUrlForm(form) {
+        var params = {};
+
+        params.url = form.find('*[name="url"]').val();
+
+        return params;
+    }
+    
+    function parseAddScoopitByUserForm(form) {
+        var params = {};
+
+        params.user = form.find('*[name="user"]').val();
+
+        return params;
     }
     
     function displayFormErrors(form, errors) {
@@ -394,6 +446,43 @@ $(function() {
         $('#collect-document').toggle();
     });
 
+    function addSourceFactory(form, driver, parser) {
+        form.submit(function(e) {
+            e.preventDefault();
+
+            var col = currentCollection();
+            var source = {
+                driver: driver,
+                params: parser(form) 
+            };
+            col.sources.push(source);
+
+            api.updateCollection(col, function(collection) {
+                collections[collection.id] = collection; 
+                cleanForm(form);
+                renderSourceList(collection);
+                displayMessage('Source added successfully!');
+            }, function(err, details) {
+                displayError('Unable to add source: ' + err);
+                displayFormErrors(form, details);
+            });
+        });
+    }
+
+    addSourceFactory(
+        $('#add-scoopit-url-source-form'),
+        SCOOPIT_DRIVER_ID,
+        parseAddScoopitByUrlForm
+    );
+
+    addSourceFactory(
+        $('#add-scoopit-user-source-form'),
+        SCOOPIT_DRIVER_ID,
+        parseAddScoopitByUserForm
+    );
+
+    // Init
+
     api.listCollections(function(data) {
         for(let col of data) {
             collections[col.id] = col;
@@ -413,5 +502,21 @@ $(function() {
         }
     }, function(err) {
         displayError('Unable to load documents: ' + err); 
+    });
+    
+    api.listSources(function(data) {
+        for(let obj of data) {
+            sources[obj.id] = obj;
+        }
+    }, function(err) {
+        displayError('Unable to load sources: ' + err); 
+    });
+    
+    api.listSourceDrivers(function(data) {
+        for(let obj of data) {
+            sourceDrivers[obj.id] = obj;
+        }
+    }, function(err) {
+        displayError('Unable to load source drivers: ' + err); 
     });
 });

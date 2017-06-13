@@ -15,6 +15,8 @@ var API = function(API_ROOT) {
 
     module.listCollections = list('collections');
     module.listDocuments = list('documents');
+    module.listSources = list('sources');
+    module.listSourceDrivers = list('source_drivers');
 
     function get(name) {
         return function(id, success, error) {
@@ -84,6 +86,21 @@ var API = function(API_ROOT) {
     
     module.updateCollection = update('collections');
     module.updateDocument = update('documents');
+
+    module.requestSource = function(collection, driver, params, success, error) {
+        params.collection_id = collection.id;
+
+        $.ajax({
+            url: driver.url,
+            method: 'POST',
+            data: JSON.stringify(params),
+            contentType: 'application/json'
+        })
+        .done(success)
+        .fail(function(jqXHR, textStatus, errorThrown) {
+            error(errorThrown, JSON.parse(jqXHR.responseText));
+        });
+    };
 
     return module;
 };

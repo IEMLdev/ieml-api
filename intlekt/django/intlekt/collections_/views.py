@@ -1,11 +1,24 @@
 # TODO: to be removed, for testing ui
 from django.shortcuts import render
+from django.views.decorators.http import require_http_methods
+from django.views.decorators.csrf import csrf_exempt
+from rest_framework.response import Response
+from django.http import HttpResponse
 
 def home(request):
     return render(request, 'collections_/home.html')
 
+@require_http_methods(["POST"])
+@csrf_exempt
+def scoopit(request):
+    print(request.body)
+
+    return HttpResponse('scoopit')
+
+
 
 from rest_framework_mongoengine import viewsets
+from rest_framework.decorators import detail_route
 
 from . import models
 from . import serializers
@@ -20,6 +33,10 @@ class CollectionViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return models.Collection.objects.all()
+
+    @detail_route()
+    def request_source(self, request, *args, **kwargs):
+        return Response('')
 
 
 class DocumentViewSet(viewsets.ModelViewSet):
