@@ -8,5 +8,6 @@ USLField = fields.StringField
 
 
 class Tag(Document):
-    usls = fields.ListField(USLField(), blank=True, default=list,)  # The meaning can depend on the context
+    # The meaning can depend on the context so a tag may have multiple usls
+    usls = fields.ListField(USLField(),)
     text = fields.StringField(required=True, unique=True,)
