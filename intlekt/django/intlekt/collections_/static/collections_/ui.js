@@ -337,6 +337,7 @@ $(function() {
                     collections[collection.id] = collection;
 
                     renderDocumentList(collection);
+                    renderCollectedDocument(doc.id, collection);
                     cleanForm(form);
                     displayMessage('Document collected successfully!');
                     $('#collect-document').hide();
