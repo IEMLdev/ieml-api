@@ -261,6 +261,7 @@ class Dictionary(metaclass=DictionarySingleton):
                 self.ranks[t_term] = rank
                 defined.add(t_term)
                 self.partitions[term_src].add(t_term)
+                self.parents[t_term] = term_src
 
                 if len(t.headers) != 1:
                     for tab in t.headers:
@@ -268,6 +269,7 @@ class Dictionary(metaclass=DictionarySingleton):
                         defined.add(self.terms[tab])
                         tables[self.terms[tab]] = self.terms[tab].tables
                         self.partitions[term_src].add(t_term)
+                        self.parents[self.terms[tab]] = term_src
 
         self.partitions = defaultdict(set)
         self.parents = {}
@@ -379,7 +381,7 @@ class Dictionary(metaclass=DictionarySingleton):
         _relations['etymology'] = _relations['father'] + _relations['child']
 
         _relations['table'] = np.zeros((len(self), len(self)), dtype=np.float32)
-        for i, t in enumerate(self._compute_table_rank(_relations['contains'])):
+        for i, t in enumerate(self._compute_table_rank()):
             _relations['table_%d'%i] = t
             _relations['table'] = np.maximum((i + 1.0) * t, _relations['table'])
 
@@ -391,7 +393,7 @@ class Dictionary(metaclass=DictionarySingleton):
         for reltype in RELATIONS:
             self.relations.append(csr_matrix(_relations[reltype]))
 
-    def _compute_table_rank(self, contains):
+    def _compute_table_rank(self):
         print("\t\t[*] Computing tables relations")
 
         _tables_rank = np.zeros((6, len(self), len(self)))
