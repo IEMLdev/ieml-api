@@ -40,8 +40,11 @@ def _build_old_model_from_term_entry(t):
 
 
 @exception_handler
-def dictionary_dump(dictionary_version):
-    version = DictionaryVersion.from_file_name(dictionary_version)
+def dictionary_dump(dictionary_version=None):
+    if dictionary_version is not None:
+        version = DictionaryVersion.from_file_name(dictionary_version)
+    else:
+        version = None
 
     return {'success': True,
             'terms': sorted((ieml_term_model(t) for t in Dictionary(version)), key=lambda c: c['INDEX'])}
