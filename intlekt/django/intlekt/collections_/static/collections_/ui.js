@@ -5,13 +5,6 @@ $(function() {
     var collections = {};
     var documents = {};
     
-    function formatDate(date) {
-        var dt = date.split('T');
-        var time = dt[1].split('.');
-
-        return dt[0] + ' ' + time[0];
-    }
-
     function authorsToStr(authors) {
         return authors.join(', ');
     }
@@ -140,8 +133,8 @@ $(function() {
 
         $('#edit-collection-form input[name="title"]').val(collection.title);
         $('#edit-collection-form input[name="authors"]').val(authorsToStr(collection.authors));
-        $('#collection-created-on span').html(formatDate(collection.created_on));
-        $('#collection-updated-on span').html(formatDate(collection.updated_on));
+        $('#collection-created-on span').html(collection.created_on);
+        $('#collection-updated-on span').html(collection.updated_on);
 
         renderDocumentList(collection);
         
@@ -158,6 +151,7 @@ $(function() {
         for(let key in doc) {
             form.find('*[name="' + key + '"]').val(doc[key]);
         }
+        form.find('*[name="url_collected"]').val(doc.url);
 
         $('#document').show();
         $('#document').data('id', id);
@@ -203,8 +197,9 @@ $(function() {
         collectedDoc.url = form.find('*[name="url_collected"]').val();
         collectedDoc.tags = tagsToArray(form.find('*[name="tags"]').val());
         collectedDoc.image = form.find('*[name="image"]').val();
-        collectedDoc.comments = form.find('*[name="comments"]').val();
+        collectedDoc.description = form.find('*[name="description"]').val();
 
+        if(!collectedDoc.collected_on) delete collectedDoc.collected_on;
         if(!collectedDoc.usl) collectedDoc.usl = null;
         if(!collectedDoc.image) collectedDoc.image = null;
         if(!collectedDoc.url) collectedDoc.url = null;
@@ -220,7 +215,6 @@ $(function() {
         doc.authors = authorsToArray(form.find('*[name="authors"]').val());
         doc.created_on = form.find('*[name="created_on"]').val();
         doc.url = form.find('*[name="url"]').val();
-        doc.description = form.find('*[name="description"]').val();
 
         if(!doc.created_on) doc.created_on = null;
 

@@ -76,20 +76,16 @@
                             <div class="field-errors"></div>
 
                             <label>Created on:</label>
-                            <input type="date" name="created_on" placeholder="YYYY-MM-DDThh:mm" />
+                            <input type="date" name="created_on" placeholder="YYYY-MM-DD" />
                             <div class="field-errors"></div>
 
                             <label>URL:</label>
                             <input type="url" name="url" />
                             <div class="field-errors"></div>
-
-                            <label>Description:</label>
-                            <textarea name="description"></textarea>
-                            <div class="field-errors"></div>
                         </td>
                         <td>
                             <label>Collected on:</label>
-                            <input type="date" name="collected_on" placeholder="YYYY-MM-DDThh:mm" />
+                            <input type="date" name="collected_on" placeholder="YYYY-MM-DD" />
                             <div class="field-errors"></div>
 
                             <label>USL:</label>
@@ -108,8 +104,8 @@
                             <input type="url" name="url_collected" />
                             <div class="field-errors"></div>
 
-                            <label>Comments:</label>
-                            <textarea name="comments"></textarea>
+                            <label>Description:</label>
+                            <textarea name="description"></textarea>
                             <div class="field-errors"></div>
 
                             <input type="submit" value="Collect" />
@@ -124,7 +120,7 @@
         <div id="document" data-id="">
             <form id="edit-document-form" method="POST" action="">
                 <label>Collected on:</label>
-                <input type="date" name="collected_on" placeholder="YYYY-MM-DDThh:mm" />
+                <input type="date" name="collected_on" />
                 <div class="field-errors"></div>
 
                 <label>USL:</label>
@@ -143,8 +139,8 @@
                 <input type="url" name="url_collected" />
                 <div class="field-errors"></div>
 
-                <label>Comments:</label>
-                <textarea name="comments"></textarea>
+                <label>Description:</label>
+                <textarea name="description"></textarea>
                 <div class="field-errors"></div>
 
                 <input type="submit" value="Update" />
