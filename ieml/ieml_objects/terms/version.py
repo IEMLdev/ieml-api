@@ -208,6 +208,8 @@ def create_dictionary_version(old_version, add=None, update=None, remove=None):
     if update is not None:
         if 'inhibitions' in update:
             for s, l in update['inhibitions'].items():
+                if s not in state['inhibitions']:
+                    continue
                 state['inhibitions'][s].extend(l)
         if 'translations' in update:
             state['translations'] = {l: {**state['translations'][l], **update['translations'][l]} for l in LANGUAGES}
@@ -218,7 +220,7 @@ def create_dictionary_version(old_version, add=None, update=None, remove=None):
     from ieml.ieml_objects.terms.dictionary import Dictionary
 
     if set(old_version.terms) == set(state['terms']) and set(old_version.roots) == set(state['roots']) and \
-       all(not v for v in update['inhibitions'].values()):
+       all(old_version.inhibitions[s] == state['inhibitions'][s] for s in old_version.inhibitions):
 
         old_dict_state = Dictionary(old_version).__getstate__()
         d = Dictionary(dictionary_version, load=False)

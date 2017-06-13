@@ -275,48 +275,12 @@ def script_table(ieml):
     except CannotParse:
         pass
 
-#
-# @exception_handler
-# def script_tree(iemltext):
-#     def _tree_entry(script):
-#         if script.layer == 0:
-#             return {
-#                 'op': 'none',
-#                 'name': str(script),
-#                 'children': []
-#             }
-#
-#         if isinstance(script, NullScript):
-#             n = NullScript(script.layer - 1)
-#             return {
-#                 'op': '*',
-#                 'name': str(script),
-#                 'children': [
-#                     _tree_entry(n) for i in range(3)
-#                 ]
-#             }
-#         return {
-#             'op': '*' if isinstance(script, MultiplicativeScript) else '+',
-#             'name': str(script),
-#             'children': [
-#                 _tree_entry(s) for s in script
-#             ]
-#         }
-#
-#     script = sc(iemltext)
-#     return {
-#         'level': script.layer,
-#         'tree': _tree_entry(script),
-#         'taille': script.cardinal,
-#         'success': True,
-#         'canonical': old_canonical(script)
-#     }
 
-
-def _process_inhibits(body, t):
+def _process_inhibits(body, t=None):
     if 'INHIBITS' in body:
         try:
-            inhibits = [relation_name_table[i] for i in body['INHIBITS'] if relation_name_table[i] not in t.inhibitions]
+            inhibits = [relation_name_table[i] for i in body['INHIBITS'] if t is None or
+                        (t is not None and relation_name_table[i] not in t.inhibitions)]
         except KeyError as e:
             raise ValueError(e.args[0])
     else:
@@ -333,7 +297,7 @@ def new_ieml_script(body, version):
     to_add = {
         'terms': [str(script_ast)],
         'roots': [str(script_ast)] if body["PARADIGM"] == "1" else [],
-        'inhibitions': {str(script_ast): _process_inhibits(body, term(script_ast, dictionary=version))} if body["PARADIGM"] == "1" else {},
+        'inhibitions': {str(script_ast): _process_inhibits(body)} if body["PARADIGM"] == "1" else {},
         'translations': {"fr": {str(script_ast): body["FR"]},
                          "en": {str(script_ast): body["EN"]}}
     }
@@ -379,7 +343,7 @@ def remove_ieml_script(body, version):
 
 @need_login
 @flush_cache
-# @exception_handler
+@exception_handler
 def update_ieml_script(body, version):
     """Updates an IEML Term's properties (mainly the tags, and the paradigm). If the IEML is changed,
     a new term is created"""
