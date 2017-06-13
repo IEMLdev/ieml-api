@@ -1,4 +1,6 @@
 from collections import namedtuple, OrderedDict
+
+import itertools
 import numpy as np
 from ieml.script.operator import script
 
@@ -79,6 +81,21 @@ class Table:
                 self._dim -= 1
 
         return self._dim
+
+    def all(self):
+        """
+
+        :return: all script referenced in this table
+        """
+        iter_list = []
+        for tab in self.tabs:
+            iter_list.append(tab.rows)
+            iter_list.append(tab.columns)
+            iter_list.append([tab.paradigm])
+        iter_list.append(self.cells.flatten())
+        iter_list.append([self.paradigm])
+
+        return set(itertools.chain.from_iterable(iter_list))
 
     def __eq__(self, other):
         return isinstance(other, Table) and self.paradigm == other.paradigm

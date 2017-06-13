@@ -15,17 +15,20 @@ def _term_entry(s):
     }
 
 
-def __build_parallel_table(main_term, parallel_terms):
+def __build_parallel_table(main_term, parallel_terms, others_rel):
     """
     Must match the tables geometry
     :param main_term:
     :param parallel_terms:
     :return:
     """
-
-
     assert all(len(t.tables) == 1 and t.tables[0].dim == main_term.tables[0].dim and t.tables[0].dim <= 2
                for t in [main_term, *parallel_terms])
+
+    def _others_rel(s):
+        t = term(s)
+        return [_term_entry(t.relations[reltype][0].script) for reltype in others_rel]
+
 
     main_tab = main_term.tables[0].tabs[0]
     dim = main_term.tables[0].dim
@@ -34,28 +37,29 @@ def __build_parallel_table(main_term, parallel_terms):
 
     headers = {
         'main': _term_entry(main_tab.paradigm),
-        'others': [_term_entry(tab.paradigm) for tab in others_tab]
+        'others': [_term_entry(tab.paradigm) for tab in others_tab] + _others_rel(main_tab.paradigm),
+        # 'siblings': [_term_entry(t.script) for s]
     }
 
     cells = [
         [
             {
                 'main': _term_entry(main_tab.cells[i, j]),
-                'others': [_term_entry(tab.cells[i, j]) for tab in others_tab]
+                'others': [_term_entry(tab.cells[i, j]) for tab in others_tab] + _others_rel(main_tab.cells[i, j])
             } for j in range(main_tab.cells.shape[1])
         ] for i in range(main_tab.cells.shape[0])
     ]
 
     columns = [{
         'main': _term_entry(main_tab.columns[i]),
-        'others': [_term_entry(tab.columns[i]) for tab in others_tab]
+        'others': [_term_entry(tab.columns[i]) for tab in others_tab] + _others_rel(main_tab.columns[i])
     } for i in range(main_tab.cells.shape[1])]
 
     styles = []
     if dim == 2:
         rows = [{
             'main': _term_entry(main_tab.rows[i]),
-            'others': [_term_entry(tab.rows[i]) for tab in others_tab]
+            'others': [_term_entry(tab.rows[i]) for tab in others_tab] + _others_rel(main_tab.rows[i])
         } for i in range(main_tab.cells.shape[0])]
 
         ss = main_tab.paradigm
@@ -69,6 +73,7 @@ def __build_parallel_table(main_term, parallel_terms):
         'parent': _term_entry(main_term.parent.script) if main_term.parent is not None else None,
         'styles': styles,
         'dimension': dim, # 1 or 2,
+        'others_types': ['parallel']*len(parallel_terms) + others_rel,
 
         'header': headers,
         'cells_lines': cells,
@@ -80,18 +85,29 @@ def __build_parallel_table(main_term, parallel_terms):
 def get_table_for_term(ieml):
     t = term(ieml)
 
-
-
     tables = []
     for table in t.tables:
-        main = term(table.tabs[0].paradigm)
-        if table.dim == 3:
-            others = [term(tab.paradigm) for tab in  table.tabs[1:]]
+        # check if term is a tab in a bigger table
+        for u_table in t.parent.tables:
+            if table.paradigm in u_table.headers:
+                upper_table = u_table
+                main = term(table.paradigm)
+                break
         else:
-            # todo, add the siblings relationships
-            others = []
+            upper_table = table
+            main = term(table.tabs[0].paradigm)
 
-        tables.append(__build_parallel_table(main, others))
+        others = []
+        if upper_table.dim == 3:
+            others = [term(tab.paradigm) for tab in upper_table.tabs if tab.paradigm != main.script]
+
+        # todo, add the siblings relationships
+        rels = {reltype: {s: term(s).relations[reltype] for s in table.all()}
+                for reltype in ['associated', 'opposed', 'crossed']}
+
+        others_rel = [reltype for reltype in rels if all(len(t) == 1 for s, t in rels[reltype].items())]
+
+        tables.append(__build_parallel_table(main, others, others_rel))
 
     return {
         'success': True,
@@ -101,7 +117,6 @@ def get_table_for_term(ieml):
 
 def get_relations_for_term(ieml):
     t = term(ieml)
-    # first check if
 
     relations = {
         relcat: {
