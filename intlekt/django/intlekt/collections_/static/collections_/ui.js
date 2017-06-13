@@ -22,6 +22,24 @@ $(function() {
         return authorsToArray(tags);
     }
 
+    function collectedSourceToStr(collectedSource) {
+        var driver = sourceDrivers[collectedSource.driver];
+        var source = sources[driver.source];
+
+        var str = source.name + ' (';
+
+        if (driver.id == SCOOPIT_DRIVER_ID) {
+            if (collectedSource.params.url != undefined)
+                str += collectedSource.params.url;
+            else if (collectedSource.params.user != undefined)
+                str += collectedSource.params.user;
+        }
+
+        str += ')';
+
+        return str;
+    }
+
     function unlinkedDocuments(collection) {
         var docs = Object.keys(documents);
         var index;
@@ -132,17 +150,19 @@ $(function() {
     }
     
     function renderSourceList(collection) {
-        var li, a, span, src;
+        var li, a, src;
         $('#collection-sources').empty();
 
         for(let i in collection.sources) {
             src = collection.sources[i];
 
             li = document.createElement('li');
-            li.innerHTML = sources[sourceDrivers[src.driver].source].name;
-            
+
+            a = document.createElement('a');
+            a.setAttribute('href', '');
+            a.innerHTML = collectedSourceToStr(src);
             (function(i) {
-                $(li).click(function(e) {
+                $(a).click(function(e) {
                     e.preventDefault();
 
                     api.requestSource(
@@ -158,6 +178,32 @@ $(function() {
                     );
                 });
             })(i);
+            li.appendChild(a);
+
+            a = document.createElement('a');
+            a.setAttribute('href', '');
+            a.setAttribute('class', 'hide');
+            a.innerHTML = 'X';
+            (function(i) {
+                $(a).click(function(e) {
+                    e.preventDefault();
+
+                    collection.sources.splice(i, 1);
+                    api.updateCollection(
+                        collection,
+                        function(data) {
+                            collections[data.id] = data;
+                            renderSourceList(data);
+                            displayMessage('Source unlinked successfully!');
+                        },
+                        function(err, details) {
+                            displayError('Unable to unlink source: ' + err);
+                            displayFormErrors(form, details);
+                        }
+                    );
+                });
+            })(i);
+            li.appendChild(a);
 
             $('#collection-sources').append(li);
         }
