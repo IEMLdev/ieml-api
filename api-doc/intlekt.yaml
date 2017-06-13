@@ -15,7 +15,7 @@ paths:
   ##          INTLEKT         ##
   ##############################
 
-  /intlekt/tables:
+  /intlekt/dictionary/tables:
     get:
       operationId: handlers.get_table_for_term
       description: |
@@ -76,7 +76,7 @@ paths:
                       type: array
                       items:
                         $ref: "#/definitions/multi_cell"
-  /intlekt/relations:
+  /intlekt/dictionary/relations:
     get:
       operationId: handlers.get_relations_for_term
       description: |
