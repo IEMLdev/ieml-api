@@ -85,9 +85,17 @@ class Term(IEMLObjects):
     def tables(self):
         return self.script.tables
 
+    @property
+    def singular_sequences(self):
+        from .tools import term
+        return [term(ss, dictionary=self.dictionary) for ss in self.script.singular_sequences]
+
     def __contains__(self, item):
         from .tools import term
         if not isinstance(item, Term):
-            item = term(item)
+            item = term(item, dictionary=self.dictionary)
+        elif item.dictionary != self.dictionary:
+            print("\t[!] Comparison between different dictionary.")
+            return False
 
         return item.script in self.script
