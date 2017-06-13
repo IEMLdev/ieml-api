@@ -17,6 +17,7 @@ var API = function(API_ROOT) {
     module.listDocuments = list('documents');
     module.listSources = list('sources');
     module.listSourceDrivers = list('source_drivers');
+    module.listTags = list('tags');
 
     function get(name) {
         return function(id, success, error) {
@@ -50,6 +51,7 @@ var API = function(API_ROOT) {
 
     module.createCollection = create('collections');
     module.createDocument = create('documents');
+    module.createTag = create('tags');
     module.createCollectedDocument = function(doc, collection, success, error) {
         $.ajax({
             url: API_ROOT + 'collected_documents/',
@@ -86,6 +88,7 @@ var API = function(API_ROOT) {
     
     module.updateCollection = update('collections');
     module.updateDocument = update('documents');
+    module.updateTag = update('tags');
 
     module.requestSource = function(collection, driver, params, success, error) {
         params.collection_id = collection.id;

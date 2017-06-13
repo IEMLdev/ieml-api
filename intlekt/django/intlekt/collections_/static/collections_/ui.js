@@ -1,4 +1,7 @@
 $(function() {
+    
+    // Globals
+    
     var API_ROOT = 'http://127.0.0.1:8000/collections/';
     var SCOOPIT_DRIVER_ID = '593ef18cb15ab3332c49c945';
     var api = API(API_ROOT);
@@ -7,7 +10,19 @@ $(function() {
     var documents = {};
     var sources = {};
     var sourceDrivers = {};
+    var tags = {};
     
+    // Helpers
+    
+    function currentCollection() {
+        var id = $('#collection').data('id');
+        return collections[id];
+    }
+
+    function currentDocument() {
+        var id = $('#document').data('id');
+        return documents[id];
+    }
     function authorsToStr(authors) {
         return authors.join(', ');
     }
@@ -51,6 +66,81 @@ $(function() {
 
         return docs;
     }
+
+    function collectionTags(collection) {
+        var tags = new Set([]);
+
+        for (let id in collection.documents) {
+            for(let tag of collection.documents[id].tags) {
+                tags.add(tag);
+            }
+        }
+
+        return tags;
+    }
+
+    function textToTag(text) {
+        var tag = tags[text];
+
+        if (!tag) {
+            return {
+                id: '',
+                text: text,
+                usls: new Set([])
+            };
+        }
+
+        return tag;
+    }
+
+    function removeUSLFromTag(usl, tagText) {
+        var tag = textToTag(tagText);
+        tag.usls.delete(usl);
+
+        if(!tag.id) {
+            displayError('Cannot remove an USL to the tag ' + tagText);
+            return;
+        }
+        
+        tag.usls = [...tag.usls];
+        api.updateTag(
+            tag,
+            function(tag) {
+                tags[tag.text] = tag;
+                displayMessage('USL removed successfully to tag!');
+            },
+            function(err, details) {
+                displayError('Unable to update tag: ' + err);
+            }
+        );
+    }
+
+    function addUSLToTag(usl, tagText) {
+        var tag = textToTag(tagText);
+        tag.usls.add(usl);
+        var func;
+
+        if(!tag.id) {
+            delete tag.id;
+            func = api.createTag;
+        } else {
+            func = api.updateTag;
+        }
+
+        tag.usls = [...tag.usls];
+        func(
+            tag,
+            function(tag) {
+                tags[tag.text] = tag;
+                displayMessage('USL added successfully to tag!');
+            },
+            function(err, details) {
+                displayError('Unable to update tag: ' + err);
+            }
+        );
+    }
+
+    // Renderers
 
     function renderCollectionList() {
         var list = $('#collection-list');
@@ -98,6 +188,84 @@ $(function() {
                 displayError('Unable to update collection: ' + err);
             }
         );
+    }
+
+    function buildAddUSLForm() {
+        var form = document.createElement('form');
+
+        var input = document.createElement('input');
+        input.setAttribute('type', 'text');
+        input.setAttribute('name', 'usl');
+        form.appendChild(input);
+
+        input = document.createElement('input');
+        input.setAttribute('type', 'submit');
+        input.setAttribute('value', 'Add');
+        form.appendChild(input);
+
+        return $(form);
+    }
+
+    function buildTagUSLList(tag) {
+        var usls = tag.usls;
+        var ul = document.createElement('ul');
+        var li, child;
+
+        for(let usl of usls) {
+            li = document.createElement('li');
+
+            child = document.createElement('span');
+            child.innerHTML = usl;
+            li.appendChild(child);
+
+            child = document.createElement('a');
+            child.setAttribute('href', '')
+            child.setAttribute('class', 'hide')
+            child.innerHTML = 'X';
+            (function(usl) {
+                $(child).click(function(e) {
+                    e.preventDefault();
+
+                    removeUSLFromTag(usl, tag.text);
+                });
+            })(usl);
+            li.appendChild(child);
+
+            ul.appendChild(li);
+        }
+
+        return ul;
+    }
+
+    function renderTagEditor(tags_) {
+        var div = $('#tag-editor');
+        var table = div.find('table');
+        table.empty();
+        var tr, td, form;
+
+        for(let text of tags_) {
+            tr = $(document.createElement('tr'));
+
+            td = document.createElement('td');
+            td.innerHTML = text;
+            tr.append(td);
+
+            td = $(document.createElement('td'));
+            form = buildAddUSLForm();
+            (function(text, form) {
+                form.submit(function(e) {
+                    e.preventDefault();
+                    var data = parseAddUSLForm(form);
+
+                    addUSLToTag(data.usl, text);
+                });
+                td.append(form);
+                td.append(buildTagUSLList(textToTag(text)));
+            })(text, form);
+            tr.append(td);
+
+            table.append(tr);
+        }
     }
 
     function renderDocumentList(collection) {
@@ -224,10 +392,12 @@ $(function() {
 
         renderSourceList(collection);
         renderDocumentList(collection);
+        renderTagEditor(collectionTags(collection));
         
         $('#document').hide();
         $('#add-document').hide();
         $('#add-source').hide();
+        $('#tag-editor').hide();
         $('#collection').show();
         $('#collection').data('id', collection.id);
     }
@@ -243,6 +413,8 @@ $(function() {
 
         $('#document').show();
         $('#document').data('id', id);
+
+        renderTagEditor(doc.tags);
     }
 
     function renderCollectDocumentForm() {
@@ -267,6 +439,48 @@ $(function() {
             select.append(option);
         }
     }
+    
+    function displayFormErrors(form, errors) {
+        var errDiv;
+
+        for(let fieldName in errors) {
+            errDiv = form.find('*[name="' + fieldName + '"]').next('div');
+            errDiv.html(errors[fieldName]);
+        }
+    }
+
+    function displayMessage(msg) {
+        $('#messages').html(msg);
+    }
+
+    displayError = displayMessage;
+
+    function cleanMessages() {
+        $('#messages').html('');
+    }
+    
+    function cleanFormErrors(form) {
+        form.find('.field-errors').html('');
+    }
+
+    function cleanFormFields(form) {
+        form.find('input[type!="submit"], textarea').val('');
+    }
+
+    function cleanForm(form) {
+        cleanFormFields(form);
+        cleanFormErrors(form);
+    }
+
+    // Parsers
+
+    function parseAddUSLForm(form) {
+        var data = {};
+
+        data.usl = form.find('*[name="usl"]').val().trim();
+
+        return data;
+    }
 
     function parseCollectionForm(form) {
         var data = {};
@@ -281,14 +495,12 @@ $(function() {
         var collectedDoc = {};
         
         collectedDoc.collected_on = form.find('*[name="collected_on"]').val();
-        collectedDoc.usl = form.find('*[name="usl"]').val();
         collectedDoc.url = form.find('*[name="url_collected"]').val();
         collectedDoc.tags = tagsToArray(form.find('*[name="tags"]').val());
         collectedDoc.image = form.find('*[name="image"]').val();
         collectedDoc.description = form.find('*[name="description"]').val();
 
         if(!collectedDoc.collected_on) delete collectedDoc.collected_on;
-        if(!collectedDoc.usl) collectedDoc.usl = null;
         if(!collectedDoc.image) collectedDoc.image = null;
         if(!collectedDoc.url) collectedDoc.url = null;
 
@@ -328,47 +540,7 @@ $(function() {
         return params;
     }
     
-    function displayFormErrors(form, errors) {
-        var errDiv;
-
-        for(let fieldName in errors) {
-            errDiv = form.find('*[name="' + fieldName + '"]').next('div');
-            errDiv.html(errors[fieldName]);
-        }
-    }
-
-    function displayMessage(msg) {
-        $('#messages').html(msg);
-    }
-
-    displayError = displayMessage;
-
-    function cleanMessages() {
-        $('#messages').html('');
-    }
-    
-    function cleanFormErrors(form) {
-        form.find('.field-errors').html('');
-    }
-
-    function cleanFormFields(form) {
-        form.find('input[type!="submit"], textarea').val('');
-    }
-
-    function cleanForm(form) {
-        cleanFormFields(form);
-        cleanFormErrors(form);
-    }
-
-    function currentCollection() {
-        var id = $('#collection').data('id');
-        return collections[id];
-    }
-
-    function currentDocument() {
-        var id = $('#document').data('id');
-        return documents[id];
-    }
+    // Events
 
     $('form').submit(function(e) {
         cleanFormErrors($(this));
@@ -434,7 +606,6 @@ $(function() {
             var col = currentCollection();
             col.documents[doc.id] = collectedDoc;
 
-
             api.updateCollection(
                 col,
                 function(collection) {
@@ -495,6 +666,10 @@ $(function() {
 
     $('#add-source-button').click(function(e) {
         $('#add-source').toggle();
+    });
+
+    $('#tag-editor-button').click(function(e) {
+        $('#tag-editor').toggle();
     });
 
     $('#collect-document-button').click(function(e) {
@@ -574,5 +749,14 @@ $(function() {
         }
     }, function(err) {
         displayError('Unable to load source drivers: ' + err); 
+    });
+    
+    api.listTags(function(data) {
+        for(let obj of data) {
+            obj.usls = new Set(obj.usls);
+            tags[obj.text] = obj;
+        }
+    }, function(err) {
+        displayError('Unable to load tags: ' + err); 
     });
 });

@@ -77,6 +77,16 @@
 
         <ul id="collection-sources"></ul>
 
+        <h3>Tag editor</h3>
+
+        <input type="button" id="tag-editor-button" value="Show" />
+
+        <div id="tag-editor">
+            <table>
+
+            </table>
+        </div>
+
         <h3>Documents</h3>
 
         <input type="button" id="collect-document-button" value="Collect" />
@@ -112,10 +122,6 @@
                         <td>
                             <label>Collected on:</label>
                             <input type="date" name="collected_on" placeholder="YYYY-MM-DD" />
-                            <div class="field-errors"></div>
-
-                            <label>USL:</label>
-                            <input type="text" name="usl" />
                             <div class="field-errors"></div>
 
                             <label>Tags (comma-separated):</label>
