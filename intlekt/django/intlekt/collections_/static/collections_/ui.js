@@ -87,6 +87,11 @@ $(function() {
             function(data) {
                 collections[data.id] = data;
                 renderDocumentList(data);
+                if(visible) {
+                    renderCollectedDocument(id, data);
+                } else {
+                    $('#document').hide();
+                }
                 displayMessage('Document removed from collection successfully!');
             },
             function(err, details) {
