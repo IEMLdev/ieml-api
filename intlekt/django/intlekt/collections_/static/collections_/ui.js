@@ -222,6 +222,7 @@ $(function() {
         
         $('#document').hide();
         $('#add-document').hide();
+        $('#add-source').hide();
         $('#collection').show();
         $('#collection').data('id', collection.id);
     }
@@ -485,6 +486,10 @@ $(function() {
 
     $('#add-collection-button').click(function(e) {
         $('#create-collection').toggle();
+    });
+
+    $('#add-source-button').click(function(e) {
+        $('#add-source').toggle();
     });
 
     $('#collect-document-button').click(function(e) {

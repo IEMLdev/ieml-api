@@ -36,3 +36,7 @@ a.show{
 #collect-document td {
     border: 1px solid #000;
 }
+
+#add-source {
+    display: none;
+}
