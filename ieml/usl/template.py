@@ -1,10 +1,12 @@
+import copy
 import itertools
 
+import bidict
+
+from ieml.commons import LANGUAGES
 from ieml.ieml_objects.terms.terms import Term
 from ieml.ieml_objects.terms.tools import term
-from ieml.ieml_objects.tools import ieml
 from ieml.ieml_objects.words import Word
-from ieml.paths.paths import Path
 from ieml.paths.tools import path
 from ieml.usl.tools import usl, replace_paths
 import numpy as np
@@ -12,6 +14,12 @@ import numpy as np
 
 class Template:
     def __init__(self, model, path_list):
+        """
+
+        :param model:
+        :param path_list:
+        :param translation_rule:
+        """
         super().__init__()
 
         self.model = usl(model)
@@ -25,6 +33,8 @@ class Template:
 
         self.multiples = []
         self.result = []
+
+        self.build()
 
     def build(self):
         self.multiples = []
@@ -46,6 +56,29 @@ class Template:
             self.template[index] = replace_paths(self.model, {
                 m['path']: term(m['term'].script.singular_sequences[index[i]]) for i, m in enumerate(self.multiples)
             })
+
+    def get_translations(self, translation_template, mapping=None):
+        """
+
+        :param translation_template: str, a string with special string embedded to determine where to put the variation
+        translations
+        :param mapping: dict {path -> str} where str is the special string in translation template to replace with the
+        term translation
+        :return: dict {usl -> dict { str (language) ->  str}}
+        """
+
+        if mapping is None:
+            mapping = {m['path']: str(m['path']) for m in self.multiples}
+
+        def _replace(u):
+            translation = copy.deepcopy(translation_template)
+            for m in self.multiples:
+                for l in LANGUAGES:
+                    translation[l] = translation[l].replace(mapping[m['path']], u[m['path']].translations[l])
+            return translation
+
+        return {u: _replace(u) for u in self.__iter__()}
+
 
     def __iter__(self):
         return (np.asscalar(w) for w in np.nditer(self.template, flags=['refs_ok']))

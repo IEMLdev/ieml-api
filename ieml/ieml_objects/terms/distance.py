@@ -8,14 +8,6 @@ from ieml.ieml_objects.terms.tools import term
 
 import numpy as np
 
-# graph_nb_rel = Dictionary().relations_graph(['siblings', 'table_0'])
-#
-# graph_table = np.ones((len(Dictionary()),len(Dictionary()))) * 5
-# for i in range(6):
-#     for x, l in enumerate(Dictionary().relations[RELATIONS.index("table_%d"%i)]):
-#         for y in l.indices:
-#             graph_table[x, y] = 5 - i
-
 __distance_mat = {}
 
 
@@ -37,7 +29,7 @@ def load_distance_matrix(version):
             'etymology': 1.0, # 1 to 0 (1/(layer0 - layer1)**2
             'inclusion': 1.0, # 0 or 1
             'siblings' : 1.5, # 0 or 1
-            'table'    : 1/3 # 0 to 6
+            'table'    : 1/3  # 0 to 6
         })
         # graph_ethy_m = Dictionary().relations_graph(['etymology', 'inclusion', 'siblings',
         #                                            'table_0', 'table_1', 'table_2', 'table_3',
@@ -46,9 +38,6 @@ def load_distance_matrix(version):
         graph_ethy = 1.0/graph_ethy
         graph_ethy[graph_ethy == np.inf] = 0
 
-        # for x, y in zip(*np.where(graph_ethy != 0)):
-        #     graph_ethy[x, y] = 1/graph_ethy[x, y]
-        # graph_ethy.tocsr()
         # dist_m = shortest_path(graph_ethy, directed=False, unweighted=True)
         dist_m_w, pred = shortest_path(graph_ethy, directed=False, unweighted=False, return_predecessors=True)
         np.save(FILE, pred)
@@ -69,10 +58,10 @@ def _distance_etymology(term0, term1):
 
     return i
 
+
 def _nb_relations(term0, term1):
-    # print(term0.relations.to(term1, table=False))
     return get_distance_matrix(term0.dictionary.version)[1][term0.index, term1.index]
-    # 5 - len(term0.relations.to(term1, ['opposed', 'associated', 'crossed', 'twin', 'table_0']))
+
 
 def _max_rank(term0, term1):
     rel_table = term0.relations.to(term1, ['table_%d'%i for i in range(1, 6)])
@@ -96,17 +85,11 @@ def _max_rank(term0, term1):
     # return 4 + abs(term0.script.layer - term1.script.layer)
 
 
-
 def distance(term0, term1):
     if term0 == term1:
         return 0.,0.,0.
-    # if term0.script.paradigm or term1.script.paradigm:
-    #     raise ValueError("Not implemented for paradigms")
 
     return _distance_etymology(term0, term1), _nb_relations(term0, term1), _max_rank(term0, term1)
-
-    # print(term0.relations.to(term1))
-    # print(term1.relations.to(term0))
 
 
 def ranking_from_term(term0, nb_terms=30):
