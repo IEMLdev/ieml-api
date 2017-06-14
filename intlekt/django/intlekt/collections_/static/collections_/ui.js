@@ -100,12 +100,10 @@ $(function() {
 
     function removeUSLFromTag(usl, tag, success, error) {
         if(!tag.id) {
-            displayError('Cannot remove an USL to the tag ' + tagText);
-            return;
+            throw 'Cannot remove an USL to the tag ' + tagText;
         }
         if(!tag.usls.delete(usl)) {
-            displayError('Cannot remove an USL to the tag ' + tagText);
-            return;
+            throw 'Cannot remove an USL to the tag ' + tagText;
         }
 
         // No USLS anymore, delete tag
@@ -119,6 +117,10 @@ $(function() {
     }
 
     function addUSLToTag(usl, tag, success, error) {
+        if(tag.usls.has(usl)) {
+            throw 'The USL is already linked to the tag.';
+        }
+
         tag.usls.add(usl);
         var apiCall;
 
@@ -191,6 +193,10 @@ $(function() {
         input.setAttribute('name', 'usl');
         form.appendChild(input);
 
+        var err = document.createElement('div');
+        err.setAttribute('class', 'field-errors');
+        form.appendChild(err);
+
         input = document.createElement('input');
         input.setAttribute('type', 'submit');
         input.setAttribute('value', 'Add');
@@ -219,17 +225,21 @@ $(function() {
                 $(child).click(function(e) {
                     e.preventDefault();
 
-                    removeUSLFromTag(
-                        usl, tag,
-                        function(tag) {
-                            if(tag) tags[tag.text] = tag;
-                            displayMessage('USL removed successfully to tag!');
-                            renderTagEditor(editorTags);
-                        },
-                        function(err, details) {
-                            displayError('Unable to update tag: ' + err);
-                        }
-                    );
+                    try {
+                        removeUSLFromTag(
+                            usl, tag,
+                            function(tag) {
+                                if(tag) tags[tag.text] = tag;
+                                displayMessage('USL removed successfully to tag!');
+                                renderTagEditor(editorTags);
+                            },
+                            function(err, details) {
+                                displayError('Unable to update tag: ' + err);
+                            }
+                        );
+                    } catch(err) {
+                        displayError(err);
+                    }
                 });
             })(usl);
             li.appendChild(child);
@@ -261,17 +271,22 @@ $(function() {
                     e.preventDefault();
                     var data = parseAddUSLForm(form);
 
-                    addUSLToTag(
-                        data.usl, tag,
-                        function(tag) {
-                            tags[tag.text] = jsonTagToJS(tag);
-                            displayMessage('USL added successfully to tag!');
-                            renderTagEditor(tags_);
-                        },
-                        function(err, details) {
-                            displayError('Unable to update tag: ' + err);
-                        }
-                    );
+                    try {
+                        addUSLToTag(
+                            data.usl, tag,
+                            function(tag) {
+                                tags[tag.text] = jsonTagToJS(tag);
+                                displayMessage('USL added successfully to tag!');
+                                cleanForm(form);
+                                renderTagEditor(tags_);
+                            },
+                            function(err, details) {
+                                displayError('Unable to update tag: ' + err);
+                            }
+                        );
+                    } catch(err) {
+                        displayFormErrors(form, {usl: err});
+                    }
                 });
             })(tag, form);
             td.append(form);
