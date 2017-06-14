@@ -1,3 +1,5 @@
+import itertools
+
 from ieml.ieml_objects.terms.terms import Term
 from ieml.ieml_objects.terms.tools import term
 from ieml.ieml_objects.tools import ieml
@@ -7,8 +9,9 @@ from ieml.paths.tools import path
 from ieml.usl.tools import usl, replace_paths
 import numpy as np
 
+
 class Template:
-    def __init__(self, model, path_list, ):
+    def __init__(self, model, path_list):
         super().__init__()
 
         self.model = usl(model)
@@ -24,6 +27,7 @@ class Template:
         self.result = []
 
     def build(self):
+        self.multiples = []
         for i, p in enumerate(self.paths):
             t = self.model[p]
             if not isinstance(t, Term) or t.script.cardinal == 1:
@@ -36,11 +40,12 @@ class Template:
                 'term': t,
             })
 
-        template = np.zeros(shape=(), dtype=object)
-        for m in self.multiples:
-            pass
+        self.template = np.zeros(shape=tuple(t['term'].script.cardinal for t in self.multiples), dtype=object)
 
+        for index in itertools.product(*tuple(range(s) for s in self.template.shape)):
+            self.template[index] = replace_paths(self.model, {
+                m['path']: term(m['term'].script.singular_sequences[index[i]]) for i, m in enumerate(self.multiples)
+            })
 
-        return replace_paths(self.model, {
-            'r'
-        })
+    def __iter__(self):
+        return (np.asscalar(w) for w in np.nditer(self.template, flags=['refs_ok']))
