@@ -31,6 +31,11 @@ class CollectionSerializer(mongoserializers.DocumentSerializer):
         }
 
 
+class CollectDocumentSerializer(serializers.Serializer):
+    id = mongofields.ReferenceField(models.Document)
+    document = CollectedDocumentSerializer()
+
+
 class DocumentSerializer(mongoserializers.DocumentSerializer):
     class Meta:
         model = models.Document

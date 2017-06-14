@@ -18,6 +18,7 @@ def scoopit(request):
 
 
 from rest_framework_mongoengine import viewsets
+from rest_framework import status
 from rest_framework.decorators import detail_route
 
 from . import models
@@ -34,9 +35,38 @@ class CollectionViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return models.Collection.objects.all()
 
-    @detail_route()
-    def request_source(self, request, *args, **kwargs):
-        return Response('')
+    @detail_route(methods=['get', 'post', 'put'])
+    def documents(self, request, *args, **kwargs):
+        collection = self.get_object()
+        if request.method == 'GET':
+            return Response(
+                serializers.CollectionSerializer(collection).data['documents']
+            )
+
+        serializer = serializers.CollectDocumentSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors,
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        id_ = serializer.data['id']
+        if request.method == 'POST' and id_ in collection.documents:
+            return Response(
+                {'id': ('This document has already been collected. '
+                        'Use PUT instead.')},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        if request.method == 'PUT' and id_ not in collection.documents:
+            return Response(
+                {'id': ('This document has not been collected yet. '
+                        'Use POST instead.')},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        document = models.CollectedDocument(**serializer.data['document'])
+        collection.documents[id_] = document
+        collection.save()
+
+        return Response(serializers.CollectedDocumentSerializer(document).data)
 
 
 class DocumentViewSet(viewsets.ModelViewSet):
