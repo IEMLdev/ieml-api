@@ -93,12 +93,35 @@ $(function() {
         return tag;
     }
 
+    function jsonTagToJS(tag) {
+        tag.usls = new Set(tag.usls);
+        return tag; 
+    }
+
     function removeUSLFromTag(usl, tagText) {
         var tag = textToTag(tagText);
-        tag.usls.delete(usl);
+        console.log(tag);
 
         if(!tag.id) {
             displayError('Cannot remove an USL to the tag ' + tagText);
+            return;
+        }
+        if(!tag.usls.delete(usl)) {
+            displayError('Cannot remove an USL to the tag ' + tagText);
+            return;
+        }
+
+        // No USLS anymore, delete tag
+        if(tag.usls.size == 0) {
+            api.deleteTag(
+                tag.id,
+                function() {
+                    displayMessage('USL removed successfully to tag!');
+                },
+                function(err, details) {
+                    displayError('Unable to update tag: ' + err);
+                }
+            );
             return;
         }
         
@@ -131,7 +154,7 @@ $(function() {
         func(
             tag,
             function(tag) {
-                tags[tag.text] = tag;
+                tags[tag.text] = jsonTagToJS(tag);
                 displayMessage('USL added successfully to tag!');
             },
             function(err, details) {

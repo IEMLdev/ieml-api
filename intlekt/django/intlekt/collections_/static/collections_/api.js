@@ -104,6 +104,21 @@ var API = function(API_ROOT) {
             error(errorThrown, JSON.parse(jqXHR.responseText));
         });
     };
+    
+    function delete_(name) {
+        return function(id, success, error) {
+            $.ajax({
+                url: API_ROOT + name + '/' + id + '/',
+                method: 'DELETE',
+            })
+            .done(success)
+            .fail(function(jqXHR, textStatus, errorThrown) {
+                error(errorThrown, JSON.parse(jqXHR.responseText));
+            });
+        };
+    }
+
+    module.deleteTag = delete_('tags');
 
     return module;
 };
