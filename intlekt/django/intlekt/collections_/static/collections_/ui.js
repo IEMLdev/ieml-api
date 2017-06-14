@@ -229,7 +229,7 @@ $(function() {
                         removeUSLFromTag(
                             usl, tag,
                             function(tag) {
-                                if(tag) tags[tag.text] = tag;
+                                if(tag) tags[tag.text] = jsonTagToJS(tag);
                                 displayMessage('USL removed successfully to tag!');
                                 renderTagEditor(editorTags);
                             },
