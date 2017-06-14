@@ -98,10 +98,7 @@ $(function() {
         return tag; 
     }
 
-    function removeUSLFromTag(usl, tagText) {
-        var tag = textToTag(tagText);
-        console.log(tag);
-
+    function removeUSLFromTag(usl, tag, success, error) {
         if(!tag.id) {
             displayError('Cannot remove an USL to the tag ' + tagText);
             return;
@@ -113,54 +110,27 @@ $(function() {
 
         // No USLS anymore, delete tag
         if(tag.usls.size == 0) {
-            api.deleteTag(
-                tag.id,
-                function() {
-                    displayMessage('USL removed successfully to tag!');
-                },
-                function(err, details) {
-                    displayError('Unable to update tag: ' + err);
-                }
-            );
+            api.deleteTag(tag.id, success, error);
             return;
         }
         
         tag.usls = [...tag.usls];
-        api.updateTag(
-            tag,
-            function(tag) {
-                tags[tag.text] = tag;
-                displayMessage('USL removed successfully to tag!');
-            },
-            function(err, details) {
-                displayError('Unable to update tag: ' + err);
-            }
-        );
+        api.updateTag(tag, success, error);
     }
 
-    function addUSLToTag(usl, tagText) {
-        var tag = textToTag(tagText);
+    function addUSLToTag(usl, tag, success, error) {
         tag.usls.add(usl);
-        var func;
+        var apiCall;
 
         if(!tag.id) {
             delete tag.id;
-            func = api.createTag;
+            apiCall = api.createTag;
         } else {
-            func = api.updateTag;
+            apiCall = api.updateTag;
         }
 
         tag.usls = [...tag.usls];
-        func(
-            tag,
-            function(tag) {
-                tags[tag.text] = jsonTagToJS(tag);
-                displayMessage('USL added successfully to tag!');
-            },
-            function(err, details) {
-                displayError('Unable to update tag: ' + err);
-            }
-        );
+        apiCall(tag, success, error);
     }
 
     // Renderers
@@ -229,7 +199,7 @@ $(function() {
         return $(form);
     }
 
-    function buildTagUSLList(tag) {
+    function buildTagUSLList(tag, editorTags) {
         var usls = tag.usls;
         var ul = document.createElement('ul');
         var li, child;
@@ -249,7 +219,17 @@ $(function() {
                 $(child).click(function(e) {
                     e.preventDefault();
 
-                    removeUSLFromTag(usl, tag.text);
+                    removeUSLFromTag(
+                        usl, tag,
+                        function(tag) {
+                            if(tag) tags[tag.text] = tag;
+                            displayMessage('USL removed successfully to tag!');
+                            renderTagEditor(editorTags);
+                        },
+                        function(err, details) {
+                            displayError('Unable to update tag: ' + err);
+                        }
+                    );
                 });
             })(usl);
             li.appendChild(child);
@@ -264,9 +244,10 @@ $(function() {
         var div = $('#tag-editor');
         var table = div.find('table');
         table.empty();
-        var tr, td, form;
+        var tr, td, form, tag;
 
         for(let text of tags_) {
+            tag = textToTag(text);
             tr = $(document.createElement('tr'));
 
             td = document.createElement('td');
@@ -275,16 +256,26 @@ $(function() {
 
             td = $(document.createElement('td'));
             form = buildAddUSLForm();
-            (function(text, form) {
+            (function(tag, form) {
                 form.submit(function(e) {
                     e.preventDefault();
                     var data = parseAddUSLForm(form);
 
-                    addUSLToTag(data.usl, text);
+                    addUSLToTag(
+                        data.usl, tag,
+                        function(tag) {
+                            tags[tag.text] = jsonTagToJS(tag);
+                            displayMessage('USL added successfully to tag!');
+                            renderTagEditor(tags_);
+                        },
+                        function(err, details) {
+                            displayError('Unable to update tag: ' + err);
+                        }
+                    );
                 });
-                td.append(form);
-                td.append(buildTagUSLList(textToTag(text)));
-            })(text, form);
+            })(tag, form);
+            td.append(form);
+            td.append(buildTagUSLList(tag, tags_));
             tr.append(td);
 
             table.append(tr);
