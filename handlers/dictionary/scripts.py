@@ -97,12 +97,15 @@ _RELATIONS = {'contains': 'inclusion',         # 0
              'twin': 'sibling'}
 
 
-def drupal_relations_dump(number=None):
+def drupal_relations_dump(number=None, all=False):
     _drupal_utils = _get_drupal_utils()
 
     root = term("O:M:.O:M:.-+M:O:.M:O:.-")
 
-    paradigm = sorted(Dictionary().roots[root])
+    if all:
+        paradigm = list(Dictionary())
+    else:
+        paradigm = sorted(Dictionary().roots[root])
 
     relations = defaultdict(set)
 
@@ -125,7 +128,7 @@ def drupal_relations_dump(number=None):
 
     for t0, t1 in relations:
         for rel_cat in relations[(t0, t1)]:
-            comment = ''.join([random.choice(string.ascii_lowercase) for i in range(100)])
+            comment = ''.join([random.choice(string.ascii_lowercase) for i in range(10)])
             res.append({
                 'term_src': _drupal_utils['all_uuid'][str(t0.script)],
                 'term_dest': _drupal_utils['all_uuid'][str(t1.script)],
