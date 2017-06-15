@@ -7,23 +7,10 @@ $(function() {
     var DEFAULT_DOCUMENT_TITLE = 'Unknown title';
     var api = API(API_ROOT);
 
-    var collections = {};
-    var documents = {};
-    var sources = {};
-    var sourceDrivers = {};
-    var tags = {};
-    
+    var currentCollection;
+
     // Helpers
     
-    function currentCollection() {
-        var id = $('#collection').data('id');
-        return collections[id];
-    }
-
-    function currentDocument() {
-        var id = $('#document').data('id');
-        return documents[id];
-    }
     function authorsToStr(authors) {
         return authors.join(', ');
     }
@@ -38,25 +25,38 @@ $(function() {
         return authorsToArray(tags);
     }
 
-    function collectedSourceToStr(collectedSource) {
-        var driver = sourceDrivers[collectedSource.driver];
-        var source = sources[driver.source];
+    function collectedSourceToStr(collectedSource, callback) {
+        api.getSourceDriver(
+            collectedSource.driver,
+            function(driver) {
+                api.getSource(
+                    driver.source,
+                    function(source) {
+                        var str = source.name + ' (';
+        
+                        if (driver.id == SCOOPIT_DRIVER_ID) {
+                            if (collectedSource.params.url != undefined)
+                                str += collectedSource.params.url;
+                            else if (collectedSource.params.user != undefined)
+                                str += collectedSource.params.user;
+                        }
 
-        var str = source.name + ' (';
+                        str += ')';
 
-        if (driver.id == SCOOPIT_DRIVER_ID) {
-            if (collectedSource.params.url != undefined)
-                str += collectedSource.params.url;
-            else if (collectedSource.params.user != undefined)
-                str += collectedSource.params.user;
-        }
-
-        str += ')';
-
-        return str;
+                        callback(str);
+                    },
+                    function(err, details) {
+                        displayError('Unable to load source: ' + err);
+                    }
+                );
+            },
+            function(err, details) {
+                displayError('Unable to load source driver: ' + err);
+            }
+        );
     }
 
-    function unlinkedDocuments(collection) {
+    function unlinkedDocuments(collection, documents) {
         var docs = Object.keys(documents);
         var index;
 
@@ -68,7 +68,7 @@ $(function() {
         return docs;
     }
 
-    function collectionTags(collection) {
+    function collectionTags(collection, callback) {
         var tags = new Set([]);
 
         for (let id in collection.posts) {
@@ -80,18 +80,24 @@ $(function() {
         return tags;
     }
 
-    function textToTag(text) {
-        var tag = tags[text];
+    function textToTag(text, success, error) {
+        api.getTag(
+            text,
+            function(tag) {
+                if(tag == undefined) {
+                    return success({
+                        id: '',
+                        text: text,
+                        usls: new Set([])
+                    });
+                }
 
-        if (!tag) {
-            return {
-                id: '',
-                text: text,
-                usls: new Set([])
-            };
-        }
-
-        return tag;
+                success(jsonTagToJS(tag));
+            },
+            function(err, details) {
+                error(err, details);
+            }
+        );
     }
 
     function jsonTagToJS(tag) {
@@ -138,14 +144,14 @@ $(function() {
 
     // Renderers
 
-    function renderCollectionList() {
+    function renderCollectionList(collections) {
         var list = $('#collection-list');
         list.empty();
         
         var li, a, collection;
 
-        for(let collectionId in collections) {
-            collection = collections[collectionId];
+        for(let id in collections) {
+            collection = collections[id];
 
             li = document.createElement('li');
             a = document.createElement('a');
@@ -153,30 +159,29 @@ $(function() {
             a.setAttribute('href', '');
             a.innerHTML = collection.title;
 
-            $(a).click(function(e) {
-                e.preventDefault();
+            (function(collection) {
+                $(a).click(function(e) {
+                    e.preventDefault();
+                    renderCollection(collection);
+                });
+            })(collection);
 
-                var id = $(this).data('id');
-                renderCollection(collections[id]);
-            });
             li.appendChild(a);
-
             list.append(li);
         }
     }
 
-    function toggleDocumentVisibility(id, collection, visible) {
-        collection.posts[id].hidden = !visible;
+    function togglePostVisibility(post, collection, visible) {
+        post.hidden = !visible;
 
         api.updateCollection(
             collection,
             function(data) {
-                collections[data.id] = data;
                 renderDocumentList(data);
                 if(visible) {
-                    renderCollectedDocument(id, data);
+                    renderPost(post, data);
                 } else {
-                    $('#document').hide();
+                    $('#post').hide();
                 }
                 displayMessage('Document removed from collection successfully!');
             },
@@ -230,7 +235,6 @@ $(function() {
                         removeUSLFromTag(
                             usl, tag,
                             function(tag) {
-                                if(tag) tags[tag.text] = jsonTagToJS(tag);
                                 displayMessage('USL removed successfully to tag!');
                                 renderTagEditor(editorTags);
                             },
@@ -251,72 +255,89 @@ $(function() {
         return ul;
     }
 
-    function renderTagEditor(tags_) {
+    function renderTagEditor(tags) {
         var div = $('#tag-editor');
         var table = div.find('table');
         table.empty();
         var tr, td, form, tag;
 
-        for(let text of tags_) {
-            tag = textToTag(text);
-            tr = $(document.createElement('tr'));
+        for(let text of tags) {
+            (function(text) {
+                textToTag(
+                    text,
+                    function(tag) {
+                        tr = $(document.createElement('tr'));
 
-            td = document.createElement('td');
-            td.innerHTML = text;
-            tr.append(td);
+                        td = document.createElement('td');
+                        td.innerHTML = text;
+                        tr.append(td);
 
-            td = $(document.createElement('td'));
-            form = buildAddUSLForm();
-            (function(tag, form) {
-                form.submit(function(e) {
-                    e.preventDefault();
-                    var data = parseAddUSLForm(form);
+                        td = $(document.createElement('td'));
+                        form = buildAddUSLForm();
+                        (function(tag, form) {
+                            form.submit(function(e) {
+                                e.preventDefault();
+                                var data = parseAddUSLForm(form);
 
-                    try {
-                        addUSLToTag(
-                            data.usl, tag,
-                            function(tag) {
-                                tags[tag.text] = jsonTagToJS(tag);
-                                displayMessage('USL added successfully to tag!');
-                                cleanForm(form);
-                                renderTagEditor(tags_);
-                            },
-                            function(err, details) {
-                                displayError('Unable to update tag: ' + err);
-                            }
-                        );
-                    } catch(err) {
-                        displayFormErrors(form, {usl: err});
+                                try {
+                                    addUSLToTag(
+                                        data.usl, tag,
+                                        function(tag) {
+                                            displayMessage('USL added successfully to tag!');
+                                            cleanForm(form);
+                                            renderTagEditor(tags);
+                                        },
+                                        function(err, details) {
+                                            displayError('Unable to update tag: ' + err);
+                                        }
+                                    );
+                                } catch(err) {
+                                    displayFormErrors(form, {usl: err});
+                                }
+                            });
+                        })(tag, form);
+                        td.append(form);
+                        td.append(buildTagUSLList(tag, tags));
+                        tr.append(td);
+
+                        table.append(tr);
+                    },
+                    function(err, details) {
+                        displayError('Unable to load tags: ' + err);
                     }
-                });
-            })(tag, form);
-            td.append(form);
-            td.append(buildTagUSLList(tag, tags_));
-            tr.append(td);
-
-            table.append(tr);
+                );
+            })(text);
         }
     }
 
     function renderDocumentList(collection) {
-        var li, a, span, collectedDoc;
-        $('#collection-documents').empty();
+        var li, a, span, post;
+        $('#collection-posts').empty();
 
         for(let docId in collection.posts) {
-            collectedDoc = collection.posts[docId];
-
+            post = collection.posts[docId];
             li = document.createElement('li');
 
-            if(!collectedDoc.hidden) {
+            if(!post.hidden) {
                 a = document.createElement('a');
                 a.setAttribute('data-id', docId);
                 a.setAttribute('href', '');
-                a.innerHTML = documents[docId].title ? documents[docId].title : DEFAULT_DOCUMENT_TITLE;
-                $(a).click(function(e) {
-                    e.preventDefault();
-                    var id = $(this).data('id');
-                    renderCollectedDocument(id, collection);
-                });
+
+                (function(a) {
+                    api.getDocument(docId, function(doc) {
+                        a.innerHTML = doc.title ? doc.title : DEFAULT_DOCUMENT_TITLE;
+                    }, function(err, details) {
+                        displayError('Unable to load document: ' + err);
+                    });
+                })(a);
+
+                (function(post, collection) {
+                    $(a).click(function(e) {
+                        e.preventDefault();
+                        renderPost(post, collection);
+                    });
+                })(post, collection);
+
                 li.appendChild(a);
 
                 a = document.createElement('a');
@@ -324,15 +345,26 @@ $(function() {
                 a.setAttribute('href', '');
                 a.setAttribute('class', 'hide');
                 a.innerHTML = 'hide';
-                $(a).click(function(e) {
-                    e.preventDefault();
-                    var id = $(this).data('id');
-                    toggleDocumentVisibility(id, currentCollection(), false);
-                });
+
+                (function(post, collection) {
+                    $(a).click(function(e) {
+                        e.preventDefault();
+                        togglePostVisibility(post, collection, false);
+                    });
+                })(post, collection);
+
                 li.appendChild(a);
             } else {
                 span = document.createElement('span');
-                span.innerHTML = documents[docId].title + ' ';
+
+                (function(el) {
+                    api.getDocument(docId, function(doc) {
+                        el.innerHTML = doc.title ? doc.title : DEFAULT_DOCUMENT_TITLE + ' ';
+                    }, function(err, details) {
+                        displayError('Unable to load document: ' + err);
+                    });
+                })(span);
+
                 li.appendChild(span);
                 
                 a = document.createElement('a');
@@ -340,38 +372,47 @@ $(function() {
                 a.setAttribute('href', '');
                 a.setAttribute('class', 'show');
                 a.innerHTML = 'show';
-                $(a).click(function(e) {
-                    e.preventDefault();
-                    var id = $(this).data('id');
-                    toggleDocumentVisibility(id, currentCollection(), true);
-                });
+
+                (function(post, collection) {
+                    $(a).click(function(e) {
+                        e.preventDefault();
+                        togglePostVisibility(post, collection, true);
+                    });
+                })(post, collection);
+
                 li.appendChild(a);
             }
             
-            $('#collection-documents').append(li);
+            $('#collection-posts').append(li);
         }
     }
     
     function renderSourceList(collection) {
-        var li, a, src;
+        var li, a, source;
         $('#collection-sources').empty();
 
         for(let i in collection.sources) {
-            src = collection.sources[i];
+            source = collection.sources[i];
 
             li = document.createElement('li');
 
             a = document.createElement('a');
             a.setAttribute('href', '');
-            a.innerHTML = collectedSourceToStr(src);
-            (function(i) {
+
+            (function(a, source) {
+                collectedSourceToStr(source, function(str) {
+                    a.innerHTML = str;
+                });
+            })(a, source);
+
+            (function(source) {
                 $(a).click(function(e) {
                     e.preventDefault();
 
                     api.requestSource(
                         collection,
-                        sourceDrivers[collection.sources[i].driver],
-                        collection.sources[i].params,
+                        api.getSourceDriver(source.driver),
+                        source.params,
                         function(resp) {
                             displayMessage('Source being collected... Reload the page to see new documents.');
                         },
@@ -380,13 +421,15 @@ $(function() {
                         }
                     );
                 });
-            })(i);
+            })(source);
+
             li.appendChild(a);
 
             a = document.createElement('a');
             a.setAttribute('href', '');
             a.setAttribute('class', 'hide');
             a.innerHTML = 'X';
+
             (function(i) {
                 $(a).click(function(e) {
                     e.preventDefault();
@@ -394,9 +437,8 @@ $(function() {
                     collection.sources.splice(i, 1);
                     api.updateCollection(
                         collection,
-                        function(data) {
-                            collections[data.id] = data;
-                            renderSourceList(data);
+                        function(collection) {
+                            renderSourceList(collection);
                             displayMessage('Source unlinked successfully!');
                         },
                         function(err, details) {
@@ -406,25 +448,31 @@ $(function() {
                     );
                 });
             })(i);
-            li.appendChild(a);
 
+            li.appendChild(a);
             $('#collection-sources').append(li);
         }
+    }
+
+    function renderCollectionForm(collection) {
+        $('#edit-collection-form input[name="title"]').val(collection.title);
+        $('#edit-collection-form input[name="authors"]').val(authorsToStr(collection.authors));
     }
 
     function renderCollection(collection) {
         if(collection == null) return;
 
-        $('#edit-collection-form input[name="title"]').val(collection.title);
-        $('#edit-collection-form input[name="authors"]').val(authorsToStr(collection.authors));
+        currentCollection = collection;
+
         $('#collection-created-on span').html(collection.created_on);
         $('#collection-updated-on span').html(collection.updated_on);
 
+        renderCollectionForm(collection);
         renderSourceList(collection);
         renderDocumentList(collection);
-        renderTagEditor(collectionTags(collection));
+        renderTagEditor(collectionTags(collection)); 
         
-        $('#document').hide();
+        $('#post').hide();
         $('#add-document').hide();
         $('#add-source').hide();
         $('#tag-editor').hide();
@@ -432,42 +480,45 @@ $(function() {
         $('#collection').data('id', collection.id);
     }
 
-    function renderCollectedDocument(id, collection) {
-        var form = $('#edit-document-form');
-        var doc = collection.posts[id];
+    function renderPost(post, collection) {
+        var form = $('#edit-post-form');
 
-        for(let key in doc) {
-            form.find('*[name="' + key + '"]').val(doc[key]);
+        for(let key in post) {
+            form.find('*[name="' + key + '"]').val(post[key]);
         }
-        form.find('*[name="url_collected"]').val(doc.url);
+        form.find('*[name="url_collected"]').val(post.url);
 
-        $('#document').show();
-        $('#document').data('id', id);
+        $('#post').show();
+        $('#post').data('document', post.document);
 
-        renderTagEditor(doc.tags);
+        // renderTagEditor(post.tags);
     }
 
     function renderCollectDocumentForm() {
-        var docs = unlinkedDocuments(currentCollection());
+        api.listDocuments(function(documents) {
+            var docs = unlinkedDocuments(currentCollection, documents);
 
-        var select = $('#collect-document-form select');
-        select.empty();
+            var select = $('#collect-document-form select');
+            select.empty();
 
-        var option, doc;
-        
-        option = document.createElement('option');
-        option.setAttribute('value', '');
-        select.append(option);
-
-        for(let docId of docs) {
-            doc = documents[docId];
-
+            var option, doc;
+            
             option = document.createElement('option');
-            option.setAttribute('value', doc.id);
-            option.innerHTML = doc.title;
-
+            option.setAttribute('value', '');
             select.append(option);
-        }
+
+            for(let docId of docs) {
+                doc = documents[docId];
+
+                option = document.createElement('option');
+                option.setAttribute('value', doc.id);
+                option.innerHTML = doc.title;
+
+                select.append(option);
+            }
+        }, function(err, details) {
+            displayError('Unable to load documents: ' + err);
+        });
     }
     
     function displayFormErrors(form, errors) {
@@ -521,20 +572,20 @@ $(function() {
         return data;
     }
 
-    function parseCollectedDocumentForm(form) {
-        var collectedDoc = {};
+    function parsePostForm(form) {
+        var data = {};
         
-        collectedDoc.collected_on = form.find('*[name="collected_on"]').val();
-        collectedDoc.url = form.find('*[name="url_collected"]').val();
-        collectedDoc.tags = tagsToArray(form.find('*[name="tags"]').val());
-        collectedDoc.image = form.find('*[name="image"]').val();
-        collectedDoc.description = form.find('*[name="description"]').val();
+        data.collected_on = form.find('*[name="collected_on"]').val();
+        data.url = form.find('*[name="url_collected"]').val();
+        data.tags = tagsToArray(form.find('*[name="tags"]').val());
+        data.image = form.find('*[name="image"]').val();
+        data.description = form.find('*[name="description"]').val();
 
-        if(!collectedDoc.collected_on) collectedDoc.collected_on = new Date().toJSON().split('T')[0];
-        if(!collectedDoc.image) collectedDoc.image = null;
-        if(!collectedDoc.url) collectedDoc.url = null;
+        if(!data.collected_on) data.collected_on = new Date().toJSON().split('T')[0];
+        if(!data.image) data.image = null;
+        if(!data.url) data.url = null;
 
-        return collectedDoc;
+        return data;
     }
 
     function parseCollectDocumentForm(form) {
@@ -550,7 +601,7 @@ $(function() {
 
         return {
             doc: doc,
-            collectedDoc: parseCollectedDocumentForm(form)
+            post: parsePostForm(form)
         };
     }
 
@@ -628,22 +679,17 @@ $(function() {
         cleanFormErrors(form);
         var parsedForm = parseCollectDocumentForm(form);
         var doc = parsedForm.doc;
-        var collectedDoc = parsedForm.collectedDoc;
+        var post = parsedForm.post;
 
         function createDocumentCallback(doc) {
-            documents[doc.id] = doc;
-
-            collectedDoc.document = doc.id;
-            var col = currentCollection();
-            col.posts[doc.id] = collectedDoc;
+            post.document = doc.id;
+            currentCollection.posts[doc.id] = post;
 
             api.updateCollection(
-                col,
+                currentCollection,
                 function(collection) {
-                    collections[collection.id] = collection;
-
                     renderDocumentList(collection);
-                    renderCollectedDocument(doc.id, collection);
+                    renderPost(post, collection);
                     cleanForm(form);
                     displayMessage('Document collected successfully!');
                     $('#collect-document').hide();
@@ -656,7 +702,13 @@ $(function() {
         }
 
         if(doc.id != '') {
-            createDocumentCallback(documents[doc.id]);
+            api.getDocument(
+                doc.id,
+                createDocumentCallback,
+                function(err, details) {
+                    displayError('Unable to load document: ' + err);
+                }
+            );
         }
         else {
             api.createDocument(
@@ -670,21 +722,19 @@ $(function() {
         }
     });
     
-    $('#edit-document-form').submit(function(e) {
+    $('#edit-post-form').submit(function(e) {
         e.preventDefault();
 
         var form = $(this);
         var data = parseCollectedDocumentForm(form);
-        var id = $('#document').data('id');
-        var col = currentCollection();
+        var id = $('#post').data('document');
 
         data.document = id;
-        col.posts[id] = data;
+        currentCollection.posts[id] = data;
 
-        api.updateCollection(col, function(collection) {
-            collections[collection.id] = collection; 
+        api.updateCollection(currentCollection, function(collection) {
             cleanForm(form);
-            renderCollectedDocument(id, collection);
+            renderPost(data, collection);
             displayMessage('Document updated successfully!');
         }, function(err, details) {
             displayError('Unable to update document: ' + err);
@@ -713,15 +763,13 @@ $(function() {
         form.submit(function(e) {
             e.preventDefault();
 
-            var col = currentCollection();
             var source = {
                 driver: driver,
                 params: parser(form) 
             };
-            col.sources.push(source);
+            currentCollection.sources.push(source);
 
-            api.updateCollection(col, function(collection) {
-                collections[collection.id] = collection; 
+            api.updateCollection(currentCollection, function(collection) {
                 cleanForm(form);
                 renderSourceList(collection);
                 displayMessage('Source added successfully!');
@@ -746,49 +794,13 @@ $(function() {
 
     // Init
 
-    api.listCollections(function(data) {
-        for(let col of data) {
-            collections[col.id] = col;
-        }
-        renderCollectionList();
+    api.listCollections(function(collections) {
+        renderCollectionList(collections);
 
         $('#messages').html('');
         $('#sidebar').css('display', 'inline-block');
         $('#main').css('display', 'inline-block');
     }, function(err) {
         displayError('Unable to load collections: ' + err); 
-    });
-    
-    api.listDocuments(function(data) {
-        for(let doc of data) {
-            documents[doc.id] = doc;
-        }
-    }, function(err) {
-        displayError('Unable to load documents: ' + err); 
-    });
-    
-    api.listSources(function(data) {
-        for(let obj of data) {
-            sources[obj.id] = obj;
-        }
-    }, function(err) {
-        displayError('Unable to load sources: ' + err); 
-    });
-    
-    api.listSourceDrivers(function(data) {
-        for(let obj of data) {
-            sourceDrivers[obj.id] = obj;
-        }
-    }, function(err) {
-        displayError('Unable to load source drivers: ' + err); 
-    });
-    
-    api.listTags(function(data) {
-        for(let obj of data) {
-            obj.usls = new Set(obj.usls);
-            tags[obj.text] = obj;
-        }
-    }, function(err) {
-        displayError('Unable to load tags: ' + err); 
     });
 });

@@ -147,10 +147,10 @@
             </form>
         </div>
 
-        <ul id="collection-documents"></ul>
+        <ul id="collection-posts"></ul>
 
-        <div id="document" data-id="">
-            <form id="edit-document-form" method="POST" action="">
+        <div id="post" data-id="">
+            <form id="edit-post-form" method="POST" action="">
                 <label>Collected on:</label>
                 <input type="date" name="collected_on" />
                 <div class="field-errors"></div>
@@ -183,7 +183,7 @@
 {% endblock %}
 
 {% block js %}
-    <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+    <script src="{% static "collections_/jquery-3.2.1.min.js" %}"></script>
     <script src="{% static "collections_/api.js" %}"></script>
     <script src="{% static "collections_/ui.js" %}"></script>
 {% endblock %}

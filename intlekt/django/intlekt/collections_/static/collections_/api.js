@@ -1,57 +1,90 @@
 var API = function(API_ROOT) {
-    var module = {};
+    var module = {},
+        cache = {
+            'collections': {},
+            'documents': {},
+            'sources': {},
+            'source_drivers': {},
+            'tags': {}
+        };
+    
+    function cacheBuilderFactory(lookupField) {
+        return function cacheBuilder(data) {
+            var cache = {};
 
-    function list(name) {
+            for(let el of data) {
+                cache[el[lookupField]] = el;
+            }
+
+            return cache;
+        }
+    }
+
+    function list(name, cacheBuilder) {
         return function(success, error) {
+            if (cache[name].length) {
+                return success(cache[name]);
+            }
+
             $.ajax({
                 url: API_ROOT + name + '/',
             })
-            .done(success)
+            .done(function(data) {
+                cache[name] = cacheBuilder(data); success(cache[name]);
+            })
             .fail(function(jqXHR, textStatus, errorThrown) {
                 error(errorThrown, JSON.parse(jqXHR.responseText));
             });
         };
     }
 
-    module.listCollections = list('collections');
-    module.listDocuments = list('documents');
-    module.listSources = list('sources');
-    module.listSourceDrivers = list('source_drivers');
-    module.listTags = list('tags');
+    module.listCollections = list('collections', cacheBuilderFactory('id'));
+    module.listDocuments = list('documents', cacheBuilderFactory('id'));
+    module.listSources = list('sources', cacheBuilderFactory('id'));
+    module.listSourceDrivers = list('source_drivers', cacheBuilderFactory('id'));
+    module.listTags = list('tags', cacheBuilderFactory('text'));
 
-    function get(name) {
+    function get(listFunction) {
         return function(id, success, error) {
-            $.ajax({
-                url: API_ROOT + name + '/' + id + '/',
-            })
-            .done(success)
-            .fail(function(jqXHR, textStatus, errorThrown) {
-                error(errorThrown, JSON.parse(jqXHR.responseText));
-            });
+            listFunction(function(data) {
+                success(data[id]);
+            }, error);
         };
     }
 
-    module.getCollection = get('collections');
-    module.getDocument = get('documents');
+    module.getCollection = get(module.listCollections);
+    module.getDocument = get(module.listDocuments);
+    module.getSource = get(module.listSources);
+    module.getSourceDriver = get(module.listSourceDrivers);
+    module.getTag = get(module.listTags);
 
-    function create(name) {
+    function insert(name, lookupField, create) {
         return function(obj, success, error) {
+            var url = API_ROOT + name + '/';
+            if(!create)
+                url += obj.id + '/';
+
             $.ajax({
-                url: API_ROOT + name + '/',
-                method: 'POST',
+                url: url,
+                method: create ? 'POST' : 'PUT',
                 data: JSON.stringify(obj),
                 contentType: 'application/json'
             })
-            .done(success)
+            .done(function(data) {
+                cache[name][data[lookupField]] = data;
+                success(data);
+            })
             .fail(function(jqXHR, textStatus, errorThrown) {
                 error(errorThrown, JSON.parse(jqXHR.responseText));
             });
         };
     }
 
-    module.createCollection = create('collections');
-    module.createDocument = create('documents');
-    module.createTag = create('tags');
+    module.createCollection = insert('collections', 'id', true);
+    module.createDocument = insert('documents', 'id', true);
+    module.createTag = insert('tags', 'text', true);
+
+    // TODO
     module.createCollectedDocument = function(doc, collection, success, error) {
         $.ajax({
             url: API_ROOT + 'collections/' + collection.id + '/posts/',
@@ -71,24 +104,9 @@ var API = function(API_ROOT) {
         });
     };
 
-    function update(name) {
-        return function(obj, success, error) {
-            $.ajax({
-                url: API_ROOT + name + '/' + obj.id + '/',
-                method: 'PUT',
-                data: JSON.stringify(obj),
-                contentType: 'application/json'
-            })
-            .done(success)
-            .fail(function(jqXHR, textStatus, errorThrown) {
-                error(errorThrown, JSON.parse(jqXHR.responseText));
-            });
-        };
-    }
-    
-    module.updateCollection = update('collections');
-    module.updateDocument = update('documents');
-    module.updateTag = update('tags');
+    module.updateCollection = insert('collections', 'id', false);
+    module.updateDocument = insert('documents', 'id', false);
+    module.updateTag = insert('tags', 'text', false);
 
     module.requestSource = function(collection, driver, params, success, error) {
         params.collection_id = collection.id;
@@ -111,7 +129,10 @@ var API = function(API_ROOT) {
                 url: API_ROOT + name + '/' + id + '/',
                 method: 'DELETE',
             })
-            .done(success)
+            .done(function(resp) {
+                delete cache[name][id];
+                success(resp);
+            })
             .fail(function(jqXHR, textStatus, errorThrown) {
                 error(errorThrown, JSON.parse(jqXHR.responseText));
             });
