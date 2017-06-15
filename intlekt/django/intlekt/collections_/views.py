@@ -30,6 +30,9 @@ class PostDoesNotExist(LookupError): pass
 
 
 class PostViewSet(viewsets.ViewSet):
+    def get_serializer(self, *args, **kwargs):
+        return serializers.PostSerializer(*args, **kwargs)
+
     @classmethod
     def get_post(cls, collection_id, post_id):
         try:
