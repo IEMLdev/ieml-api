@@ -72,6 +72,7 @@ class DocumentSerializer(mongoserializers.DocumentSerializer):
             'authors': {'validators': [validate_set]},
             'keywords': {'validators': [validate_set]},
             'language': {'validators': [validate_language]},
+            'title': {'allow_blank': True},
         }
 
 

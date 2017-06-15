@@ -4,6 +4,7 @@ $(function() {
     
     var API_ROOT = 'http://127.0.0.1:8000/collections/';
     var SCOOPIT_DRIVER_ID = '593ef18cb15ab3332c49c945';
+    var DEFAULT_DOCUMENT_TITLE = 'Unknown title';
     var api = API(API_ROOT);
 
     var collections = {};
@@ -310,7 +311,7 @@ $(function() {
                 a = document.createElement('a');
                 a.setAttribute('data-id', docId);
                 a.setAttribute('href', '');
-                a.innerHTML = documents[docId].title;
+                a.innerHTML = documents[docId].title ? documents[docId].title : DEFAULT_DOCUMENT_TITLE;
                 $(a).click(function(e) {
                     e.preventDefault();
                     var id = $(this).data('id');
