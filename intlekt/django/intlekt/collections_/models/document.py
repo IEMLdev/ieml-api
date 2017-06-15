@@ -6,3 +6,6 @@ class Document(Document_):
     authors = fields.ListField(fields.StringField(), blank=True, default=list,)
     created_on = fields.DateTimeField(blank=True, null=True,)
     url = fields.URLField(required=True,)
+
+    def __str__(self):
+        return self.title

@@ -5,7 +5,8 @@ from .tag import USLField
 
 
 class CollectedDocument(EmbeddedDocument):
-    collected_on = fields.DateTimeField(default=timezone.now,)
+    document = fields.ReferenceField('Document')
+    collected_on = fields.DateTimeField()
     usl = USLField(null=True, blank=True, default=None,)
     tags = fields.ListField(fields.StringField(), blank=True,)
     image = fields.URLField(verify_exists=True, null=True, blank=True, default=None,)

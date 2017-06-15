@@ -17,7 +17,8 @@ def scoopit(request):
 
 
 
-from rest_framework_mongoengine import viewsets
+from rest_framework_mongoengine import viewsets as mongoviewsets
+from rest_framework import viewsets
 from rest_framework import status
 from rest_framework.decorators import detail_route
 
@@ -25,7 +26,153 @@ from . import models
 from . import serializers
 
 
-class CollectionViewSet(viewsets.ModelViewSet):
+class CollectedDocumentDoesNotExist(LookupError): pass
+
+
+class CollectedDocumentViewSet(viewsets.ViewSet):
+    @classmethod
+    def get_document(cls, collection_id, document_id):
+        try:
+            collection = models.Collection.objects.get(id=collection_id)
+        except models.Collection.DoesNotExist:
+            raise CollectedDocumentDoesNotExist()
+
+        documents = collection.documents
+        try:
+            return documents[document_id], collection
+        except KeyError:
+            raise CollectedDocumentDoesNotExist()
+
+    def list(self, request, collection_id=None):
+        if collection_id is None:
+            return Response('Please specify a collection id.',
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            collection = models.Collection.objects.get(id=collection_id)
+        except models.Collection.DoesNotExist:
+            return Response('No such collection {}'.format(collection_id),
+                            status=status.HTTP_404_NOT_FOUND)
+        documents = collection.documents
+
+        for key in documents:
+            documents[key] = serializers.CollectedDocumentSerializer(documents[key]).data
+
+        return Response(documents)
+
+    def create(self, request, collection_id=None):
+        if collection_id is None:
+            return Response('Please specify a collection id.',
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            collection = models.Collection.objects.get(id=collection_id)
+        except models.Collection.DoesNotExist:
+            return Response('No such collection {}'.format(collection_id),
+                            status=status.HTTP_404_NOT_FOUND)
+
+        serializer = serializers.CollectedDocumentSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors,
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        collected_document = serializer.save()
+
+        if str(collected_document.document.id) in collection.documents:
+            return Response(
+                {'document': ('This document has already been collected. '
+                              'Please, use PUT or PATCH.')},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        collection.documents[str(collected_document.document.id)] = collected_document
+        collection.save()
+
+        return Response(serializer.data)
+
+    def retrieve(self, request, pk=None, collection_id=None):
+        try:
+            document, _ = self.get_document(collection_id, pk)
+        except CollectedDocumentDoesNotExist:
+            return Response(
+                'No such collected document {} in collection {}'.format(
+                    pk,
+                    collection_id
+                ),
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        return Response(serializers.CollectedDocumentSerializer(document).data)
+
+    def update(self, request, pk=None, collection_id=None):
+        try:
+            document, collection = self.get_document(collection_id, pk)
+        except CollectedDocumentDoesNotExist:
+            return Response(
+                'No such collected document {} in collection {}'.format(
+                    pk,
+                    collection_id
+                ),
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        serializer = serializers.CollectedDocumentSerializer(document, data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors,
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        document = serializer.save()
+        collection.documents[pk] = document
+        collection.save()
+
+        return Response(serializer.data)
+
+    def partial_update(self, request, pk=None, collection_id=None):
+        try:
+            document, collection = self.get_document(collection_id, pk)
+        except CollectedDocumentDoesNotExist:
+            return Response(
+                'No such collected document {} in collection {}'.format(
+                    pk,
+                    collection_id
+                ),
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        serializer = serializers.CollectedDocumentSerializer(
+            document,
+            data=request.data,
+            partial=True,
+        )
+        if not serializer.is_valid():
+            return Response(serializer.errors,
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        document = serializer.save()
+        collection.documents[pk] = document
+        collection.save()
+
+        return Response(serializer.data)
+
+    def destroy(self, request, pk=None, collection_id=None):
+        try:
+            _, collection = self.get_document(collection_id, pk)
+        except CollectedDocumentDoesNotExist:
+            return Response(
+                'No such collected document {} in collection {}'.format(
+                    pk,
+                    collection_id
+                ),
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        collection.documents.pop(pk, None)
+        collection.save()
+
+        return Response('')
+
+
+class CollectionViewSet(mongoviewsets.ModelViewSet):
     """A group of documents related to the same topic."""
 
     queryset = models.Collection.objects.all()
@@ -35,41 +182,8 @@ class CollectionViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return models.Collection.objects.all()
 
-    @detail_route(methods=['get', 'post', 'put'])
-    def documents(self, request, *args, **kwargs):
-        collection = self.get_object()
-        if request.method == 'GET':
-            return Response(
-                serializers.CollectionSerializer(collection).data['documents']
-            )
 
-        serializer = serializers.CollectDocumentSerializer(data=request.data)
-        if not serializer.is_valid():
-            return Response(serializer.errors,
-                            status=status.HTTP_400_BAD_REQUEST)
-
-        id_ = serializer.data['id']
-        if request.method == 'POST' and id_ in collection.documents:
-            return Response(
-                {'id': ('This document has already been collected. '
-                        'Use PUT instead.')},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        if request.method == 'PUT' and id_ not in collection.documents:
-            return Response(
-                {'id': ('This document has not been collected yet. '
-                        'Use POST instead.')},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        document = models.CollectedDocument(**serializer.data['document'])
-        collection.documents[id_] = document
-        collection.save()
-
-        return Response(serializers.CollectedDocumentSerializer(document).data)
-
-
-class DocumentViewSet(viewsets.ModelViewSet):
+class DocumentViewSet(mongoviewsets.ModelViewSet):
     """A document to be collected. Can be a tweet, an article, a pdf..."""
 
     queryset = models.Document.objects.all()
@@ -80,7 +194,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
         return models.Document.objects.all()
 
 
-class TagViewSet(viewsets.ModelViewSet):
+class TagViewSet(mongoviewsets.ModelViewSet):
     queryset = models.Tag.objects.all()
     lookup_field = 'id'
     serializer_class = serializers.TagSerializer
@@ -89,7 +203,7 @@ class TagViewSet(viewsets.ModelViewSet):
         return models.Tag.objects.all()
 
 
-class SourceViewSet(viewsets.ModelViewSet):
+class SourceViewSet(mongoviewsets.ModelViewSet):
     queryset = models.Source.objects.all()
     lookup_field = 'id'
     serializer_class = serializers.SourceSerializer
@@ -98,7 +212,7 @@ class SourceViewSet(viewsets.ModelViewSet):
         return models.Source.objects.all()
 
 
-class SourceDriverViewSet(viewsets.ModelViewSet):
+class SourceDriverViewSet(mongoviewsets.ModelViewSet):
     queryset = models.SourceDriver.objects.all()
     lookup_field = 'id'
     serializer_class = serializers.SourceDriverSerializer

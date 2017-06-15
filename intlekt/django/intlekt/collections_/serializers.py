@@ -10,6 +10,15 @@ def validate_set(list_):
         raise serializers.ValidationError('Cannot have duplicates.')
 
 
+def validate_collected_document_keys(documents):
+    for key, collected_document in documents.items():
+        if key != str(collected_document['document'].id):
+            raise serializers.ValidationError(
+                "The key '{0}' must be equal to the 'document' field value "
+                "'{1}'.".format(key, collected_document['document'].id)
+            )
+            
+
 class CollectedDocumentSerializer(mongoserializers.EmbeddedDocumentSerializer):
     class Meta:
         model = models.CollectedDocument
@@ -25,7 +34,11 @@ class CollectedDocumentSerializer(mongoserializers.EmbeddedDocumentSerializer):
 
 
 class CollectionSerializer(mongoserializers.DocumentSerializer):
-    documents = mongofields.DictField(child=CollectedDocumentSerializer(), required=False,)
+    documents = mongofields.DictField(
+        child=CollectedDocumentSerializer(),
+        required=False,
+        validators=[validate_collected_document_keys],
+    )
 
     class Meta:
         model = models.Collection
@@ -36,11 +49,6 @@ class CollectionSerializer(mongoserializers.DocumentSerializer):
             'updated_on': {'format': '%Y-%m-%d'},
             'authors': {'validators': [validate_set]},
         }
-
-
-class CollectDocumentSerializer(serializers.Serializer):
-    id = mongofields.ReferenceField(models.Document)
-    document = CollectedDocumentSerializer()
 
 
 class DocumentSerializer(mongoserializers.DocumentSerializer):
