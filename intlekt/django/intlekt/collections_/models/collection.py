@@ -8,7 +8,7 @@ class Collection(Document):
     authors = fields.ListField(fields.StringField(), required=False, blank=True, default=list,)
     created_on = fields.DateTimeField(default=timezone.now, blank=True,)
     updated_on = fields.DateTimeField(default=timezone.now, blank=True,)
-    documents = fields.MapField(fields.EmbeddedDocumentField('CollectedDocument'), blank=True,)
+    posts = fields.MapField(fields.EmbeddedDocumentField('Post'), blank=True,)
     sources = fields.EmbeddedDocumentListField('CollectedSource', blank=True,)
 
     @classmethod

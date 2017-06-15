@@ -12,16 +12,16 @@ router.register(r'sources', views.SourceViewSet)
 router.register(r'source_drivers', views.SourceDriverViewSet)
 router.register(r'tags', views.TagViewSet)
 
-collected_documents_router = NestedSimpleRouter(router, r'collections', lookup='collection')
-collected_documents_router.register(
-    r'collected_documents',
-    views.CollectedDocumentViewSet,
-    base_name='collection_collected_documents',
+posts_router = NestedSimpleRouter(router, r'collections', lookup='collection')
+posts_router.register(
+    r'posts',
+    views.PostViewSet,
+    base_name='collection_posts',
 )
 
 urlpatterns = [
     url(r'^', include(router.urls)),
-    url(r'^', include(collected_documents_router.urls)),
+    url(r'^', include(posts_router.urls)),
 
     # TODO: to be removed, for testing
     url(r'^ui/$', views.home),

@@ -4,7 +4,7 @@ from django_mongoengine import EmbeddedDocument, fields
 from .tag import USLField
 
 
-class CollectedDocument(EmbeddedDocument):
+class Post(EmbeddedDocument):
     document = fields.ReferenceField('Document')
     collected_on = fields.DateTimeField()
     usl = USLField(null=True, blank=True, default=None,)

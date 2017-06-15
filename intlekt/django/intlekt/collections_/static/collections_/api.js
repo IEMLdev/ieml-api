@@ -54,7 +54,7 @@ var API = function(API_ROOT) {
     module.createTag = create('tags');
     module.createCollectedDocument = function(doc, collection, success, error) {
         $.ajax({
-            url: API_ROOT + 'collected_documents/',
+            url: API_ROOT + 'collections/' + collection.id + '/posts/',
             method: 'POST',
             data: JSON.stringify(doc),
             contentType: 'application/json'

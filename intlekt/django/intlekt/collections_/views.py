@@ -26,22 +26,22 @@ from . import models
 from . import serializers
 
 
-class CollectedDocumentDoesNotExist(LookupError): pass
+class PostDoesNotExist(LookupError): pass
 
 
-class CollectedDocumentViewSet(viewsets.ViewSet):
+class PostViewSet(viewsets.ViewSet):
     @classmethod
-    def get_document(cls, collection_id, document_id):
+    def get_post(cls, collection_id, post_id):
         try:
             collection = models.Collection.objects.get(id=collection_id)
         except models.Collection.DoesNotExist:
-            raise CollectedDocumentDoesNotExist()
+            raise PostDoesNotExist()
 
-        documents = collection.documents
+        posts = collection.posts
         try:
-            return documents[document_id], collection
+            return posts[post_id], collection
         except KeyError:
-            raise CollectedDocumentDoesNotExist()
+            raise PostDoesNotExist()
 
     def list(self, request, collection_id=None):
         if collection_id is None:
@@ -53,12 +53,12 @@ class CollectedDocumentViewSet(viewsets.ViewSet):
         except models.Collection.DoesNotExist:
             return Response('No such collection {}'.format(collection_id),
                             status=status.HTTP_404_NOT_FOUND)
-        documents = collection.documents
+        posts = collection.posts
 
-        for key in documents:
-            documents[key] = serializers.CollectedDocumentSerializer(documents[key]).data
+        for key in posts:
+            posts[key] = serializers.PostSerializer(posts[key]).data
 
-        return Response(documents)
+        return Response(posts)
 
     def create(self, request, collection_id=None):
         if collection_id is None:
@@ -71,76 +71,76 @@ class CollectedDocumentViewSet(viewsets.ViewSet):
             return Response('No such collection {}'.format(collection_id),
                             status=status.HTTP_404_NOT_FOUND)
 
-        serializer = serializers.CollectedDocumentSerializer(data=request.data)
+        serializer = serializers.PostSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors,
                             status=status.HTTP_400_BAD_REQUEST)
 
-        collected_document = serializer.save()
+        post = serializer.save()
 
-        if str(collected_document.document.id) in collection.documents:
+        if str(post.document.id) in collection.posts:
             return Response(
                 {'document': ('This document has already been collected. '
                               'Please, use PUT or PATCH.')},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        collection.documents[str(collected_document.document.id)] = collected_document
+        collection.posts[str(post.document.id)] = post
         collection.save()
 
         return Response(serializer.data)
 
     def retrieve(self, request, pk=None, collection_id=None):
         try:
-            document, _ = self.get_document(collection_id, pk)
-        except CollectedDocumentDoesNotExist:
+            post, _ = self.get_post(collection_id, pk)
+        except PostDoesNotExist:
             return Response(
-                'No such collected document {} in collection {}'.format(
+                'No such post {} in collection {}'.format(
                     pk,
                     collection_id
                 ),
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        return Response(serializers.CollectedDocumentSerializer(document).data)
+        return Response(serializers.PostSerializer(post).data)
 
     def update(self, request, pk=None, collection_id=None):
         try:
-            document, collection = self.get_document(collection_id, pk)
-        except CollectedDocumentDoesNotExist:
+            post, collection = self.get_post(collection_id, pk)
+        except PostDoesNotExist:
             return Response(
-                'No such collected document {} in collection {}'.format(
+                'No such post {} in collection {}'.format(
                     pk,
                     collection_id
                 ),
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        serializer = serializers.CollectedDocumentSerializer(document, data=request.data)
+        serializer = serializers.PostSerializer(post, data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors,
                             status=status.HTTP_400_BAD_REQUEST)
 
-        document = serializer.save()
-        collection.documents[pk] = document
+        post = serializer.save()
+        collection.posts[pk] = post
         collection.save()
 
         return Response(serializer.data)
 
     def partial_update(self, request, pk=None, collection_id=None):
         try:
-            document, collection = self.get_document(collection_id, pk)
-        except CollectedDocumentDoesNotExist:
+            post, collection = self.get_post(collection_id, pk)
+        except PostDoesNotExist:
             return Response(
-                'No such collected document {} in collection {}'.format(
+                'No such post {} in collection {}'.format(
                     pk,
                     collection_id
                 ),
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        serializer = serializers.CollectedDocumentSerializer(
-            document,
+        serializer = serializers.PostSerializer(
+            post,
             data=request.data,
             partial=True,
         )
@@ -148,25 +148,25 @@ class CollectedDocumentViewSet(viewsets.ViewSet):
             return Response(serializer.errors,
                             status=status.HTTP_400_BAD_REQUEST)
 
-        document = serializer.save()
-        collection.documents[pk] = document
+        post = serializer.save()
+        collection.posts[pk] = post
         collection.save()
 
         return Response(serializer.data)
 
     def destroy(self, request, pk=None, collection_id=None):
         try:
-            _, collection = self.get_document(collection_id, pk)
-        except CollectedDocumentDoesNotExist:
+            _, collection = self.get_post(collection_id, pk)
+        except PostDoesNotExist:
             return Response(
-                'No such collected document {} in collection {}'.format(
+                'No such post {} in collection {}'.format(
                     pk,
                     collection_id
                 ),
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        collection.documents.pop(pk, None)
+        collection.posts.pop(pk, None)
         collection.save()
 
         return Response('')

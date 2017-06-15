@@ -12,12 +12,12 @@ def validate_set(list_):
         raise serializers.ValidationError('Cannot have duplicates.')
 
 
-def validate_collected_document_keys(documents):
-    for key, collected_document in documents.items():
-        if key != str(collected_document['document'].id):
+def validate_posts_dict(posts):
+    for key, post in posts.items():
+        if key != str(post['document'].id):
             raise serializers.ValidationError(
                 "The key '{0}' must be equal to the 'document' field value "
-                "'{1}'.".format(key, collected_document['document'].id)
+                "'{1}'.".format(key, post['document'].id)
             )
 
 
@@ -28,9 +28,9 @@ def validate_language(language):
         raise serializers.ValidationError('Bad format. See ISO 639-1.')
 
 
-class CollectedDocumentSerializer(mongoserializers.EmbeddedDocumentSerializer):
+class PostSerializer(mongoserializers.EmbeddedDocumentSerializer):
     class Meta:
-        model = models.CollectedDocument
+        model = models.Post
         fields = '__all__'
         extra_kwargs = {
             'collected_on': {
@@ -43,10 +43,10 @@ class CollectedDocumentSerializer(mongoserializers.EmbeddedDocumentSerializer):
 
 
 class CollectionSerializer(mongoserializers.DocumentSerializer):
-    documents = mongofields.DictField(
-        child=CollectedDocumentSerializer(),
+    posts = mongofields.DictField(
+        child=PostSerializer(),
         required=False,
-        validators=[validate_collected_document_keys],
+        validators=[validate_posts_dict],
     )
 
     class Meta:
@@ -70,6 +70,7 @@ class DocumentSerializer(mongoserializers.DocumentSerializer):
                 'input_formats': ['%Y-%m-%d'],
             },
             'authors': {'validators': [validate_set]},
+            'keywords': {'validators': [validate_set]},
             'language': {'validators': [validate_language]},
         }
 

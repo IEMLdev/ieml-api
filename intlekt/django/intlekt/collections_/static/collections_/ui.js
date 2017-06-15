@@ -59,7 +59,7 @@ $(function() {
         var docs = Object.keys(documents);
         var index;
 
-        for(let doc in collection.documents) {
+        for(let doc in collection.posts) {
             index = docs.indexOf(doc);
             docs.splice(index, 1);
         }
@@ -70,8 +70,8 @@ $(function() {
     function collectionTags(collection) {
         var tags = new Set([]);
 
-        for (let id in collection.documents) {
-            for(let tag of collection.documents[id].tags) {
+        for (let id in collection.posts) {
+            for(let tag of collection.posts[id].tags) {
                 tags.add(tag);
             }
         }
@@ -165,7 +165,7 @@ $(function() {
     }
 
     function toggleDocumentVisibility(id, collection, visible) {
-        collection.documents[id].hidden = !visible;
+        collection.posts[id].hidden = !visible;
 
         api.updateCollection(
             collection,
@@ -301,8 +301,8 @@ $(function() {
         var li, a, span, collectedDoc;
         $('#collection-documents').empty();
 
-        for(let docId in collection.documents) {
-            collectedDoc = collection.documents[docId];
+        for(let docId in collection.posts) {
+            collectedDoc = collection.posts[docId];
 
             li = document.createElement('li');
 
@@ -433,7 +433,7 @@ $(function() {
 
     function renderCollectedDocument(id, collection) {
         var form = $('#edit-document-form');
-        var doc = collection.documents[id];
+        var doc = collection.posts[id];
 
         for(let key in doc) {
             form.find('*[name="' + key + '"]').val(doc[key]);
@@ -529,7 +529,7 @@ $(function() {
         collectedDoc.image = form.find('*[name="image"]').val();
         collectedDoc.description = form.find('*[name="description"]').val();
 
-        if(!collectedDoc.collected_on) delete collectedDoc.collected_on;
+        if(!collectedDoc.collected_on) collectedDoc.collected_on = new Date().toJSON().split('T')[0];
         if(!collectedDoc.image) collectedDoc.image = null;
         if(!collectedDoc.url) collectedDoc.url = null;
 
@@ -632,8 +632,9 @@ $(function() {
         function createDocumentCallback(doc) {
             documents[doc.id] = doc;
 
+            collectedDoc.document = doc.id;
             var col = currentCollection();
-            col.documents[doc.id] = collectedDoc;
+            col.posts[doc.id] = collectedDoc;
 
             api.updateCollection(
                 col,
@@ -676,7 +677,8 @@ $(function() {
         var id = $('#document').data('id');
         var col = currentCollection();
 
-        col.documents[id] = data;
+        data.document = id;
+        col.posts[id] = data;
 
         api.updateCollection(col, function(collection) {
             collections[collection.id] = collection; 
