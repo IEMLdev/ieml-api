@@ -99,3 +99,6 @@ class Term(IEMLObjects):
             return False
 
         return item.script in self.script
+
+    def __len__(self):
+        return self.script.cardinal

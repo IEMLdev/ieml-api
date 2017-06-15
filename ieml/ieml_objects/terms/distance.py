@@ -36,6 +36,7 @@ def load_distance_matrix(version):
         #                                            'table_4', 'table_5']).astype(np.float32).todense()
 
         graph_ethy = 1.0/graph_ethy
+
         graph_ethy[graph_ethy == np.inf] = 0
 
         # dist_m = shortest_path(graph_ethy, directed=False, unweighted=True)
@@ -118,28 +119,48 @@ def _test_diagram(t):
                                                        ', '.join(t.relations.to(tt))))
 
 
-def _test_term(t):
-    print("Distance from term %s -- %s"%(str(t), t.translation['fr']))
-    other = sorted((distance(t, t1) ,t1) for t1 in Dictionary() if not t1.script.paradigm)
+def _test_term(t, distance_f=distance):
+    print("Distance from term %s -- %s"%(str(t), t.translations['fr']))
+
+    other = sorted((distance_f(t, t1) ,t1) for t1 in Dictionary() if not t1.script.paradigm)
     kkk = [t for t in other if t[0][1] < 2.0]
     for d, tt in kkk[:30]:
-        print("%s (%.2f, %.2f, %.2f) - %s [%s]"%(str(tt), d[0], d[1], d[2], tt.translation['fr'],
+        print("%s (%.2f, %.2f, %.2f) - %s [%s]"%(str(tt), d[0], d[1], d[2], tt.translations['fr'],
                                                  ', '.join(t.relations.to(tt))))
+
+__graph_ethy = None
+def distance2(t0, t1):
+    global __graph_ethy
+    if __graph_ethy is None:
+        __graph_ethy = Dictionary().relations_graph({
+            'etymology': 1.0, # 1 to 0 (1/(layer0 - layer1)**2
+            'inclusion': 1.0, # 0 or 1
+            'siblings' : 1.5, # 0 or 1
+            'table'    : 1/3  # 0 to 6
+        })
+        __graph_ethy = np.exp(-__graph_ethy)
+        for i in range(__graph_ethy.shape[0]):
+            __graph_ethy[i, i] = 0
+
+    v = __graph_ethy[t0.index, t1.index] - __graph_ethy[t1.index, :]
+    return __graph_ethy[t0.index, t1.index]#np.sum(np.dot(v, v.transpose()))
+
+
+def _test_term2(t):
+    print("Distance from term %s -- %s, with tanh distance"%(str(t), t.translations['fr']))
+
+    other = sorted((distance2(t, t1), t1) for t1 in Dictionary() if not t1.script.paradigm)
+    kkk = [t for t in other if t[0] < 1.0]
+    for d, tt in kkk[:30]:
+        print("%s (%.2f) - %s [%s]"%(str(tt), d, tt.translations['fr'], ', '.join(t.relations.to(tt))))
 
 
 if __name__ == '__main__':
-
-    # _test_term(term("wa."))
-    _test_diagram(term("l.-y.-s.y.-'"))
+    print(distance2(term(312), term(3112)))
+    _test_term2(term(1692))
+    # _test_diagram(term("l.-y.-s.y.-'"))
     # print(term("j.-'U:.-'k.o.-t.o.-',").relations.to(term("[j.-'B:.-'k.o.-t.o.-',]")))
     # print(distance(term("j.-'U:.-'k.o.-t.o.-',"), term("k.o.-t.o.-'")))
-
-    graph_ethy = Dictionary().relations_graph({
-        'etymology': 2.0,
-        'inclusion': 1.0,
-        'siblings': 1.5,
-        'table': 1/3
-    })
 
     # print(distance(term("E:U:.k.-"), term("E:U:.m.-")))
     # print(distance(term("y."), term("j.")))
