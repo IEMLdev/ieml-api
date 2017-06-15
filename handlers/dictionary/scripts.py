@@ -73,7 +73,13 @@ def drupal_dictionary_dump():
                 'IEML': d['IEML'],
                 'FR': d['FR'],
                 'EN': d['EN'],
-                'INDEX': d['INDEX']
+                'INDEX': d['INDEX'],
+                'CARDINALITY': d['SIZE'],
+                'LAYER': d['LAYER'],
+                'RANK': d['RANK'],
+                'CLASS': d['CLASS'][0] + d['CLASS'][1:].lower(),
+                'PARADIGM': d['PARADIGM'],
+                'ROOT_PARADIGM': d['ROOT_PARADIGM'],
             } for d in _drupal_utils['drupal_dico']]
 
 
@@ -402,3 +408,4 @@ def fr_tag_exists(tag_fr, version):
 
 def get_last_version():
     return str(sorted(get_available_dictionary_version())[-1])
+
