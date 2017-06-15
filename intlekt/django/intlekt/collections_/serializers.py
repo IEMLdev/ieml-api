@@ -1,3 +1,5 @@
+import pycountry
+
 from rest_framework_mongoengine import serializers as mongoserializers
 from rest_framework_mongoengine import fields as mongofields
 from rest_framework import serializers
@@ -17,7 +19,14 @@ def validate_collected_document_keys(documents):
                 "The key '{0}' must be equal to the 'document' field value "
                 "'{1}'.".format(key, collected_document['document'].id)
             )
-            
+
+
+def validate_language(language):
+    try:
+        pycountry.languages.get(alpha_2=language)
+    except KeyError:
+        raise serializers.ValidationError('Bad format. See ISO 639-1.')
+
 
 class CollectedDocumentSerializer(mongoserializers.EmbeddedDocumentSerializer):
     class Meta:
@@ -61,6 +70,7 @@ class DocumentSerializer(mongoserializers.DocumentSerializer):
                 'input_formats': ['%Y-%m-%d'],
             },
             'authors': {'validators': [validate_set]},
+            'language': {'validators': [validate_language]},
         }
 
 

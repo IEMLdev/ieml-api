@@ -24,3 +24,5 @@ django
 djangorestframework
 django-rest-framework-mongoengine
 blinker
+drf-nested-routers
+pycountry
