@@ -182,7 +182,7 @@ $(function() {
             function(data) {
                 renderDocumentList(data);
                 if(visible) {
-                    renderPost(post, data);
+                    renderPost(post.document, data);
                 } else {
                     $('#post').hide();
                 }
@@ -334,12 +334,12 @@ $(function() {
                     });
                 })(a);
 
-                (function(post, collection) {
+                (function(id, collection) {
                     $(a).click(function(e) {
                         e.preventDefault();
-                        renderPost(post, collection);
+                        renderPost(id, collection);
                     });
-                })(post, collection);
+                })(docId, collection);
 
                 li.appendChild(a);
 
@@ -458,6 +458,7 @@ $(function() {
     }
 
     function renderCollectionForm(collection) {
+        $('#edit-collection-form input[name="id"]').val(collection.id);
         $('#edit-collection-form input[name="title"]').val(collection.title);
         $('#edit-collection-form input[name="authors"]').val(authorsToStr(collection.authors));
     }
@@ -483,7 +484,8 @@ $(function() {
         $('#collection').data('id', collection.id);
     }
 
-    function renderPost(post, collection) {
+    function renderPost(id, collection) {
+        var post = collection.posts[id];
         var form = $('#edit-post-form');
 
         for(let key in post) {
@@ -589,6 +591,7 @@ $(function() {
     function parseCollectionForm(form) {
         var data = {};
 
+        data.id = form.find('*[name="id"]').val();
         data.title = form.find('*[name="title"]').val().trim();
         data.authors = authorsToArray(form.find('*[name="authors"]').val());
 
@@ -615,6 +618,7 @@ $(function() {
     function parsePostForm(form) {
         var data = {};
         
+        data.document = form.find('*[name="document"]').val();
         data.collected_on = form.find('*[name="collected_on"]').val();
         data.url = form.find('*[name="url_collected"]').val();
         data.tags = tagsToArray(form.find('*[name="tags"]').val());
@@ -684,14 +688,15 @@ $(function() {
         e.preventDefault();
         var form = $(this);
 
-        var data = parseCollectionForm(form);
-        data.id = $('#collection').data('id');
-
         api.updateCollection(
-            data,
+            parseCollectionForm(form),
             function(data) {
-                collections[data.id] = data;
-                renderCollectionList();
+                api.listCollections(
+                    renderCollectionList,
+                    function(err, details) {
+                        displayError('Unable to load collections: ' + err);
+                    }
+                );
                 renderCollection(data);
                 displayMessage('Collection updated successfully!');
             },
@@ -719,7 +724,7 @@ $(function() {
                 currentCollection,
                 function(collection) {
                     renderDocumentList(collection);
-                    renderPost(post, collection);
+                    renderPost(doc.id, collection);
                     cleanForm(form);
                     displayMessage('Document collected successfully!');
                     $('#collect-document').hide();
@@ -756,17 +761,13 @@ $(function() {
         e.preventDefault();
 
         var form = $(this);
-        var data = parseCollectedDocumentForm(form);
-
-        // TODO: read id from hidden field
-        var id = $('#post').data('document');
-
-        data.document = id;
-        currentCollection.posts[id] = data;
+        var data = parsePostForm(form);
+        // TODO: use post endpoint
+        currentCollection.posts[data.document] = data;
 
         api.updateCollection(currentCollection, function(collection) {
             cleanForm(form);
-            renderPost(data, collection);
+            renderPost(data.document, collection);
             displayMessage('Post updated successfully!');
         }, function(err, details) {
             displayError('Unable to update document: ' + err);
@@ -788,7 +789,6 @@ $(function() {
             displayFormErrors(form, details);
         });
     });
-
 
     $('#add-collection-button').click(function(e) {
         $('#create-collection').toggle();

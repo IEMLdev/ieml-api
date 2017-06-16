@@ -35,8 +35,10 @@
 </div>
 
 <div id="main">
-    <div id="collection" data-id="">
+    <div id="collection">
         <form id="edit-collection-form" method="POST" action="">
+            <input type="hidden" name="id" />
+
             <label>Title:</label>
             <input type="text" name="title" />
             <div class="field-errors"></div>
@@ -157,8 +159,10 @@
 
         <ul id="collection-posts"></ul>
 
-        <div id="post" data-id="">
+        <div id="post">
             <form id="edit-post-form" method="POST" action="">
+                <input type="hidden" name="document" />
+
                 <label>Collected on:</label>
                 <input type="date" name="collected_on" />
                 <div class="field-errors"></div>
