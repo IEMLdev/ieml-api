@@ -48,3 +48,15 @@ a.show{
 #tag-editor td {
     border: 1px solid #000;
 }
+
+#usl-hint table td {
+    border: 1px solid #000;
+}
+
+.no_usl {
+    color: red;
+}
+
+.selected_usl {
+    color: red;
+}

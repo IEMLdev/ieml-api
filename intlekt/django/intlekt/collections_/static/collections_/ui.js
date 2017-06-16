@@ -124,26 +124,28 @@ $(function() {
         if(!tag.id) {
             throw 'Cannot remove an USL to the tag ' + tagText;
         }
-        if(!tag.usls.delete(usl)) {
+        var index = tag.usls.indexOf(usl);
+        if(index == -1) {
             throw 'Cannot remove an USL to the tag ' + tagText;
         }
 
+        tag.usls.splice(index, 1);
+
         // No USLS anymore, delete tag
-        if(tag.usls.size == 0) {
+        if(tag.usls.length == 0) {
             api.deleteTag(tag.id, success, error);
             return;
         }
         
-        tag.usls = [...tag.usls];
         api.updateTag(tag, success, error);
     }
 
     function addUSLToTag(usl, tag, success, error) {
-        if(tag.usls.has(usl)) {
+        if(tag.usls.indexOf(usl) != -1) {
             throw 'The USL is already linked to the tag.';
         }
 
-        tag.usls.add(usl);
+        tag.usls.push(usl);
         var apiCall;
 
         if(!tag.id) {
@@ -153,7 +155,6 @@ $(function() {
             apiCall = api.updateTag;
         }
 
-        tag.usls = [...tag.usls];
         apiCall(tag, success, error);
     }
 
@@ -494,32 +495,12 @@ $(function() {
         $('#collection').data('id', collection.id);
     }
 
-    function renderUSLHint(usls) {
-        var table = $('#usl-hint');
-        var messages = [];
-
-        var hint = [];
-
-        for(let text in usls) {
-            if(usls[text].length == 0) {
-                messages.push('The tag "' + text + '" has no USLs.');
-                continue;
-            }
-            if(usls[text].length > 1) {
-                messages.push(
-                    'The tag "' + text + ' has multiple USLs: ' +
-                    usls[text].join(', ')
-                );
-                continue;
-            }
-            hint.push(usls[text][0]);
-        }
-        
-        hint = hint.join(USL_CONCAT_CHAR);
-        div.html('Hint: ' + hint);
-        for(msg of messages) {
-            div.append('<div>' + msg + '</div>');
-        }
+    function renderUSLBuilder(usls) {
+        var builder = USLBuilder(usls, USL_CONCAT_CHAR);
+        var els = builder.render();
+        $('#usl-hint').empty();
+        $('#usl-hint').append(els.hintDiv);
+        $('#usl-hint').append(els.table);
     }
 
     function renderPost(id, collection) {
@@ -533,7 +514,7 @@ $(function() {
 
         postUSLs(
             post,
-            renderUSLHint,
+            renderUSLBuilder,
             function(err, details) {
                 displayErrors('Unable to build USL hint: ' + err);
             }
