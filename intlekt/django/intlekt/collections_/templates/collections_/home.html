@@ -167,11 +167,6 @@
                 <input type="date" name="collected_on" />
                 <div class="field-errors"></div>
 
-                <label>USL:</label>
-
-                <input type="text" name="usl" />
-                <div class="field-errors"></div>
-
                 <label>Tags (comma-separated):</label>
                 <input type="text" name="tags" placeholder="tag0, tag1, ..." />
                 <div class="field-errors"></div>
@@ -187,6 +182,11 @@
                 <label>Description:</label>
                 <textarea name="description"></textarea>
                 <div class="field-errors"></div>
+
+                <label>USL:</label>
+                <input type="text" name="usl" />
+                <div class="field-errors"></div>
+                <div id="usl-hint"></div>
 
                 <input type="submit" value="Update" />
             </form>

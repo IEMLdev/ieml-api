@@ -5,8 +5,9 @@ $(function() {
     var API_ROOT = 'http://127.0.0.1:8000/collections/';
     var SCOOPIT_DRIVER_ID = '593ef18cb15ab3332c49c945';
     var DEFAULT_DOCUMENT_TITLE = 'Unknown title';
-    var api = API(API_ROOT);
+    var USL_CONCAT_CHAR = '+';
 
+    var api = API(API_ROOT);
     var currentCollection;
 
     // Helpers
@@ -27,6 +28,22 @@ $(function() {
     var authorsToArray = strToArray;
     var tagsToArray = strToArray;
     var keywordsToArray = strToArray;
+
+    function postUSLs(post, success, error) {
+        api.listTags(function(tags) {
+            var usls = {};
+
+            for(let text of post.tags) {
+                if(tags[text] != undefined) {
+                    usls[text] = tags[text].usls;
+                } else {
+                    usls[text] = [];
+                }
+            }
+
+            success(usls);
+        }, error);
+    }
 
     function collectedSourceToStr(collectedSource, callback) {
         api.getSourceDriver(
@@ -87,25 +104,20 @@ $(function() {
         api.getTag(
             text,
             function(tag) {
-                if(tag == undefined) {
-                    return success({
-                        id: '',
-                        text: text,
-                        usls: new Set([])
-                    });
+                if(tag) {
+                    return success(tag);
                 }
 
-                success(jsonTagToJS(tag));
+                return success({
+                    id: '',
+                    text: text,
+                    usls: []
+                });
             },
             function(err, details) {
                 error(err, details);
             }
         );
-    }
-
-    function jsonTagToJS(tag) {
-        tag.usls = new Set(tag.usls);
-        return tag; 
     }
 
     function removeUSLFromTag(usl, tag, success, error) {
@@ -265,51 +277,49 @@ $(function() {
         var tr, td, form, tag;
 
         for(let text of tags) {
-            (function(text) {
-                textToTag(
-                    text,
-                    function(tag) {
-                        tr = $(document.createElement('tr'));
+            textToTag(
+                text,
+                function(tag) {
+                    tr = $(document.createElement('tr'));
 
-                        td = document.createElement('td');
-                        td.innerHTML = text;
-                        tr.append(td);
+                    td = document.createElement('td');
+                    td.innerHTML = tag.text;
+                    tr.append(td);
 
-                        td = $(document.createElement('td'));
-                        form = buildAddUSLForm();
-                        (function(tag, form) {
-                            form.submit(function(e) {
-                                e.preventDefault();
-                                var data = parseAddUSLForm(form);
+                    td = $(document.createElement('td'));
+                    form = buildAddUSLForm();
+                    (function(tag, form) {
+                        form.submit(function(e) {
+                            e.preventDefault();
+                            var data = parseAddUSLForm(form);
 
-                                try {
-                                    addUSLToTag(
-                                        data.usl, tag,
-                                        function(tag) {
-                                            displayMessage('USL added successfully to tag!');
-                                            cleanForm(form);
-                                            renderTagEditor(tags);
-                                        },
-                                        function(err, details) {
-                                            displayError('Unable to update tag: ' + err);
-                                        }
-                                    );
-                                } catch(err) {
-                                    displayFormErrors(form, {usl: err});
-                                }
-                            });
-                        })(tag, form);
-                        td.append(form);
-                        td.append(buildTagUSLList(tag, tags));
-                        tr.append(td);
+                            try {
+                                addUSLToTag(
+                                    data.usl, tag,
+                                    function(tag) {
+                                        displayMessage('USL added successfully to tag!');
+                                        cleanForm(form);
+                                        renderTagEditor(tags);
+                                    },
+                                    function(err, details) {
+                                        displayError('Unable to update tag: ' + err);
+                                    }
+                                );
+                            } catch(err) {
+                                displayFormErrors(form, {usl: err});
+                            }
+                        });
+                    })(tag, form);
+                    td.append(form);
+                    td.append(buildTagUSLList(tag, tags));
+                    tr.append(td);
 
-                        table.append(tr);
-                    },
-                    function(err, details) {
-                        displayError('Unable to load tags: ' + err);
-                    }
-                );
-            })(text);
+                    table.append(tr);
+                },
+                function(err, details) {
+                    displayError('Unable to load tags: ' + err);
+                }
+            );
         }
     }
 
@@ -484,6 +494,34 @@ $(function() {
         $('#collection').data('id', collection.id);
     }
 
+    function renderUSLHint(usls) {
+        var table = $('#usl-hint');
+        var messages = [];
+
+        var hint = [];
+
+        for(let text in usls) {
+            if(usls[text].length == 0) {
+                messages.push('The tag "' + text + '" has no USLs.');
+                continue;
+            }
+            if(usls[text].length > 1) {
+                messages.push(
+                    'The tag "' + text + ' has multiple USLs: ' +
+                    usls[text].join(', ')
+                );
+                continue;
+            }
+            hint.push(usls[text][0]);
+        }
+        
+        hint = hint.join(USL_CONCAT_CHAR);
+        div.html('Hint: ' + hint);
+        for(msg of messages) {
+            div.append('<div>' + msg + '</div>');
+        }
+    }
+
     function renderPost(id, collection) {
         var post = collection.posts[id];
         var form = $('#edit-post-form');
@@ -492,6 +530,14 @@ $(function() {
             form.find('*[name="' + key + '"]').val(post[key]);
         }
         form.find('*[name="url_collected"]').val(post.url);
+
+        postUSLs(
+            post,
+            renderUSLHint,
+            function(err, details) {
+                displayErrors('Unable to build USL hint: ' + err);
+            }
+        );
 
         api.getDocument(
             post.document,
