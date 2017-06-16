@@ -5,7 +5,7 @@ from mongoengine import signals
 
 class Collection(Document):
     title = fields.StringField(unique=True,)
-    authors = fields.ListField(fields.StringField(), required=False, blank=True, default=list,)
+    authors = fields.ListField(fields.StringField(), blank=True, default=list,)
     created_on = fields.DateTimeField(default=timezone.now, blank=True,)
     updated_on = fields.DateTimeField(default=timezone.now, blank=True,)
     posts = fields.MapField(fields.EmbeddedDocumentField('Post'), blank=True,)

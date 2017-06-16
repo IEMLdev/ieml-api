@@ -10,4 +10,4 @@ USLField = fields.StringField
 class Tag(Document):
     # The meaning can depend on the context so a tag may have multiple usls
     usls = fields.ListField(USLField(),)
-    text = fields.StringField(required=True, unique=True,)
+    text = fields.StringField(unique=True,)
