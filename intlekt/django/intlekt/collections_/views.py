@@ -17,13 +17,23 @@ def scoopit(request):
 
 
 
+from django.utils.encoding import smart_text
 from rest_framework_mongoengine import viewsets as mongoviewsets
 from rest_framework import viewsets
 from rest_framework import status
+from rest_framework.utils import formatting
 from rest_framework.decorators import detail_route
 
 from . import models
 from . import serializers
+
+
+def get_modelview_description(model, html=False):
+    description = model.__doc__
+    description = formatting.dedent(smart_text(description))
+    if html:
+        return formatting.markup_description(description)
+    return description
 
 
 class PostDoesNotExist(LookupError): pass
@@ -32,6 +42,10 @@ class PostDoesNotExist(LookupError): pass
 class PostViewSet(viewsets.ViewSet):
     def get_serializer(self, *args, **kwargs):
         return serializers.PostSerializer(*args, **kwargs)
+
+    @classmethod
+    def get_view_description(cls, html=False):
+        return get_modelview_description(models.Post, html=html)
 
     @classmethod
     def get_post(cls, collection_id, post_id):
@@ -176,22 +190,26 @@ class PostViewSet(viewsets.ViewSet):
 
 
 class CollectionViewSet(mongoviewsets.ModelViewSet):
-    """A group of documents related to the same topic."""
-
     queryset = models.Collection.objects.all()
     lookup_field = 'id'
     serializer_class = serializers.CollectionSerializer
+
+    @classmethod
+    def get_view_description(cls, html=False):
+        return get_modelview_description(models.Collection, html=html)
 
     def get_queryset(self):
         return models.Collection.objects.all()
 
 
 class DocumentViewSet(mongoviewsets.ModelViewSet):
-    """A document to be collected. Can be a tweet, an article, a pdf..."""
-
     queryset = models.Document.objects.all()
     lookup_field = 'id'
     serializer_class = serializers.DocumentSerializer
+
+    @classmethod
+    def get_view_description(cls, html=False):
+        return get_modelview_description(models.Document, html=html)
 
     def get_queryset(self):
         return models.Document.objects.all()
@@ -202,6 +220,10 @@ class TagViewSet(mongoviewsets.ModelViewSet):
     lookup_field = 'id'
     serializer_class = serializers.TagSerializer
 
+    @classmethod
+    def get_view_description(cls, html=False):
+        return get_modelview_description(models.Tag, html=html)
+
     def get_queryset(self):
         return models.Tag.objects.all()
 
@@ -211,6 +233,10 @@ class SourceViewSet(mongoviewsets.ModelViewSet):
     lookup_field = 'id'
     serializer_class = serializers.SourceSerializer
 
+    @classmethod
+    def get_view_description(cls, html=False):
+        return get_modelview_description(models.Source, html=html)
+
     def get_queryset(self):
         return models.Source.objects.all()
 
@@ -219,6 +245,10 @@ class SourceDriverViewSet(mongoviewsets.ModelViewSet):
     queryset = models.SourceDriver.objects.all()
     lookup_field = 'id'
     serializer_class = serializers.SourceDriverSerializer
+
+    @classmethod
+    def get_view_description(cls, html=False):
+        return get_modelview_description(models.SourceDriver, html=html)
 
     def get_queryset(self):
         return models.SourceDriver.objects.all()

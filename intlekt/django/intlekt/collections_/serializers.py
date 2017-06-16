@@ -43,12 +43,6 @@ class PostSerializer(mongoserializers.EmbeddedDocumentSerializer):
 
 
 class CollectionSerializer(mongoserializers.DocumentSerializer):
-    posts = mongofields.DictField(
-        child=PostSerializer(),
-        required=False,
-        validators=[validate_posts_dict],
-    )
-
     class Meta:
         model = models.Collection
         fields = '__all__'
@@ -57,6 +51,10 @@ class CollectionSerializer(mongoserializers.DocumentSerializer):
             'created_on': {'format': '%Y-%m-%d'},
             'updated_on': {'format': '%Y-%m-%d'},
             'authors': {'validators': [validate_set]},
+            'posts': {
+                'child': PostSerializer(),
+                'validators': [validate_posts_dict],
+            }
         }
 
 
