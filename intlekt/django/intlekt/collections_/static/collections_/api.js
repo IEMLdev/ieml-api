@@ -1,11 +1,11 @@
 var API = function(API_ROOT) {
     var module = {},
         cache = {
-            'collections': {},
-            'documents': {},
-            'sources': {},
-            'source_drivers': {},
-            'tags': {}
+            'collections': null,
+            'documents': null,
+            'sources': null,
+            'source_drivers': null,
+            'tags': null
         };
     
     function cacheBuilderFactory(lookupField) {
@@ -22,7 +22,7 @@ var API = function(API_ROOT) {
 
     function list(name, cacheBuilder) {
         return function(success, error) {
-            if (!_.isEmpty(cache[name])) {
+            if (cache[name] != null) {
                 return success(cache[name]);
             }
 
@@ -30,7 +30,8 @@ var API = function(API_ROOT) {
                 url: API_ROOT + name + '/',
             })
             .done(function(data) {
-                cache[name] = cacheBuilder(data); success(cache[name]);
+                cache[name] = cacheBuilder(data); 
+                success(cache[name]);
             })
             .fail(function(jqXHR, textStatus, errorThrown) {
                 error(errorThrown, JSON.parse(jqXHR.responseText));
