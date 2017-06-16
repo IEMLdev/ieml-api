@@ -98,7 +98,7 @@
                         <td>
                             <p>An existing document:</p>
 
-                            <select name="documents"></select>
+                            <select name="id"></select>
                             <div class="field-errors"></div>
 
                             <p>Or a new one:</p>
@@ -117,6 +117,14 @@
 
                             <label>URL:</label>
                             <input type="url" name="url" />
+                            <div class="field-errors"></div>
+
+                            <label>Language:</label>
+                            <input type="text" name="language" />
+                            <div class="field-errors"></div>
+
+                            <label>Keywords (comma-separated):</label>
+                            <input type="text" name="keywords" placeholder="keyword1, keyword2, ..." />
                             <div class="field-errors"></div>
                         </td>
                         <td>
@@ -156,6 +164,7 @@
                 <div class="field-errors"></div>
 
                 <label>USL:</label>
+
                 <input type="text" name="usl" />
                 <div class="field-errors"></div>
 
@@ -177,6 +186,37 @@
 
                 <input type="submit" value="Update" />
             </form>
+            
+            <form id="edit-document-form" method="POST" action="">
+                <input type="hidden" name="id" />
+
+                <label>Title:</label>
+                <input type="text" name="title" />
+                <div class="field-errors"></div>
+
+                <label>Authors (comma-separated):</label>
+                <input type="text" name="authors" placeholder="author1, author2, ..." />
+                <div class="field-errors"></div>
+
+                <label>Created on:</label>
+                <input type="date" name="created_on" />
+                <div class="field-errors"></div>
+
+                <label>URL:</label>
+                <input type="url" name="url" />
+                <div class="field-errors"></div>
+
+                <label>Language:</label>
+                <input type="text" name="language" />
+                <div class="field-errors"></div>
+
+                <label>Keywords (comma-separated):</label>
+                <input type="text" name="keywords" placeholder="keyword1, keyword2, ..." />
+                <div class="field-errors"></div>
+
+                <input type="submit" value="Update" />
+            </form>
+
         </div>
     </div>
 </div>
@@ -184,6 +224,7 @@
 
 {% block js %}
     <script src="{% static "collections_/jquery-3.2.1.min.js" %}"></script>
+    <script src="{% static "collections_/underscore-min.js" %}"></script>
     <script src="{% static "collections_/api.js" %}"></script>
     <script src="{% static "collections_/ui.js" %}"></script>
 {% endblock %}

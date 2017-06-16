@@ -11,19 +11,22 @@ $(function() {
 
     // Helpers
     
-    function authorsToStr(authors) {
-        return authors.join(', ');
+    function listToStr(list) {
+        return list.join(', ');
     }
 
-    function authorsToArray(authors) {
-        var array = authors.split(',').map(function(s) { return s.trim(); });
-        // If authors is an empty string, array == [''], but we want []
+    var authorsToStr = listToStr;
+    var keywordsToStr = listToStr;
+
+    function strToArray(str) {
+        var array = str.split(',').map(function(s) { return s.trim(); });
+        // If str is an empty string, array == [''], but we want []
         return !array[0] ? [] : array;
     }
 
-    function tagsToArray(tags) {
-        return authorsToArray(tags);
-    }
+    var authorsToArray = strToArray;
+    var tagsToArray = strToArray;
+    var keywordsToArray = strToArray;
 
     function collectedSourceToStr(collectedSource, callback) {
         api.getSourceDriver(
@@ -488,11 +491,31 @@ $(function() {
         }
         form.find('*[name="url_collected"]').val(post.url);
 
-        $('#post').show();
-        $('#post').data('document', post.document);
+        api.getDocument(
+            post.document,
+            function(doc) {
+                renderDocumentForm(doc);
+                $('#post').show();
+                $('#post').data('document', post.document);
+            },
+            function(err, details) {
+                displayError('Unable to load document: ' + err);
+            }
+        );
 
-        // renderTagEditor(post.tags);
+        renderTagEditor(post.tags);
     }
+    
+    function renderDocumentForm(doc) {
+        var form = $('#edit-document-form');
+
+        for(let key in doc) {
+            form.find('*[name="' + key + '"]').val(doc[key]);
+        }
+        form.find('*[name="authors"]').val(authorsToStr(doc.authors));
+        form.find('*[name="keywords"]').val(keywordsToStr(doc.keywords));
+    }
+
 
     function renderCollectDocumentForm() {
         api.listDocuments(function(documents) {
@@ -571,6 +594,23 @@ $(function() {
 
         return data;
     }
+    
+    function parseDocumentForm(form) {
+        var doc = {};
+
+        doc.id = form.find('*[name="id"]').val();
+        doc.title = form.find('*[name="title"]').val().trim();
+        doc.authors = authorsToArray(form.find('*[name="authors"]').val());
+        doc.created_on = form.find('*[name="created_on"]').val();
+        doc.url = form.find('*[name="url"]').val();
+        doc.keywords = keywordsToArray(form.find('*[name="keywords"]').val());
+        doc.language = form.find('*[name="language"]').val();
+
+        if(!doc.created_on) doc.created_on = null;
+        if(!doc.language) doc.language = null;
+
+        return doc;
+    }
 
     function parsePostForm(form) {
         var data = {};
@@ -589,18 +629,8 @@ $(function() {
     }
 
     function parseCollectDocumentForm(form) {
-        var doc = {};
-        
-        doc.id = form.find('*[name="documents"]').val();
-        doc.title = form.find('*[name="title"]').val().trim();
-        doc.authors = authorsToArray(form.find('*[name="authors"]').val());
-        doc.created_on = form.find('*[name="created_on"]').val();
-        doc.url = form.find('*[name="url"]').val();
-
-        if(!doc.created_on) doc.created_on = null;
-
         return {
-            doc: doc,
+            doc: parseDocumentForm(form),
             post: parsePostForm(form)
         };
     }
@@ -727,6 +757,8 @@ $(function() {
 
         var form = $(this);
         var data = parseCollectedDocumentForm(form);
+
+        // TODO: read id from hidden field
         var id = $('#post').data('document');
 
         data.document = id;
@@ -735,12 +767,28 @@ $(function() {
         api.updateCollection(currentCollection, function(collection) {
             cleanForm(form);
             renderPost(data, collection);
+            displayMessage('Post updated successfully!');
+        }, function(err, details) {
+            displayError('Unable to update document: ' + err);
+            displayFormErrors(form, details);
+        });
+    });
+    
+    $('#edit-document-form').submit(function(e) {
+        e.preventDefault();
+
+        var form = $(this);
+        var data = parseDocumentForm(form);
+
+        api.updateDocument(data, function(doc) {
+            cleanFormErrors(form);
             displayMessage('Document updated successfully!');
         }, function(err, details) {
             displayError('Unable to update document: ' + err);
             displayFormErrors(form, details);
         });
     });
+
 
     $('#add-collection-button').click(function(e) {
         $('#create-collection').toggle();

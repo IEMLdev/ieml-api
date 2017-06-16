@@ -22,7 +22,7 @@ var API = function(API_ROOT) {
 
     function list(name, cacheBuilder) {
         return function(success, error) {
-            if (cache[name].length) {
+            if (!_.isEmpty(cache[name])) {
                 return success(cache[name]);
             }
 
