@@ -718,11 +718,12 @@ $(function() {
 
         function createDocumentCallback(doc) {
             post.document = doc.id;
-            currentCollection.posts[doc.id] = post;
 
-            api.updateCollection(
+            api.createPost(
+                post,
                 currentCollection,
                 function(collection) {
+                    currentCollection = collection;
                     renderDocumentList(collection);
                     renderPost(doc.id, collection);
                     cleanForm(form);
@@ -761,13 +762,12 @@ $(function() {
         e.preventDefault();
 
         var form = $(this);
-        var data = parsePostForm(form);
-        // TODO: use post endpoint
-        currentCollection.posts[data.document] = data;
+        var post = parsePostForm(form);
 
-        api.updateCollection(currentCollection, function(collection) {
+        api.updatePost(post, currentCollection, function(collection) {
+            currentCollection = collection;
             cleanForm(form);
-            renderPost(data.document, collection);
+            renderPost(post.document, currentCollection);
             displayMessage('Post updated successfully!');
         }, function(err, details) {
             displayError('Unable to update document: ' + err);

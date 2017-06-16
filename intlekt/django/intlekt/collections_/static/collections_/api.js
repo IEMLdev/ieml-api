@@ -80,10 +80,33 @@ var API = function(API_ROOT) {
             });
         };
     }
+    
+    function insertPost(create) {
+        return function(obj, collection, success, error) {
+            var url = API_ROOT + 'collections/' + collection.id + '/posts/';
+            if(!create)
+                url += obj.document + '/';
+
+            $.ajax({
+                url: url,
+                method: create ? 'POST' : 'PUT',
+                data: JSON.stringify(obj),
+                contentType: 'application/json'
+            })
+            .done(function(data) {
+                cache['collections'][collection.id].posts[data.document] = data;
+                success(cache['collections'][collection.id]);
+            })
+            .fail(function(jqXHR, textStatus, errorThrown) {
+                error(errorThrown, JSON.parse(jqXHR.responseText));
+            });
+        };
+    }
 
     module.createCollection = insert('collections', 'id', true);
     module.createDocument = insert('documents', 'id', true);
     module.createTag = insert('tags', 'text', true);
+    module.createPost = insertPost(true);
 
     // TODO
     module.createCollectedDocument = function(doc, collection, success, error) {
@@ -108,6 +131,7 @@ var API = function(API_ROOT) {
     module.updateCollection = insert('collections', 'id', false);
     module.updateDocument = insert('documents', 'id', false);
     module.updateTag = insert('tags', 'text', false);
+    module.updatePost = insertPost(false);
 
     module.requestSource = function(collection, driver, params, success, error) {
         params.collection_id = collection.id;
