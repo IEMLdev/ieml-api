@@ -2,7 +2,8 @@ import unittest
 
 from ieml.ieml_objects.parser.parser import IEMLParser
 from ieml.ieml_objects.texts import Text
-from ieml.ieml_objects.tools import RandomPoolIEMLObjectGenerator, term
+from ieml.ieml_objects.tools import RandomPoolIEMLObjectGenerator
+from ieml.ieml_objects.terms import term
 
 
 class TestPropositionParser(unittest.TestCase):

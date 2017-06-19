@@ -26,3 +26,4 @@ django-rest-framework-mongoengine
 blinker
 drf-nested-routers
 pycountry
+boto3

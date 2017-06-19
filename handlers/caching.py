@@ -33,6 +33,7 @@ class cached(object):
 
     def __call__(self, f):
         def decorator(*args, **kwargs):
+
             cached_value = cache.get(self.cache_key)
             if cached_value is None:
                 cached_value = f(*args, **kwargs)
@@ -53,9 +54,10 @@ class memoized(object):
 
     def __call__(self, f):
         def decorator(*args, **kwargs):
-            key = args + (kwd_mark, self.cache_key) + tuple(sorted(kwargs.items().__hash__()))
+            key = str((args + (kwd_mark, self.cache_key) + tuple(sorted(kwargs.items()))).__hash__())
             cached_value = cache.get(key)
             if cached_value is None:
+                print("cache miss")
                 cached_value = f(*args, **kwargs)
                 cache.set(key, cached_value, self.timeout)
             return cached_value

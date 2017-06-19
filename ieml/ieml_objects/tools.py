@@ -4,16 +4,14 @@ import itertools
 
 import functools
 from ieml.ieml_objects.commons import IEMLObjects
-from ieml.ieml_objects.exceptions import InvalidIEMLObjectArgument, TermNotFoundInDictionary
+from ieml.ieml_objects.exceptions import InvalidIEMLObjectArgument
 from ieml.ieml_objects.parser.parser import IEMLParser
-from ieml.ieml_objects.terms import Term
 
 from ieml.ieml_objects.sentences import Sentence, Clause, SuperSentence, SuperClause
 from ieml.ieml_objects.texts import Text
 from ieml.ieml_objects.words import Word, Morpheme
 from ieml.ieml_objects.exceptions import CantGenerateElement
-from ieml.script.script import Script
-from ieml.ieml_objects.dictionary import Dictionary
+from ieml.ieml_objects.terms import Term, Dictionary
 
 
 def ieml(arg):
@@ -24,26 +22,6 @@ def ieml(arg):
         return IEMLParser().parse(arg)
 
     raise ValueError("Invalid argument, c'ant instantiate an IEMLObject from %s."%str(arg))
-
-
-def term(arg):
-    if isinstance(arg, Term):
-        return arg
-
-    if isinstance(arg, int):
-        return Dictionary().index[arg]
-
-    if isinstance(arg, str):
-        if arg[0] == '[' and arg[-1] == ']':
-            arg = arg[1:-1]
-
-    if isinstance(arg, Script) or isinstance(arg, str):
-        d = Dictionary()
-        if arg in d.terms:
-            return d.terms[arg]
-
-    print("Invalid argument for term creation %s (or not in dictionary)"%str(arg))
-    raise TermNotFoundInDictionary(arg)
 
 
 def _loop_result(max_try):

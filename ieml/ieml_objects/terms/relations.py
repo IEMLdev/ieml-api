@@ -1,5 +1,4 @@
 from collections import OrderedDict, defaultdict
-from functools import partial
 
 NB_RELATIONS = 12
 

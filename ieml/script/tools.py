@@ -2,7 +2,6 @@ import itertools as it
 import numpy as np
 from bidict import bidict
 
-from ieml.ieml_objects.relations import INVERSE_RELATIONS
 from ieml.script.script import MultiplicativeScript, Script, AdditiveScript, remarkable_multiplication_lookup_table
 
 
@@ -131,6 +130,7 @@ def factorize(script):
 
 
 def inverse_relation(relation_name):
+    from ieml.ieml_objects.terms.relations import INVERSE_RELATIONS
     return INVERSE_RELATIONS[relation_name]
 
 

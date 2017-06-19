@@ -2,7 +2,7 @@ from unittest.case import TestCase
 
 from handlers.dictionary.commons import relations_order
 from handlers.dictionary.relations import get_relations
-from ieml.ieml_objects.tools import term
+from ieml.ieml_objects.terms import term
 from ieml.script.operator import sc
 
 

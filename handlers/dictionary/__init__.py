@@ -1,4 +1,4 @@
 from .client import authenticate
-from .relations import get_relation_visibility, get_relations, update_relations, computation_status
+from .relations import *
 from .scripts import *
-
+from .distance import *

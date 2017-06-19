@@ -2,8 +2,7 @@ import uuid
 
 import pymongo
 
-from ieml.ieml_objects.terms import Term
-from ieml.ieml_objects.tools import term
+from ieml.ieml_objects.terms import Term, term
 from models.commons import DBConnector
 from models.constants import GLOSSARIES_COLLECTION
 

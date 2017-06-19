@@ -15,6 +15,140 @@ paths:
   ##          INTLEKT         ##
   ##############################
 
+  /intlekt/dictionary/tables:
+    get:
+      operationId: handlers.get_table_for_term
+      description: |
+        Get the table for the specified term
+      tags:
+        - Dictionary
+      parameters:
+        - name: ieml
+          in: query
+          required: true
+          type: string
+      responses:
+        '200':
+          description: |
+            The tables for this script.
+          schema:
+            type: object
+            required:
+              - tables
+              - success
+            properties:
+              success:
+                type: boolean
+              tables:
+                type: array
+                items:
+                  type: object
+                  required:
+                    - parent
+                    - styles
+                    - dimension
+                    - header
+                    - cells_lines
+                    - rows
+                    - columns
+                  properties:
+                    parent:
+                      $ref: "#/definitions/term_entry"
+                    styles:
+                      type: array
+                      items:
+                        type: string
+                    dimension:
+                      type: integer
+                    header:
+                      $ref: "#/definitions/multi_cell"
+                    cells_lines:
+                      type: array
+                      items:
+                        type: array
+                        items:
+                          $ref: "#/definitions/multi_cell"
+                    rows:
+                      type: array
+                      items:
+                        $ref: "#/definitions/multi_cell"
+                    columns:
+                      type: array
+                      items:
+                        $ref: "#/definitions/multi_cell"
+  /intlekt/dictionary/relations:
+    get:
+      operationId: handlers.get_relations_for_term
+      description: |
+        Get the table for the specified term
+      tags:
+        - Dictionary
+      parameters:
+        - name: ieml
+          in: query
+          required: true
+          type: string
+      responses:
+        '200':
+          description: |
+            The relations for this script.
+          schema:
+            type: object
+            required:
+              - relations
+              - success
+            properties:
+              success:
+                type: boolean
+              relations:
+                type: object
+                required:
+                  - etymology
+                  - inclusion
+                  - sibling
+                properties:
+                  etymology:
+                    type: object
+                    properties:
+                      father:
+                        type: array
+                        items:
+                          $ref: "#/definitions/term_entry"
+                      child:
+                        type: array
+                        items:
+                          $ref: "#/definitions/term_entry"
+                  inclusion:
+                    type: object
+                    properties:
+                      contained:
+                        type: array
+                        items:
+                          $ref: "#/definitions/term_entry"
+                      contains:
+                        type: array
+                        items:
+                          $ref: "#/definitions/term_entry"
+                  sibling:
+                    type: object
+                    properties:
+                      twin:
+                        type: array
+                        items:
+                          $ref: "#/definitions/term_entry"
+                      opposed:
+                        type: array
+                        items:
+                          $ref: "#/definitions/term_entry"
+                      associated:
+                        type: array
+                        items:
+                          $ref: "#/definitions/term_entry"
+                      crossed:
+                        type: array
+                        items:
+                          $ref: "#/definitions/term_entry"
+
   /intlekt/collection/get_tags:
     post:
       operationId: handlers.collection_get_tags
@@ -623,6 +757,11 @@ paths:
       tags:
         - Drupal
       operationId: handlers.drupal_relations_dump
+      parameters:
+        - name: number
+          in: query
+          required: false
+          type: integer
       responses:
         '200':
           description: Successful response
@@ -1001,3 +1140,29 @@ definitions:
         type: integer
       favorite:
         type: integer
+
+  multi_cell:
+    required:
+      - main
+      - others
+    properties:
+      main:
+        $ref: '#/definitions/term_entry'
+      others:
+        type: array
+        items:
+          $ref: '#/definitions/term_entry'
+
+
+  term_entry:
+    required:
+      - fr
+      - en
+      - ieml
+    properties:
+      fr:
+        type: string
+      en:
+        type: string
+      ieml:
+        type: string

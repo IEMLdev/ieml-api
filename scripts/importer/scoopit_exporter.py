@@ -193,8 +193,8 @@ def scoopit_login(username, password):
 
 # save_datas(scrap_scoopit())
 datas = scrap_scoopit()
-# save_datas(datas)
-data = load_datas()
-save_datas(data)
-mongo_save_datas(data)
+save_datas(datas)
+# data = load_datas()
+# save_datas(data)
+# mongo_save_datas(data)
 # scoopit_login('pierre.levy@mac.me', '1plotin')

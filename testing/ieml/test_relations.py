@@ -1,8 +1,7 @@
 from unittest.case import TestCase
 
-from ieml.ieml_objects.dictionary import Dictionary
-from ieml.ieml_objects.relations import RELATIONS
-from ieml.ieml_objects.tools import term
+from ieml.ieml_objects.terms import Dictionary, term
+from ieml.ieml_objects.terms.relations import RELATIONS
 from ieml.script.tools import inverse_relation
 
 
@@ -43,3 +42,9 @@ class TestRelations(TestCase):
             self.assertEqual(Dictionary().rel(reltype).min(), 0)
             self.assertEqual(Dictionary().rel(reltype).max(), 1,
                              "%s -> max %d"%(reltype, Dictionary().rel(reltype).max()))
+
+    def test_table_relations(self):
+        t_p = term("M:M:.u.-")
+        t_ss = term("s.u.-")
+
+        self.assertFalse(t_p.relations.to(t_ss, relations_types=['table_2']))

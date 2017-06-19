@@ -1,0 +1,93 @@
+from collections import namedtuple
+
+from ieml.commons import LANGUAGES
+from ieml.ieml_objects.commons import IEMLObjects
+from ieml.ieml_objects.terms.relations import Relations
+from ieml.script.operator import script
+
+Translations = namedtuple('Translations', list(LANGUAGES))
+Translations.__getitem__ = lambda self, item: self.__getattribute__(item) if item in LANGUAGES \
+    else tuple.__getitem__(self, item)
+
+
+class Term(IEMLObjects):
+    closable = True
+
+    def __init__(self, s, dictionary):
+        self.dictionary = dictionary
+        self.script = script(s)
+
+        self.grammatical_class = self.script.script_class
+
+        super().__init__([])
+        self.relations = Relations(term=self, dictionary=self.dictionary)
+        self.index = None
+
+        # if term in a dictionary, those values will be set
+        self._translations = None
+        self._root = None
+
+    __hash__ = IEMLObjects.__hash__
+
+    def __eq__(self, other):
+        if not isinstance(other, Term):
+            return False
+
+        return self.script == other.script
+
+    def _do_gt(self, other):
+        return self.script > other.script
+
+    def compute_str(self, children_str):
+        return "[" + str(self.script) + "]"
+
+    @property
+    def parent(self):
+        if self in self.dictionary.parents:
+            return self.dictionary.parents[self]
+
+        return None
+
+    @property
+    def partitions(self):
+        return self.dictionary.partitions[self]
+
+    @property
+    def inhibitions(self):
+        return self.dictionary.inhibitions[self.root]
+
+    @property
+    def translations(self):
+        if self._translations is None:
+            self._translations = Translations(**{l: self.dictionary.translations[l][self] for l in LANGUAGES})
+        return self._translations
+
+    @property
+    def root(self):
+        if self._root is None:
+            self._root = self.dictionary.get_root(self.script)
+        return self._root
+
+    @property
+    def rank(self):
+        return self.dictionary.ranks[self]
+
+    @property
+    def empty(self):
+        return self.script.empty
+
+    @property
+    def defined(self):
+        return all(self.__getattribute__(p) is not None for p in
+                   ['translation', 'inhibitions', 'root', 'index', 'relations', 'rank'])
+
+    @property
+    def tables(self):
+        return self.script.tables
+
+    def __contains__(self, item):
+        from .tools import term
+        if not isinstance(item, Term):
+            item = term(item)
+
+        return item.script in self.script

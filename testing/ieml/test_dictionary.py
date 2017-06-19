@@ -1,11 +1,9 @@
 import os
 
 from ieml.commons import LANGUAGES
-from ieml.ieml_objects.dictionary import Dictionary
-from unittest.case import TestCase
+from ieml.ieml_objects.terms import Dictionary
 
-from ieml.ieml_objects.exceptions import TermNotFoundInDictionary
-from ieml.ieml_objects.tools import term
+from unittest.case import TestCase
 from ieml.script.constants import MAX_LAYER
 
 

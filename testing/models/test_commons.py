@@ -1,6 +1,6 @@
 from unittest.case import TestCase
 
-from ieml.ieml_objects.tools import term
+from ieml.ieml_objects.terms import term
 from ieml.ieml_objects.words import Word, Morpheme
 from ieml.usl import usl
 from models.commons import generate_tags

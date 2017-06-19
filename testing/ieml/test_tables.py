@@ -4,9 +4,7 @@ from collections import defaultdict
 
 import yaml
 import numpy as np
-from ieml.ieml_objects.dictionary import Dictionary
-
-from ieml.ieml_objects.tools import term
+from ieml.ieml_objects.terms import Dictionary, term
 from ieml.script.operator import sc
 from ieml.script.parser import ScriptParser
 from ieml.script.tools import factorize

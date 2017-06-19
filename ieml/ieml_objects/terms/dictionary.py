@@ -1,90 +1,128 @@
+import inspect
 import json
 from collections import defaultdict
 from itertools import product, groupby
-
+import itertools
 from bidict import bidict
 import numpy as np
 import os
 
 from scipy.sparse.csr import csr_matrix
+from ieml.ieml_objects.terms.relations import RELATIONS
+from ieml.ieml_objects.terms.version import DictionaryVersion, get_default_dictionary_version
 
-from ieml.commons import LANGUAGES
-from ieml.ieml_objects.relations import Relations, RELATIONS
 from ieml.ieml_objects.terms import Term
 from ieml.script.constants import MAX_LAYER
 from ieml.script.operator import script
 from ieml.script.script import AdditiveScript, NullScript, MultiplicativeScript
-from metaclasses import Singleton
+from config import DICTIONARY_FOLDER
+
+class InvalidDictionaryState(Exception):
+    def __init__(self, dictionary, message):
+        self.dictionary = dictionary
+        self.message = message
+
+    def __str__(self):
+        return "Invalid state dictionary state for version %s: %s"%(str(self.dictionary.version), self.message)
 
 
-# RELATION_TYPES_TO_INDEX = bidict({
-#     'CONTAINS': 0,
-#     'CONTAINED': 1,
-#     'FATHER.SUBSTANCE': 2,
-#     'FATHER.ATTRIBUTE': 3,
-#     'FATHER.MODE': 4,
-#     'CHILDREN.SUBSTANCE': 5,
-#     'CHILDREN.ATTRIBUTE': 6,
-#     'CHILDREN.MODE': 7,
-#     'OPPOSED': 8,
-#     'ASSOCIATED':9,
-#     'TWIN': 10,
-#     'CROSSED': 11
-# })
+class DictionarySingleton(type):
+    _instances = {}
 
-DICTIONARY_FOLDER = os.path.join(os.path.dirname(__file__), "../../data/dictionary")
+    def __call__(cls, *args, **kwargs):
+        if len(args) < 1 or not isinstance(args[0], (DictionaryVersion, str)):
+            version = get_default_dictionary_version()
+        elif isinstance(args[0], DictionaryVersion):
+            version = args[0]
+        elif isinstance(args[0], str):
+            version = DictionaryVersion(args[0])
+        else:
+            raise ValueError("Invalid argument for dictionary creation, expected dictionary version, not %s"%str(args[0]))
+
+        if version not in cls._instances:
+            cls._instances[version] = super(DictionarySingleton, cls).__call__(version, **kwargs)
+
+        return cls._instances[version]
 
 
-class Dictionary(metaclass=Singleton):
-    def __init__(self, cache=True):
-
+class Dictionary(metaclass=DictionarySingleton):
+    def __init__(self, version, cache=True, load=True):
         super().__init__()
 
-        self.terms = {}
-        self.translations = {l: bidict() for l in LANGUAGES}
-        self.roots = {}
-        self.relations = None
-        self.inhibitions = {}
+        if isinstance(version, str):
+            version = DictionaryVersion(version)
 
+        self.version = version
+
+        self.cache = cache
+
+        # static elements from the version object
+        self.terms = None
+        self.translations = None
+        self.roots = None
+        self.inhibitions = None
+
+        self.index = None
+
+        # computed elements stored in cache
         # terms -> int
         self.ranks = None
-
         # terms -> terms[] all the terms that decompose the key into subtable
         self.partitions = None
-
-        self.singular_sequences_map = {}
+        self.parents = None
+        # numpy array
+        self.relations = None
 
         # list layer (int) -> list of terms at this layer
         self._layers = None         # make layers stacks
-        self._index = None
         self._singular_sequences = None
+        self._singular_sequence_map = None
 
-        if cache:
-            load_dictionary(DICTIONARY_FOLDER, dictionary=self)
+        if load:
+            self.load()
+
+    @property
+    def is_build(self):
+        return all(getattr(self, attr) is not None for attr in ['terms', 'translations', 'roots', 'inhibitions',
+                                                                'index', 'ranks', 'partitions', 'parents', 'relations'])
+
+    def load(self):
+        cache_folder = os.path.join(DICTIONARY_FOLDER, 'cache')
+        cache_json = os.path.join(cache_folder, 'cache_%s.json'%(str(self.version)))
+        cache_relations = os.path.join(cache_folder, 'cache_%s_relations.npy'%(str(self.version)))
+
+        if not os.path.isdir(cache_folder):
+            os.makedirs(cache_folder)
+
+        if not os.path.isfile(cache_json) or not os.path.isfile(cache_relations) or not self.cache:
+            if not self.is_build:
+                self.build()
+
+            if self.cache:
+                print("\t[*] Saving dictionary cache to disk (%s, %s)" % (str(cache_json), str(cache_relations)))
+                state = self.__getstate__()
+                # save relations as numpy array
+                np.save(arr=state['relations'], file=cache_relations)
+                del state['relations']
+
+                with open(cache_json, 'w') as fp:
+                    json.dump(state, fp)
+        else:
+            print("\t[*] Loading dictionary from disk (%s, %s)" % (str(cache_json), str(cache_relations)))
+
+            with open(cache_json, 'r') as fp:
+                state = json.load(fp)
+
+            state['relations'] = np.load(cache_relations)
+            self.__setstate__(state)
+
+        print("\t[*] Dictionary loaded (version: %s, nb_roots: %d, nb_terms: %d)"%
+              (str(self.version), len(self.roots), len(self)))
 
     def build(self):
+        self._populate()
         self.compute_ranks()
         self.compute_relations()
-
-    def define_terms(self):
-        for i, t in enumerate(self.index):
-            t.index = i
-            t.relations = Relations(term=t, dictionary=self)
-
-        for r, v in self.roots.items():
-            r.inhibitions = self.inhibitions[r]
-            for t in v:
-                t.root = r
-
-        for t in self.terms.values():
-            t.translation = {l: self.translations[l][t] for l in self.translations}
-            t.inhibitions = t.root.inhibitions
-            t.rank = self.ranks[t]
-
-        for t0, v in self.partitions.items():
-            t0.partitions = v
-            for t1 in v:
-                t1.parent = t0
 
     @property
     def singular_sequences(self):
@@ -92,12 +130,6 @@ class Dictionary(metaclass=Singleton):
             self._singular_sequences = sorted(self.terms[ss] for r in self.roots for ss in r.script.singular_sequences)
 
         return self._singular_sequences
-
-    @property
-    def index(self):
-        if self._index is None:
-            self._index = sorted(self.terms.values())
-        return self._index
 
     @property
     def layers(self):
@@ -108,104 +140,17 @@ class Dictionary(metaclass=Singleton):
 
         return self._layers
 
-    def add_term(self, script, root=False, inhibitions=(), translation=None):
-        term = Term(script, self)
+    @property
+    def singular_sequences_map(self):
+        if self._singular_sequence_map is None:
+            self._singular_sequence_map = {ss: r for r in self.roots for ss in r.script.singular_sequences}
 
-        if term.script in self.terms:
-            # print("Term %s already defined."%str(term))
-            return
-
-        root_p = self.get_root(script)
-        if root_p is None:
-            if root:
-                if not term.script.paradigm:
-                    raise ValueError("Can't add the singular sequence term %s as a root paradigm." % str(term))
-
-                self._add_root(term, inhibitions, translation)
-
-            else:
-                raise ValueError(
-                    "Can't add term %s to the dictionary, it is not defined within a root paradigm." % str(term))
-
-        else:
-            if root:
-                raise ValueError("Root paradigm intersection with term %s when adding root term %s" %
-                                 (str(root_p), str(term)))
-            else:
-                self._add_term(term, root_p=root_p, translation=translation)
-
-        self._index = None
-
-    # def remove_term(self, term):
-    #     if not isinstance(term, Term) or not term.defined or term not in self.index:
-    #         raise ValueError("The term %s is not defined in the dictionary."%str(term))
-    #
-    #     to_remove = [term]
-    #
-    #     # can;t remove singular sequences
-    #     if not term.script.paradigm:
-    #         raise ValueError("Can't remove the singular sequence %s. Remove the root paradigm %s instead."%
-    #                          (str(term), str(self.get_root(term.script))))
-    #
-    #     if term in self.partitions:
-    #         raise ValueError("Can't remove the paradigm %s, remove his subtables first (%s)." %
-    #                          (str(term), ', '.join(map(str, self.partitions[term]))))
-    #
-    #     # if root make sure it is empty
-    #     if term in self.roots:
-    #         paradigms = [p for p in self.rel('CONTAINED', term) if p != term and p.script.paradigm]
-    #         if paradigms:
-    #             raise ValueError("Can't remove a non empty root paradigm, remove first the following terms : (%s)"%
-    #                              ', '.join([str(p) for p in paradigms]))
-    #
-    #         to_remove.extend([self.terms[ss] for ss in term.script.singular_sequences])
-    #
-    #         del self.roots[term]
-    #         del self.inhibitions[term]
-    #
-    #     self._index = None
-    #     self._layers = None
-    #     self._singular_sequences = None
-    #
-    #     for t in to_remove:
-    #         del self.terms[t.script]
-    #         for l in LANGUAGES:
-    #             del self.translations[l][t]
-    #         if t.script in self.singular_sequences_map:
-    #             del self.singular_sequences_map[t.script]
-    #
-    #         if t.parent in self.partitions:
-    #             self.partitions[t.parent].remove(t)
-    #
-    #             if not self.partitions[t.parent]:
-    #                 del self.partitions[t.parent]
-    #
-    #     self.relations = None
-    #     self.ranks = None
-
-    # def update_term(self, term, inhibitions=None, translation=None):
-    #     if term not in self.index:
-    #         raise ValueError("Term %s is not defined in the dictionary"%str(term))
-    #
-    #     if inhibitions is not None:
-    #         if term not in self.roots:
-    #             raise ValueError("Term %s is not root, can only update inhibitions on root paradigms"%str(term))
-    #
-    #         self.inhibitions[term] = inhibitions
-    #
-    #     if translation is not None:
-    #         for l in translation:
-    #             if l not in LANGUAGES:
-    #                 continue
-    #             self.translations[l] = translation[l]
-    #
-    #     self.define_terms()
+        return self._singular_sequence_map
 
     def compute_ranks(self):
         print("\t[*] Computing ranks")
         tables = defaultdict(list)
         self.ranks = {}
-        self.partitions = {}
 
         def get_rank_partition(term0, term1):
             def is_connexe_tilling(coords, t):
@@ -307,6 +252,7 @@ class Dictionary(metaclass=Singleton):
 
             defined.add(term)
             self.partitions[term_src].add(term)
+            self.parents[term] = term_src
 
             for t in term.script.tables:
                 t_term = self.terms[t.paradigm]
@@ -315,6 +261,7 @@ class Dictionary(metaclass=Singleton):
                 self.ranks[t_term] = rank
                 defined.add(t_term)
                 self.partitions[term_src].add(t_term)
+                self.parents[t_term] = term_src
 
                 if len(t.headers) != 1:
                     for tab in t.headers:
@@ -322,8 +269,10 @@ class Dictionary(metaclass=Singleton):
                         defined.add(self.terms[tab])
                         tables[self.terms[tab]] = self.terms[tab].tables
                         self.partitions[term_src].add(t_term)
+                        self.parents[self.terms[tab]] = term_src
 
         self.partitions = defaultdict(set)
+        self.parents = {}
         for ss in self.singular_sequences:
             self.ranks[ss] = 6
 
@@ -382,20 +331,6 @@ class Dictionary(metaclass=Singleton):
 
         return next(res.__iter__())
 
-    def set_translation(self, term, translation):
-        if not isinstance(translation, dict) or len(translation) != 2 or any(not isinstance(v, str) for v in translation.values()):
-            raise ValueError("Invalid translation format for term %s."%str(term))
-
-        for l in LANGUAGES:
-            if l not in translation:
-                raise ValueError("Missing translation for %s language for term %s"%(l, str(term)))
-
-            if translation[l] in self.translations[l].inv:
-                raise ValueError("Translation %s provided for term %s already used for term %s."%
-                                 (translation[l], str(self.translations[l].inv[translation[l]]), str(term)))
-
-            self.translations[l][term] = translation[l]
-
     def rel(self, type, term=None):
         if term:
             return [self.index[j] for j in self.relations[RELATIONS.index(type)][term.index, :].indices]
@@ -446,7 +381,7 @@ class Dictionary(metaclass=Singleton):
         _relations['etymology'] = _relations['father'] + _relations['child']
 
         _relations['table'] = np.zeros((len(self), len(self)), dtype=np.float32)
-        for i, t in enumerate(self._compute_table_rank(_relations['contains'])):
+        for i, t in enumerate(self._compute_table_rank()):
             _relations['table_%d'%i] = t
             _relations['table'] = np.maximum((i + 1.0) * t, _relations['table'])
 
@@ -458,16 +393,24 @@ class Dictionary(metaclass=Singleton):
         for reltype in RELATIONS:
             self.relations.append(csr_matrix(_relations[reltype]))
 
-    def _compute_table_rank(self, contains):
+    def _compute_table_rank(self):
         print("\t\t[*] Computing tables relations")
 
         _tables_rank = np.zeros((6, len(self), len(self)))
 
         for i, t in enumerate(self.index):
             if t.script.paradigm and len(t.script.tables) == 1 and t.script.tables[0].dim < 3:
-                contained_terms = np.where(contains[i, :] == 1)[0]
-                index0, index1 = list(zip(*product(contained_terms, repeat=2)))
+
+                contained_ss = [self.terms[ss].index for ss in t.script.singular_sequences]
+                index0, index1 = list(zip(*product(contained_ss, repeat=2)))
                 _tables_rank[t.rank, index0, index1] = 1
+
+                h = t.script.tables[0].headers[t.script]
+                contained_r_c = [self.terms[s].index for s in itertools.chain(h.rows, h.columns) if s in self.terms]
+
+                if contained_r_c:
+                    index0, index1 = list(zip(*product(contained_r_c, repeat=2)))
+                    _tables_rank[t.rank, index0, index1] = 1
 
         for root in self.roots:
             indexes = [p.index for p in self.roots[root]]
@@ -598,93 +541,83 @@ class Dictionary(metaclass=Singleton):
 
         return siblings
 
-    def _add_term(self, term, root_p, translation):
-        self.set_translation(term, translation)
-        self.roots[root_p].append(term)
-        self.terms[term.script] = term
-
-    def _add_root(self, term, inhibitions, translation):
-        self.roots[term] = list()
-        for ss in term.script.singular_sequences:
-            self.singular_sequences_map[ss] = term
-
-        self.inhibitions[term] = inhibitions
-
-        self._add_term(term, root_p=term, translation=translation)
-
     def __getstate__(self):
         return {
-            'index': [str(t.script) for t in self.index],
-            'translations': {l: {str(t.script): text for t, text in v.items()} for l, v in self.translations.items()},
-            'roots': [str(t.script) for t in self.roots],
             'relations': self.relations,
             'ranks': {str(t.script): r for t, r in self.ranks.items()},
             'partitions': {str(t.script): [str(tt.script) for tt in v] for t, v in self.partitions.items()},
-            'inhibitions': {str(r.script): v for r, v in self.inhibitions.items()}
+            'parents': {str(t0.script): str(t1.script) for t0, t1 in self.parents.items()}
         }
 
     def __setstate__(self, state):
-        self.roots = {Term(r, dictionary=self): [] for r in state['roots']}
-        self.singular_sequences_map = {ss: r for r in self.roots for ss in r.script.singular_sequences}
+        self._populate(partitions=state['partitions'], ranks=state['ranks'], relations=state['relations'],
+                       parents=state['parents'])
 
-        self.terms = {ss: Term(ss, dictionary=self) for ss in self.singular_sequences_map}
-        for r in self.roots:
-            self.terms[r.script] = r
+    def _populate(self, partitions=None, ranks=None, relations=None, parents=None):
+        self.version.load()
 
-        for t in state['index']:
-            if t not in self.terms:
-                self.terms[t] = Term(t, dictionary=self)
+        self.terms = {s: Term(s, dictionary=self) for s in self.version.terms}
+        self.index = sorted(self.terms.values())
 
-        self._index = [self.terms[t] for t in state['index']]
+        for i, t in enumerate(self.index):
+            t.index = i
 
         self.translations = {l: bidict({self.terms[t]: text for t, text in v.items()}) for l, v in
-                             state['translations'].items()}
+                             self.version.translations.items()}
 
-        self.ranks = {}
-        self.partitions = {self.terms[t]: [self.terms[tt] for tt in v] for t, v in state['partitions'].items()}
+        self.inhibitions = {self.terms[r]: v for r, v in self.version.inhibitions.items()}
 
-        for t in self.index:
-            self.ranks[t] = state['ranks'][str(t.script)]
-            self.roots[self.singular_sequences_map[t.script.singular_sequences[0]]].append(t)
+        # if any(v for v in self.inhibitions.values()):
+        #     raise InvalidDictionaryState("")
 
-        self.relations = state['relations']
+        self.roots = {self.terms[r]: [] for r in self.version.roots}
+
+        try:
+            for t in self.terms.values():
+                self.roots[self.singular_sequences_map[t.script.singular_sequences[0]]].append(t)
+        except KeyError as e:
+            raise InvalidDictionaryState(self, "No root paradigm for script %s"%str(e.args[0]))
+
+        if partitions is not None:
+            self.partitions = defaultdict(set)
+            for t, v in partitions.items():
+                self.partitions[self.terms[t]] = {self.terms[tt] for tt in v}
+
+        if ranks is not None:
+            self.ranks = {}
+            for t in self.index:
+                self.ranks[t] = ranks[str(t.script)]
+
+        if relations is not None:
+            self.relations = relations
+
+        if parents is not None:
+            self.parents = {self.terms[t0]: self.terms[t1] for t0, t1 in parents.items()}
 
         # reset the cache properties
         self._layers = None
         self._singular_sequences = None
 
-        self.inhibitions = {self.terms[r]: v for r, v in state['inhibitions'].items()}
-
-        self.define_terms()
-        print("\t[*] Dictionary loaded (nb_roots: %d, nb_terms: %d)"%(len(self.roots), len(self)))
-
-
-def save_dictionary(directory):
-    file = os.path.join(directory, "dictionary.json")
-    relations_file = os.path.join(directory, "dictionary_relations.npy")
-    print("\t[*] Saving dictionary to disk (%s, %s)"%(str(file), str(relations_file)))
-    state = Dictionary().__getstate__()
-
-    # save relations as numpy array
-    np.save(arr=state['relations'], file=relations_file)
-    del state['relations']
-
-    with open(file, 'w') as fp:
-        json.dump(state, fp)
-
-
-def load_dictionary(directory, dictionary):
-    dic_json = os.path.join(directory, "dictionary.json")
-    dic_rel = os.path.join(directory, "dictionary_relations.npy")
-    print("\t[*] Loading dictionary from disk (%s, %s)"%(str(dic_json), str(dic_rel)))
-
-    with open(dic_json, 'r') as fp:
-        state = json.load(fp)
-
-    state['relations'] = np.load(dic_rel)
-    dictionary.__setstate__(state)
-
-
 if __name__ == '__main__':
-    Dictionary().build()
-    save_dictionary(DICTIONARY_FOLDER)
+    # version = DictionaryVersion(datetime.date.today())
+    # if False:
+    #     d = Dictionary()
+    #     version.terms = [str(t.script) for t in d.index]
+    #     version.inhibitions = {str(t.script): v for t, v in d.inhibitions.items()}
+    #     version.roots = [str(t.script) for t in d.roots]
+    #     version.translations = {
+    #         l: {
+    #             str(t.script): trad for t, trad in v.items()
+    #         } for l, v in d.translations.items()
+    #     }
+    #     version.upload_to_s3()
+
+    Dictionary(DictionaryVersion())
+
+    # print(get_available_dictionary_version())
+
+    # upload_dictionary_version(DictionaryVersion(datetime.date.today()))
+
+    # get_dictionary_version("d")
+    # Dictionary().build()
+    # save_dictionary(DICTIONARY_FOLDER)

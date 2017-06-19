@@ -1,10 +1,10 @@
 import os
+from ieml.ieml_objects.terms import Dictionary
 from collections import defaultdict
 
-from ieml.ieml_objects.dictionary import Dictionary
 from scipy.sparse.csgraph._shortest_path import shortest_path
 
-from ieml.ieml_objects.tools import term
+from ieml.ieml_objects.terms.tools import term
 
 import numpy as np
 
@@ -16,18 +16,27 @@ import numpy as np
 #         for y in l.indices:
 #             graph_table[x, y] = 5 - i
 
+__distance_mat = {}
 
-def get_distance_m():
-    FILE = '/tmp/dist_m.npy'
-    FILE_w = '/tmp/dist_m_w.npy'
+
+def get_distance_matrix(version):
+    if version not in __distance_mat:
+        __distance_mat[version] = load_distance_matrix(version)
+
+    return __distance_mat[version]
+
+
+def load_distance_matrix(version):
+    FILE = '/tmp/distance_m_%s.npy'%str(version)
+    FILE_w = '/tmp/distance_m_w_%s.npy'%str(version)
 
     if os.path.isfile(FILE) and os.path.isfile(FILE_w):
         return np.load(FILE), np.load(FILE_w)
     else:
-        graph_ethy = Dictionary().relations_graph({
+        graph_ethy = Dictionary(version).relations_graph({
             'etymology': 1.0, # 1 to 0 (1/(layer0 - layer1)**2
             'inclusion': 1.0, # 0 or 1
-            'siblings' : 2.0, # 0 or 1
+            'siblings' : 1.5, # 0 or 1
             'table'    : 1/3 # 0 to 6
         })
         # graph_ethy_m = Dictionary().relations_graph(['etymology', 'inclusion', 'siblings',
@@ -48,15 +57,10 @@ def get_distance_m():
         return pred, dist_m_w
 
 
-# dist_m_nb_rel = shortest_path(graph_nb_rel, directed=True, unweighted=True)
-#
-# dist_table = shortest_path(graph_table, directed=True, unweighted=False)
-
-
-pred, distance_m_w = get_distance_m()
 def _distance_etymology(term0, term1):
     i = 0.0
     index = term1.index
+    pred = get_distance_matrix(term0.dictionary.version)[0]
     while index != term0.index:
         i += 1.0
         index = pred[term0.index, index]
@@ -67,7 +71,7 @@ def _distance_etymology(term0, term1):
 
 def _nb_relations(term0, term1):
     # print(term0.relations.to(term1, table=False))
-    return distance_m_w[term0.index, term1.index]
+    return get_distance_matrix(term0.dictionary.version)[1][term0.index, term1.index]
     # 5 - len(term0.relations.to(term1, ['opposed', 'associated', 'crossed', 'twin', 'table_0']))
 
 def _max_rank(term0, term1):
@@ -92,10 +96,10 @@ def _max_rank(term0, term1):
     # return 4 + abs(term0.script.layer - term1.script.layer)
 
 
+
 def distance(term0, term1):
     if term0 == term1:
         return 0.,0.,0.
-
     # if term0.script.paradigm or term1.script.paradigm:
     #     raise ValueError("Not implemented for paradigms")
 
@@ -105,8 +109,14 @@ def distance(term0, term1):
     # print(term1.relations.to(term0))
 
 
+def ranking_from_term(term0, nb_terms=30):
+    other = sorted((_distance_etymology(term0, t1), _nb_relations(term0, t1) ,t1) for t1 in term0.dictionary if not t1.script.paradigm)
+
+    return other[:nb_terms]
+
+
 def _test_diagram(t):
-    print("Diagram for term %s -- %s"%(str(t), t.translation['fr']))
+    print("Diagram for term %s -- %s"%(str(t), t.translations.fr))
 
     other = sorted((distance(t, t1) ,t1) for t1 in Dictionary() if t1 != t)
 
@@ -121,7 +131,7 @@ def _test_diagram(t):
     for k, v in cat.items():
         print("\t[%s]"%k)
         for d, tt in v:
-            print("%s (%.2f, %.2f, %.2f) - %s [%s]" % (str(tt), d[0], d[1], d[2], tt.translation['fr'],
+            print("%s (%.2f, %.2f, %.2f) - %s [%s]" % (str(tt), d[0], d[1], d[2], tt.translations.fr,
                                                        ', '.join(t.relations.to(tt))))
 
 
