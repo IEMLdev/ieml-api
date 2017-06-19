@@ -42,7 +42,7 @@ INSTALLED_APPS = [
     'django_mongoengine',
     'rest_framework',
     'rest_framework_mongoengine',
-    'collections_.apps.CollectionsConfig',
+    'intlekt.apps.IntlektConfig',
 ]
 
 MIDDLEWARE = [

@@ -17,6 +17,6 @@ from django.conf.urls import include, url
 from django.contrib import admin
 
 urlpatterns = [
-    url(r'^collections/', include('collections_.urls')),
+    url(r'^intlekt/', include('intlekt.urls')),
     url(r'^admin/', admin.site.urls),
 ]
