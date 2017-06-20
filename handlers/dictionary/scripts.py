@@ -22,7 +22,6 @@ from .client import need_login
 
 
 def _build_old_model_from_term_entry(t):
-
     return {
         "_id": str(t.script),
         "IEML": str(t.script),

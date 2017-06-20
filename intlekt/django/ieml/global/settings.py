@@ -27,7 +27,7 @@ SECRET_KEY = '1j8ai(ft))a6)*fyp5+qd1i6fs+fb62pu_&nbe+%aemihe)#xc'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -42,12 +42,15 @@ INSTALLED_APPS = [
     'django_mongoengine',
     'rest_framework',
     'rest_framework_mongoengine',
-    'intlekt.apps.IntlektConfig',
+    'rest_framework.authtoken',
+    'corsheaders',
+    'dictionary_editor.apps.DictionaryEditorConfig',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -55,7 +58,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'ieml.urls'
+ROOT_URLCONF = 'global.urls'
 
 TEMPLATES = [
     {
@@ -73,7 +76,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'ieml.wsgi.application'
+WSGI_APPLICATION = 'global.wsgi.application'
 
 
 # Database
