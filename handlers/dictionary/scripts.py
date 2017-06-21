@@ -75,7 +75,13 @@ def drupal_dictionary_dump():
                 'IEML': d['IEML'],
                 'FR': d['FR'],
                 'EN': d['EN'],
-                'INDEX': d['INDEX']
+                'INDEX': d['INDEX'],
+                'CARDINALITY': d['SIZE'],
+                'LAYER': d['LAYER'],
+                'RANK': d['RANK'],
+                'CLASS': d['CLASS'][0] + d['CLASS'][1:].lower(),
+                'PARADIGM': d['PARADIGM'],
+                'ROOT_PARADIGM': d['ROOT_PARADIGM'],
             } for d in _drupal_utils['drupal_dico']]
 
 
@@ -93,12 +99,15 @@ _RELATIONS = {'contains': 'inclusion',         # 0
              'twin': 'sibling'}
 
 
-def drupal_relations_dump(number=None):
+def drupal_relations_dump(number=None, all=False):
     _drupal_utils = _get_drupal_utils()
 
     root = term("O:M:.O:M:.-+M:O:.M:O:.-")
 
-    paradigm = sorted(Dictionary().roots[root])
+    if all:
+        paradigm = list(Dictionary())
+    else:
+        paradigm = sorted(Dictionary().roots[root])
 
     relations = defaultdict(set)
 
@@ -121,7 +130,7 @@ def drupal_relations_dump(number=None):
 
     for t0, t1 in relations:
         for rel_cat in relations[(t0, t1)]:
-            comment = ''.join([random.choice(string.ascii_lowercase) for i in range(100)])
+            comment = ''.join([random.choice(string.ascii_lowercase) for i in range(10)])
             res.append({
                 'term_src': _drupal_utils['all_uuid'][str(t0.script)],
                 'term_dest': _drupal_utils['all_uuid'][str(t1.script)],
@@ -406,3 +415,4 @@ def fr_tag_exists(tag_fr, version):
 
 def get_last_version():
     return str(sorted(get_available_dictionary_version())[-1])
+

@@ -154,7 +154,7 @@ def _enumerate_paths(ieml_obj, level):
                 for p, e in _enumerate_paths(t, level=level):
                     yield [path('f%d' % i)] + p, e
 
-    raise StopIteration
+    return
 
 
 def _tree_graph_path_of_node(tree_graph, node):

@@ -8,7 +8,7 @@ from ieml.ieml_objects.sentences import SuperSentence, Sentence
 from ieml.ieml_objects.terms import Term
 from ieml.ieml_objects.texts import Text
 from ieml.ieml_objects.words import Word
-from ieml.paths.constants import COORDINATES_KINDS, KIND_TO_RANK
+from ieml.paths.constants import COORDINATES_KINDS
 from ieml.paths.exceptions import PathError
 
 Context = namedtuple("Context", ['accept', 'conserve', 'switch'])

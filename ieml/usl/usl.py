@@ -28,8 +28,8 @@ class Usl:
 
     def __getitem__(self, item):
         if isinstance(item, Path):
-            if item in self._rules:
-                return self._rules[item]
+            if item in self.paths:
+                return self.paths[item]
 
             return resolve(self.ieml_object, item)
 

@@ -81,6 +81,10 @@ def __build_parallel_table(main_term, parallel_terms, others_rel):
         'columns': columns
     }
 
+def _build_parralel_mapping(t_src, t_dest, reltype):
+    # reltype one of ['
+    pass
+
 
 def get_table_for_term(ieml):
     t = term(ieml)

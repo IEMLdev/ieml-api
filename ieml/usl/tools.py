@@ -60,5 +60,5 @@ def random_usl(rank_type=None):
 def replace_paths(u, rules):
     k = [(p,t) for p, t in {
             **usl(u).paths,
-            **{path(p): ieml(t) for p, t in rules}}.items()]
+            **{path(p): ieml(t) for p, t in rules.items()}}.items()]
     return usl(k)

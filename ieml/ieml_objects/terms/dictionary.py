@@ -268,7 +268,7 @@ class Dictionary(metaclass=DictionarySingleton):
                         self.ranks[self.terms[tab]] = rank
                         defined.add(self.terms[tab])
                         tables[self.terms[tab]] = self.terms[tab].tables
-                        self.partitions[term_src].add(t_term)
+                        self.partitions[term_src].add(self.terms[tab])
                         self.parents[self.terms[tab]] = term_src
 
         self.partitions = defaultdict(set)
@@ -415,7 +415,7 @@ class Dictionary(metaclass=DictionarySingleton):
         for root in self.roots:
             indexes = [p.index for p in self.roots[root]]
             index0, index1 = list(zip(*product(indexes, repeat=2)))
-            _tables_rank[0,index0, index1] = 1
+            _tables_rank[0, index0, index1] = 1
 
         return _tables_rank
 
@@ -612,7 +612,7 @@ if __name__ == '__main__':
     #     }
     #     version.upload_to_s3()
 
-    Dictionary(DictionaryVersion())
+    Dictionary(DictionaryVersion()).build()
 
     # print(get_available_dictionary_version())
 
