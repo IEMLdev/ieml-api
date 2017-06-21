@@ -19,3 +19,5 @@ DICTIONARY_FOLDER = os.path.join(os.path.dirname(__file__), "data/dictionary")
 
 AWS_ACCESS_KEY_ID = ''
 AWS_SECRET_ACCESS_KEY = ''
+
+API_PORT=5001
