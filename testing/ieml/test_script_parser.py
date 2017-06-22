@@ -1,5 +1,5 @@
 import unittest
-from _dbus_bindings import Dictionary
+from ieml.ieml_objects.terms import Dictionary
 
 from pymongo import MongoClient
 

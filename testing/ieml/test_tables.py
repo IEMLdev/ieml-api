@@ -1,8 +1,4 @@
-import json
 import unittest
-from collections import defaultdict
-
-import yaml
 import numpy as np
 from ieml.ieml_objects.terms import Dictionary, term
 from ieml.script.operator import sc
@@ -35,28 +31,28 @@ class TableGenerationTest(unittest.TestCase):
         self.assertEqual(t.rank, 3)
 
 
-    def test_rank(self):
-        with open('data/ranks.json', 'r') as fp:
-            old_ranks = json.load(fp)
-
-        diff = defaultdict(list)
-        for _term in Dictionary():
-            ranks = set()
-            for t in _term.tables:
-                ranks.add(t.rank)
-
-            if _term.script.paradigm:
-                self.assertEqual(len(ranks), 1, "Too many ranks for %s"%str(_term.script))
-                r = list(ranks)[0]
-                if r != old_ranks[str(_term.script)]:
-                    diff[str(_term.script)].extend([r, old_ranks[str(_term.script)]])
-            else:
-                self.assertSetEqual(ranks, {6})
-
-        with open('../../data/diff_ranks.yml', 'w') as fp:
-            yaml.dump(diff, fp)
-
-        print(len(diff))
+    # def test_rank(self):
+    #     with open('data/ranks.json', 'r') as fp:
+    #         old_ranks = json.load(fp)
+    #
+    #     diff = defaultdict(list)
+    #     for _term in Dictionary():
+    #         ranks = set()
+    #         for t in _term.tables:
+    #             ranks.add(t.rank)
+    #
+    #         if _term.script.paradigm:
+    #             self.assertEqual(len(ranks), 1, "Too many ranks for %s"%str(_term.script))
+    #             r = list(ranks)[0]
+    #             if r != old_ranks[str(_term.script)]:
+    #                 diff[str(_term.script)].extend([r, old_ranks[str(_term.script)]])
+    #         else:
+    #             self.assertSetEqual(ranks, {6})
+    #
+    #     with open('../../data/diff_ranks.yml', 'w') as fp:
+    #         yaml.dump(diff, fp)
+    #
+    #     print(len(diff))
 
     def test_headers(self):
         for p in Dictionary():
