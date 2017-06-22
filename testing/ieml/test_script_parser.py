@@ -1,8 +1,5 @@
 import unittest
 from ieml.ieml_objects.terms import Dictionary
-
-from pymongo import MongoClient
-
 from ieml.exceptions import CannotParse
 from ieml.script import *
 from ieml.script.operator import sc
