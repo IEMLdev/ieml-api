@@ -6,7 +6,7 @@ from ieml.exceptions import CannotParse
 from ieml.ieml_objects.parser.parser import IEMLParser
 from ieml.usl.parser.lexer import tokens, get_lexer
 from ieml.usl.usl import Usl
-from metaclasses import Singleton
+from ieml.metaclasses import Singleton
 
 
 class USLParser(metaclass=Singleton):

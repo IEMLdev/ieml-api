@@ -1,14 +1,13 @@
 from ieml.ieml_objects.sentences import Sentence, Clause
-from ieml.ieml_objects.terms import Term
+from ieml.ieml_objects.terms import term
 from ieml.ieml_objects.words import Word, Morpheme
 from ieml.usl.tools import usl
-from models.usls.library import LibraryConnector
 
-root = Word(Morpheme([Term("i.i.-"),  # fabriquer
-                     Term("a.i.-")]),  # vendre
-            Morpheme([Term("E:S:.o.-"),  # vouloir futur
-                      Term("E:S:.wa.-"),  # 1ere personne pluriel
-                      Term("E:A:T:.")]))  # beaucoup
+root = Word(Morpheme([term("i.i.-"),  # fabriquer
+                     term("a.i.-")]),  # vendre
+            Morpheme([term("E:S:.o.-"),  # vouloir futur
+                      term("E:S:.wa.-"),  # 1ere personne pluriel
+                      term("E:A:T:.")]))  # beaucoup
 
 
 objects = [
@@ -26,12 +25,12 @@ objects = [
     {
         'usl': usl(Sentence([Clause(
             root,
-            Word(Morpheme([Term("t.i.-s.i.-'u.T:.-U:.-'wo.-',B:.-',_M:.-',_;")])),  # véhicule a roue sans conducteur
-            Word(Morpheme([Term("E:E:T:.")]))  # COD
+            Word(Morpheme([term("t.i.-s.i.-'u.T:.-U:.-'wo.-',B:.-',_M:.-',_;")])),  # véhicule a roue sans conducteur
+            Word(Morpheme([term("E:E:T:.")]))  # COD
         ), Clause(
             root,
-            Word(Morpheme([Term("S:.-'B:.-'n.-S:.U:.-',")])),  # Europe
-            Word(Morpheme([Term("E:T:.f.-")]))  # dans
+            Word(Morpheme([term("S:.-'B:.-'n.-S:.U:.-',")])),  # Europe
+            Word(Morpheme([term("E:T:.f.-")]))  # dans
         )])),
         'translations': {
             'FR': "Nous avons l'intention de fabriquer et de vendre beaucoup de nos véhicules à roues sans conducteurs en Europe",
@@ -44,17 +43,3 @@ objects = [
     }
 ]
 
-
-def save_usls():
-    usls = LibraryConnector()
-    for o in objects:
-        if usls.get(usl=o['usl']) is None:
-            usls.save(**o)
-
-
-def init_dev_db():
-    save_usls()
-
-
-if __name__ == '__main__':
-    init_dev_db()

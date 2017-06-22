@@ -8,7 +8,7 @@ from ieml.exceptions import CannotParse
 from ieml.script import AdditiveScript, MultiplicativeScript
 from ieml.script.constants import REMARKABLE_ADDITION
 from ieml.script.script import NullScript
-from metaclasses import Singleton
+from ieml.metaclasses import Singleton
 from .lexer import get_script_lexer, tokens
 
 

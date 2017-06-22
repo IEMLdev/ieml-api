@@ -7,7 +7,7 @@ from ieml.ieml_objects import Word, Morpheme, Clause, SuperClause, Sentence, Sup
 from ieml.ieml_objects.terms.dictionary import Dictionary
 from ieml.ieml_objects.hypertexts import Hyperlink, PropositionPath
 from ieml.ieml_objects.parser.lexer import get_lexer, tokens
-from metaclasses import Singleton
+from ieml.metaclasses import Singleton
 
 
 def _add(lp1, p2):

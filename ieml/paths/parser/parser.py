@@ -6,7 +6,7 @@ from ply import yacc
 from ieml.exceptions import CannotParse
 from ieml.paths.parser.lexer import tokens, get_lexer
 from ieml.paths.paths import Coordinate, AdditivePath, MultiplicativePath, ContextPath
-from metaclasses import Singleton
+from ieml.metaclasses import Singleton
 
 
 class PathParser(metaclass=Singleton):

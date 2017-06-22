@@ -1,6 +1,5 @@
 from unittest.case import TestCase
 
-from handlers import usl
 from ieml.ieml_objects.sentences import Sentence, SuperSentence, Clause, SuperClause
 from ieml.ieml_objects.terms import Term, term
 from ieml.ieml_objects.texts import Text
@@ -9,7 +8,7 @@ from ieml.ieml_objects.words import Word, Morpheme
 from ieml.paths.exceptions import PathError, IEMLObjectResolutionError
 from ieml.paths.paths import MultiplicativePath, Coordinate, AdditivePath, ContextPath
 from ieml.paths.tools import path, resolve, enumerate_paths, resolve_ieml_object
-from ieml.usl.tools import random_usl
+from ieml.usl.tools import random_usl, usl
 
 
 class TestPaths(TestCase):
