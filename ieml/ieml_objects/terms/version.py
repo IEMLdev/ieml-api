@@ -155,7 +155,7 @@ def get_default_dictionary_version():
     return _default_version
 
 
-def create_dictionary_version(old_version, add=None, update=None, remove=None):
+def create_dictionary_version(old_version=None, add=None, update=None, remove=None, merge=None):
     """
 
     :param old_version: the dictionary version to build the new version from
@@ -165,6 +165,7 @@ def create_dictionary_version(old_version, add=None, update=None, remove=None):
                                                 'translations': dict {language: {script: traduction}}}
     :param update: a dict to update the translations and inhibtions
     :param remove: a list of term to remove, they are removed from root, terms, inhibitions and translations
+    :param merge: a list of dictionary version to merge
     :return:
     """
     v = get_available_dictionary_version()[-1]
@@ -174,6 +175,9 @@ def create_dictionary_version(old_version, add=None, update=None, remove=None):
         new_date = datetime.datetime.utcnow()
         if new_date != last_date:
             break
+
+    if old_version is None:
+        old_version = v
 
     old_version.load()
 
@@ -185,14 +189,35 @@ def create_dictionary_version(old_version, add=None, update=None, remove=None):
         'translations': copy.deepcopy(old_version.translations)
     }
 
+    if merge is not None:
+        for m_version in merge:
+            m_version.load()
+
+            terms_to_add = set(m_version.terms).difference(state['terms'])
+            roots_to_add = set(m_version.roots).difference(state['roots'])
+
+            state['terms'].extend(terms_to_add)
+            state['roots'].extend(roots_to_add)
+            state['inhibitions'].update({r: m_version.inhibitions[r] for r in roots_to_add if r in m_version.inhibitions})
+            for l in LANGUAGES:
+                state['translations'][l].update({s: m_version.translations[l][s] for s in terms_to_add})
+
     if add is not None:
         if 'terms' in add:
             state['terms'] = list(set(state['terms']).union(add['terms']))
         if 'roots' in add:
             state['roots'] = list(set(state['roots']).union(add['roots']))
         if 'inhibitions' in add:
+            if set(state['inhibitions']).intersection(set(add['inhibitions'])):
+                raise ValueError("Error in creating a new dictionary versions, trying to add multiples "
+                                 "inhibitions rules for the same script.")
+
             state['inhibitions'] = {**state['inhibitions'], **add['inhibitions']}
         if 'translations' in add:
+            if any(set(state['translations'][l]).intersection(set(add['translations'][l])) for l in LANGUAGES):
+                raise ValueError("Error in creating a new dictionary version, trying to add multiples "
+                                 "translation for the same script.")
+
             state['translations'] = {l: {**state['translations'][l], **add['translations'][l]} for l in LANGUAGES}
 
     if remove is not None:
