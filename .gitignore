@@ -75,3 +75,4 @@ flask_session/
 parser/*
 scripts/lambda
 data/dictionary/*
+ieml/config.py

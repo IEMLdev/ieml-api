@@ -15,7 +15,7 @@ from ieml.ieml_objects.terms import Term
 from ieml.script.constants import MAX_LAYER
 from ieml.script.operator import script
 from ieml.script.script import AdditiveScript, NullScript, MultiplicativeScript
-from config import DICTIONARY_FOLDER
+from ieml.config import DICTIONARY_FOLDER
 
 class InvalidDictionaryState(Exception):
     def __init__(self, dictionary, message):
