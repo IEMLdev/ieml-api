@@ -1,9 +1,11 @@
 from collections import namedtuple
+import numpy as np
 
 from ieml.commons import LANGUAGES
 from ieml.ieml_objects.commons import IEMLObjects
 from ieml.ieml_objects.terms.relations import Relations
 from ieml.script.operator import script
+from ieml.script.tools import factorize
 
 Translations = namedtuple('Translations', list(LANGUAGES))
 Translations.__getitem__ = lambda self, item: self.__getattribute__(item) if item in LANGUAGES \
@@ -26,6 +28,17 @@ class Term(IEMLObjects):
         # if term in a dictionary, those values will be set
         self._translations = None
         self._root = None
+
+        from ieml.ieml_objects.terms.tools import TermNotFoundInDictionary
+
+        def _term(s):
+            try:
+                return Term(s, dictionary=self.dictionary)
+            except TermNotFoundInDictionary:
+                return None
+
+        self._term = np.vectorize(_term)
+
 
     __hash__ = IEMLObjects.__hash__
 
@@ -80,6 +93,20 @@ class Term(IEMLObjects):
     def defined(self):
         return all(self.__getattribute__(p) is not None for p in
                    ['translation', 'inhibitions', 'root', 'index', 'relations', 'rank'])
+
+    def cells(self):
+        if len(self.script.cells) != 1 and self.script.cells.shape[2] != 1:
+            raise ValueError("Too many dimension to generate table.")
+
+        return self._term(self.script.cells[0][:,:,0])
+
+    def headers(self):
+        cells = self.cells()
+
+        rows = self._term([factorize([t.script for t in c]) for c in cells])
+        columns = self._term([factorize([t.script for t in c]) for c in cells.transpose()])
+
+        return rows, columns
 
     @property
     def tables(self):

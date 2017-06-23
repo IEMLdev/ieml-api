@@ -9,7 +9,7 @@ def readme():
 copyfile('ieml/config.sample.py', 'ieml/config.py')
 
 setup(name='ieml',
-      version='0.1.3',
+      version='0.1.4',
       description='Implementation of the artificial natural language IEML',
       long_description=readme(),
       classifiers=[
