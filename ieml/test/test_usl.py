@@ -10,7 +10,7 @@ from ieml.paths.tools import resolve
 from ieml.usl import usl
 from ieml.usl.tools import random_usl, replace_paths
 from ieml.usl.usl import Usl
-from testing.ieml.helper import *
+from .helper import *
 
 
 class TestTexts(unittest.TestCase):

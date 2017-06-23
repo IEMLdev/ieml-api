@@ -10,7 +10,7 @@ from ieml.ieml_objects.parser.parser import IEMLParser
 from ieml.ieml_objects.sentences import SuperClause
 from ieml.ieml_objects.tools import RandomPoolIEMLObjectGenerator
 from ieml.script.operator import sc
-from testing.ieml.helper import *
+from .helper import *
 
 
 class TestIEMLType(unittest.TestCase):
