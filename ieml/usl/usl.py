@@ -10,6 +10,7 @@ class Usl:
     def __init__(self, ieml_object):
         self.ieml_object = ieml_object
         self._rules = None
+        self._level = {}
 
     def __str__(self):
         return str(self.ieml_object)
@@ -23,10 +24,7 @@ class Usl:
 
     @property
     def paths(self):
-        if self._rules is None:
-            self._rules = {path: term for path, term in enumerate_paths(self.ieml_object, level=Term)}
-
-        return self._rules
+        return self.rules(Term)
 
     def __getitem__(self, item):
         if isinstance(item, Path):
@@ -44,3 +42,12 @@ class Usl:
             result[l.upper()] = ' '.join((e.translations[l] for e in islice(entries, 10)))
 
         return result
+
+    def rules(self, type):
+        if type not in self._level:
+            self._level[type] = {path: element for path, element in enumerate_paths(self.ieml_object, level=type)}
+
+        return self._level[type]
+
+    def objects(self, type):
+        return set(self.rules(type).values())

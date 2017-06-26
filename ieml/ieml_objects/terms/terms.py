@@ -31,15 +31,6 @@ class Term(IEMLObjects):
 
         from ieml.ieml_objects.terms.tools import TermNotFoundInDictionary
 
-        def _term(s):
-            try:
-                return Term(s, dictionary=self.dictionary)
-            except TermNotFoundInDictionary:
-                return None
-
-        self._term = np.vectorize(_term)
-
-
     __hash__ = IEMLObjects.__hash__
 
     def __eq__(self, other):
@@ -94,17 +85,21 @@ class Term(IEMLObjects):
         return all(self.__getattribute__(p) is not None for p in
                    ['translation', 'inhibitions', 'root', 'index', 'relations', 'rank'])
 
+    @property
+    def ntable(self):
+        return sum(self.script.cells[i].shape[2] for i in range(len(self.script.cells)))
+
     def cells(self):
-        if len(self.script.cells) != 1 and self.script.cells.shape[2] != 1:
+        if self.ntable != 1:
             raise ValueError("Too many dimension to generate table.")
 
-        return self._term(self.script.cells[0][:,:,0])
+        return self.script.cells[0][:,:,0]
 
     def headers(self):
         cells = self.cells()
 
-        rows = self._term([factorize([t.script for t in c]) for c in cells])
-        columns = self._term([factorize([t.script for t in c]) for c in cells.transpose()])
+        rows = [factorize([s for s in c]) for c in cells]
+        columns = [factorize([s for s in c]) for c in cells.transpose()]
 
         return rows, columns
 

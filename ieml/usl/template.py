@@ -24,7 +24,7 @@ class Template:
 
         self.model = usl(model)
 
-        if not isinstance(model, Word):
+        if not isinstance(self.model.ieml_object, Word):
             raise ValueError("Template only implemented for words.")
 
         self.paths = [path(p) for p in path_list]
