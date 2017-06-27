@@ -2,6 +2,7 @@ from ieml.ieml_objects.terms.version import DictionaryVersion
 from ieml.script import Script
 from ieml.ieml_objects.terms.terms import Term
 from ieml.ieml_objects.terms.dictionary import Dictionary
+from ieml.script.operator import script
 
 
 class TermNotFoundInDictionary(Exception):
@@ -31,7 +32,7 @@ def term(arg, dictionary=None):
 
     if isinstance(arg, Script) or isinstance(arg, str):
         if arg in dictionary:
-            return dictionary.terms[arg]
+            return dictionary.terms[script(arg)]
 
     raise TermNotFoundInDictionary(arg, dictionary)
 
