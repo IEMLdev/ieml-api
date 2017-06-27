@@ -31,8 +31,9 @@ def term(arg, dictionary=None):
             arg = arg[1:-1]
 
     if isinstance(arg, Script) or isinstance(arg, str):
+        arg = script(arg)
         if arg in dictionary:
-            return dictionary.terms[script(arg)]
+            return dictionary.terms[arg]
 
     raise TermNotFoundInDictionary(arg, dictionary)
 

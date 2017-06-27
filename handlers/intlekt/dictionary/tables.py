@@ -1,4 +1,6 @@
 from ieml.ieml_objects.terms import term
+from ieml.ieml_objects.terms.dictionary import Dictionary
+from ieml.ieml_objects.terms.tools import TermNotFoundInDictionary
 
 RELATIONS_CATEGORIES = {
     'inclusion': ['contains', 'contained'],
@@ -8,11 +10,20 @@ RELATIONS_CATEGORIES = {
 
 
 def _term_entry(s):
-    return {
-        'ieml': str(s),
-        'fr': term(s).translations.fr,
-        'en': term(s).translations.en
-    }
+    try:
+        t = term(s)
+        return {
+            'ieml': str(s),
+            'fr': t.translations.fr,
+            'en': t.translations.en
+        }
+
+    except TermNotFoundInDictionary:
+        return {
+            'ieml': str(s),
+            'fr': "undefined",
+            'en': "undefined"
+        }
 
 
 def __build_parallel_table(main_term, parallel_terms, others_rel):
@@ -26,9 +37,7 @@ def __build_parallel_table(main_term, parallel_terms, others_rel):
                for t in [main_term, *parallel_terms])
 
     def _others_rel(s):
-        t = term(s)
-        return [_term_entry(t.relations[reltype][0].script) for reltype in others_rel]
-
+        return [_term_entry(term(s).relations[reltype][0].script) for reltype in others_rel]
 
     main_tab = main_term.tables[0].tabs[0]
     dim = main_term.tables[0].dim
@@ -106,7 +115,7 @@ def get_table_for_term(ieml):
             others = [term(tab.paradigm) for tab in upper_table.tabs if tab.paradigm != main.script]
 
         # todo, add the siblings relationships
-        rels = {reltype: {s: term(s).relations[reltype] for s in table.all()}
+        rels = {reltype: {s: term(s).relations[reltype] if s in Dictionary() else [] for s in table.all()}
                 for reltype in ['associated', 'opposed', 'crossed']}
 
         others_rel = [reltype for reltype in rels if all(len(t) == 1 for s, t in rels[reltype].items())]
@@ -133,3 +142,6 @@ def get_relations_for_term(ieml):
         'success': True,
         'relations': relations
     }
+
+if __name__ == "__main__":
+    get_table_for_term("s.O:O:.A:.-")
