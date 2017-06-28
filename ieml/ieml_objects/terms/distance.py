@@ -341,6 +341,9 @@ def load_distance3_matrix():
 
 
 def distance3(t0, t1):
+    if mat_distance3 is None:
+        load_distance3_matrix()
+
     return mat_distance3[t0.index, t1.index]
 
 
@@ -363,7 +366,7 @@ def test_distance_same_layer(t):
 
 
 def ranking_from_term(term0, nb_terms=30):
-    other = sorted((mat_distance3[term0.index, t1.index],
+    other = sorted((distance3(term0, t1),
                     _nb_relations(term0, t1) ,t1) for t1 in term0.dictionary)
 
     return other[:nb_terms]
