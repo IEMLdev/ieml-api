@@ -74,6 +74,8 @@ class Term(IEMLObjects):
 
     @property
     def rank(self):
+        if self not in self.dictionary.ranks:
+            print(self)
         return self.dictionary.ranks[self]
 
     @property
@@ -111,6 +113,10 @@ class Term(IEMLObjects):
     def singular_sequences(self):
         from .tools import term
         return [term(ss, dictionary=self.dictionary) for ss in self.script.singular_sequences]
+
+    @property
+    def layer(self):
+        return self.script.layer
 
     def __contains__(self, item):
         from .tools import term

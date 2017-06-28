@@ -1,12 +1,18 @@
 import os
-from ieml.ieml_objects.terms import Dictionary
+from itertools import product, groupby
+
+from ieml.ieml_objects.terms import Dictionary, Table
 from collections import defaultdict
 
 from scipy.sparse.csgraph._shortest_path import shortest_path
 
-from ieml.ieml_objects.terms.tools import term
+from ieml.ieml_objects.terms.tools import term, TermNotFoundInDictionary
 
 import numpy as np
+
+from ieml.ieml_objects.terms.version import get_default_dictionary_version
+from ieml.script.constants import MAX_LAYER
+from ieml.script.script import MultiplicativeScript, NullScript, AdditiveScript
 
 __distance_mat = {}
 
@@ -154,20 +160,214 @@ def _test_term2(t):
     for d, tt in kkk[:30]:
         print("%s (%.2f) - %s [%s]"%(str(tt), d, tt.translations['fr'], ', '.join(t.relations.to(tt))))
 
+mat_distance3 = None
+
+def _table_entry(t):
+    table = Table(t)
+    return {
+        'table': table,
+        'term': t,
+        'ss_set': set(t.script.singular_sequences)
+    }
+
+
+# layer -> rank -> terms[]
+layers_by_rank = {
+    i: {k: [_table_entry(t) for t in g]
+        for k, g in groupby(sorted([t for t in layer if t.ntable == 1 and len(t) != 1], key=lambda t: t.rank), key=lambda t: t.rank)}
+            for i, layer in enumerate(Dictionary().layers)
+}
+
+
+def _get_greater_common_rank(t0, t1):
+    ranks = layers_by_rank[t0.layer]
+    max_rank = max(ranks)
+
+    ss_set = set(t0.script.singular_sequences).union(t1.script.singular_sequences)
+
+    for i in range(max_rank, -1, -1):
+        if i not in ranks:
+            continue
+
+        if any(ss_set.issubset(tt['ss_set']) for tt in ranks[i]):
+            return float(max(i, 1)) / max_rank
+
+    return 1.0/5.0
+    # raise ValueError("No rank candidate found")
+
+
+def _order(t0, t1):
+    return (t0, t1) if t0 < t1 else (t1, t0)
+
+C = .9
+
+_siblings = {
+    'opposed': 2, 'crossed': 1, 'associated': 3, 'twin': 0
+}
+
+def _get_sibling(t0, t1):
+    return max(map(lambda r: _siblings[r], t0.relations.to(t1, ['opposed', 'crossed', 'associated', 'twin']))) + .5
+
+
+def _distance_same_layer(t0, t1):
+    t0, t1 = _order(t0, t1)
+
+    if t0.layer != t1.layer:
+        raise ValueError("Nop nop different layer")
+
+    if t0 == t1:
+        return 1.0
+
+    if t0.root == t1.root:
+        # siblings
+        if t1 in t0.relations.siblings:
+            return C + (1.0 - C) * float(_get_sibling(t0, t1)) / 4.0
+
+        # table
+
+        return C * _get_greater_common_rank(t0, t1)
+
+    return 0.0
+
+
+def _distance_upper_layer(t0, t1):
+    t0, t1 = _order(t0, t1)
+
+    if isinstance(t1.script, MultiplicativeScript):
+        a, b, c = t1.script.children
+
+        t_a = term(a)
+
+        if isinstance(c, NullScript):
+            if isinstance(b, NullScript):
+                return mat_distance3[t0.index, t_a.index]
+            else:
+                t_b = term(b)
+
+                return 0.6 * mat_distance3[t0.index, t_a.index] + \
+                       0.4 * mat_distance3[t0.index, t_b.index]
+        else:
+            t_b = term(b)
+            t_c = term(c)
+
+            return 0.5 * mat_distance3[t0.index, t_a.index] + \
+                   0.3 * mat_distance3[t0.index, t_b.index] + \
+                   0.2 * mat_distance3[t0.index, t_c.index]
+    elif isinstance(t1.script, AdditiveScript):
+        res = [_distance_upper_layer(t0, term(s)) for s in t1.script]
+
+        return sum(res) / len(res)
+
+
+def _distance_upper_layer2(t0, t1):
+    if isinstance(t1.script, MultiplicativeScript):
+        a, b, c = t1.script.children
+
+        def _dist(s):
+            if isinstance(s, NullScript):
+                return 0.0
+
+            try:
+                return mat_distance3[t0.index, term(s).index]
+            except TermNotFoundInDictionary:
+                return 0.0
+
+        d_a = _dist(a)
+        d_b = _dist(b)
+        d_c = _dist(c)
+
+        if isinstance(c, NullScript):
+            if isinstance(b, NullScript):
+                return 1.0 * d_a
+            else:
+                return 0.60 * d_a + 0.35 * d_b
+        else:
+            return 0.55 * d_a + 0.30 * d_b + 0.10 * d_c
+
+    elif isinstance(t1.script, AdditiveScript):
+        res = [_distance_upper_layer2(t0, term(s)) for s in t1.script]
+
+        return sum(res) / len(res)
+
+
+def _compute_distance_3():
+    global mat_distance3
+
+    indexes_layers = {
+        k: [t.index for t in g] for k, g in groupby(Dictionary(), key=lambda t: t.layer)
+    }
+
+    def _distance_all_layer(t0, t1):
+        t0, t1 = _order(t0, t1)
+
+        return np.dot(mat_distance3[t0.index, indexes_layers[t1.layer - 1]],
+                      mat_distance3[indexes_layers[t1.layer - 1], t1.index])
+
+    def _set_distance(t0, t1, dist):
+        mat_distance3[t0.index, t1.index] = dist
+        mat_distance3[t1.index, t0.index] = dist
+
+    d = Dictionary()
+    mat_distance3 = np.zeros(shape=[len(d)]*2, dtype=float)
+
+    for root in d.roots:
+        terms = root.relations.contains
+        for i, t0 in enumerate(terms):
+            for t1 in terms[i:]:
+                _set_distance(t0, t1, _distance_same_layer(t0, t1))
+
+    # same layer + 1
+    # for i, layer0 in enumerate(d.layers[:MAX_LAYER - 1]):
+    #     for t0 in layer0:
+    #         for t1 in (tt for tt in d.rel('child', t0) if tt.layer == i + 1):
+    #             _set_distance(t0, t1, _distance_upper_layer2(t0, t1))
+
+    for j in range(1, MAX_LAYER):
+        for i, layer0 in enumerate(d.layers[:MAX_LAYER - 1]):
+            if i+j == len(d.layers):
+                break
+
+            for t0 in layer0:
+                for t1 in (tt for tt in d.rel('child', t0) if tt.layer == i + j):
+                    _set_distance(t0, t1, _distance_upper_layer2(t0, t1))
+
+    # assert mat_distance3 == mat_distance3.transpose()
+
+def load_distance3_matrix():
+    global mat_distance3
+    version = get_default_dictionary_version()
+    FILE = '/tmp/distance_3_m_%s.npy'%str(version)
+
+    if os.path.isfile(FILE):
+        mat_distance3 = np.load(FILE)
+    else:
+        _compute_distance_3()
+        np.save(FILE, mat_distance3)
+
+
+def distance3(t0, t1):
+    return mat_distance3[t0.index, t1.index]
+
+
+def test_distance3(t):
+    print("Distance from term %s -- %s"%(str(t), t.translations['fr']))
+
+    other = sorted(((distance3(t, t1), t1) for t1 in Dictionary() if not t1.script.paradigm), reverse=True)
+    kkk = [t for t in other]
+    for d, tt in kkk[:30]:
+        print("%s (%.2f) - %s [%s]"%(str(tt), d, tt.translations['fr'], ', '.join(t.relations.to(tt))))
+
+
+def test_distance_same_layer(t):
+    print("Distance from term %s -- %s"%(str(t), t.translations['fr']))
+
+    other = sorted(((distance3(t, t1), t1) for t1 in Dictionary()), reverse=True)
+    kkk = [t for t in other]
+    for d, tt in kkk[:30]:
+        print("%s (%.2f) - %s [%s]"%(str(tt), d, tt.translations['fr'], ', '.join(t.relations.to(tt))))
+
 
 if __name__ == '__main__':
-    print(distance2(term(312), term(3112)))
-    _test_term2(term(1692))
-    # _test_diagram(term("l.-y.-s.y.-'"))
-    # print(term("j.-'U:.-'k.o.-t.o.-',").relations.to(term("[j.-'B:.-'k.o.-t.o.-',]")))
-    # print(distance(term("j.-'U:.-'k.o.-t.o.-',"), term("k.o.-t.o.-'")))
-
-    # print(distance(term("E:U:.k.-"), term("E:U:.m.-")))
-    # print(distance(term("y."), term("j.")))
-    # print(distance(term("y."), term("g.")))
-    #
-    # root = term("M:M:.o.-M:M:.o.-E:.-+s.u.-'")
-    # ss = [term(s) for s in root.script.singular_sequences]
-    #
-    # print(ss[34].translation['fr'])
-    # print([t.translation['fr'] for t in sorted(ss, key=lambda t1: distance(ss[34], t1))])
+    # print(distance3(term(312), term(3112)))
+    load_distance3_matrix()
+    test_distance_same_layer(term("U:"))

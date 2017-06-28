@@ -237,7 +237,7 @@ class Dictionary(metaclass=DictionarySingleton):
                 coords = sorted(table.index(term0.script))
 
                 is_dim, count = is_dim_subset(coords, table)
-                if is_dim and count == 1:
+                if is_dim and (count == 1 or table.dim == 1):
                     # one dimension subset, it is a rank 3/5 paradigm
                     return 2, table
 
@@ -297,14 +297,16 @@ class Dictionary(metaclass=DictionarySingleton):
                 if not res:
                     raise ValueError("No rank candidates for %s" % str(term))
                 if len(res) > 1:
-                    print("Multiple rank candidates for %s (%s)" %
-                                     (str(term), ', '.join("%s:%d->%d"%(str(t1), self.ranks[t1], r) for r,v in res.items() for parent_t, t1 in v)))
-                    continue
+                    # print("Multiple rank candidates for %s (%s)" %
+                    #                  (str(term), ', '.join("%s:%d->%d"%(str(t1), self.ranks[t1], r) for r,v in res.items() for parent_t, t1 in v)))
+                    print("Multiple rank candidates [%s] for the term %s. Choosing the maximum rank."%(", ".join(["%d/%s"%(r, str(t[0].script)) for r, t in res.items()]), str(term)))
+                    m = max(res)
+                    res = {m: res[m]}
 
                 rank = next(res.__iter__())
                 if len(res[rank]) > 1:
                     res[rank] = sorted(res[rank])
-                    # print("Multiple candidate for rank %d : (%s)"%(rank, ", ".join(str(t) for t in res[rank])))
+                    print("Multiple candidate for parent of %s with rank %d : [%s]. Choosing 1st one."%(str(term), rank, ", ".join(str(t) for t in res[rank])))
                 term1 = res[rank][0]
 
                 _define(term, rank, term1, defined)

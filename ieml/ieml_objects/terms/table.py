@@ -1,18 +1,23 @@
 import collections
+from collections import defaultdict
+from itertools import chain
+
 import numpy as np
 
 from ieml.ieml_objects.terms import Term, term, TermNotFoundInDictionary
 from ieml.script.operator import script
 from ieml.script.script import Script
 
-Cell = collections.namedtuple('Cell', ['row', 'column', 'coordinate', 'table', 'term', 'script'])
+Cell = collections.namedtuple('Cell', ['row', 'column', 'coordinate', 'table', 'script', 'term'])
+
+_terms = defaultdict(list)
 
 
 class Table:
-    def __init__(self, t):
+    def __init__(self, paradigm):
         super().__init__()
 
-        self.paradigm = term(t)
+        self.paradigm = term(paradigm)
         if self.paradigm.script.cardinal == 1:
             raise ValueError("Table are defined on paradigm, not singular sequences.")
 
@@ -44,6 +49,9 @@ class Table:
                        table=self,
                        script=s,
                        term=t)
+
+            if t is not None:
+                _terms[t].append(res)
 
             self._index[s] = res
             return res
@@ -81,7 +89,21 @@ class Table:
         return self.paradigm.__hash__()
 
     def __contains__(self, item):
-        return item in self.paradigm
+        if isinstance(item, Term):
+            return item in self.paradigm
+
+        ss = None
+        if isinstance(item, Script):
+            ss = set(item.singular_sequences)
+
+        # script list set
+        if isinstance(item, collections.Iterable) and all(isinstance(ss, Script) for ss in item):
+            ss = set(chain.from_iterable(s.singular_sequences for s in item))
+
+        if ss is not None:
+            return ss.issubset(self.paradigm.script.singular_sequences)
+
+        raise NotImplemented
 
     def __iter__(self):
         return map(lambda e: e[()],
