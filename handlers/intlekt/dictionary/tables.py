@@ -78,11 +78,20 @@ def __build_parallel_table(main_term, parallel_terms, others_rel):
     else:
         rows = []
 
+    others_types = [{
+        'type': '%d dimension'%i,
+        **_term_entry(t.script)
+    } for i, t in enumerate(parallel_terms)] + \
+    [{
+        'type': reltype,
+        **_term_entry(term(main_tab.paradigm).relations[reltype][0].script)
+    } for i, reltype in enumerate(others_rel)]
+
     return {
         'parent': _term_entry(main_term.parent.script) if main_term.parent is not None else None,
         'styles': styles,
         'dimension': dim, # 1 or 2,
-        'others_types': ['parallel']*len(parallel_terms) + others_rel,
+        'others_types': others_types,
 
         'header': headers,
         'cells_lines': cells,
@@ -144,4 +153,5 @@ def get_relations_for_term(ieml):
     }
 
 if __name__ == "__main__":
-    get_table_for_term("s.O:O:.A:.-")
+    t = get_table_for_term("s.O:O:.A:.-")
+    print(t)
