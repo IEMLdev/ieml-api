@@ -147,11 +147,13 @@ def get_relations_for_term(ieml):
         } for relcat in RELATIONS_CATEGORIES
     }
 
+    relations['inclusion']['table_2_4'] = [_term_entry(tt) for tt in t.root.relations.contains if tt.rank in [2,4]]
+
     return {
         'success': True,
         'relations': relations
     }
 
 if __name__ == "__main__":
-    t = get_table_for_term("s.O:O:.A:.-")
+    t = get_relations_for_term("s.O:O:.A:.-")
     print(t)
