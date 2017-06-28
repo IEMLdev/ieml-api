@@ -99,11 +99,6 @@ def distance(term0, term1):
     return _distance_etymology(term0, term1), _nb_relations(term0, term1), _max_rank(term0, term1)
 
 
-def ranking_from_term(term0, nb_terms=30):
-    other = sorted((_distance_etymology(term0, t1), _nb_relations(term0, t1) ,t1) for t1 in term0.dictionary if not t1.script.paradigm)
-
-    return other[:nb_terms]
-
 
 def _test_diagram(t):
     print("Diagram for term %s -- %s"%(str(t), t.translations.fr))
@@ -365,6 +360,13 @@ def test_distance_same_layer(t):
     kkk = [t for t in other]
     for d, tt in kkk[:30]:
         print("%s (%.2f) - %s [%s]"%(str(tt), d, tt.translations['fr'], ', '.join(t.relations.to(tt))))
+
+
+def ranking_from_term(term0, nb_terms=30):
+    other = sorted((mat_distance3[term0.index, t1.index],
+                    _nb_relations(term0, t1) ,t1) for t1 in term0.dictionary)
+
+    return other[:nb_terms]
 
 
 if __name__ == '__main__':

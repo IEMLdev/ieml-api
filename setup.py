@@ -9,7 +9,7 @@ def readme():
 copyfile('ieml/config.sample.py', 'ieml/config.py')
 
 setup(name='ieml',
-      version='0.1.4',
+      version='0.1.6',
       description='Implementation of the artificial natural language IEML',
       long_description=readme(),
       classifiers=[
@@ -25,7 +25,13 @@ setup(name='ieml',
       author_email='louis.vanbeurden@gmail.com',
       license='GPLv3',
       packages=find_packages(exclude=['scripts', '*.test']),
-      install_requires=[],
+      install_requires=[
+            'numpy',
+            'bidict',
+            'ply',
+            'scipy',
+            'boto3'
+      ],
       test_suite='nose2.collector.collector',
       tests_require=['nose2'],
       package_data={
