@@ -1,9 +1,11 @@
 import os
 from itertools import groupby
 
+from ieml.script.tables import Table
+
 from ieml.ieml_objects.terms.version import get_available_dictionary_version
 
-from ieml.ieml_objects.terms import Dictionary, Table
+from ieml.ieml_objects.terms import Dictionary
 
 from scipy.sparse.csgraph._shortest_path import shortest_path
 
@@ -158,9 +160,9 @@ def _test_term2(t):
 mat_distance3 = None
 
 def _table_entry(t):
-    table = Table(t)
+    # table = Table(t)
     return {
-        'table': table,
+        # 'table': table,
         'term': t,
         'ss_set': set(t.script.singular_sequences)
     }
@@ -364,6 +366,8 @@ if __name__ == '__main__':
     # print(distance3(term(312), term(3112)))
     d = Dictionary(get_available_dictionary_version()[-1])
     # r = ranking_from_term(d.index[1])
-    print('\n'.join("%s - %s (%f)"%(str(r[1]), r[1].translations['fr'], r[0]) for r in ranking_from_term(d.index[1])))
+    print('\n'.join("%s - %s (%f)"%(str(r[1]), r[1].translations['fr'], r[0]) for r in ranking_from_term(d.terms["n.-x.-s.y.-'"])))
+
+    print(distance3(d.terms["n.-x.-s.y.-'"], d.terms["n.o.-s.o.-s.u.-'"]))
 
 

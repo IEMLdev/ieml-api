@@ -1,16 +1,13 @@
 import collections
-from collections import defaultdict
 from itertools import chain
 
 import numpy as np
+from ieml.script.tools import factorize
 
 from ieml.ieml_objects.terms import Term, term, TermNotFoundInDictionary
-from ieml.script.operator import script
 from ieml.script.script import Script
 
-Cell = collections.namedtuple('Cell', ['row', 'column', 'coordinate', 'table', 'script', 'term'])
-
-_terms = defaultdict(list)
+Cell = collections.namedtuple('Cell', ['tables', 'term', 'root_table'])
 
 
 class AbstractTable:
@@ -18,91 +15,19 @@ class AbstractTable:
         self.children = None
         self.partitions = None
         self.parent = None
-        self.rank = None
         self.table_set = None
         self.term = None
-
-
-class Table(AbstractTable):
-    def __init__(self, cell, paradigm, table_set):
-        super().__init__()
-
-        if not isinstance(paradigm, Term) or len(paradigm) == 1 or paradigm.ntable != 1:
-            raise ValueError("Invalid term for Table creation %s. Expected a Term paradigm that lead a 2d "
-                             "table"%str(paradigm))
-
-        self.term = paradigm
-
-        self._index = {}
-
-        cells = self.paradigm.cells()
-        self.dim = 2 if all(s != 1 for s in cells.shape) else 1
-
-        def _cell(s, i, j):
-            try:
-                t = term(s, dictionary=self.paradigm.dictionary)
-            except TermNotFoundInDictionary:
-                t = None
-
-            row = None
-            column = None
-
-            if i is not None and j is not None:
-                # singular sequence -> table cell
-                if self.dim == 2:
-                    row = self.rows[i]
-                    column = self.columns[j]
-                else:
-                    column = self.header
-
-            res = Cell(row=row,
-                       column=column,
-                       coordinate=(i, j),
-                       table=self,
-                       script=s,
-                       term=t)
-
-            if t is not None:
-                _terms[t].append(res)
-
-            self._index[s] = res
-            return res
-
-        self.header = _cell(self.paradigm.script, None, None)
-
-        if self.dim == 2:
-            rows, columns = self.paradigm.headers()
-            self.rows = [_cell(s, i, None) for i, s in enumerate(rows)]
-            self.columns = [_cell(s, None, j) for j, s in enumerate(columns)]
-
-        self.cells = np.empty(shape=cells.shape, dtype=Cell)
-        for i, column in enumerate(cells):
-            for j, s in enumerate(column):
-                self.cells[i, j] = _cell(s, i, j)
-
-    @property
-    def shape(self):
-        return self.cells.shape
-
-    def index(self, item):
-        return self[item].coordinate
-
-    def project(self, elements, key):
-        result = {}
-        for e in elements:
-            result[e] = [c for c in self if key(c.element, e)]
-
-        return result
+        self.root_table = None
 
     def __eq__(self, other):
-        return isinstance(other, Table) and self.paradigm == other.paradigm
+        return isinstance(other, Table) and self.term == other.term
 
     def __hash__(self):
-        return self.paradigm.__hash__()
+        return self.term.__hash__()
 
     def __contains__(self, item):
         if isinstance(item, Term):
-            return item in self.paradigm
+            return item in self.term
 
         ss = None
         if isinstance(item, Script):
@@ -113,46 +38,95 @@ class Table(AbstractTable):
             ss = set(chain.from_iterable(s.singular_sequences for s in item))
 
         if ss is not None:
-            return ss.issubset(self.paradigm.script.singular_sequences)
+            return ss.issubset(self.term.script.singular_sequences)
 
         raise NotImplemented
 
-    def __iter__(self):
-        return map(lambda e: e[()],
-                   np.nditer(self.cells, flags=['refs_ok'], op_flags=['readonly']))
+    @property
+    def dictionary(self):
+        return self.table_set.dictionary
+
+    @property
+    def rank(self):
+        raise NotImplemented
+
+
+class Table(AbstractTable):
+    def __init__(self, cells, table_set):
+        super().__init__()
+
+        if not isinstance(cells, np.array) or cells.ndim > 2 or cells.dtype != Cell:
+            raise ValueError("Invalid cells array for Table creation. Expected a Term paradigm that lead a 2d "
+                             "table")
+        self.cells = cells
+
+        if not isinstance(table_set, TableSet):
+            raise ValueError("Invalid parameter for table set %s. Expected a TableSet instance."%str(table_set))
+
+        self.table_set = table_set
+
+        self.term = self.dictionary.terms[factorize(cell.term.script for cell in self)]
+
+        self.parent = table_set.parent
+        self.children = self.partitions = set()
+        self.root_table = self.parent.root_table
+
+        self._index = {}
+
+        self.dim = 2 if all(s != 1 for s in cells.shape) else 1
+        if self.dim == 2:
+            self.rows = [None] * self.shape[0]
+            self.columns = [None] * self.shape[1]
+
+            for i, line in self.cells:
+                for j, cell in line:
+                    cell.tables[self] = (i, j)
+                    self._index[cell.term] = cell
+        else:
+            self.rows = None
+            self.columns = None
+
+            for i, cell in self.cells:
+                cell.tables[self] = (i,)
+                self._index[cell.term] = cell
+
+    @property
+    def shape(self):
+        return self.cells.shape
 
     def __getitem__(self, item):
         if isinstance(item, (Script, Term, str)):
-            s = script(item)
-            return self._index[s]
+            t = term(item, dictionary=self.dictionary)
+            return self._index[t]
 
-        if not isinstance(item, collections.Iterable) and self.dim == 1:
-            if isinstance(item, int):
-                return self.cells[item, 0]
-            elif item is None:
-                return self.header
+        return self.cells[item]
 
-        if item[0] is None:
-            if item[1] is None:
-                return self.header
+    def index(self, item):
+        return self[item].tables[self]
 
-            if self.dim != 2:
-                raise KeyError("No columns in 1d table")
-            return self.columns[item[1]]
+    def project(self, elements, key):
+        result = {}
+        for e in elements:
+            result[e] = [c for c in self if key(c.term, e)]
 
-        elif item[1] is None:
-            if self.dim != 2:
-                raise KeyError("No rows in 1d table")
+        return result
 
-            return self.rows[item[0]]
-        else:
-            return self.cells[item]
+    def __iter__(self):
+        return map(np.asscalar,
+                   np.nditer(self.cells, flags=['refs_ok'], op_flags=['readonly']))
 
     def __str__(self):
-        return "<Table %s, (%d, %d)>"%(str(self.paradigm), self.shape[0], self.shape[1])
+        return "<Table %s, (%d, %d)>"%(str(self.term), self.shape[0], self.shape[1])
 
     def __len__(self):
-        return self.shape[0] * self.shape[1]
+        if self.dim == 2:
+            return self.shape[0] * self.shape[1]
+        else:
+            return self.shape[0]
+
+    @property
+    def rank(self):
+        return self.table_set.rank
 
 
 class TableSet(AbstractTable):
@@ -163,27 +137,53 @@ class TableSet(AbstractTable):
             raise ValueError("Invalid object for TableSet creation, expected a paradigm term that generate multiple "
                              "Table, not %s."%str(term))
 
-        self.term = term
-        self.partitions = self.children = self.tables = {Table(cell2d) for cell3d in self.term.cells for cell2d in cell3d}
         self.parent = parent_table
+        self.root_table = self.parent.root_table
+        self.term = term
+        ## nop nop -->
+        self.partitions = self.children = self.tables = \
+            {Table(self.root_table.get_cells(cell2d), self) for cell3d in self.term.cells for cell2d in cell3d}
+
         self.table_set = self
 
     @property
     def rank(self):
-        return
+        if self.regular:
+            return self.parent.rank + 2
+        else:
+            return self.parent.rank + 1
+
+    @property
+    def regular(self):
+        if self.parent.dim == 2:
+            if self in self.parent.rows or self in self.parent.columns:
+                return True
+            else:
+                return False
+        else:
+            return True
 
 
 class RootTableSet(TableSet):
     def __init__(self, root_term):
-        super().__init__(root_term, None)
-
         if root_term.root != root_term:
-            raise ValueError("Invalid object for root table creation, expected a root term, not %s."%str(root_term))
+            raise ValueError("Invalid object for root table creation, expected a root term, not %s." % str(root_term))
+
+        self.all_cells = {}
+        for t_ss in root_term:
+            self.all_cells[t_ss] = Cell(term=t_ss, tables={}, root_table=self)
+
+        super().__init__(root_term, None)
 
     def add_paradigm(self, term):
         if not isinstance(term, Term) or len(term) == 1:
             raise ValueError("Unexpected object %s, expected a paradigm Term."%str(term))
 
+    def get_cells(self, cells):
+        return np.vectorize(lambda t: self.all_cells[t])(cells)
+
+    def rank(self):
+        return 1
 
 
 if __name__ == '__main__':

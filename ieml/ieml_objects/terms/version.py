@@ -90,11 +90,7 @@ class DictionaryVersion:
         return json.dumps(self.__getstate__())
 
     def upload_to_s3(self):
-        s3 = boto3.resource(
-            's3',
-            aws_access_key_id=AWS_ACCESS_KEY_ID,
-            aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
-        )
+        s3 = boto3.resource('s3')
         bucket_name = 'ieml-dictionary-versions'
         bucket = s3.Bucket(bucket_name)
         obj = bucket.Object("%s.json" % str(self))

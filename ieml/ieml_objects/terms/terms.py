@@ -130,3 +130,6 @@ class Term(IEMLObjects):
 
     def __len__(self):
         return self.script.cardinal
+
+    def __iter__(self):
+        return self.singular_sequences
