@@ -279,7 +279,7 @@ def get_ranking_from_term(request, format=None):
         'ieml': str(t[1].script),
         'ranking': t[0],
         'relations': _tt.relations.to(t[1], relations_types=['inclusion', 'etymology', 'siblings', 'table'])
-    } for t in ranking_from_term(_tt, nb_terms=30) if t[0] != 0.0])
+    } for t in ranking_from_term(_tt, nb_terms=30) if int(t[0]) != 0])
 
 
 @api_view(['GET'])
