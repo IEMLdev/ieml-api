@@ -78,14 +78,30 @@ def __build_parallel_table(main_term, parallel_terms, others_rel):
     else:
         rows = []
 
-    others_types = [{
-        'type': '%d dimension'%i,
-        **_term_entry(t.script)
-    } for i, t in enumerate(parallel_terms)] + \
-    [{
-        'type': reltype,
-        **_term_entry(term(main_tab.paradigm).relations[reltype][0].script)
-    } for i, reltype in enumerate(others_rel)]
+    others_types = []
+    offset = 0
+    if len(parallel_terms) > 0:
+        others_types.append({
+            'category': 'parallel',
+            'elements': [
+                {
+                    'index': i,
+                    **_term_entry(t.script)
+                } for i, t in enumerate(parallel_terms)
+            ]
+        })
+        offset = len(parallel_terms)
+
+    for i, reltype in enumerate(others_rel):
+        others_types.append({
+            'category': reltype,
+            'elements': [
+                {
+                    'index': offset + i,
+                    **_term_entry(term(main_tab.paradigm).relations[reltype][0].script)
+                }
+            ]
+        })
 
     return {
         'parent': _term_entry(main_term.parent.script) if main_term.parent is not None else None,
@@ -98,10 +114,6 @@ def __build_parallel_table(main_term, parallel_terms, others_rel):
         'rows': rows,
         'columns': columns
     }
-
-def _build_parralel_mapping(t_src, t_dest, reltype):
-    # reltype one of ['
-    pass
 
 
 def get_table_for_term(ieml):
@@ -127,7 +139,7 @@ def get_table_for_term(ieml):
         rels = {reltype: {s: term(s).relations[reltype] if s in Dictionary() else [] for s in table.all()}
                 for reltype in ['associated', 'opposed', 'crossed']}
 
-        others_rel = [reltype for reltype in rels if all(len(t) == 1 for s, t in rels[reltype].items())]
+        others_rel = sorted([reltype for reltype in rels if all(len(t) == 1 for s, t in rels[reltype].items())])
 
         tables.append(__build_parallel_table(main, others, others_rel))
 
@@ -155,5 +167,5 @@ def get_relations_for_term(ieml):
     }
 
 if __name__ == "__main__":
-    t = get_relations_for_term("s.O:O:.A:.-")
+    t = get_table_for_term("O:M:.+M:O:.")
     print(t)
