@@ -276,9 +276,9 @@ def get_ranking_from_term(request, format=None):
     _tt = term(request.query_params.get('ieml', None), dictionary=Dictionary(request.query_params.get('version', None)))
 
     return Response([{
-        'ieml': str(t[2].script),
-        'ranking': [t[0], t[1]],
-        'relations': _tt.relations.to(t[2], relations_types=['inclusion', 'etymology', 'siblings', 'table'])
+        'ieml': str(t[1].script),
+        'ranking': t[0],
+        'relations': _tt.relations.to(t[1], relations_types=['inclusion', 'etymology', 'siblings', 'table'])
     } for t in ranking_from_term(_tt, nb_terms=30) if t[0] < 5.0])
 
 
