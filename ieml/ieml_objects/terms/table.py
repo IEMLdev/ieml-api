@@ -142,6 +142,16 @@ class Table:
     def __len__(self):
         return self.shape[0] * self.shape[1]
 
+
+class RootTable:
+    def __init__(self, root_term):
+
+        if not isinstance(root_term, Term) or root_term.root != root_term:
+            raise ValueError("Invalid object for root table creation, expected a root term, not %s."%str(root_term))
+
+        self.term = root_term
+        # self.tables =
+
 if __name__ == '__main__':
     from ieml.ieml_objects.terms import term
     t = Table(term('M:O:.M:M:.-'))

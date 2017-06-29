@@ -17,11 +17,7 @@ __available_versions = None
 def get_available_dictionary_version(update=False):
     global __available_versions
     if __available_versions is None or update:
-        s3 = boto3.resource(
-            's3',
-            aws_access_key_id=AWS_ACCESS_KEY_ID,
-            aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
-        )
+        s3 = boto3.resource('s3')
         bucket_name = 'ieml-dictionary-versions'
         bucket = s3.Bucket(bucket_name)
 

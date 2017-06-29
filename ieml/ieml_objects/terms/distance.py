@@ -1,8 +1,9 @@
 import os
-from itertools import product, groupby
+from itertools import groupby
+
+from ieml.ieml_objects.terms.version import get_available_dictionary_version
 
 from ieml.ieml_objects.terms import Dictionary, Table
-from collections import defaultdict
 
 from scipy.sparse.csgraph._shortest_path import shortest_path
 
@@ -10,7 +11,6 @@ from ieml.ieml_objects.terms.tools import term, TermNotFoundInDictionary
 
 import numpy as np
 
-from ieml.ieml_objects.terms.version import get_default_dictionary_version
 from ieml.script.constants import MAX_LAYER
 from ieml.script.script import MultiplicativeScript, NullScript, AdditiveScript
 
@@ -100,24 +100,24 @@ def distance(term0, term1):
 
 
 
-def _test_diagram(t):
-    print("Diagram for term %s -- %s"%(str(t), t.translations.fr))
-
-    other = sorted((distance(t, t1) ,t1) for t1 in Dictionary() if t1 != t)
-
-    cat = defaultdict(list)
-    for d, tt in other:
-        for rel in t.relations.to(tt, relations_types=['father', 'child', 'contains', 'contained', 'table', 'siblings']):
-            cat[rel].append((d, tt))
-
-    for rel in cat:
-        cat[rel] = [(d,tt) for d, tt in sorted(cat[rel]) if d[1] <= 1.0]
-
-    for k, v in cat.items():
-        print("\t[%s]"%k)
-        for d, tt in v:
-            print("%s (%.2f, %.2f, %.2f) - %s [%s]" % (str(tt), d[0], d[1], d[2], tt.translations.fr,
-                                                       ', '.join(t.relations.to(tt))))
+# def _test_diagram(t):
+#     print("Diagram for term %s -- %s"%(str(t), t.translations.fr))
+#
+#     other = sorted((distance(t, t1) ,t1) for t1 in Dictionary() if t1 != t)
+#
+#     cat = defaultdict(list)
+#     for d, tt in other:
+#         for rel in t.relations.to(tt, relations_types=['father', 'child', 'contains', 'contained', 'table', 'siblings']):
+#             cat[rel].append((d, tt))
+#
+#     for rel in cat:
+#         cat[rel] = [(d,tt) for d, tt in sorted(cat[rel]) if d[1] <= 1.0]
+#
+#     for k, v in cat.items():
+#         print("\t[%s]"%k)
+#         for d, tt in v:
+#             print("%s (%.2f, %.2f, %.2f) - %s [%s]" % (str(tt), d[0], d[1], d[2], tt.translations.fr,
+#                                                        ', '.join(t.relations.to(tt))))
 
 
 def _test_term(t, distance_f=distance):
@@ -166,15 +166,33 @@ def _table_entry(t):
     }
 
 
-# layer -> rank -> terms[]
-layers_by_rank = {
-    i: {k: [_table_entry(t) for t in g]
-        for k, g in groupby(sorted([t for t in layer if t.ntable == 1 and len(t) != 1], key=lambda t: t.rank), key=lambda t: t.rank)}
-            for i, layer in enumerate(Dictionary().layers)
+
+def _order(t0, t1):
+    return (t0, t1) if t0 < t1 else (t1, t0)
+
+C = .9
+
+_siblings = {
+    'opposed': 2, 'crossed': 1, 'associated': 3, 'twin': 0
 }
+
+def _get_sibling(t0, t1):
+    return max(map(lambda r: _siblings[r], t0.relations.to(t1, ['opposed', 'crossed', 'associated', 'twin']))) + .5
+
+# layer -> rank -> terms[]
+layers_by_rank = None
 
 
 def _get_greater_common_rank(t0, t1):
+    global layers_by_rank
+    if layers_by_rank is None:
+        layers_by_rank = {
+            i: {k: [_table_entry(t) for t in g]
+                for k, g in groupby(sorted([t for t in layer if t.ntable == 1 and len(t) != 1], key=lambda t: t.rank),
+                                    key=lambda t: t.rank)}
+            for i, layer in enumerate(t0.dictionary.layers)
+        }
+
     ranks = layers_by_rank[t0.layer]
     max_rank = max(ranks)
 
@@ -188,20 +206,6 @@ def _get_greater_common_rank(t0, t1):
             return float(max(i, 1)) / max_rank
 
     return 1.0/5.0
-    # raise ValueError("No rank candidate found")
-
-
-def _order(t0, t1):
-    return (t0, t1) if t0 < t1 else (t1, t0)
-
-C = .9
-
-_siblings = {
-    'opposed': 2, 'crossed': 1, 'associated': 3, 'twin': 0
-}
-
-def _get_sibling(t0, t1):
-    return max(map(lambda r: _siblings[r], t0.relations.to(t1, ['opposed', 'crossed', 'associated', 'twin']))) + .5
 
 
 def _distance_same_layer(t0, t1):
@@ -263,7 +267,7 @@ def _distance_upper_layer2(t0, t1):
                 return 0.0
 
             try:
-                return mat_distance3[t0.index, term(s).index]
+                return mat_distance3[t0.index, term(s, dictionary=t0.dictionary).index]
             except TermNotFoundInDictionary:
                 return 0.0
 
@@ -273,76 +277,62 @@ def _distance_upper_layer2(t0, t1):
 
         if isinstance(c, NullScript):
             if isinstance(b, NullScript):
-                return 1.0 * d_a
+                return 0.80 * d_a
             else:
-                return 0.60 * d_a + 0.35 * d_b
+                return 0.40 * d_a + 0.30 * d_b
         else:
-            return 0.55 * d_a + 0.30 * d_b + 0.10 * d_c
+            return 0.35 * d_a + 0.20 * d_b + 0.10 * d_c
 
     elif isinstance(t1.script, AdditiveScript):
-        res = [_distance_upper_layer2(t0, term(s)) for s in t1.script]
+        res = [_distance_upper_layer2(t0, term(s, dictionary=t0.dictionary)) for s in t1.script]
 
         return sum(res) / len(res)
 
 
-def _compute_distance_3():
+def _compute_distance_3(dictionary):
     global mat_distance3
 
-    indexes_layers = {
-        k: [t.index for t in g] for k, g in groupby(Dictionary(), key=lambda t: t.layer)
-    }
-
-    def _distance_all_layer(t0, t1):
-        t0, t1 = _order(t0, t1)
-
-        return np.dot(mat_distance3[t0.index, indexes_layers[t1.layer - 1]],
-                      mat_distance3[indexes_layers[t1.layer - 1], t1.index])
+    # indexes_layers = {
+    #     k: [t.index for t in g] for k, g in groupby(dictionary, key=lambda t: t.layer)
+    # }
 
     def _set_distance(t0, t1, dist):
         mat_distance3[t0.index, t1.index] = dist
         mat_distance3[t1.index, t0.index] = dist
 
-    d = Dictionary()
-    mat_distance3 = np.zeros(shape=[len(d)]*2, dtype=float)
+    mat_distance3 = np.zeros(shape=[len(dictionary)]*2, dtype=float)
 
-    for root in d.roots:
+    for root in dictionary.roots:
         terms = root.relations.contains
         for i, t0 in enumerate(terms):
             for t1 in terms[i:]:
                 _set_distance(t0, t1, _distance_same_layer(t0, t1))
 
-    # same layer + 1
-    # for i, layer0 in enumerate(d.layers[:MAX_LAYER - 1]):
-    #     for t0 in layer0:
-    #         for t1 in (tt for tt in d.rel('child', t0) if tt.layer == i + 1):
-    #             _set_distance(t0, t1, _distance_upper_layer2(t0, t1))
-
     for j in range(1, MAX_LAYER):
-        for i, layer0 in enumerate(d.layers[:MAX_LAYER - 1]):
-            if i+j == len(d.layers):
+        for i, layer0 in enumerate(dictionary.layers[:MAX_LAYER - 1]):
+            if i+j == len(dictionary.layers):
                 break
 
             for t0 in layer0:
-                for t1 in (tt for tt in d.rel('child', t0) if tt.layer == i + j):
+                for t1 in (tt for tt in dictionary.rel('child', t0) if tt.layer == i + j):
                     _set_distance(t0, t1, _distance_upper_layer2(t0, t1))
 
-    # assert mat_distance3 == mat_distance3.transpose()
 
-def load_distance3_matrix():
+def load_distance3_matrix(dictionary):
     global mat_distance3
-    version = get_default_dictionary_version()
-    FILE = '/tmp/distance_3_m_%s.npy'%str(version)
+
+    FILE = '/tmp/distance_3_m_%s.npy'%str(dictionary.version)
 
     if os.path.isfile(FILE):
         mat_distance3 = np.load(FILE)
     else:
-        _compute_distance_3()
+        _compute_distance_3(dictionary)
         np.save(FILE, mat_distance3)
 
 
 def distance3(t0, t1):
     if mat_distance3 is None:
-        load_distance3_matrix()
+        load_distance3_matrix(t0.dictionary)
 
     return mat_distance3[t0.index, t1.index]
 
@@ -366,13 +356,14 @@ def test_distance_same_layer(t):
 
 
 def ranking_from_term(term0, nb_terms=30):
-    other = sorted((distance3(term0, t1),
-                    _nb_relations(term0, t1) ,t1) for t1 in term0.dictionary)
-
+    other = sorted([(distance3(term0, t1), t1) for t1 in term0.dictionary], reverse=True)
     return other[:nb_terms]
 
 
 if __name__ == '__main__':
     # print(distance3(term(312), term(3112)))
-    load_distance3_matrix()
-    test_distance_same_layer(term("U:"))
+    d = Dictionary(get_available_dictionary_version()[-1])
+    # r = ranking_from_term(d.index[1])
+    print('\n'.join("%s - %s (%f)"%(str(r[1]), r[1].translations['fr'], r[0]) for r in ranking_from_term(d.index[1])))
+
+
