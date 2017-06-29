@@ -13,13 +13,25 @@ Cell = collections.namedtuple('Cell', ['row', 'column', 'coordinate', 'table', '
 _terms = defaultdict(list)
 
 
-class Table:
-    def __init__(self, paradigm):
+class AbstractTable:
+    def __init__(self):
+        self.children = None
+        self.partitions = None
+        self.parent = None
+        self.rank = None
+        self.table_set = None
+        self.term = None
+
+
+class Table(AbstractTable):
+    def __init__(self, cell, paradigm, table_set):
         super().__init__()
 
-        self.paradigm = term(paradigm)
-        if self.paradigm.script.cardinal == 1:
-            raise ValueError("Table are defined on paradigm, not singular sequences.")
+        if not isinstance(paradigm, Term) or len(paradigm) == 1 or paradigm.ntable != 1:
+            raise ValueError("Invalid term for Table creation %s. Expected a Term paradigm that lead a 2d "
+                             "table"%str(paradigm))
+
+        self.term = paradigm
 
         self._index = {}
 
@@ -143,14 +155,36 @@ class Table:
         return self.shape[0] * self.shape[1]
 
 
-class RootTable:
-    def __init__(self, root_term):
+class TableSet(AbstractTable):
+    def __init__(self, term, parent_table):
+        super().__init__()
 
-        if not isinstance(root_term, Term) or root_term.root != root_term:
+        if not isinstance(term, Term) or len(term) == 1 or term.ntable == 1:
+            raise ValueError("Invalid object for TableSet creation, expected a paradigm term that generate multiple "
+                             "Table, not %s."%str(term))
+
+        self.term = term
+        self.partitions = self.children = self.tables = {Table(cell2d) for cell3d in self.term.cells for cell2d in cell3d}
+        self.parent = parent_table
+        self.table_set = self
+
+    @property
+    def rank(self):
+        return
+
+
+class RootTableSet(TableSet):
+    def __init__(self, root_term):
+        super().__init__(root_term, None)
+
+        if root_term.root != root_term:
             raise ValueError("Invalid object for root table creation, expected a root term, not %s."%str(root_term))
 
-        self.term = root_term
-        # self.tables =
+    def add_paradigm(self, term):
+        if not isinstance(term, Term) or len(term) == 1:
+            raise ValueError("Unexpected object %s, expected a paradigm Term."%str(term))
+
+
 
 if __name__ == '__main__':
     from ieml.ieml_objects.terms import term
