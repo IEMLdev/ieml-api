@@ -92,10 +92,7 @@ class Term(IEMLObjects):
         return sum(self.script.cells[i].shape[2] for i in range(len(self.script.cells)))
 
     def cells(self):
-        if self.ntable != 1:
-            raise ValueError("Too many dimension to generate table.")
-
-        return self.script.cells[0][:,:,0]
+        return self.script.cells
 
     def headers(self):
         cells = self.cells()
@@ -132,4 +129,4 @@ class Term(IEMLObjects):
         return self.script.cardinal
 
     def __iter__(self):
-        return self.singular_sequences
+        return self.singular_sequences.__iter__()
