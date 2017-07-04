@@ -500,8 +500,8 @@ class Dictionary(metaclass=DictionarySingleton):
         def _crossed_sibling(s0, s1):
             return s0.layer >= 2 and \
                    s0.cardinal == s1.cardinal and \
-                   _opposed_sibling(s0.children[0], s1.children[1]) and \
-                   _opposed_sibling(s0.children[1], s1.children[0])
+                   _opposed_sibling(s0.children[0], s1.children[0]) and \
+                   _opposed_sibling(s0.children[1], s1.children[1])
 
         siblings = np.zeros((4, len(self), len(self)), dtype=np.int8)
 
