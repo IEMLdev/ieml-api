@@ -15,7 +15,8 @@ from ieml.ieml_objects.terms import Term
 from ieml.script.constants import MAX_LAYER
 from ieml.script.operator import script
 from ieml.script.script import AdditiveScript, NullScript, MultiplicativeScript
-from ieml.config import DICTIONARY_FOLDER
+from ieml import get_configuration, ieml_folder
+
 
 class InvalidDictionaryState(Exception):
     def __init__(self, dictionary, message):
@@ -45,8 +46,11 @@ class DictionarySingleton(type):
         return cls._instances[version]
 
 
+USE_CACHE = get_configuration().get("RELATIONS", "cacherelations")
+
+
 class Dictionary(metaclass=DictionarySingleton):
-    def __init__(self, version, cache=True, load=True):
+    def __init__(self, version, cache=USE_CACHE, load=True):
         super().__init__()
 
         if isinstance(version, str):
@@ -87,18 +91,21 @@ class Dictionary(metaclass=DictionarySingleton):
                                                                 'index', 'ranks', 'partitions', 'parents', 'relations'])
 
     def load(self):
-        cache_folder = os.path.join(DICTIONARY_FOLDER, 'cache')
+        cache_folder = os.path.join(
+            ieml_folder,
+            get_configuration().get("RELATIONS", "cacherelationsfolder"))
+
         cache_json = os.path.join(cache_folder, 'cache_%s.json'%(str(self.version)))
         cache_relations = os.path.join(cache_folder, 'cache_%s_relations.npy'%(str(self.version)))
-
-        if not os.path.isdir(cache_folder):
-            os.makedirs(cache_folder)
 
         if not os.path.isfile(cache_json) or not os.path.isfile(cache_relations) or not self.cache:
             if not self.is_build:
                 self.build()
 
             if self.cache:
+                if not os.path.isdir(cache_folder):
+                    os.makedirs(cache_folder)
+
                 print("\t[*] Saving dictionary cache to disk (%s, %s)" % (str(cache_json), str(cache_relations)))
                 state = self.__getstate__()
                 # save relations as numpy array

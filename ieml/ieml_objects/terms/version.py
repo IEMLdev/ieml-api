@@ -7,8 +7,7 @@ import boto3
 import json
 import os
 
-from ieml.config import DICTIONARY_BUCKET_URL, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, DICTIONARY_FOLDER, \
-    DICTIONARY_DEFAULT_VERSION
+from ieml import get_configuration, ieml_folder
 from ieml.commons import LANGUAGES
 
 __available_versions = None
@@ -51,7 +50,7 @@ class DictionaryVersion:
         self.loaded = False
 
         if date is None:
-            date = DICTIONARY_DEFAULT_VERSION
+            date = get_configuration().get('VERSIONS', 'defaultversion')
 
         if isinstance(date, str):
             if date.startswith('dictionary_'):
@@ -106,14 +105,18 @@ class DictionaryVersion:
 
         file_name = "%s.json" % str(self)
 
-        if not os.path.isdir(DICTIONARY_FOLDER):
-            os.mkdir(DICTIONARY_FOLDER)
+        VERSIONS_FOLDER = os.path.join(ieml_folder, get_configuration().get('VERSIONS', 'versionsfolder'))
 
-        file = os.path.join(DICTIONARY_FOLDER, file_name)
+        if not os.path.isdir(VERSIONS_FOLDER):
+            os.mkdir(VERSIONS_FOLDER)
+
+        file = os.path.join(VERSIONS_FOLDER, file_name)
 
         if not os.path.isfile(file):
+            DICTIONARY_BUCKET_URL = get_configuration().get('VERSIONS', 'versionsurl')
             url = urllib.parse.urljoin(DICTIONARY_BUCKET_URL, file_name)
             print("\t[*] Downloading dictionary %s at %s" % (file_name, url))
+
             urlretrieve(url, file)
 
         with open(file, 'r') as fp:
