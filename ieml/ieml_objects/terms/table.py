@@ -11,12 +11,41 @@ from ieml.script.script import Script
 
 
 class AbstractTable:
-    def __init__(self):
+    def __init__(self, term, parent):
         self.partitions = None
-        self.parent = None
-        self.table_set = None
-        self.term = None
-        self.root_table = None
+        self._all_tables = None
+
+        self.term = term
+
+        # parent is always of type Table
+        if isinstance(parent, TableSet):
+            self.table_set = parent
+            self.parent = parent.parent
+            self.root_table = parent.root_table
+
+        elif isinstance(parent, Table):
+            self.table_set = None
+            self.parent = parent
+            self.root_table = parent.root_table
+
+        else:
+            # root
+            self.parent = None
+            self.table_set = None
+            self.root_table = self
+            if term.root != term:
+                raise ValueError("Invalid object for root table creation, expected a root term, not %s." % str(term))
+
+        self.all_cells = None
+        if self.is_root:
+            self.all_cells = {}
+            for t_ss in self.term:
+                self.all_cells[t_ss.script] = Cell(term=t_ss, root_table=self)
+        else:
+            self.all_cells = {t_ss: cell for t_ss, cell in self.root_table.all_cells.items() if t_ss in self.term}
+
+    def get_cells(self, cells):
+        return np.vectorize(lambda t: self.all_cells[t])(cells)
 
     def __eq__(self, other):
         return isinstance(other, Table) and self.term == other.term
@@ -41,9 +70,19 @@ class AbstractTable:
 
         raise NotImplemented
 
+    def __gt__(self, other):
+        return self.term.__gt__(other.term)
+
+    def __lt__(self, other):
+        return self.term.__lt__(other.term)
+
+    @property
+    def is_root(self):
+        return self.term.root == self.term
+
     @property
     def dictionary(self):
-        return self.root_table.dictionary
+        return self.term.dictionary
 
     @property
     def regular(self):
@@ -57,16 +96,24 @@ class AbstractTable:
 
     @property
     def rank(self):
-        if self.table_set is not None:
-            return self.table_set.rank
+        if self.is_root:
+            return 0
+        elif self.table_set is not None:
+            return max(self.table_set.rank, 1)
         elif self.regular:
-            return self.parent.rank + 2
+            return max(self.parent.rank, 1) + 2
         else:
-            return self.parent.rank + 1
+            return max(self.parent.rank, 1) + 1
 
     @property
     def children(self):
         return chain((self,), chain.from_iterable(p.children for p in self.partitions))
+
+    @property
+    def all_tables(self):
+        if self._all_tables is None:
+            self._all_tables = {table.term: table for table in self.children}
+        return self._all_tables
 
     def accept_term(self, term):
         raise NotImplemented
@@ -74,46 +121,65 @@ class AbstractTable:
     def add_paradigm(self, term):
         raise NotImplemented
 
+    def define_paradigm(self, term):
+        if not self.is_root:
+            self.root_table.define_paradigm(term)
+
+        if not isinstance(term, Term) or len(term) == 1:
+            raise ValueError("Unexpected object %s, expected a paradigm Term." % str(term))
+
+        if term in self.all_tables:
+            return
+            # raise ValueError("Paradigm already defined")
+
+        candidates = []
+        for t in self.children:
+            if term not in t.term:
+                continue
+
+            accept, regular = t.accept_term(term)
+            if accept:
+                candidates.append((t, regular))
+
+        candidates = sorted(candidates)
+        if len(candidates) == 0:
+            raise ValueError("No parent candidate for the table produced by term %s" % str(term))
+
+        if len(candidates) > 1:
+            print("\t[!] Multiple parent candidate for the table produced by term %s: {%s} choosing the smaller one." %
+                  (str(term), ', '.join([str(cand[0].term) for cand in candidates])))
+
+        table = candidates[0][0]
+        _table = table.add_paradigm(term)
+        self.all_tables[term] = _table
+
+
 def table(term, parent):
     if term.ntable == 1:
-        return Table(parent.root_table.get_cells(term.cells()[0][:, :, 0]), parent)
+        return Table(term, parent)
     else:
         return TableSet(term, parent)
 
 
 class Table(AbstractTable):
-    def __init__(self, cells, parent):
-        super().__init__()
-
-        if not isinstance(cells, np.ndarray) or cells.ndim > 2 or cells.dtype != Cell:
-            raise ValueError("Invalid cells array for Table creation. Expected a Term paradigm that lead a 2d "
+    def __init__(self, term, parent):
+        if term.ntable != 1:
+            raise ValueError("Invalid Term for Table creation. Expected a Term paradigm that lead a 2d "
                              "table")
-        self.cells = cells
 
-        if not isinstance(parent, AbstractTable):
+        if parent is not None and not isinstance(parent, AbstractTable):
             raise ValueError("Invalid parameter for parent parameter %s. Expected a Table or TableSet"
                              " instance."%str(parent))
 
-        self.table_set = None
-
-        if isinstance(parent, Table):
-            # Table instance
-            self.parent = parent
-        elif isinstance(parent, TableSet):
-            # TableSet instance
-            self.parent = parent.parent
-            self.table_set = parent
-        else:
-            raise ValueError()
+        super().__init__(term=term, parent=parent)
+        self.cells = self.root_table.get_cells(term.cells()[0][:, :, 0])
 
         assert self.parent is None or isinstance(self.parent, Table)
 
-        self.root_table = parent.root_table
-
         self.partitions = set()
-        self.term = self.dictionary.terms[factorize(cell.term.script for cell in self)]
+
         self._index = {}
-        self.dim = 2 if all(s != 1 for s in cells.shape) else 1
+        self.dim = 2 if all(s != 1 for s in self.cells.shape) else 1
 
         if self.dim == 2:
             self.rows = [None] * self.shape[0]
@@ -201,7 +267,7 @@ class Table(AbstractTable):
 
             return False, 0
 
-        if self.rank % 2 == 0:
+        if self.rank != 0 and self.rank % 2 == 0:
             return False, False
 
         coords = sorted([self.index(ss) for ss in term])
@@ -227,6 +293,7 @@ class Table(AbstractTable):
     def add_paradigm(self, term):
         _table = table(term, self)
         self.partitions.add(_table)
+        return _table
 
     @property
     def shape(self):
@@ -277,24 +344,15 @@ class Cell:
 
 class TableSet(AbstractTable):
     def __init__(self, term, parent_table):
-        super().__init__()
+        super().__init__(term=term, parent=parent_table)
 
-        if not isinstance(term, Term) or len(term) == 1:
+        if term.ntable == 1:
             raise ValueError("Invalid object for TableSet creation, expected a paradigm term that generate multiple "
                              "Table, not %s."%str(term))
 
-        if parent_table is not None:
-            self.parent = parent_table
-            self.root_table = self.parent.root_table
-        else:
-            self.parent = None
-            self.root_table = self
+        self.partitions = self.tables = {Table(t, self) for t in self.term.tables_term}
 
-        self.term = term
-
-        self.partitions = self.tables = \
-            {Table(self.root_table.get_cells(cell3d[:, :, i]), self) for cell3d in self.term.cells() for i in range(cell3d.shape[2])}
-        self.table_set = self
+        # self.table_set = self
 
     def accept_term(self, term):
         tables = [table for table in self.tables if table.term in term]
@@ -311,74 +369,32 @@ class TableSet(AbstractTable):
         if isinstance(_table, Table):
             self.tables.add(_table)
 
+        return _table
 
-class RootTableSet(TableSet):
-    def __init__(self, root_term):
-        if root_term.root != root_term:
-            raise ValueError("Invalid object for root table creation, expected a root term, not %s." % str(root_term))
-
-        self.all_cells = {}
-        for t_ss in root_term:
-            self.all_cells[t_ss.script] = Cell(term=t_ss, root_table=self)
-
-        self.root_table = self
-        super().__init__(root_term, None)
-
-        self.all_tables = {t.term: t for t in self.children}
-
-    def get_cells(self, cells):
-        return np.vectorize(lambda t: self.all_cells[t])(cells)
-
-    @property
-    def rank(self):
-        return 1
-
-    @property
-    def dictionary(self):
-        return self.term.dictionary
-
-    def define_paradigm(self, term):
-        if not isinstance(term, Term) or len(term) == 1:
-            raise ValueError("Unexpected object %s, expected a paradigm Term." % str(term))
-
-        if term in self.all_tables:
-            return
-            # raise ValueError("Paradigm already defined")
-
-        candidates = []
-        for t in self.children:
-            if term not in t.term:
-                continue
-
-            accept, regular = t.accept_term(term)
-            if accept:
-                candidates.append((t, regular))
-
-        candidates = sorted(candidates)
-        if len(candidates) == 0:
-            raise ValueError("No parent candidate for the table produced by term %s" % str(term))
-
-        if len(candidates) > 1:
-            print("\t[!] Multiple parent candidate for the table produced by term %s." % str(term))
-
-        table = candidates[0][0]
-        self.all_tables[term] = table
-        table.add_paradigm(term)
+    def __str__(self):
+        return "<TableSet %s, {%s}>"%(str(self.term), ', '.join([str(t.term) for t in self.partitions]))
 
 
 if __name__ == '__main__':
     from ieml.ieml_objects.terms import term
     # tt = next(rt.children).columns[0]
     # print(tt.rank)
-    root = term("O:M:.M:M:.-+M:M:.O:M:.-")
-    rt = RootTableSet(root)
+    root = term("I:")
+    rt = table(root, None)
 
-    for t in [t for t in root.relations.contains if len(t) != 1]:
+    for t in [t for t in root.relations.contains if len(t) != 1][::-1]:
         rt.define_paradigm(t)
 
     print(rt)
+    ## unit test
     tables = {}
     for root in Dictionary().roots:
-        tables[root] = RootTableSet(root)
-        for t in [t for t in root.relations.contains if len(t) != 1]:
+        tables[root] = table(root, None)
+        for t in [t for t in root.relations.contains if len(t) != 1][::-1]:
             tables[root].define_paradigm(t)
+
+        for _term, _table in tables[root].all_tables.items():
+            if _term.rank != _table.rank:
+                print("%s | old: %d, new: %d"%(str(_term), _term.rank, _table.rank))
+
+

@@ -94,6 +94,10 @@ class Term(IEMLObjects):
     def cells(self):
         return self.script.cells
 
+    @property
+    def tables_term(self):
+        return [self.dictionary.terms[s] for s in self.script.tables_script]
+
     def headers(self):
         cells = self.cells()
 

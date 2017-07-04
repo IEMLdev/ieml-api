@@ -144,15 +144,25 @@ class Script(TreeStructure):
 
         return item.singular_sequences_set.issubset(self.singular_sequences_set)
 
+    def _build_tables(self):
+        if self.cardinal == 1:
+            self._cells = [np.array([[[self]]])]
+            self._tables_script = [self]
+        else:
+            self._cells, self._tables_script = self._compute_cells()
+
     @property
     def cells(self):
         if self._cells is None:
-            if self.cardinal == 1:
-                self._cells = [np.array([[[self]]])]
-            else:
-                self._cells = self._compute_cells()
-
+            self._build_tables()
         return self._cells
+
+    @property
+    def tables_script(self):
+        if self._tables_script is None:
+            self._build_tables()
+        return self._tables_script
+
 
     @property
     def singular_sequences(self):
@@ -175,9 +185,6 @@ class Script(TreeStructure):
             self._tables = [Table(cell) for cell in self.cells]
 
         return self._tables
-
-    def _compute_tables(self):
-        pass
 
     def _compute_cells(self):
         pass
@@ -286,9 +293,9 @@ class AdditiveScript(Script):
 
         if any(not c.paradigm for c in self.children):
             # layer 0 -> column paradigm (like I: F: M: O:)
-            return [np.array([[[s]] for s in self.singular_sequences])]
+            return [np.array([[[s]] for s in self.singular_sequences])], [self]
 
-        return [t for c in self.children for t in c.cells]
+        return [t for c in self.children for t in c.cells], [t for c in self.children for t in c.tables_script]
 
 
 class MultiplicativeScript(Script):
@@ -436,6 +443,7 @@ class MultiplicativeScript(Script):
     def _compute_cells(self):
         # check how many plurals child
         plurals_child = [(c, i) for i, c in enumerate(self.children) if c.cardinal != 1]
+
         if len(plurals_child) == 1:
             # only one plural child, we recurse
             v = plurals_child[0]
@@ -446,7 +454,12 @@ class MultiplicativeScript(Script):
             def resolve_ss(s):
                 return map_seq[s]
 
-            return [np.vectorize(resolve_ss)(c) for c in v[0].cells]
+            def map_script(s):
+                return MultiplicativeScript(children=[
+                    self.children[i] if i != v[1] else s for i in range(3)
+                ])
+
+            return [np.vectorize(resolve_ss)(c) for c in v[0].cells], [map_script(c) for c in v[0].tables_script]
 
         # more than one plural var, we build a multidimensional array
         # Check the table dimension
@@ -469,7 +482,13 @@ class MultiplicativeScript(Script):
 
             result[res[0], res[1], res[2]] = s
 
-        return [result]
+        if len(plurals_child) == 3:
+            tables_script = [MultiplicativeScript(children=[self.children[0], self.children[1], ss])
+                             for ss in self.children[2].singular_sequences]
+        else:
+            tables_script = [self]
+
+        return [result], tables_script
 
 
 class NullScript(Script):
