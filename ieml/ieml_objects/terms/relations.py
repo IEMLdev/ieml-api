@@ -14,13 +14,13 @@ RELATIONS = ['contains',         # 0
              'associated',       # 9
              'crossed',          # 10
              'twin',             # 11
-
-             'table_0',
-             'table_1',
-             'table_2',
-             'table_3',
-             'table_4',
-             'table_5',
+             #
+             # 'table_0',
+             # 'table_1',
+             # 'table_2',
+             # 'table_3',
+             # 'table_4',
+             # 'table_5',
 
              'inclusion',        # 12
              'father',           # 13

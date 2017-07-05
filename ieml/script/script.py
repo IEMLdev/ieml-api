@@ -178,14 +178,6 @@ class Script(TreeStructure):
 
         return self._singular_sequences_set
 
-    @property
-    def tables(self):
-        if self._tables is None:
-            from ieml.script.tables import Table
-            self._tables = [Table(cell) for cell in self.cells]
-
-        return self._tables
-
     def _compute_cells(self):
         pass
 

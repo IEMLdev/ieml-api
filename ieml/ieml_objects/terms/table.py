@@ -2,11 +2,9 @@ import collections
 from itertools import chain
 
 import numpy as np
-from ieml.ieml_objects.terms.dictionary import Dictionary
-
 from ieml.script.tools import factorize
 
-from ieml.ieml_objects.terms import Term, term, TermNotFoundInDictionary
+from ieml.ieml_objects.terms import Term
 from ieml.script.script import Script
 
 
@@ -40,12 +38,12 @@ class AbstractTable:
         if self.is_root:
             self.all_cells = {}
             for t_ss in self.term:
-                self.all_cells[t_ss.script] = Cell(term=t_ss, root_table=self)
+                self.all_cells[t_ss] = Cell(term=t_ss, root_table=self)
         else:
             self.all_cells = {t_ss: cell for t_ss, cell in self.root_table.all_cells.items() if t_ss in self.term}
 
     def get_cells(self, cells):
-        return np.vectorize(lambda t: self.all_cells[t])(cells)
+        return np.vectorize(lambda s: self.all_cells[self.dictionary.terms[s]])(cells)
 
     def __eq__(self, other):
         return isinstance(other, Table) and self.term == other.term
@@ -75,6 +73,12 @@ class AbstractTable:
 
     def __lt__(self, other):
         return self.term.__lt__(other.term)
+
+    def __getitem__(self, item):
+        if len(item) == 1:
+            return self.all_cells[item]
+        else:
+            return self.all_tables[item]
 
     @property
     def is_root(self):
@@ -172,13 +176,12 @@ class Table(AbstractTable):
                              " instance."%str(parent))
 
         super().__init__(term=term, parent=parent)
-        self.cells = self.root_table.get_cells(term.cells()[0][:, :, 0])
+        self.cells = self.root_table.get_cells(term.script.cells[0][:, :, 0])
 
         assert self.parent is None or isinstance(self.parent, Table)
 
         self.partitions = set()
 
-        self._index = {}
         self.dim = 2 if all(s != 1 for s in self.cells.shape) else 1
 
         if self.dim == 2:
@@ -188,7 +191,6 @@ class Table(AbstractTable):
             for i, line in enumerate(self.cells):
                 for j, cell in enumerate(line):
                     cell.tables[self] = (i, j)
-                    self._index[cell.term] = cell
 
             for i, row in enumerate(self.cells):
                 script_row = factorize([cell.term.script for cell in row])
@@ -208,7 +210,6 @@ class Table(AbstractTable):
 
             for i, cell in enumerate(self.cells):
                 cell.tables[self] = (i,)
-                self._index[cell.term] = cell
 
     def accept_term(self, term):
         """
@@ -299,12 +300,13 @@ class Table(AbstractTable):
     def shape(self):
         return self.cells.shape
 
-    def __getitem__(self, item):
-        if isinstance(item, (Script, Term, str)):
-            t = term(item, dictionary=self.dictionary)
-            return self._index[t]
-
-        return self.cells[item]
+    # def __getitem__(self, item):
+    #     from ieml.ieml_objects.terms import term
+    #     if isinstance(item, (Script, Term, str)):
+    #         t = term(item, dictionary=self.dictionary)
+    #         return self._index[t]
+    #
+    #     return self.cells[item]
 
     def index(self, item):
         return self[item].tables[self]
@@ -384,6 +386,7 @@ if __name__ == '__main__':
 
     for t in [t for t in root.relations.contains if len(t) != 1][::-1]:
         rt.define_paradigm(t)
+
 
     print(rt)
     ## unit test

@@ -1,6 +1,16 @@
 import bidict
 
 
+class cached_property:
+    def __init__(self, factory):
+        self._factory = factory
+        self._attr_name = factory.__name__
+
+    def __get__(self, instance, owner):
+        attr = self._factory(instance)
+        setattr(instance, self._attr_name, attr)
+        return attr
+
 class TreeStructure:
     def __init__(self):
         super().__init__()

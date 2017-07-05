@@ -1,11 +1,9 @@
 from collections import namedtuple
-import numpy as np
 
-from ieml.commons import LANGUAGES
+from ieml.commons import LANGUAGES, cached_property
 from ieml.ieml_objects.commons import IEMLObjects
 from ieml.ieml_objects.terms.relations import Relations
-from ieml.script.operator import script
-from ieml.script.tools import factorize
+from ieml.script.operator import script as _script
 
 Translations = namedtuple('Translations', list(LANGUAGES))
 Translations.__getitem__ = lambda self, item: self.__getattribute__(item) if item in LANGUAGES \
@@ -15,21 +13,25 @@ Translations.__getitem__ = lambda self, item: self.__getattribute__(item) if ite
 class Term(IEMLObjects):
     closable = True
 
-    def __init__(self, s, dictionary):
+    def __init__(self, script, index, dictionary):
         self.dictionary = dictionary
-        self.script = script(s)
+        # from ieml.ieml_objects.terms.dictionary import Dictionary
+        # if not isinstance(dictionary, Dictionary):
+        #     raise ValueError("Invalid dictionary argument for Term creation: %s"%str(dictionary))
 
-        self.grammatical_class = self.script.script_class
+        # self.table = table
+        # from ieml.ieml_objects.terms.table import AbstractTable
+        # if not isinstance(table, AbstractTable):
+        #     raise ValueError("Invalid table argument for Term creation: %s"%str(table))
 
+        self.script = _script(script)
         super().__init__([])
+
         self.relations = Relations(term=self, dictionary=self.dictionary)
-        self.index = None
+        self.index = index
 
         # if term in a dictionary, those values will be set
-        self._translations = None
-        self._root = None
-
-        from ieml.ieml_objects.terms.tools import TermNotFoundInDictionary
+        self.translations = Translations(**{l: self.dictionary.translations[l][self.script] for l in LANGUAGES})
 
     __hash__ = IEMLObjects.__hash__
 
@@ -45,79 +47,45 @@ class Term(IEMLObjects):
     def compute_str(self, children_str):
         return "[" + str(self.script) + "]"
 
-    @property
-    def parent(self):
-        if self in self.dictionary.parents:
-            return self.dictionary.parents[self]
-
-        return None
-
-    @property
-    def partitions(self):
-        return self.dictionary.partitions[self]
+    @cached_property
+    def root(self):
+        return self.dictionary.get_root(self.script)
 
     @property
     def inhibitions(self):
         return self.dictionary.inhibitions[self.root]
 
-    @property
-    def translations(self):
-        if self._translations is None:
-            self._translations = Translations(**{l: self.dictionary.translations[l][self] for l in LANGUAGES})
-        return self._translations
-
-    @property
-    def root(self):
-        if self._root is None:
-            self._root = self.dictionary.get_root(self.script)
-        return self._root
-
-    @property
+    @cached_property
     def rank(self):
-        if self not in self.dictionary.ranks:
-            print(self)
-        return self.dictionary.ranks[self]
+        return self.table.rank
 
     @property
     def empty(self):
         return self.script.empty
 
-    @property
-    def defined(self):
-        return all(self.__getattribute__(p) is not None for p in
-                   ['translation', 'inhibitions', 'root', 'index', 'relations', 'rank'])
-
-    @property
+    @cached_property
     def ntable(self):
         return sum(self.script.cells[i].shape[2] for i in range(len(self.script.cells)))
 
-    def cells(self):
-        return self.script.cells
-
-    @property
+    @cached_property
     def tables_term(self):
         return [self.dictionary.terms[s] for s in self.script.tables_script]
 
-    def headers(self):
-        cells = self.cells()
-
-        rows = [factorize([s for s in c]) for c in cells]
-        columns = [factorize([s for s in c]) for c in cells.transpose()]
-
-        return rows, columns
-
     @property
-    def tables(self):
-        return self.script.tables
+    def grammatical_class(self):
+        return self.script.script_class
 
-    @property
+    @cached_property
     def singular_sequences(self):
-        from .tools import term
-        return [term(ss, dictionary=self.dictionary) for ss in self.script.singular_sequences]
+        return [self.dictionary.terms[ss] for ss in self.script.singular_sequences]
 
     @property
     def layer(self):
         return self.script.layer
+
+    @cached_property
+    def table(self):
+        return self.dictionary.tables[self.root][self]
 
     def __contains__(self, item):
         from .tools import term
