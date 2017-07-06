@@ -3,9 +3,9 @@ import logging
 import ply.yacc as yacc
 
 from ieml.exceptions import CannotParse
-from ieml.ieml_objects.parser.parser import IEMLParser
+from ieml.synthax.parser import IEMLParser
 from ieml.usl.parser.lexer import tokens, get_lexer
-from ieml.usl.usl import Usl
+from ieml.usl import Usl
 from ieml.metaclasses import Singleton
 
 

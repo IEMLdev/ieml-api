@@ -1,10 +1,9 @@
 import os
 
-from ieml.commons import LANGUAGES
-from ieml.ieml_objects.terms import Dictionary
+from ieml.constants import LANGUAGES, MAX_LAYER
+from ieml.dictionary import Dictionary
 
 from unittest.case import TestCase
-from ieml.script.constants import MAX_LAYER
 
 
 class DictionaryTest(TestCase):
@@ -14,7 +13,6 @@ class DictionaryTest(TestCase):
 
         self.assertEqual(len(dic.index), NB_TERMS)
         self.assertEqual(len(dic.terms), NB_TERMS)
-        self.assertEqual(len(dic.ranks), NB_TERMS)
         # self.assertEqual(len(dic.relations), 12)
         for l in LANGUAGES:
             self.assertEqual(len(dic.translations[l]), NB_TERMS)
@@ -25,8 +23,8 @@ class DictionaryTest(TestCase):
 
         self.assertEqual(len(dic.singular_sequences), sum(r.script.cardinal for r in dic.roots))
 
-        for t, r in dic.ranks.items():
-            self.assertIn(r, list(range(0, 7)), "Term %s as a invalid rank of %d"%(str(t), r))
+        # for t, r in dic.ranks.items():
+        #     self.assertIn(r, list(range(0, 7)), "Term %s as a invalid rank of %d"%(str(t), r))
 
     # def test_remove(self):
     #     dic = Dictionary()

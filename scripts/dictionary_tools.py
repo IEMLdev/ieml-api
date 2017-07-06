@@ -163,10 +163,10 @@ result = {
 }
 
 
-def _test_rules():
-    for s, r in to_translate.items():
-        if str(r(script(s))) != result[s]:
-            print("error for %s != %s"%(str(r(script(s))), result[s]))
+# def _test_rules():
+#     for s, r in to_translate.items():
+#         if str(r(script(s))) != result[s]:
+#             print("error for %s != %s"%(str(r(script(s))), result[s]))
 
 
 def translate_script(to_translate):
@@ -197,9 +197,29 @@ def translate_script(to_translate):
 
     return create_dictionary_version(version, add=to_add, remove=to_remove)
 
+"""
+s.-S:.U:.-'l.-S:.O:.-'n.-T:.A:.-',+M:.-'M:.-'n.-T:.A:.-',
+s.-S:.U:.-'n.-T:.A:.-'l.-S:.O:.-',+n.-T:.A:.-'M:.-'M:.-',
+"""
+def translate_ocean(s):
+    if s in script("M:.-'M:.-'n.-T:.A:.-',"):
+        return _rotate_sc(s)
+    elif s in script("s.-S:.U:.-'l.-S:.O:.-'n.-T:.A:.-',"):
+        subst, attr, mode = s
+        return m(subst, mode, attr)
+    elif isinstance(s, AdditiveScript):
+        return AdditiveScript(children=[translate_ocean(c) for c in s])
+
+
+
 if __name__ == "__main__":
-    v = get_available_dictionary_version()[-1]
-    v.load()
-    print('\n'.join(v.roots))
-    # v = translate_script(to_translate)
-    # v.upload_to_s3()
+    assert translate_ocean(script("s.-S:.U:.-'l.-S:.O:.-'n.-T:.A:.-',+M:.-'M:.-'n.-T:.A:.-',")) == "s.-S:.U:.-'n.-T:.A:.-'l.-S:.O:.-',+n.-T:.A:.-'M:.-'M:.-',"
+
+
+    # v = get_available_dictionary_version()[-1]
+    # v.load()
+    # print('\n'.join(v.roots))
+    v = translate_script({
+        "s.-S:.U:.-'l.-S:.O:.-'n.-T:.A:.-',+M:.-'M:.-'n.-T:.A:.-',": translate_ocean
+    })
+    v.upload_to_s3()

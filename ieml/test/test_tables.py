@@ -1,9 +1,9 @@
 import unittest
 import numpy as np
-from ieml.ieml_objects.terms import Dictionary, term
-from ieml.script.operator import sc
-from ieml.script.parser import ScriptParser
-from ieml.script.tools import factorize
+from ieml.dictionary import Dictionary, term
+from ieml.dictionary.script import script as sc
+from ieml.dictionary.script.parser import ScriptParser
+from ieml.dictionary.script.tools import factorize
 
 
 class TableGenerationTest(unittest.TestCase):

@@ -1,5 +1,5 @@
-from ieml.ieml_objects.terms import Dictionary
-from ieml.script.tools import factorize
+from ieml.dictionary import Dictionary
+from ieml.dictionary.script import factorize
 import unittest
 
 class FactorizationTest(unittest.TestCase):

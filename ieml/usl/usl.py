@@ -1,9 +1,8 @@
 from itertools import islice
 
-from ieml.commons import LANGUAGES
-from ieml.ieml_objects.terms import Term
-from ieml.paths.paths import Path
-from ieml.paths.tools import enumerate_paths, resolve
+from ..constants import LANGUAGES
+from ..dictionary import Term
+from .paths import Path, enumerate_paths, resolve
 
 
 class Usl:

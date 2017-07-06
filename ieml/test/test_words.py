@@ -1,9 +1,9 @@
 import unittest
 
-from ieml.ieml_objects.exceptions import InvalidIEMLObjectArgument
-from ieml.ieml_objects.terms import term
-from ieml.ieml_objects.tools import ieml
-from ieml.ieml_objects.words import Word, Morpheme
+from ieml.exceptions import InvalidIEMLObjectArgument
+from ieml.dictionary import term
+from ieml.tools import ieml
+from ieml.synthax import Word, Morpheme
 
 
 class WordsTest(unittest.TestCase):

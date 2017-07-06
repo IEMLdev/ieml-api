@@ -1,9 +1,7 @@
 from collections import defaultdict
-from ieml.ieml_objects.tools import ieml
-from ieml.ieml_objects.terms.dictionary import Dictionary
-from ieml.ieml_objects.words import Word
-from ieml.usl.template import Template
-from ieml.usl.tools import random_usl
+
+from ..tools import ieml
+from .template import Template
 
 template = Template(ieml("[([M:M:.a.-]+[M:.-',M:.-',S:.-'B:.-'n.-S:.U:.-',_])*([E:U:T:.]+[E:U:.wa.-])]"), ['r0', 'r1'])
 collection = list(template)

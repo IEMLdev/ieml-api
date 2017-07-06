@@ -1,16 +1,11 @@
 import random
-import re
 import unittest
 
-from ieml.ieml_objects import RandomPoolIEMLObjectGenerator, Sentence, Hypertext, Text, Word, PropositionPath
-from ieml.ieml_objects.hypertexts import Hyperlink
-from ieml.ieml_objects.parser.parser import IEMLParser
-from ieml.ieml_objects.sentences import SuperSentence
-from ieml.paths.tools import resolve
-from ieml.usl import usl
+from ieml.synthax import Sentence, Text, Word, SuperSentence
+from ieml.tools import RandomPoolIEMLObjectGenerator
+from ieml.usl import usl, Usl
 from ieml.usl.tools import random_usl, replace_paths
-from ieml.usl.usl import Usl
-from .helper import *
+from ieml.test.helper import *
 
 
 class TestTexts(unittest.TestCase):

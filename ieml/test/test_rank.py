@@ -1,7 +1,7 @@
 import unittest
 # We use protected method _compute_rank for dependency injection
-from ieml.ieml_objects.terms import Dictionary, term
-from ieml.script.operator import sc
+from ieml.dictionary import Dictionary, term
+from ieml.dictionary.script import script as sc
 
 
 class RankComputationTest(unittest.TestCase):

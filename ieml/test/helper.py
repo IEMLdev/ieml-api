@@ -1,6 +1,6 @@
-from ieml.ieml_objects.sentences import Sentence, Clause
-from ieml.ieml_objects.terms import term
-from ieml.ieml_objects.words import Morpheme, Word
+from ieml.synthax import Sentence, Clause
+from ieml.dictionary import term
+from ieml.synthax import Morpheme, Word
 
 
 def get_test_word_instance():

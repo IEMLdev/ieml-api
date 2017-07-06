@@ -1,15 +1,12 @@
 import copy
 import itertools
-
-import bidict
-
-from ieml.commons import LANGUAGES
-from ieml.ieml_objects.terms.terms import Term
-from ieml.ieml_objects.terms.tools import term
-from ieml.ieml_objects.words import Word
-from ieml.paths.tools import path
-from ieml.usl.tools import usl, replace_paths
 import numpy as np
+
+from ..constants import LANGUAGES
+from ..dictionary import Term, term
+from ..synthax import Word
+from .paths import path
+from .tools import usl, replace_paths
 
 
 class Template:

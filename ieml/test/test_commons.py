@@ -2,12 +2,11 @@ import random
 from collections import defaultdict, Counter
 from itertools import repeat, chain
 from unittest.case import TestCase
-from ieml.ieml_objects.sentences import AbstractSentence, SuperSentence, Sentence
-from ieml.ieml_objects.terms import Term, term
-from ieml.ieml_objects.texts import Text
-from ieml.ieml_objects.tools import RandomPoolIEMLObjectGenerator
-from ieml.ieml_objects.words import Word
-from ieml.script.operator import sc
+from ieml.synthax.sentences import AbstractSentence, SuperSentence, Sentence
+from ieml.dictionary import Term, term
+from ieml.synthax import Text,Word
+from ieml.tools import RandomPoolIEMLObjectGenerator
+from ieml.dictionary import script as sc
 from ieml.usl.tools import random_usl, replace_paths, usl
 from ieml.usl.usl import Usl
 

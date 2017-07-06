@@ -1,14 +1,13 @@
 import random
 
-from ieml.ieml_objects.commons import IEMLObjects, IEMLType
-from ieml.ieml_objects.sentences import Sentence, SuperSentence
-from ieml.ieml_objects.terms import Term
-from ieml.ieml_objects.texts import Text
-from ieml.ieml_objects.tools import RandomPoolIEMLObjectGenerator, ieml
-from ieml.ieml_objects.words import Word, Morpheme
-from ieml.paths.tools import path, resolve_ieml_object
-from ieml.usl.parser.parser import USLParser
-from ieml.usl.usl import Usl
+from ..commons import IEMLObjects, IEMLType
+from ..synthax import Sentence, SuperSentence, Text, Word, Morpheme
+from ..tools import RandomPoolIEMLObjectGenerator, ieml
+from ..dictionary import Term
+
+from .paths import path, resolve_ieml_object
+from .parser import USLParser
+from .usl import Usl
 
 
 def usl(arg):

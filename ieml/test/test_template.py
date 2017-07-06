@@ -1,6 +1,6 @@
 import unittest
 
-from ieml.ieml_objects.tools import RandomPoolIEMLObjectGenerator, ieml
+from ieml.tools import RandomPoolIEMLObjectGenerator, ieml
 from ieml.usl.template import Template
 
 

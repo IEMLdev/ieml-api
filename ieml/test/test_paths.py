@@ -1,13 +1,11 @@
 from unittest.case import TestCase
 
-from ieml.ieml_objects.sentences import Sentence, SuperSentence, Clause, SuperClause
-from ieml.ieml_objects.terms import Term, term
-from ieml.ieml_objects.texts import Text
-from ieml.ieml_objects.tools import RandomPoolIEMLObjectGenerator
-from ieml.ieml_objects.words import Word, Morpheme
-from ieml.paths.exceptions import PathError, IEMLObjectResolutionError
-from ieml.paths.paths import MultiplicativePath, Coordinate, AdditivePath, ContextPath
-from ieml.paths.tools import path, resolve, enumerate_paths, resolve_ieml_object
+from ieml.synthax import Sentence, SuperSentence, Clause, SuperClause, Text, Word, Morpheme
+from ieml.dictionary import Term, term
+from ieml.tools import RandomPoolIEMLObjectGenerator
+from ieml.usl.paths.exceptions import PathError, IEMLObjectResolutionError
+from ieml.usl.paths import MultiplicativePath, Coordinate, AdditivePath, ContextPath, path, resolve, enumerate_paths,\
+    resolve_ieml_object
 from ieml.usl.tools import random_usl, usl
 
 

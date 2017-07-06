@@ -1,8 +1,11 @@
 import unittest
-from ieml.ieml_objects.terms import Dictionary
+
+from ieml.dictionary.script.parser import ScriptParser
+from ieml.dictionary.script import AdditiveScript, MultiplicativeScript, NullScript
+
+from ieml.dictionary import Dictionary
+from ieml.dictionary.script import script as sc
 from ieml.exceptions import CannotParse
-from ieml.script import *
-from ieml.script.operator import sc
 
 
 class TestTermParser(unittest.TestCase):

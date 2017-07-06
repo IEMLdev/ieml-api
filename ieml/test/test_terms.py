@@ -1,6 +1,6 @@
 import unittest
 
-from ieml.ieml_objects.terms import term
+from ieml.dictionary import term
 
 
 class TermsTest(unittest.TestCase):

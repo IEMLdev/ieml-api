@@ -3,14 +3,13 @@ import unittest
 
 import numpy as np
 
-from ieml.ieml_objects import Text, SuperSentence
-from ieml.ieml_objects.exceptions import InvalidIEMLObjectArgument
-from ieml.ieml_objects.terms.tools import TermNotFoundInDictionary
-from ieml.ieml_objects.parser.parser import IEMLParser
-from ieml.ieml_objects.sentences import SuperClause
-from ieml.ieml_objects.tools import RandomPoolIEMLObjectGenerator
-from ieml.script.operator import sc
-from .helper import *
+from ieml.synthax import Text, SuperSentence
+from ieml.exceptions import InvalidIEMLObjectArgument, TermNotFoundInDictionary
+from ieml.synthax.parser import IEMLParser
+from ieml.synthax.sentences import SuperClause
+from ieml.tools import RandomPoolIEMLObjectGenerator
+from ieml.dictionary.script import script as sc
+from ieml.test.helper import *
 
 
 class TestIEMLType(unittest.TestCase):
