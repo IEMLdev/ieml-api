@@ -12,7 +12,7 @@ def m(substance, attribute=None, mode=None):
 
 
 def script(arg):
-    from ..dictionary import Term
+    from ..terms import Term
 
     if isinstance(arg, str):
         s = ScriptParser().parse(arg)

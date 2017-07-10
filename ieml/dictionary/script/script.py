@@ -44,6 +44,7 @@ class Script(TreeStructure):
         # The contained paradigms (tables)
         self._tables = None
         self._cells = None
+        self._tables_script = None
 
         # The canonical string to compare same layer and cardinal parser (__lt__)
         self.canonical = None
@@ -51,7 +52,22 @@ class Script(TreeStructure):
         # class of the parser, one of the following : VERB (1), AUXILIARY (0), and NOUN (2)
         self.script_class = None
 
-        self._hash = None
+    def __new__(cls, *args, **kwargs):
+        """
+        Need this to pickle scripts, the pickler use __hash__ method before unpickling the
+        object attribute. Then need to pass the _str.
+        """
+        instance = super(Script, cls).__new__(cls)
+        if 'str' in kwargs:
+            # print("initialize %s"%kwargs['str'])
+            instance._str = kwargs['str']
+
+        return instance
+
+    def __getnewargs_ex__(self):
+        return ((), {
+            'str': str(self)
+        })
 
     def __add__(self, other):
         if not isinstance(other, Script):
@@ -64,9 +80,7 @@ class Script(TreeStructure):
 
     def __hash__(self):
         """Since the IEML string for any proposition AST is supposed to be unique, it can be used as a hash"""
-        if self._hash is None:
-            self._hash = self.__str__().__hash__()
-        return self._hash
+        return self._str.__hash__()
 
     def __lt__(self, other):
         if not isinstance(self, Script) or not isinstance(other, Script):
@@ -130,8 +144,8 @@ class Script(TreeStructure):
 
                     return self_char_value < other_char_value
 
-    def __getitem__(self, index):
-        return self.children[index]
+    # def __getitem__(self, index):
+    #     return self.children[index]
 
     def __contains__(self, item):
         if not isinstance(item, Script):
@@ -141,6 +155,9 @@ class Script(TreeStructure):
             return False
 
         return item.singular_sequences_set.issubset(self.singular_sequences_set)
+
+    def __len__(self):
+        return self.cardinal
 
     def _build_tables(self):
         if self.cardinal == 1:

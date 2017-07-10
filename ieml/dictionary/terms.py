@@ -13,21 +13,13 @@ Translations.__getitem__ = lambda self, item: self.__getattribute__(item) if ite
 class Term(IEMLObjects):
     closable = True
 
-    def __init__(self, script, index, dictionary):
+    def __init__(self, script, index, dictionary, parent):
         self.dictionary = dictionary
-        # from ieml.ieml_objects.terms.dictionary import Dictionary
-        # if not isinstance(dictionary, Dictionary):
-        #     raise ValueError("Invalid dictionary argument for Term creation: %s"%str(dictionary))
-
-        # self.table = table
-        # from ieml.ieml_objects.terms.table import AbstractTable
-        # if not isinstance(table, AbstractTable):
-        #     raise ValueError("Invalid table argument for Term creation: %s"%str(table))
+        self.parent = parent
 
         self.script = _script(script)
         super().__init__([])
 
-        self.relations = Relations(term=self, dictionary=self.dictionary)
         self.index = index
 
         # if term in a dictionary, those values will be set
@@ -36,20 +28,20 @@ class Term(IEMLObjects):
     __hash__ = IEMLObjects.__hash__
 
     def __eq__(self, other):
-        if not isinstance(other, Term):
-            return False
-
-        return self.script == other.script
+        return isinstance(other, self.__class__) and self.index == other.index
 
     def _do_gt(self, other):
-        return self.script > other.script
+        return self.index > other.index
 
     def compute_str(self, children_str):
         return "[" + str(self.script) + "]"
 
     @cached_property
     def root(self):
-        return self.dictionary.get_root(self.script)
+        if self.parent is None:
+            return self
+        else:
+            return self.parent.root
 
     @property
     def inhibitions(self):
@@ -87,6 +79,10 @@ class Term(IEMLObjects):
     def table(self):
         return self.dictionary.tables[self.root][self]
 
+    @cached_property
+    def relations(self):
+        return self.dictionary.relations_graph[self]
+
     def __contains__(self, item):
         from .tools import term
         if not isinstance(item, Term):
@@ -102,3 +98,14 @@ class Term(IEMLObjects):
 
     def __iter__(self):
         return self.singular_sequences.__iter__()
+
+    # def __getstate__(self):
+    #     return {
+    #         'script': self.script.__getstate__(),
+    #         'index': self.index,
+    #         'table': self.table.__getstate__()
+    #     }
+    #
+    # def __setstate__(self, state):
+    #     self.index = state['index']
+    #     self.script =

@@ -1,4 +1,5 @@
 import copy
+import pickle
 from urllib.request import urlretrieve
 import datetime
 import urllib.parse
@@ -9,6 +10,12 @@ import os
 
 from .. import get_configuration, ieml_folder
 from ..constants import LANGUAGES
+
+
+VERSIONS_FOLDER = os.path.join(ieml_folder, get_configuration().get('VERSIONS', 'versionsfolder'))
+
+if not os.path.isdir(VERSIONS_FOLDER):
+    os.mkdir(VERSIONS_FOLDER)
 
 __available_versions = None
 
@@ -104,12 +111,6 @@ class DictionaryVersion:
             return
 
         file_name = "%s.json" % str(self)
-
-        VERSIONS_FOLDER = os.path.join(ieml_folder, get_configuration().get('VERSIONS', 'versionsfolder'))
-
-        if not os.path.isdir(VERSIONS_FOLDER):
-            os.mkdir(VERSIONS_FOLDER)
-
         file = os.path.join(VERSIONS_FOLDER, file_name)
 
         if not os.path.isfile(file):
@@ -138,6 +139,15 @@ class DictionaryVersion:
     def from_file_name(file_name):
         date = _str_to_date(file_name.split('.')[0].split('_', maxsplit=1)[1])
         return DictionaryVersion(date=date)
+
+    @property
+    def cache(self):
+        file_name = "cache_%s.pkl" % str(self)
+        return os.path.join(VERSIONS_FOLDER, file_name)
+
+    @property
+    def is_cached(self):
+        return os.path.isfile(self.cache)
 
 _default_version = None
 
