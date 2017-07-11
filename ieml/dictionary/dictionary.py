@@ -1,30 +1,17 @@
 import pickle
-from itertools import product, groupby, combinations
-import numpy as np
-import os
 
 from collections import defaultdict
-from scipy.sparse.csr import csr_matrix
 
 from ieml.commons import cached_property
 from ieml.dictionary.relations import RelationsGraph
 from ieml.dictionary.table import Cell, table_class
-from .relations import RELATIONS
 from .version import DictionaryVersion, get_default_dictionary_version
 from ..constants import MAX_LAYER
-from .script import script, AdditiveScript, NullScript, MultiplicativeScript
+from .script import script
 
-from ieml import get_configuration, ieml_folder
+from ieml import get_configuration
 
 USE_CACHE = get_configuration().get("RELATIONS", "cacherelations")
-
-class InvalidDictionaryState(Exception):
-    def __init__(self, dictionary, message):
-        self.dictionary = dictionary
-        self.message = message
-
-    def __str__(self):
-        return "Invalid state dictionary state for version %s: %s"%(str(self.dictionary.version), self.message)
 
 
 class DictionarySingleton(type):
@@ -82,13 +69,8 @@ class Dictionary(metaclass=DictionarySingleton):
               (str(self.version), len(self.roots), len(self)))
 
     @property
-    def is_build(self):
-        return all(getattr(self, attr) is not None for attr in ['terms', 'roots', 'inhibitions', 'index', 'relations_graph'])
-
-    @property
     def translations(self):
         return self.version.translations
-
 
     @cached_property
     def layers(self):
