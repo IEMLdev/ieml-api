@@ -68,7 +68,7 @@ class Dictionary(metaclass=DictionarySingleton):
         print("\t[*] Dictionary loaded (version: %s, nb_roots: %d, nb_terms: %d)"%
               (str(self.version), len(self.roots), len(self)))
 
-    @property
+    @cached_property
     def translations(self):
         return self.version.translations
 

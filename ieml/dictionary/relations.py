@@ -1,5 +1,5 @@
 from collections import OrderedDict, defaultdict
-from itertools import product, groupby, combinations
+from itertools import groupby, combinations, permutations
 
 import numpy as np
 from scipy.sparse.csr import csr_matrix
@@ -182,15 +182,16 @@ class RelationsGraph:
         def _recurse_script(script):
             result = []
             for sub_s in script.children if isinstance(script, AdditiveScript) else [script]:
-                if sub_s.layer == 0 or isinstance(sub_s, NullScript):
+                if isinstance(sub_s, NullScript):
                     continue
 
                 if sub_s in self.dictionary.terms:
                     result += [self.dictionary.terms[sub_s].index]
 
-                subst, attr, mode = sub_s.children
-                if attr.empty and mode.empty:
-                    result += _recurse_script(subst)
+                if sub_s.layer > 0:
+                    subst, attr, mode = sub_s.children
+                    if attr.empty and mode.empty:
+                        result += _recurse_script(subst)
 
             return result
 
@@ -268,7 +269,7 @@ class RelationsGraph:
                 twin_indexes = [t.index for t in g]
 
                 if len(twin_indexes) > 1:
-                    index0, index1 = list(zip(*product(twin_indexes, repeat=2)))
+                    index0, index1 = list(zip(*permutations(twin_indexes, r=2)))
                     siblings[3, index0, index1] = 1
 
         return siblings

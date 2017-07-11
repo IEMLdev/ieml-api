@@ -99,6 +99,7 @@ def build_matrix(version):
 
     return relation_matrix
 
+
 def distance_matrix(version):
     if os.path.isfile('/tmp/cache_relations_%s.npy'%str(version)):
         return np.load('/tmp/cache_relations_%s.npy'%str(version))
@@ -107,14 +108,22 @@ def distance_matrix(version):
         np.save('/tmp/cache_relations_%s.npy'%str(version), mat)
         return mat
 
+def default_metric(dictionary_version):
+    mat = distance_matrix(dictionary_version)
+    return lambda t0, t1: mat[t0.index, t1.index]
+
+def rank_from_term(term, metric, nb_terms=30):
+    res = sorted([(metric(term, t), t) for t in term.dictionary])[:nb_terms]
+    return [r for r in res if r[0] != 1.0]
+
+
 def test_metric(metric, t0, n=30):
     def _str_term(t):
         return "%s - (%s)"%(str(t), t.translations['fr'])
 
     print("distance from %s"%_str_term(t0))
+    res = rank_from_term(t0, metric, nb_terms=n)
 
-    res = sorted([(metric(t0, t), t) for t in t0.dictionary])[:n]
-    res = [r for r in res if r[0] != 1.0]
     print('\n'.join("[%.3f]: %s"%(r[0], _str_term(r[1])) for r in res))
 
 
