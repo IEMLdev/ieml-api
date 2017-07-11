@@ -1,15 +1,12 @@
 from setuptools import setup, find_packages
-from shutil import copyfile
-
 
 def readme():
     with open('README.md') as f:
         return f.read()
 
-copyfile('ieml/config.sample.py', 'ieml/config.py')
 
 setup(name='ieml',
-      version='0.1.12',
+      version='0.2.2',
       description='Implementation of the artificial natural language IEML',
       long_description=readme(),
       classifiers=[
@@ -34,9 +31,6 @@ setup(name='ieml',
       ],
       test_suite='nose2.collector.collector',
       tests_require=['nose2'],
-      package_data={
-            '': ['*.md', '*.txt'],
-      },
 
       include_package_data=True,
       zip_safe=False)
