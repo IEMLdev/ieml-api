@@ -7,32 +7,33 @@ from scipy.sparse.csr import csr_matrix
 from ieml.commons import cached_property
 from ieml.dictionary.script.script import MultiplicativeScript, AdditiveScript, NullScript
 
-RELATIONS = ['contains',         # 0
-             'contained',        # 1
-             'father_substance', # 2
-             'child_substance',  # 3
-             'father_attribute', # 4
-             'child_attribute',  # 5
-             'father_mode',      # 6
-             'child_mode',       # 7
-             'opposed',          # 8
-             'associated',       # 9
-             'crossed',          # 10
-             'twin',             # 11
-             #
-             # 'table_0',
-             # 'table_1',
-             # 'table_2',
-             # 'table_3',
-             # 'table_4',
-             # 'table_5',
 
-             'inclusion',        # 12
-             'father',           # 13
-             'child',            # 14
-             'etymology',        # 15
-             'siblings',         # 16
-             'table'             # 17
+RELATIONS = [
+            'contains',         # 0
+            'contained',        # 1
+            'father_substance', # 2
+            'child_substance',  # 3
+            'father_attribute', # 4
+            'child_attribute',  # 5
+            'father_mode',      # 6
+            'child_mode',       # 7
+            'opposed',          # 8
+            'associated',       # 9
+            'crossed',          # 10
+            'twin',             # 11
+            'table_0',
+            'table_1',
+            'table_2',
+            'table_3',
+            'table_4',
+            'table_5',
+
+             # 'inclusion',        # 12
+             # 'father',           # 13
+             # 'child',            # 14
+             # 'etymology',        # 15
+             # 'siblings',         # 16
+             # 'table'             # 17
              ]
 
 INVERSE_RELATIONS = {
@@ -95,17 +96,6 @@ class RelationsGraph:
             reltype: self.relation_type(term, reltype) for reltype in RELATIONS
         }
 
-    #
-    # def relations_graph(self, relations_types):
-    #     if isinstance(relations_types, dict):
-    #         res = np.zeros((len(self.dictionary), len(self.dictionary)), dtype=np.float)
-    #
-    #         for reltype in relations_types:
-    #             res += self.relations[RELATIONS.index(reltype)] * relations_types[reltype]
-    #         return res
-    #
-    #     return np.sum([self.relations[RELATIONS.index(reltype)] for reltype in relations_types])
-
     def _compute_relations(self):
         print("\t[*] Computing relations")
 
@@ -130,17 +120,19 @@ class RelationsGraph:
         for i, r in enumerate(['_substance', '_attribute', '_mode']):
             self.relations['child' + r] = self.relations['father' + r].transpose()
 
-        self.relations['siblings'] = sum(siblings)
-        self.relations['inclusion'] = np.clip(self.relations['contains'] + self.relations['contained'], 0, 1)
-        self.relations['father'] = self.relations['father_substance'] + \
-                                   self.relations['father_attribute'] + \
-                                   self.relations['father_mode']
-        self.relations['child'] = self.relations['child_substance'] + \
-                                  self.relations['child_attribute'] + \
-                                  self.relations['child_mode']
-        self.relations['etymology'] = self.relations['father'] + self.relations['child']
+        # self.relations['siblings'] = sum(siblings)
+        # self.relations['inclusion'] = np.clip(self.relations['contains'] + self.relations['contained'], 0, 1)
+        # self.relations['father'] = self.relations['father_substance'] + \
+        #                            self.relations['father_attribute'] + \
+        #                            self.relations['father_mode']
+        # self.relations['child'] = self.relations['child_substance'] + \
+        #                           self.relations['child_attribute'] + \
+        #                           self.relations['child_mode']
+        # self.relations['etymology'] = self.relations['father'] + self.relations['child']
 
-        self.relations['table'] = self._compute_table_rank(self.relations['contained'])
+        table = self._compute_table_rank(self.relations['contained'])
+        for i in range(6):
+            self.relations['table_%d'%i] = table[i, :, :]
 
         missing = {s for s in RELATIONS if s not in self.relations}
         if missing:
@@ -151,14 +143,14 @@ class RelationsGraph:
     def _compute_table_rank(self, contained):
         print("\t\t[*] Computing tables relations")
 
-        _tables_rank = np.zeros((len(self.dictionary), len(self.dictionary)))
+        _tables_rank = np.zeros((6, len(self.dictionary), len(self.dictionary)), np.bool)
 
         for root in self.dictionary.roots:
             for t0, t1 in combinations(self.dictionary.roots[root], 2):
                 commons = [self.dictionary.index[i] for i in np.where(contained[t0.index, :] & contained[t1.index, :])[0]]
-                _tables_rank[t0.index, t1.index] = max(map(lambda t: t.rank, commons))
+                _tables_rank[max(map(lambda t: t.rank, commons)), t0.index, t1.index] = True
 
-        return _tables_rank + _tables_rank.transpose()
+        return _tables_rank + _tables_rank.transpose((0, 2, 1))
 
     def _do_inhibitions(self):
         print("\t\t[*] Performing inhibitions")
@@ -187,21 +179,22 @@ class RelationsGraph:
     def _compute_father(self):
         print("\t\t[*] Computing father/child relations")
 
-        def _recurse_script(script, res_indexes, depth):
-            if isinstance(script, NullScript):
-                return
+        def _recurse_script(script):
+            result = []
+            for sub_s in script.children if isinstance(script, AdditiveScript) else [script]:
+                if sub_s.layer == 0 or isinstance(sub_s, NullScript):
+                    continue
 
-            if script in self.dictionary.terms:
-                depth += 1
-                res_indexes.append((self.dictionary.terms[script].index, depth))
+                if sub_s in self.dictionary.terms:
+                    result += [self.dictionary.terms[sub_s].index]
 
-            if script.layer == 0:
-                return
+                subst, attr, mode = sub_s.children
+                if attr.empty and mode.empty:
+                    result += _recurse_script(subst)
 
-            for c in script.children:
-                _recurse_script(c, res_indexes, depth)
+            return result
 
-        father = np.zeros((3, len(self.dictionary), len(self.dictionary)), dtype=np.float32)
+        father = np.zeros((3, len(self.dictionary), len(self.dictionary)), dtype=np.bool)
 
         for t in self.dictionary.terms.values():
             s = t.script
@@ -211,10 +204,8 @@ class RelationsGraph:
                     continue
 
                 for i in range(3):
-                    res_indexes = []
-                    _recurse_script(sub_s.children[i], res_indexes, 0)
-                    for j, d in res_indexes:
-                        father[i, t.index, j] = 1.0/d**2
+                    fathers_indexes = _recurse_script(sub_s.children[i])
+                    father[i, t.index, fathers_indexes] = True
 
         return father
 
@@ -341,6 +332,22 @@ class Relations:
 
         raise NotImplemented
 
+    @property
+    def father(self):
+        return {
+            's': self.father_substance,
+            'a': self.father_attribute,
+            'm': self.father_mode,
+        }
+
+    @property
+    def child(self):
+        return {
+            's': self.child_substance,
+            'a': self.child_attribute,
+            'm': self.child_mode,
+        }
+
 
 def get_relation(reltype):
     def getter(self):
@@ -349,5 +356,23 @@ def get_relation(reltype):
     getter.__name__ = reltype
     return getter
 
-for reltype in RELATIONS:
+
+for reltype in {'contains',
+                'contained',
+                'father_substance',
+                'child_substance',
+                'father_attribute',
+                'child_attribute',
+                'father_mode',
+                'child_mode',
+                'opposed',
+                'associated',
+                'crossed',
+                'twin',
+                'table_0',
+                'table_1',
+                'table_2',
+                'table_3',
+                'table_4',
+                'table_5'}:
     setattr(Relations, reltype, cached_property(get_relation(reltype)))
