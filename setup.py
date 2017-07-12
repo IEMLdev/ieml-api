@@ -27,7 +27,6 @@ setup(name='ieml',
             'bidict',
             'ply',
             'scipy',
-            'boto3'
       ],
       test_suite='nose2.collector.collector',
       tests_require=['nose2'],

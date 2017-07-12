@@ -1,38 +1,37 @@
 import copy
-import pickle
-from urllib.request import urlretrieve
+from urllib.request import urlretrieve, urlopen
 import datetime
 import urllib.parse
-import io
-import boto3
 import json
 import os
 
 from .. import get_configuration, ieml_folder
 from ..constants import LANGUAGES
-
+import xml.etree.ElementTree as ET
 
 VERSIONS_FOLDER = os.path.join(ieml_folder, get_configuration().get('VERSIONS', 'versionsfolder'))
 
 if not os.path.isdir(VERSIONS_FOLDER):
     os.mkdir(VERSIONS_FOLDER)
 
-__available_versions = None
+
+def get_available_dictionary_version():
+    version_url = get_configuration().get('VERSIONS', 'versionsurl')
+    root_node = ET.fromstring(urlopen(version_url).read())
+    all_versions_entry = ({k.tag: k.text for k in list(t)} for t in root_node
+                          if t.tag == '{http://s3.amazonaws.com/doc/2006-03-01/}Contents')
+
+    # sort by date
+    all_versions = sorted(all_versions_entry,
+                          key=lambda t: t['{http://s3.amazonaws.com/doc/2006-03-01/}LastModified'], reverse=True)
+
+    all_versions = [v['{http://s3.amazonaws.com/doc/2006-03-01/}Key'][:-5] for v in all_versions]
+
+    return all_versions
 
 
-def get_available_dictionary_version(update=False):
-    global __available_versions
-    if __available_versions is None or update:
-        s3 = boto3.resource('s3')
-        bucket_name = 'ieml-dictionary-versions'
-        bucket = s3.Bucket(bucket_name)
-
-        result = []
-        for obj in bucket.objects.all():
-            result.append(DictionaryVersion.from_file_name(obj.key))
-        __available_versions = result
-
-    return __available_versions
+def latest_dictionary_version():
+    return get_available_dictionary_version()[0]
 
 
 def _date_to_str(date):
@@ -94,17 +93,6 @@ class DictionaryVersion:
 
     def json(self):
         return json.dumps(self.__getstate__())
-
-    def upload_to_s3(self):
-        s3 = boto3.resource('s3')
-        bucket_name = 'ieml-dictionary-versions'
-        bucket = s3.Bucket(bucket_name)
-        obj = bucket.Object("%s.json" % str(self))
-
-        obj.upload_fileobj(io.BytesIO(bytes(self.json(), 'utf-8')))
-        obj.Acl().put(ACL='public-read')
-
-        assert self in get_available_dictionary_version(update=True)
 
     def load(self):
         if self.loaded:
@@ -248,15 +236,14 @@ def create_dictionary_version(old_version=None, add=None, update=None, remove=No
     dictionary_version = DictionaryVersion(new_date)
     dictionary_version.__setstate__(state)
 
-    from ieml.ieml_objects.terms.dictionary import Dictionary
+    from ieml.dictionary import Dictionary
 
     if set(old_version.terms) == set(state['terms']) and set(old_version.roots) == set(state['roots']) and \
        all(old_version.inhibitions[s] == state['inhibitions'][s] for s in old_version.inhibitions):
 
         old_dict_state = Dictionary(old_version).__getstate__()
-        d = Dictionary(dictionary_version, load=False)
+        d = Dictionary(dictionary_version)
         d.__setstate__(old_dict_state)
-        d.load()
     else:
         # graph is updated, must check the coherence
         Dictionary(dictionary_version)
