@@ -1,8 +1,13 @@
-from ieml.commons import LANGUAGES
-from ieml.ieml_objects.terms.version import get_available_dictionary_version, create_dictionary_version, \
-    DictionaryVersion
-from ieml.script.operator import script, m
-from ieml.script.script import NullScript, AdditiveScript
+import io
+
+import boto3
+
+from ieml.constants import LANGUAGES
+from ieml.dictionary.version import get_available_dictionary_version, create_dictionary_version, \
+    DictionaryVersion, latest_dictionary_version
+from ieml.dictionary.script import script, m, NullScript, AdditiveScript
+
+from ieml.dictionary.script.tools import factorize
 
 
 def find_and_add_script_to_current_version(to_find):
@@ -170,7 +175,12 @@ result = {
 
 
 def translate_script(to_translate):
-    version = get_available_dictionary_version()[-1]
+    """
+    translate the root paradigms in key in argument, with the function in value
+    :param to_translate:
+    :return:
+    """
+    version = DictionaryVersion(latest_dictionary_version())
     version.load()
     to_remove = []
     to_add = {
@@ -211,15 +221,81 @@ def translate_ocean(s):
         return AdditiveScript(children=[translate_ocean(c) for c in s])
 
 
+def translate_body_parts(s):
+    def _level_3(s):
+        s2, a2, m2 = s
+        s1, a1, m1 = a2
+        return m(s2, m(s1, m(a1.children[0], m1.children[0])), m2)
+
+    s4, a4, _ = s
+    s3, a3, _ = a4
+    return m(s4, m(_level_3(s3), _level_3(a3)))
+
+
+body_parts = {
+    "f.o.-f.o.-'E:.-U:.n.-l.-',E:.-U:.M:.T:.-l.-'E:.-A:.M:.T:.-l.-',_" : "f.o.-f.o.-'E:.-U:.n.-l.-',E:.-U:.M:T:.-l.-'E:.-A:.M:T:.-l.-',_",
+    "f.o.-f.o.-'E:.-U:.t.-l.-',E:.-U:.M:.T:.-l.-'E:.-A:.M:.T:.-l.-',_" : "f.o.-f.o.-'E:.-U:.t.-l.-',E:.-U:.M:T:.-l.-'E:.-A:.M:T:.-l.-',_",
+}
+to_translate_body = {
+        "f.o.-f.o.-'E:.-U:.n.-l.-',E:.-U:.M:.T:.-l.-'E:.-A:.M:.T:.-l.-',_": translate_body_parts,
+        "f.o.-f.o.-'E:.-U:.t.-l.-',E:.-U:.M:.T:.-l.-'E:.-A:.M:.T:.-l.-',_": translate_body_parts
+    }
+
+
+body_parts_root = factorize(list(map(script, [
+    "f.o.-f.o.-'E:.-U:.n.-l.-',E:.-U:.M:T:.-l.-'E:.-A:.M:T:.-l.-',_",
+    "f.o.-f.o.-'E:.-U:.t.-l.-',E:.-U:.M:T:.-l.-'E:.-A:.M:T:.-l.-',_",
+    "f.o.-f.o.-',n.i.-f.i.-',M:O:.-O:.-',_"
+])))
+
+
+def upload_to_s3(dictionary_version):
+    s3 = boto3.resource('s3')
+    bucket_name = 'ieml-dictionary-versions'
+    bucket = s3.Bucket(bucket_name)
+    obj = bucket.Object("%s.json" % str(dictionary_version))
+
+    obj.upload_fileobj(io.BytesIO(bytes(dictionary_version.json(), 'utf-8')))
+    obj.Acl().put(ACL='public-read')
+
+    assert dictionary_version in get_available_dictionary_version()
+
 
 if __name__ == "__main__":
-    assert translate_ocean(script("s.-S:.U:.-'l.-S:.O:.-'n.-T:.A:.-',+M:.-'M:.-'n.-T:.A:.-',")) == "s.-S:.U:.-'n.-T:.A:.-'l.-S:.O:.-',+n.-T:.A:.-'M:.-'M:.-',"
+    to_add = {
+        'terms': ["f.o.-f.o.-'E:.-U:.n.-l.-',E:.-U:.M:T:.-l.-'E:.-A:.M:T:.-l.-',_",
+                  "f.o.-f.o.-'E:.-U:.t.-l.-',E:.-U:.M:T:.-l.-'E:.-A:.M:T:.-l.-',_",
+                  "f.o.-f.o.-',n.i.-f.i.-',M:O:.-O:.-',_",
+                  "f.o.-f.o.-',n.i.-f.i.-',M:O:.-O:.-',_+f.o.-f.o.-'E:.-U:.S:+B:T:.-l.-',E:.-U:.M:T:.-l.-'E:.-A:.M:T:.-l.-',_",
+                  "f.o.-f.o.-'E:.-U:.S:+B:T:.-l.-',E:.-U:.M:T:.-l.-'E:.-A:.M:T:.-l.-',_"
+                 ],
+        'roots': ["f.o.-f.o.-',n.i.-f.i.-',M:O:.-O:.-',_+f.o.-f.o.-'E:.-U:.S:+B:T:.-l.-',E:.-U:.M:T:.-l.-'E:.-A:.M:T:.-l.-',_"],
+        'inhibitions': {
+             "f.o.-f.o.-',n.i.-f.i.-',M:O:.-O:.-',_+f.o.-f.o.-'E:.-U:.S:+B:T:.-l.-',E:.-U:.M:T:.-l.-'E:.-A:.M:T:.-l.-',_": ['father_mode']
+        },
+        'translations': {
+            'fr': {
+                "f.o.-f.o.-',n.i.-f.i.-',M:O:.-O:.-',_+f.o.-f.o.-'E:.-U:.S:+B:T:.-l.-',E:.-U:.M:T:.-l.-'E:.-A:.M:T:.-l.-',_": "Parties du corps",
+                "f.o.-f.o.-'E:.-U:.n.-l.-',E:.-U:.M:T:.-l.-'E:.-A:.M:T:.-l.-',_": "Parties du corps: le tronc",
+                "f.o.-f.o.-'E:.-U:.t.-l.-',E:.-U:.M:T:.-l.-'E:.-A:.M:T:.-l.-',_": "Parties du corps: la tête",
+                "f.o.-f.o.-',n.i.-f.i.-',M:O:.-O:.-',_": "Parties du corps: membres",
+                "f.o.-f.o.-'E:.-U:.S:+B:T:.-l.-',E:.-U:.M:T:.-l.-'E:.-A:.M:T:.-l.-',_": "Parties du corps: la tête et le tronc"
+            },
+            'en': {
+                "f.o.-f.o.-',n.i.-f.i.-',M:O:.-O:.-',_+f.o.-f.o.-'E:.-U:.S:+B:T:.-l.-',E:.-U:.M:T:.-l.-'E:.-A:.M:T:.-l.-',_": "body parts",
+                "f.o.-f.o.-'E:.-U:.n.-l.-',E:.-U:.M:T:.-l.-'E:.-A:.M:T:.-l.-',_": "Body parts: trunk",
+                "f.o.-f.o.-'E:.-U:.t.-l.-',E:.-U:.M:T:.-l.-'E:.-A:.M:T:.-l.-',_": "Body parts: head",
+                "f.o.-f.o.-',n.i.-f.i.-',M:O:.-O:.-',_": "body parts: limbs",
+                "f.o.-f.o.-'E:.-U:.S:+B:T:.-l.-',E:.-U:.M:T:.-l.-'E:.-A:.M:T:.-l.-',_": "Body parts: head and trunk"
 
-
-    # v = get_available_dictionary_version()[-1]
-    # v.load()
-    # print('\n'.join(v.roots))
-    v = translate_script({
-        "s.-S:.U:.-'l.-S:.O:.-'n.-T:.A:.-',+M:.-'M:.-'n.-T:.A:.-',": translate_ocean
-    })
-    v.upload_to_s3()
+            }
+        }
+    }
+    to_remove = ["f.o.-f.o.-'E:.-U:.n.-l.-',E:.-U:.M:T:.-l.-'E:.-A:.M:T:.-l.-',_",
+                  "f.o.-f.o.-'E:.-U:.t.-l.-',E:.-U:.M:T:.-l.-'E:.-A:.M:T:.-l.-',_",
+                  "f.o.-f.o.-',n.i.-f.i.-',M:O:.-O:.-',_"
+    ]
+    version = create_dictionary_version(DictionaryVersion(latest_dictionary_version()),
+                              add=to_add, remove=to_remove)
+    upload_to_s3(version)
+    print(version)
