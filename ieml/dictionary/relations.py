@@ -1,5 +1,5 @@
 from collections import OrderedDict, defaultdict
-from itertools import groupby, combinations, permutations
+from itertools import groupby, combinations, permutations, chain
 
 import numpy as np
 from scipy.sparse.csr import csr_matrix
@@ -186,12 +186,10 @@ class RelationsGraph:
                     continue
 
                 if sub_s in self.dictionary.terms:
-                    result += [self.dictionary.terms[sub_s].index]
-
-                if sub_s.layer > 0:
-                    subst, attr, mode = sub_s.children
-                    if attr.empty and mode.empty:
-                        result += _recurse_script(subst)
+                    result.append(self.dictionary.terms[sub_s].index)
+                else:
+                    if sub_s.layer > 0:
+                        result.extend(chain.from_iterable(_recurse_script(c) for c in sub_s.children))
 
             return result
 

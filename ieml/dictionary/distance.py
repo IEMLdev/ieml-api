@@ -74,6 +74,10 @@ RELATIONS_TYPES = {
 def _enumerate_ancestors(t, prefix=''):
     for k, v in t.relations.father.items():
         for t1 in v:
+            # if t1 is layer 0, we include this etymology only if it is a direct father/child
+            if t1.layer == 0 and len(prefix) != 0:
+                continue
+
             yield (prefix + k, t1)
 
             if len(prefix) < 2:

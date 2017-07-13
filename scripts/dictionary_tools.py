@@ -295,7 +295,7 @@ if __name__ == "__main__":
                   "f.o.-f.o.-'E:.-U:.t.-l.-',E:.-U:.M:T:.-l.-'E:.-A:.M:T:.-l.-',_",
                   "f.o.-f.o.-',n.i.-f.i.-',M:O:.-O:.-',_"
     ]
-    version = create_dictionary_version(DictionaryVersion(latest_dictionary_version()),
+    version = create_dictionary_version(latest_dictionary_version(),
                               add=to_add, remove=to_remove)
     upload_to_s3(version)
     print(version)

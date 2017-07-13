@@ -31,7 +31,7 @@ def get_available_dictionary_version():
 
 
 def latest_dictionary_version():
-    return get_available_dictionary_version()[0]
+    return DictionaryVersion(get_available_dictionary_version()[0])
 
 
 def _date_to_str(date):
@@ -141,11 +141,17 @@ _default_version = None
 
 
 def get_default_dictionary_version():
-    global _default_version
     if _default_version is None:
-        _default_version = DictionaryVersion()
+        set_default_dictionary_version(latest_dictionary_version())
 
     return _default_version
+
+
+def set_default_dictionary_version(version):
+    global _default_version
+    if not isinstance(version, DictionaryVersion):
+        version = DictionaryVersion(version)
+    _default_version = version
 
 
 def create_dictionary_version(old_version=None, add=None, update=None, remove=None, merge=None):
@@ -161,7 +167,7 @@ def create_dictionary_version(old_version=None, add=None, update=None, remove=No
     :param merge: a list of dictionary version to merge
     :return:
     """
-    v = get_available_dictionary_version()[-1]
+    v = latest_dictionary_version()
     last_date = v.date
 
     while True:
@@ -195,6 +201,17 @@ def create_dictionary_version(old_version=None, add=None, update=None, remove=No
             for l in LANGUAGES:
                 state['translations'][l].update({s: m_version.translations[l][s] for s in terms_to_add})
 
+    if remove is not None:
+        state['terms'] = list(set(state['terms']).difference(remove))
+        state['roots'] = list(set(state['roots']).difference(remove))
+        for r in remove:
+            if r in state['inhibitions']:
+                del state['inhibitions'][r]
+
+            for l in LANGUAGES:
+                if r in state['translations'][l]:
+                    del state['translations'][l][r]
+
     if add is not None:
         if 'terms' in add:
             state['terms'] = list(set(state['terms']).union(add['terms']))
@@ -213,16 +230,6 @@ def create_dictionary_version(old_version=None, add=None, update=None, remove=No
 
             state['translations'] = {l: {**state['translations'][l], **add['translations'][l]} for l in LANGUAGES}
 
-    if remove is not None:
-        state['terms'] = list(set(state['terms']).difference(remove))
-        state['roots'] = list(set(state['roots']).difference(remove))
-        for r in remove:
-            if r in state['inhibitions']:
-                del state['inhibitions'][r]
-
-            for l in LANGUAGES:
-                if r in state['translations'][l]:
-                    del state['translations'][l][r]
 
     if update is not None:
         if 'inhibitions' in update:
