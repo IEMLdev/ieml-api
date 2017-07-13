@@ -42,7 +42,7 @@ def relation_value(reltype, max_rank=None):
         # available slot: 2, 4
         ratio = float(max_rank - i) / max_rank
         slot = 2 if ratio < 0.5 else 4
-        return C + k + (1 - 2*k - C) * ratio, (slot, i)
+        return C + k + (1 - 2*k - C) * ratio, (slot, max_rank - i)
     else:
         #sam
         if len(reltype) == 1:
@@ -128,11 +128,11 @@ def default_metric(dictionary_version):
     return lambda t0, t1: mat[t0.index, t1.index][0]
 
 
-def distance_pack(t, matrix):
-    res = [(*matrix[t.index, i], i) for i in np.where(matrix['reltype'][t.index, :] != b'none')[0]]
+def distance_pack(t0, matrix):
+    res = [(*matrix[t0.index, i], t0.dictionary.index[i]) for i in np.where(matrix['reltype'][t0.index, :] != b'none')[0]]
     res = sorted(res, key=lambda t: list(t[1]))
 
-    return groupby(res, key=lambda t: t[2])
+    return [(str(key, encoding='utf8'), [t[3] for t in v]) for key, v in groupby(res, key=lambda t: t[2])]
 
 
 def rank_from_term(term, metric, nb_terms=30):
