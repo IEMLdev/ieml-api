@@ -26,7 +26,6 @@ class Table(Term):
 
     @cached_property
     def partitions(self):
-        print("Partitions %s"%str(self))
         return {t for t in self.relations.contains if isinstance(t, Table) and t.parent == self}
 
 
@@ -51,17 +50,21 @@ class Table2D(Table):
 
     @cached_property
     def rows(self):
-        print("rows %s"%str(self))
-
         return [self.dictionary.terms[row] if row in self.dictionary else None
-                for row in [factorize([t.script for t in line]) for line in self.cells]]
+                for row in self.script_rows]
+
+    @cached_property
+    def script_rows(self):
+        return [factorize([t.script for t in line]) for line in self.cells]
 
     @cached_property
     def columns(self):
-        print("columns %s"%str(self))
-
         return [self.dictionary.terms[column] if column in self.dictionary else None
-                for column in [factorize([t.script for t in line]) for line in self.cells.transpose()]]
+                for column in self.script_columns]
+
+    @cached_property
+    def script_columns(self):
+        return [factorize([t.script for t in line]) for line in self.cells.transpose()]
 
     @cached_property
     def cells(self):
