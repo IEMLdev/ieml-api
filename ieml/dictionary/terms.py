@@ -48,8 +48,12 @@ class Term(IEMLObjects):
         return self.dictionary.inhibitions[self.root]
 
     @cached_property
-    def rank(self):
-        return self.table.rank
+    def max_rank(self):
+        if self.parent is None:
+            # root
+            return max(t.rank for t in self.relations.contains if len(t) != 1)
+
+        return self.root.max_rank
 
     @property
     def empty(self):
