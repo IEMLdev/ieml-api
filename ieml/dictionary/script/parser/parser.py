@@ -13,7 +13,8 @@ from .lexer import get_script_lexer, tokens
 
 from .... import parser_folder
 
-class ScriptParser(metaclass=Singleton):
+
+class ScriptParser():
     tokens = tokens
 
     def __init__(self):
