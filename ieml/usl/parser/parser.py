@@ -1,7 +1,8 @@
 import logging
-
+import os
 import ply.yacc as yacc
 
+from ieml import parser_folder
 from ieml.exceptions import CannotParse
 from ieml.syntax.parser import IEMLParser
 from ieml.usl.parser.lexer import tokens, get_lexer
@@ -17,7 +18,7 @@ class USLParser(metaclass=Singleton):
         # Build the lexer and parser
         self.lexer = get_lexer()
         self.parser = yacc.yacc(module=self, errorlog=logging, start='usl',
-                                debug=False, optimize=True, picklefile="parser/usl_parser.pickle")
+                                debug=False, optimize=True, picklefile=os.path.join(parser_folder, "usl_parser.pickle"))
 
     def parse(self, s):
         """Parses the input string, and returns a reference to the created AST's root"""

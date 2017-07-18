@@ -1,7 +1,8 @@
 import logging
-
+import os
 import ply.yacc as yacc
 
+from ... import parser_folder
 from ...metaclasses import Singleton
 from ...exceptions import CannotParse
 from .. import Word, Morpheme, Clause, SuperClause, Sentence, SuperSentence, Text, Hypertext, Hyperlink, PropositionPath
@@ -37,7 +38,7 @@ class IEMLParser(metaclass=Singleton):
         # Build the lexer and parser
         self.lexer = get_lexer()
         self.parser = yacc.yacc(module=self, errorlog=logging, start='proposition',
-                                debug=False, optimize=True, picklefile="parser/ieml_parser.pickle")
+                                debug=False, optimize=True, picklefile=os.path.join(parser_folder, "ieml_parser.pickle"))
         self._ieml = None
 
     def parse(self, s):
