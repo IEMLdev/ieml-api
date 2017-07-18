@@ -1,4 +1,6 @@
 from functools import singledispatch
+
+from ieml.exceptions import TermNotFoundInDictionary
 from .version import DictionaryVersion
 from .script import Script
 from .terms import Term
@@ -28,5 +30,8 @@ _term.register(Script, lambda arg, dictionary: dictionary.terms[arg])
 def _term_str(arg, dictionary=None):
     if arg[0] == '[' and arg[-1] == ']':
         arg = arg[1:-1]
+
+    if arg not in dictionary:
+        raise TermNotFoundInDictionary(arg, dictionary)
     return dictionary.terms[arg]
 
