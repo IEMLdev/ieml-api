@@ -210,3 +210,17 @@ class TestSuperSentence(unittest.TestCase):
             super_sentence = SuperSentence([SuperClause(a,b,f), SuperClause(a,c,f), SuperClause(b,e,f), SuperClause(b,d,f)])
         except InvalidIEMLObjectArgument as e:
             self.fail()
+
+
+class TestText(unittest.TestCase):
+    def setUp(self):
+        self.gen = RandomPoolIEMLObjectGenerator(Text)
+
+    def test_equality(self):
+        text0 = self.gen.text()
+        self.assertEqual(text0, Text(text0))
+
+        s0 = self.gen.sentence()
+        t1 = Text([text0, s0])
+        self.assertIn(s0, t1)
+        self.assertIn(text0, t1)
