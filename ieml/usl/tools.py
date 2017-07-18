@@ -1,7 +1,7 @@
 import random
 
 from ..commons import IEMLObjects, IEMLType
-from ..synthax import Sentence, SuperSentence, Text, Word, Morpheme
+from ..syntax import Sentence, SuperSentence, Text, Word, Morpheme
 from ..tools import RandomPoolIEMLObjectGenerator, ieml
 from ..dictionary import Term
 

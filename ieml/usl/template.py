@@ -4,7 +4,7 @@ import numpy as np
 
 from ..constants import LANGUAGES
 from ..dictionary import Term, term
-from ..synthax import Word
+from ..syntax import Word
 from .paths import path
 from .tools import usl, replace_paths
 

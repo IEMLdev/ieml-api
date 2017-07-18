@@ -3,7 +3,7 @@ import unittest
 from ieml.exceptions import InvalidIEMLObjectArgument
 from ieml.dictionary import term
 from ieml.tools import ieml
-from ieml.synthax import Word, Morpheme
+from ieml.syntax import Word, Morpheme
 
 
 class WordsTest(unittest.TestCase):

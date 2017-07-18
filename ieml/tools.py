@@ -4,8 +4,8 @@ import functools
 
 from .commons import IEMLObjects
 from .exceptions import InvalidIEMLObjectArgument
-from .synthax.parser.parser import IEMLParser
-from .synthax import Sentence, Clause, SuperSentence, SuperClause, Text, Word, Morpheme
+from .syntax.parser.parser import IEMLParser
+from .syntax import Sentence, Clause, SuperSentence, SuperClause, Text, Word, Morpheme
 from .exceptions import CantGenerateElement
 from .dictionary import Term, Dictionary
 

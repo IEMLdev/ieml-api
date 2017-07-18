@@ -1,6 +1,6 @@
 from unittest.case import TestCase
 
-from ieml.synthax import Sentence, SuperSentence, Clause, SuperClause, Text, Word, Morpheme
+from ieml.syntax import Sentence, SuperSentence, Clause, SuperClause, Text, Word, Morpheme
 from ieml.dictionary import Term, term
 from ieml.tools import RandomPoolIEMLObjectGenerator
 from ieml.usl.paths.exceptions import PathError, IEMLObjectResolutionError

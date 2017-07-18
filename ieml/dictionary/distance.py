@@ -27,8 +27,9 @@ def _sam_to_float(reltype):
 
 
 def relation_value(reltype, max_rank=None):
-
-    if reltype == 'associated':
+    if reltype == 'Nll':
+        return 0, RELATIONS_TYPES
+    elif reltype == 'associated':
         return C * 1. / 4, RELATIONS_TYPES[reltype]
     elif reltype == 'opposed':
         return C * 1. / 2, RELATIONS_TYPES[reltype]
@@ -56,35 +57,21 @@ def relation_value(reltype, max_rank=None):
 
 
 
-RELATIONS_TYPES = {
-    'associated': (0, 1),
-    'opposed': (0, 2),
-    'crossed': (0, 3),
-    'twin': (0, 4),
-    'table_5': (4, 0),
-    'table_4': (4, 1),
-    'table_3': (4, 2),
-    'table_2': (4, 3),
-    'table_1': (4, 4),
-    'table_0': (4, 5),
-    **{''.join(s): (1 + 2*(i-1), j) for i in range(1, 4) for j, s in enumerate(product('sam', repeat=i))}
-}
+def build_distance_matrix(version):
+
+    def _enumerate_ancestors(t, prefix=''):
+        for k, v in t.relations.father.items():
+            for t1 in v:
+                # if t1 is layer 0, we include this etymology only if it is a direct father/child
+                if t1.layer == 0 and len(prefix) != 0:
+                    continue
+
+                yield (prefix + k, t1)
+
+                if len(prefix) < 2:
+                    yield from _enumerate_ancestors(t1, prefix=prefix + k)
 
 
-def _enumerate_ancestors(t, prefix=''):
-    for k, v in t.relations.father.items():
-        for t1 in v:
-            # if t1 is layer 0, we include this etymology only if it is a direct father/child
-            if t1.layer == 0 and len(prefix) != 0:
-                continue
-
-            yield (prefix + k, t1)
-
-            if len(prefix) < 2:
-                yield from _enumerate_ancestors(t1, prefix=prefix + k)
-
-
-def build_matrix(version):
     d = Dictionary(version)
     relation_matrix = np.empty(shape=(len(d),) * 2,
                             dtype=[('distance', 'f4'),('slot', 'i4', (2,)), ('reltype', 'S16')])
@@ -111,24 +98,17 @@ def build_matrix(version):
     for layer in d.layers:
         for t0 in layer:
             for prefix, t1 in _enumerate_ancestors(t0):
-                v, order = relation_value(prefix)
+                k = relation_value(prefix)
+                v, order = k
                 relation_matrix[t0.index, t1.index] = (v, order, prefix)
                 relation_matrix[t1.index, t0.index] = (v, order, prefix)
 
     return relation_matrix
 
 
-def distance_matrix(version):
-    if os.path.isfile('/tmp/cache_relations_%s.npy'%str(version)):
-        return np.load('/tmp/cache_relations_%s.npy'%str(version))
-    else:
-        mat = build_matrix(version)
-        np.save('/tmp/cache_relations_%s.npy'%str(version), mat)
-        return mat
-
 
 def default_metric(dictionary_version):
-    mat = distance_matrix(dictionary_version)
+    mat = get_matrix('distance', dictionary_version)
     return lambda t0, t1: mat[t0.index, t1.index][0]
 
 
@@ -154,3 +134,147 @@ def test_metric(metric, t0, n=30):
     print('\n'.join("[%.3f]: %s"%(r[0], _str_term(r[1])) for r in res))
 
 
+# Ordre sur les relations:
+# Class principals :
+# Ass > Opp > Crs > Twn > Fth > Rnk > Chd > Nll
+# Sous-class
+# Fth/Chd :
+# S > A > M > SS > SA ...
+# Rnk:
+# 5 > 4 ... > 0
+
+
+def _enumerate_ancestors(t, prefix=''):
+    for k, v in t.relations.father.items():
+        for t1 in v:
+            # if t1 is layer 0, we include this etymology only if it is a direct father/child
+            if t1.layer == 0 and len(prefix) != 0:
+                continue
+
+            yield (prefix + k, t1)
+            yield from _enumerate_ancestors(t1, prefix=prefix + k)
+
+
+def build_ancestor_matrix(version):
+    d = Dictionary(version)
+    matrix = np.empty(shape=(len(d),) * 2, dtype=[('relation', "U8"), ('prefix', "U8")])
+
+    for layer in d.layers:
+        for t0 in layer:
+            for prefix, t1 in _enumerate_ancestors(t0):
+                matrix[t0.index, t1.index]['relation'] = 'Fth'
+                matrix[t0.index, t1.index]['prefix'] = prefix
+
+                matrix[t1.index, t0.index]['relation'] = 'Chd'
+                matrix[t1.index, t0.index]['prefix'] = prefix
+
+    return matrix
+MATRIX_BUILD = {
+    'distance': build_distance_matrix,
+    'ancestor': build_ancestor_matrix
+}
+
+MATRIX_CACHE = {}
+
+def get_matrix(name, version):
+    file = '/tmp/cache_%s_%s.npy' % (name, str(version))
+    if file in MATRIX_CACHE:
+        return MATRIX_CACHE[file]
+    elif os.path.isfile(file):
+        return np.load(file)
+    else:
+        mat = MATRIX_BUILD[name](version)
+        np.save(file, mat)
+        return mat
+
+# 2 terms -> Relation
+
+_RELATION_TYPES = {
+    'Idt': {
+        'order': 0,
+        'name': 'Identity'
+    },
+    'Ass': {
+        'order': 1,
+        'name': 'Associated'
+    },
+    'Opp': {
+        'order': 2,
+        'name': 'Opposed'
+    },
+    'Crs': {
+        'order': 3,
+        'name': 'Crossed'
+    },
+    'Twn': {
+        'order': 4,
+        'name': 'Twin'
+    },
+    'Fth': {
+        'order': 5,
+        'name': 'Father'
+    },
+    'Rnk': {
+        'order': 6,
+        'name': 'Rank'
+    },
+    'Chd': {
+        'order': 7,
+        'name': 'Child'
+    },
+    'Nll': {
+        'order': 8,
+        'name': 'Null'
+    }
+}
+
+
+RELATIONS_TYPES = {
+    'associated': (0, 1),
+    'opposed': (0, 2),
+    'crossed': (0, 3),
+    'twin': (0, 4),
+    'table_5': (4, 0),
+    'table_4': (4, 1),
+    'table_3': (4, 2),
+    'table_2': (4, 3),
+    'table_1': (4, 4),
+    'table_0': (4, 5),
+    **{''.join(s): (1 + 2*(i-1), j) for i in range(1, 4) for j, s in enumerate(product('sam', repeat=i))}
+}
+
+
+class RelationTerm:
+    ancestor = None
+    def __init__(self, term0, term1):
+        if self.ancestor is None:
+            self.__class__.ancestor = get_matrix('ancestor', term0.dictionary.version)
+
+        self.t0 = term0
+        self.t1 = term1
+        if self.t0 == self.t1:
+            self.relation_type = 'Idt'
+            self.order = 0
+
+        elif self.t0.root == self.t1.root:
+            self.relation_type = min({r for r in self.t0.relations.to(self.t1) if r not in ('contained', 'contains')},
+                          key=lambda r: RELATIONS_TYPES[r])
+
+            self.order = RELATIONS_TYPES[self.relation_type]
+        elif self.ancestor[self.t0.index, self.t1.index]['relation'] != '' and\
+             len(self.ancestor[self.t0.index, self.t1.index]['prefix']) < 4:
+            self.relation_type, self.subtype = self.ancestor[self.t0.index, self.t1.index]
+
+            self.order = RELATIONS_TYPES[self.subtype]
+        else:
+            self.relation_type = 'Nll'
+            _, self.order = relation_value('Nll')
+
+    def __eq__(self, other):
+        return {self.t0, self.t1} == {other.t0, other.t1}
+
+    def __lt__(self, other):
+        return self.order < other.order
+
+    def __str__(self):
+        return _RELATION_TYPES[self.relation_type]['name']

@@ -1,7 +1,7 @@
 import random
 import unittest
 
-from ieml.synthax import Sentence, Text, Word, SuperSentence
+from ieml.syntax import Sentence, Text, Word, SuperSentence
 from ieml.tools import RandomPoolIEMLObjectGenerator
 from ieml.usl import usl, Usl
 from ieml.usl.tools import random_usl, replace_paths

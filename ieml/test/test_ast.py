@@ -3,10 +3,10 @@ import unittest
 
 import numpy as np
 
-from ieml.synthax import Text, SuperSentence
+from ieml.syntax import Text, SuperSentence
 from ieml.exceptions import InvalidIEMLObjectArgument, TermNotFoundInDictionary
-from ieml.synthax.parser import IEMLParser
-from ieml.synthax.sentences import SuperClause
+from ieml.syntax.parser import IEMLParser
+from ieml.syntax.sentences import SuperClause
 from ieml.tools import RandomPoolIEMLObjectGenerator
 from ieml.dictionary.script import script as sc
 from ieml.test.helper import *

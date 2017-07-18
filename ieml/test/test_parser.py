@@ -1,7 +1,7 @@
 import unittest
 
-from ieml.synthax.parser.parser import IEMLParser
-from ieml.synthax import Text
+from ieml.syntax.parser.parser import IEMLParser
+from ieml.syntax import Text
 from ieml.tools import RandomPoolIEMLObjectGenerator
 from ieml.dictionary import term
 

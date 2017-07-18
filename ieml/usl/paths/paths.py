@@ -4,7 +4,7 @@ from itertools import chain, product
 
 from functools import reduce
 
-from ...synthax import SuperSentence, Sentence, Text, Word
+from ...syntax import SuperSentence, Sentence, Text, Word
 from ...dictionary import Term
 from .constants import COORDINATES_KINDS
 from .exceptions import PathError

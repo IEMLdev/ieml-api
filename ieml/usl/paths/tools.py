@@ -3,7 +3,7 @@ from collections import defaultdict
 import numpy
 
 from ...exceptions import InvalidIEMLObjectArgument
-from ...synthax import SuperSentence, Sentence, Clause, SuperClause, Text, Word, Morpheme
+from ...syntax import SuperSentence, Sentence, Clause, SuperClause, Text, Word, Morpheme
 from ...dictionary import Term
 from .exceptions import IEMLObjectResolutionError, ResolveError
 from .parser import PathParser
