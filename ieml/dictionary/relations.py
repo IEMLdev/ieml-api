@@ -82,7 +82,7 @@ class RelationsGraph:
         from .terms import Term
         if isinstance(item, Term):
             if item.dictionary != self.dictionary:
-                raise ValueError("Invalid dictionary")
+                raise ValueError("Invalid dictionary, (%s/%s)"%(str(item.dictionary), str(self.dictionary)))
             return Relations(term=item, relations_graph=self)
 
         raise NotImplemented
