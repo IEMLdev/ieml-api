@@ -15,7 +15,7 @@ USE_CACHE = get_configuration().get("RELATIONS", "cacherelations")
 
 
 class DictionarySingleton(type):
-    _instances = {}
+    _instance = None
 
     def __call__(cls, *args, **kwargs):
         if len(args) < 1 or not isinstance(args[0], (DictionaryVersion, str)):
@@ -27,23 +27,23 @@ class DictionarySingleton(type):
         else:
             raise ValueError("Invalid argument for dictionary creation, expected dictionary version, not %s"%str(args[0]))
 
-        if version not in cls._instances:
+        if cls._instance is None or cls._instance.version != version:
             # check cache
             if not version.is_cached or not USE_CACHE:
-                cls._instances[version] = super(DictionarySingleton, cls).__call__(version, **kwargs)
+                cls._instance = super(DictionarySingleton, cls).__call__(version, **kwargs)
 
                 if USE_CACHE:
                     print("\t[*] Saving dictionary cache to disk (%s)" % version.cache)
 
                     with open(version.cache, 'wb') as fp:
-                        pickle.dump(cls._instances[version], fp, protocol=4)
+                        pickle.dump(cls._instance, fp, protocol=4)
             else:
                 print("\t[*] Loading dictionary from disk (%s)" % version.cache)
 
                 with open(version.cache, 'rb') as fp:
-                    cls._instances[version] = pickle.load(fp)
+                    cls._instance = pickle.load(fp)
 
-        return cls._instances[version]
+        return cls._instance
 
 
 class Dictionary(metaclass=DictionarySingleton):
