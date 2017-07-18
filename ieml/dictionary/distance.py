@@ -14,11 +14,14 @@ def default_metric(dictionary_version):
     return lambda t0, t1: mat[t0.index, t1.index]
 
 
-def distance_pack(t0, matrix):
-    res = [(*matrix[t0.index, i], t0.dictionary.index[i]) for i in np.where(matrix['reltype'][t0.index, :] != b'none')[0]]
-    res = sorted(res, key=lambda t: list(t[1]))
+def distance_pack(t0, version):
+    reltypes = get_matrix('relation', version)
+    distance = get_matrix('distance', version)
 
-    return [(str(key, encoding='utf8'), [t[3] for t in v]) for key, v in groupby(res, key=lambda t: t[2])]
+    res = [(reltypes[t0.index, i], t0.dictionary.index[i]) for i in reltypes[t0.index, :].indices]
+    res = sorted(res, key=lambda t: t[0])
+
+    return [(RelationType(key).name, [t[1] for t in v]) for key, v in groupby(res, key=lambda t: t[0])]
 
 
 def rank_from_term(term, metric, nb_terms=30):
@@ -50,6 +53,7 @@ def get_matrix(name, version):
         with open(file, 'rb') as fp:
             return pickle.load(fp)
     else:
+        print("\t[*] Building distance matrix %s."%name)
         mat = MATRIX_BUILD[name](version)
         for k, v in mat.items():
             name = '/tmp/cache_%s_%s.npy' % (k, str(version))
