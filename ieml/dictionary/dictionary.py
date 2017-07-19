@@ -5,6 +5,7 @@ from collections import defaultdict
 from ieml.commons import cached_property
 from ieml.dictionary.relations import RelationsGraph
 from ieml.dictionary.table import Cell, table_class
+from ieml.dictionary.version import save_dictionary_to_cache, load_dictionary_from_cache
 from .version import DictionaryVersion, get_default_dictionary_version
 from ..constants import MAX_LAYER
 from .script import script
@@ -33,15 +34,9 @@ class DictionarySingleton(type):
                 cls._instance = super(DictionarySingleton, cls).__call__(version, **kwargs)
 
                 if USE_CACHE:
-                    print("\t[*] Saving dictionary cache to disk (%s)" % version.cache)
-
-                    with open(version.cache, 'wb') as fp:
-                        pickle.dump(cls._instance, fp, protocol=4)
+                    save_dictionary_to_cache(cls._instance)
             else:
-                print("\t[*] Loading dictionary from disk (%s)" % version.cache)
-
-                with open(version.cache, 'rb') as fp:
-                    cls._instance = pickle.load(fp)
+                cls._instance = load_dictionary_from_cache(version)
 
         return cls._instance
 
@@ -173,5 +168,8 @@ class Dictionary(metaclass=DictionarySingleton):
         }
 
     def __setstate__(self, state):
-        self.version = DictionaryVersion(state['version'])
+        if isinstance(state['version'], DictionaryVersion):
+            self.version = state['version']
+        else:
+            self.version = DictionaryVersion(state['version'])
         self._populate(scripts=state['scripts'], relations=state['relations'])

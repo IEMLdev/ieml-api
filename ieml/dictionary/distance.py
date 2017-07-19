@@ -255,8 +255,6 @@ RelationType = unique(IntEnum('RelationType', {
 }))
 
 
-
-
 # class RelationTerm:
 #     ancestor = None
 #     def __init__(self, term0, term1):

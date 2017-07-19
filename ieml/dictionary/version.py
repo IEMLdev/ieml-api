@@ -1,10 +1,12 @@
 import copy
+import pickle
 from urllib.request import urlretrieve, urlopen
 import datetime
 import urllib.parse
 import json
 import os
 
+from ieml.dictionary.relations import RelationsGraph
 from .. import get_configuration, ieml_folder
 from ..constants import LANGUAGES
 import xml.etree.ElementTree as ET
@@ -249,13 +251,41 @@ def create_dictionary_version(old_version=None, add=None, update=None, remove=No
        all(old_version.inhibitions[s] == state['inhibitions'][s] for s in old_version.inhibitions):
 
         old_dict_state = Dictionary(old_version).__getstate__()
-        d = Dictionary(dictionary_version)
-        d.__setstate__(old_dict_state)
+
+        d = Dictionary.__new__(Dictionary)
+        rel_graph = RelationsGraph.__new__(RelationsGraph)
+        rel_graph.__setstate__({
+            'dictionary': d,
+            'relations': old_dict_state['relations'].__getstate__()['relations']
+        })
+
+        state = {
+            'version': dictionary_version,
+            'relations': rel_graph,
+            'scripts': old_dict_state['scripts'],
+        }
+
+        d.__setstate__(state)
+        save_dictionary_to_cache(d)
     else:
         # graph is updated, must check the coherence
         Dictionary(dictionary_version)
 
     return dictionary_version
+
+
+def save_dictionary_to_cache(dictionary):
+    print("\t[*] Saving dictionary cache to disk (%s)" % dictionary.version.cache)
+
+    with open(dictionary.version.cache, 'wb') as fp:
+        pickle.dump(dictionary, fp, protocol=4)
+
+
+def load_dictionary_from_cache(version):
+    print("\t[*] Loading dictionary from disk (%s)" % version.cache)
+
+    with open(version.cache, 'rb') as fp:
+        return pickle.load(fp)
 
 
 if __name__ == '__main__':
