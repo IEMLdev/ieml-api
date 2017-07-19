@@ -3,6 +3,7 @@ import os
 import ply.yacc as yacc
 
 from ieml.dictionary.terms import Term
+from ieml.dictionary.tools import term
 from ... import parser_folder
 from ...metaclasses import Singleton
 from ...exceptions import CannotParse
@@ -84,7 +85,7 @@ class IEMLParser(metaclass=Singleton):
 
     def p_term(self, p):
         """term : LBRACKET TERM RBRACKET"""
-        p[0] = _build(Dictionary().terms[p[2]])
+        p[0] = _build(term(p[2]))
 
     def p_proposition_sum(self, p):
         """terms_sum : terms_sum PLUS term

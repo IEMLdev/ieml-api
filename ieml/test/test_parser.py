@@ -1,5 +1,6 @@
 import unittest
 
+from ieml.exceptions import TermNotFoundInDictionary
 from ieml.syntax.parser.parser import IEMLParser
 from ieml.syntax import Text
 from ieml.tools import RandomPoolIEMLObjectGenerator
@@ -52,3 +53,6 @@ class TestPropositionParser(unittest.TestCase):
         ss1 = '[('+ '*'.join((s1, str(self.rand.sentence()), str(self.rand.sentence()))) + ')]<opopop>'
         self.assertEqual(str(self.parser.parse(ss1)), ss1)
 
+    def test_invalid_term(self):
+        with self.assertRaises(TermNotFoundInDictionary):
+            self.parser.parse("[([A:A:A:.-'])]")
