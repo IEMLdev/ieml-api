@@ -47,7 +47,7 @@ class TestUsl(unittest.TestCase):
         ieml = RandomPoolIEMLObjectGenerator(level=Text).text()
         self.assertEqual(Usl(ieml_object=ieml), Usl(ieml_object=ieml))
 
-class TextUslToots(unittest.TestCase):
+class TextUslTools(unittest.TestCase):
     def test_replace(self):
         u = usl(Word(Morpheme([term('M:')])))
         u2 = replace_paths(u, {'r0': '[S:]'})
@@ -57,3 +57,9 @@ class TextUslToots(unittest.TestCase):
         u = random_usl(rank_type=Text)
         p = random.sample(tuple(u.paths.items()), 1)
         self.assertEqual(u[p[0][0]], p[0][1])
+
+    def test_translation(self):
+        u = random_usl(rank_type=Text)
+        t = u.auto_translation()
+        self.assertIn('fr', t)
+        self.assertIn('en', t)
