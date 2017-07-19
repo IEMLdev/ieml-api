@@ -170,8 +170,8 @@ class TestSentences(unittest.TestCase):
 
     def test_adjacency_graph_building(self):
         sentence = get_test_sentence()
-        adjancency_matrix = np.array([[False,True,True,False,False],
-                                      [False,False,False,True,True],
+        adjancency_matrix = np.array([[False,True,False,False,True],
+                                      [False,False,True,True,False],
                                       [False,False,False,False,False],
                                       [False,False,False,False,False],
                                       [False,False,False,False,False]])
