@@ -54,8 +54,8 @@ class IEMLParser(metaclass=Singleton):
             if self.hyperlinks:
                 self.root = Hypertext(self.hyperlinks)
 
-            if isinstance(self.root, Term):
-                self.root = Word(root=Morpheme([self.root]))
+            # if isinstance(self.root, Term):
+            #     self.root = Word(root=Morpheme([self.root]))
 
             return self.root
         else:

@@ -4,3 +4,4 @@ from .texts import Text
 from .hypertexts import Hyperlink, Hypertext, PropositionPath
 
 from . import parser
+from .tools import proposition

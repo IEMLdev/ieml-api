@@ -85,3 +85,7 @@ class Word(IEMLObjects):
 
     def compute_str(self, children_str):
         return '['+'*'.join(children_str)+']'
+
+    @property
+    def is_term(self):
+        return len(self.root.children) == 1 and self.flexing is None
