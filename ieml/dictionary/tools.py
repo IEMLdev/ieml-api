@@ -14,8 +14,10 @@ def term(arg, dictionary=None):
         else:
             dictionary = Dictionary()
 
-    return _term(arg, dictionary)
-
+    try:
+        return _term(arg, dictionary)
+    except KeyError:
+        raise TermNotFoundInDictionary(arg, dictionary)
 
 @singledispatch
 def _term(arg, dictionary):
@@ -30,8 +32,5 @@ _term.register(Script, lambda arg, dictionary: dictionary.terms[arg])
 def _term_str(arg, dictionary=None):
     if arg[0] == '[' and arg[-1] == ']':
         arg = arg[1:-1]
-
-    if arg not in dictionary:
-        raise TermNotFoundInDictionary(arg, dictionary)
     return dictionary.terms[arg]
 
