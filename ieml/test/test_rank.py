@@ -19,7 +19,7 @@ class RankComputationTest(unittest.TestCase):
         term = self.dic.terms[sc("O:M:.M:M:.-+M:M:.O:M:.-")]
 
         root_table = term.tables[1]
-        h = root_table.headers[next(root_table.headers.__iter__())]
+        h = root_table
         term = self.dic.terms[sc([h.columns[4],h.columns[5],h.columns[3]])]
 
         self.assertEqual(term.rank, 2)
@@ -30,20 +30,16 @@ class RankComputationTest(unittest.TestCase):
         self.assertEqual(t.rank, 3)
 
     def test_rank4_2d(self):
-        t = self.dic.terms["E:M:.we.-"]
+        t = self.dic.terms["E:.-U:.S:M:.-l.-'"]
 
-        self.assertEqual(t.rank, 4)
+        self.assertEqual(t.rank, 5)
 
     def test_rank5_2d(self):
         term = self.dic.terms[sc("O:M:.M:M:.-+M:M:.O:M:.-")]
         # Build table for the paradigm of rank 3 (root_table.headers[1][2])
         root_table = term.tables[1]
-        h = root_table.headers[next(root_table.headers.__iter__())].rows[2]
-        term = self.dic.terms[h]
-
-        root_table = term.tables[0]
-        h = root_table.headers[next(root_table.headers.__iter__())].rows[0]
-        term = self.dic.terms[h]
+        root_table = root_table.rows[2].tables[0]
+        h = root_table.rows[0]
 
         self.assertEqual(term.rank, 5)
 

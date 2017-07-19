@@ -21,7 +21,6 @@ class DictionaryTest(TestCase):
         self.assertEqual(sum(len(v) for v in dic.layers), NB_TERMS)
         self.assertListEqual(dic.index, sorted(dic.terms.values()))
 
-        self.assertEqual(len(dic.singular_sequences), sum(r.script.cardinal for r in dic.roots))
 
         # for t, r in dic.ranks.items():
         #     self.assertIn(r, list(range(0, 7)), "Term %s as a invalid rank of %d"%(str(t), r))

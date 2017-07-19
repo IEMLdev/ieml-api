@@ -63,7 +63,8 @@ class IEMLParser(metaclass=Singleton):
 
     # Parsing rules
     def p_ieml_proposition(self, p):
-        """proposition : term
+        """proposition :  script
+                        | term
                         | morpheme
                         | word
                         | clause
@@ -83,9 +84,14 @@ class IEMLParser(metaclass=Singleton):
             p[0] = [p[1][1:-1]]
 
 
+    def p_script(self, p):
+        """script : TERM """
+        p[0] = _build(term(p[1]))
+
+
     def p_term(self, p):
-        """term : LBRACKET TERM RBRACKET"""
-        p[0] = _build(term(p[2]))
+        """term : LBRACKET script RBRACKET"""
+        p[0] = p[2]
 
     def p_proposition_sum(self, p):
         """terms_sum : terms_sum PLUS term

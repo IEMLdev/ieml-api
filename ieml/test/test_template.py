@@ -11,7 +11,7 @@ class TestTemplate(unittest.TestCase):
         self.assertEqual(len(set(t)), 3*3*3)
 
     def test_translation(self):
-        w = ieml("[([M:M:.a.-]+[M:.-',M:.-',S:.-'B:.-'n.-S:.U:.-',_])*([E:U:T:.]+[E:U:.wa.-])]")
+        w = ieml("[([M:M:.a.-]+[n.-S:.U:.-'S:.-'B:.-',M:.-',M:.-',_])*([E:U:T:.]+[E:U:.wa.-])]")
         t = Template(w, ['r0', 'r1'])
         translations = t.get_translations({'fr': 'Ces meilleurs "$0" de "$1"', 'en': 'These best "$0" of "$1"'}, {'r0': '$0', 'r1': '$1'})
 

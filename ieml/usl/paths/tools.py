@@ -2,6 +2,7 @@ from collections import defaultdict
 
 import numpy
 
+from ieml.tools import ieml
 from ...exceptions import InvalidIEMLObjectArgument
 from ...syntax import SuperSentence, Sentence, Clause, SuperClause, Text, Word, Morpheme
 from ...dictionary import Term
@@ -412,7 +413,7 @@ def _build_deps_word(rules):
 def _inferred_types(path, e):
     result = set()
     for inf in path.context.switch:
-        if e.__class__ in path.context.switch[inf]:
+        if isinstance(e, tuple(path.context.switch[inf])):
             result.add(inf)
 
     if result:
@@ -531,9 +532,9 @@ def resolve_ieml_object(paths, elements=None):
         paths = list(paths.items())
 
     if elements is None:
-        result = _resolve_ctx('', [(d, e) for p, e in paths for d in p.develop])
+        result = _resolve_ctx('', [(d, ieml(e)) for p, e in paths for d in path(p).develop])
     else:
-        result = _resolve_ctx('', [(d, e) for e, p in zip(elements, paths) for d in p.develop])
+        result = _resolve_ctx('', [(d, ieml(e)) for e, p in zip(elements, paths) for d in path(p).develop])
 
     if _errors:
         raise IEMLObjectResolutionError(_errors)

@@ -16,13 +16,13 @@ class TestPaths(TestCase):
         self.assertListEqual([c.__class__ for c in p.children],
                              [Coordinate, MultiplicativePath, MultiplicativePath, Coordinate])
         self.assertEqual(str(p), "t:sa:sa0:f")
-        self.assertTupleEqual(p.context, ({Text}, False, {Text: {term}}))
+        self.assertTupleEqual(tuple(p.context), ({Text}, False, {Text: {Term}}))
 
         p = path('f15684')
         self.assertIsInstance(p, Coordinate)
         self.assertEqual(p.kind, 'f')
         self.assertEqual(p.index, 15684)
-        self.assertTupleEqual(p.context, ({Word}, False, {Word: {term}}))
+        self.assertTupleEqual(tuple(p.context), ({Word}, False, {Word: {Term}}))
 
         p = path("t0:(s0a0 + s0m0):s:f + t1:s:s:(r+f)")
         self.assertIsInstance(p, AdditivePath)
@@ -37,7 +37,7 @@ class TestPaths(TestCase):
         p = path("t + s + s:s + r")
         self.assertTupleEqual(p.context, ({Text, SuperSentence, Sentence, Word}, True, {
             Text: {
-                SuperSentence, Sentence, Word, term
+                SuperSentence, Sentence, Word, Term
             },
             SuperSentence : {
                 Sentence,
@@ -47,7 +47,7 @@ class TestPaths(TestCase):
                 Word
             },
             Word : {
-                term
+                Term
             }
         }))
 
@@ -166,3 +166,14 @@ class TestPaths(TestCase):
              [('t0:s0', 'No root for the word node.'),
              ('t0:s0m0', 'Missing node definition.'),
              ('t1', 'Missing node definition.')])
+
+    def test_parse_example(self):
+        rules = {
+            "r0": "A:O:.wo.t.-",
+            "r1": "d.a.-l.a.-f.o.-'",
+            "r2": "m.-M:.O:.-'m.-S:.U:.-'E:A:S:.-',",
+            "f0": "b.o.-k.o.-s.u.-'",
+            "f1": "n.u.-d.u.-d.u.-'"
+        }
+
+        self.assertIsInstance(usl(rules).ieml_object, Word)

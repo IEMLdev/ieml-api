@@ -26,8 +26,8 @@ class TestPropositionsInclusion(unittest.TestCase):
 
     def setUp(self):
         self.parser = IEMLParser()
-        self.sentence = self.parser.parse("""[([([h.O:T:.-])]*[([E:O:.T:M:.-])]*[([E:F:.O:O:.-])])+
-                                     ([([h.O:T:.-])]*[([wu.T:.-])]*[([h.O:B:.-])])]""")
+        self.sentence = self.parser.parse("""[([([h.O:T:.-])]*[([E:.-O:.T:M:.-l.-'])]*[([E:.F:.O:O:.-])])+
+                                     ([([h.O:T:.-])]*[([s.wu.T:.-])]*[([h.O:B:.-])])]""")
 
     def test_word_in_sentence(self):
         word = self.parser.parse("[([h.O:T:.-])]")
@@ -38,14 +38,14 @@ class TestPropositionsInclusion(unittest.TestCase):
         self.assertIn(term, set(itertools.chain.from_iterable(itertools.chain.from_iterable(itertools.chain.from_iterable(self.sentence)))))
 
     def test_word_not_in_sentence(self):
-        word = self.parser.parse("[([wo.S:.-])]")
+        word = self.parser.parse("[([s.wo.S:.-])]")
         self.assertNotIn(word, self.sentence)
 
 class TesttermsFeatures(unittest.TestCase):
     """Checks basic AST features like hashing, ordering for words, morphemes and terms"""
 
     def setUp(self):
-        self.term_a, self.term_b, self.term_c = term("E:A:T:."), term("E:S:.wa.-"), term("E:S:.o.-")
+        self.term_a, self.term_b, self.term_c = term("E:A:T:."), term("E:.S:.wa.-"), term("E:.-S:.o.-t.-'")
 
     def test_term_check_fail(self):
         with self.assertRaises(TermNotFoundInDictionary):
@@ -85,29 +85,29 @@ class TestMorphemesFeatures(unittest.TestCase):
     def test_morpheme_checks(self):
         """Creates a morpheme with conflicting terms"""
         with self.assertRaises(InvalidIEMLObjectArgument):
-            Morpheme([term("E:A:T:."), term("E:S:.o.-"), term("E:S:.wa.-"), term("E:A:T:.")])
+            Morpheme([term("E:A:T:."), term("E:.-S:.o.-t.-'"), term("E:.S:.wa.-"), term("E:A:T:.")])
 
     def _make_and_check_morphemes(self):
-        morpheme_a = Morpheme([term("E:A:T:."), term("E:S:.wa.-"),term("E:S:.o.-")])
+        morpheme_a = Morpheme([term("E:A:T:."), term("E:.S:.wa.-"),term("E:.-S:.o.-t.-'")])
         morpheme_b = Morpheme([term("a.i.-"), term("i.i.-")])
         return morpheme_a, morpheme_b
 
     def _make_and_check_suffixed_morphemes(self):
-        morpheme_a = Morpheme([term("E:A:T:."), term("E:S:.wa.-")])
-        morpheme_b = Morpheme([term("E:A:T:."), term("E:S:.wa.-"),term("E:S:.o.-")])
+        morpheme_a = Morpheme([term("E:A:T:."), term("E:.S:.wa.-")])
+        morpheme_b = Morpheme([term("E:A:T:."), term("E:.S:.wa.-"),term("E:.-S:.o.-t.-'")])
         return morpheme_a, morpheme_b
 
     def test_morpheme_reordering(self):
         """Create a new morpheme with terms in the wrong order, and check that it reorders
         after itself after the reorder() method is ran"""
-        new_morpheme = Morpheme([term("E:A:T:."), term("E:S:.o.-"), term("E:S:.wa.-")])
-        self.assertEqual(str(new_morpheme.children[2]), '[E:S:.o.-]') # last term is right?
+        new_morpheme = Morpheme([term("E:A:T:."), term("E:.-S:.o.-t.-'"), term("E:.S:.wa.-")])
+        self.assertEqual(str(new_morpheme.children[2]), "[E:.-S:.o.-t.-']") # last term is right?
 
     def test_morpheme_equality(self):
         """Tests if two morphemes That are declared the same way are said to be equal
          using the regular equality comparison. It also tests terms reordering"""
-        morpheme_a = Morpheme([term("E:A:T:."), term("E:S:.o.-"), term("E:S:.wa.-")])
-        morpheme_b = Morpheme([term("E:A:T:."), term("E:S:.wa.-"), term("E:S:.o.-")])
+        morpheme_a = Morpheme([term("E:A:T:."), term("E:.-S:.o.-t.-'"), term("E:.S:.wa.-")])
+        morpheme_b = Morpheme([term("E:A:T:."), term("E:.S:.wa.-"), term("E:.-S:.o.-t.-'")])
         self.assertTrue(morpheme_a == morpheme_b)
 
     def test_morpheme_inequality(self):
@@ -128,10 +128,10 @@ class TestMorphemesFeatures(unittest.TestCase):
 class TestWords(unittest.TestCase):
 
     def setUp(self):
-        self.morpheme_a = Morpheme([term("E:A:T:."), term("E:S:.wa.-"),term("E:S:.o.-")])
+        self.morpheme_a = Morpheme([term("E:A:T:."), term("E:.S:.wa.-"),term("E:.-S:.o.-t.-'")])
         self.morpheme_b = Morpheme([term("a.i.-"), term("i.i.-")])
         self.word_a = Word(self.morpheme_a, self.morpheme_b)
-        self.word_b = Word(Morpheme([term("E:A:T:."), term("E:S:.o.-"), term("E:S:.wa.-")]),
+        self.word_b = Word(Morpheme([term("E:A:T:."), term("E:.-S:.o.-t.-'"), term("E:.S:.wa.-")]),
                           Morpheme([term("a.i.-"), term("i.i.-")]))
 
     def test_words_equality(self):
@@ -140,7 +140,7 @@ class TestWords(unittest.TestCase):
 
     def test_words_hashing(self):
         """Verifies words can be used as keys in a hashmap"""
-        new_word = Word(Morpheme([term("E:A:T:."), term("E:S:.o.-"), term("E:S:.wa.-")]))
+        new_word = Word(Morpheme([term("E:A:T:."), term("E:.-S:.o.-t.-'"), term("E:.S:.wa.-")]))
         word_hashmap = {new_word : 1,
                         self.word_a : 2}
         self.assertTrue(self.word_b in word_hashmap)

@@ -14,9 +14,11 @@ class TestPropositionParser(unittest.TestCase):
         self.parser = IEMLParser()
 
     def test_parse_term(self):
+
         for i in range(10):
             o = self.rand.term()
             self.assertEqual(self.parser.parse(str(o)), o)
+            self.assertEqual(self.parser.parse(str(o.script)), o)
 
     def test_parse_word(self):
         for i in range(10):
