@@ -18,3 +18,5 @@ class WordsTest(unittest.TestCase):
             # "Too many singular sequences"
             ieml("[([O:M:.]+[wa.]+[M:M:.])*([O:O:.M:O:.-])]")
 
+    def test_promotion(self):
+        self.assertIsInstance(ieml('[A:]'), Word)

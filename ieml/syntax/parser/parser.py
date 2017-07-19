@@ -2,6 +2,7 @@ import logging
 import os
 import ply.yacc as yacc
 
+from ieml.dictionary.terms import Term
 from ... import parser_folder
 from ...metaclasses import Singleton
 from ...exceptions import CannotParse
@@ -51,6 +52,10 @@ class IEMLParser(metaclass=Singleton):
         if self.root is not None:
             if self.hyperlinks:
                 self.root = Hypertext(self.hyperlinks)
+
+            if isinstance(self.root, Term):
+                self.root = Word(root=Morpheme([self.root]))
+
             return self.root
         else:
             raise CannotParse(s)

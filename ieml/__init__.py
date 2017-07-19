@@ -31,3 +31,6 @@ from . import constants
 from . import syntax
 from . import dictionary
 from . import usl
+from .dictionary import term, script
+from .usl import usl, random_usl
+

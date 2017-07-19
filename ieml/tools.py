@@ -11,6 +11,9 @@ from .dictionary import Term, Dictionary
 
 
 def ieml(arg):
+    if isinstance(arg, Term):
+        return Word(root=Morpheme([arg]))
+
     if isinstance(arg, IEMLObjects):
         return arg
 
