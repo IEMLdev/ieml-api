@@ -1,6 +1,8 @@
 import ply.lex as lxr
 import logging
 
+TERM_REGEX = r'[EUASBTOMFIacbedgfihkjmlonpsutwyx][EUASBTOMFIacbedgfihkjmlonpsutwyx\.\-\;\:\,\'\’\_\+]+'
+
 tokens = (
    'TERM',
    'PLUS',
@@ -17,7 +19,7 @@ tokens = (
 
 
 def get_lexer(module=None):
-    t_TERM = r'[EUASBTOMFIacbedgfihkjmlonpsutwyx\.\-\;\:\,\'\’\_][EUASBTOMFIacbedgfihkjmlonpsutwyx\.\-\;\:\,\'\’\_\+]+'
+    t_TERM = TERM_REGEX
     t_PLUS   = r'\+'
     t_TIMES   = r'\*'
     t_LPAREN  = r'\('
