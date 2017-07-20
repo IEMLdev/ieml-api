@@ -2,7 +2,6 @@ from collections import OrderedDict, defaultdict
 from itertools import groupby, combinations, permutations, chain, repeat
 
 import numpy as np
-from memory_profiler import profile
 from scipy.sparse.coo import coo_matrix
 from scipy.sparse.csr import csr_matrix
 from scipy.sparse.dok import dok_matrix

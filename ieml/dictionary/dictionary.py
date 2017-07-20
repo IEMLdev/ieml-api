@@ -1,9 +1,4 @@
-import pickle
-
 from collections import defaultdict
-
-from memory_profiler import profile
-
 from ieml.commons import cached_property
 from ieml.dictionary.relations import RelationsGraph
 from ieml.dictionary.table import Cell, table_class

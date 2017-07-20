@@ -42,26 +42,21 @@ def test_metric(metric, t0, n=30):
 
 
 
-MATRIX_CACHE = {}
-
 
 def get_matrix(name, version):
     file = '/tmp/cache_%s_%s.npy' % (name, str(version))
-    if file in MATRIX_CACHE:
-        return MATRIX_CACHE[file]
-    elif os.path.isfile(file):
+    if os.path.isfile(file):
         with open(file, 'rb') as fp:
             return pickle.load(fp)
     else:
         print("\t[*] Building distance matrix %s."%name)
         mat = MATRIX_BUILD[name](version)
         for k, v in mat.items():
-            name = '/tmp/cache_%s_%s.npy' % (k, str(version))
-            MATRIX_CACHE[name] = v
-            with open(name, 'wb') as fp:
+            file_name = '/tmp/cache_%s_%s.npy' % (k, str(version))
+            with open(file_name, 'wb') as fp:
                 pickle.dump(v, fp)
 
-        return MATRIX_CACHE[file]
+        return mat[name]
 # to set
 
 #
@@ -256,8 +251,16 @@ RelationType = unique(IntEnum('RelationType', {
 
 
 RELATION_ORDER_FROM_MAX_RANK = {
-    i: ['Equal', 'Associated', 'Opposed', 'Crossed'] for i in range(1, 6)
+    i: ['Equal', 'Associated', 'Opposed', 'Crossed', 'Twin', 'Father'] for i in range(6)
 }
+
+# RELATION_ORDER_FROM_MAX_RANK[0] += ['Rank_0', 'Child', 'FatherFather', 'ChildChild', 'FatherFatherFather', 'ChildChildChild']
+RELATION_ORDER_FROM_MAX_RANK[0] += ['Rank_0', 'Child', 'FatherFather', 'ChildChild', 'FatherFatherFather', 'ChildChildChild']
+RELATION_ORDER_FROM_MAX_RANK[1] += ['Rank_1', 'Child', 'FatherFather', 'ChildChild', 'Rank_0','FatherFatherFather', 'ChildChildChild']
+RELATION_ORDER_FROM_MAX_RANK[2] += ['Rank_2', 'Child', 'FatherFather', 'Rank_1', 'ChildChild', 'Rank_0', 'FatherFatherFather', 'ChildChildChild']
+RELATION_ORDER_FROM_MAX_RANK[3] += ['Rank_3', 'Child', 'Rank_2', 'FatherFather', 'Rank_1', 'ChildChild', 'Rank_0', 'FatherFatherFather', 'ChildChildChild']
+RELATION_ORDER_FROM_MAX_RANK[4] += ['Rank_4', 'Child', 'Rank_3', 'Rank_2', 'FatherFather', 'Rank_1', 'ChildChild', 'Rank_0', 'FatherFatherFather', 'ChildChildChild']
+RELATION_ORDER_FROM_MAX_RANK[5] += ['Rank_5', 'Child', 'Rank_4', 'Rank_3', 'Rank_2', 'FatherFather', 'Rank_1', 'ChildChild', 'Rank_0', 'FatherFatherFather', 'ChildChildChild']
 
 
 
