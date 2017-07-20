@@ -255,6 +255,13 @@ RelationType = unique(IntEnum('RelationType', {
 }))
 
 
+RELATION_ORDER_FROM_MAX_RANK = {
+    i: ['Equal', 'Associated', 'Opposed', 'Crossed'] for i in range(1, 6)
+}
+
+
+
+
 # class RelationTerm:
 #     ancestor = None
 #     def __init__(self, term0, term1):

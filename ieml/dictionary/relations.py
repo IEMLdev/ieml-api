@@ -1,8 +1,11 @@
 from collections import OrderedDict, defaultdict
-from itertools import groupby, combinations, permutations, chain
+from itertools import groupby, combinations, permutations, chain, repeat
 
 import numpy as np
+from memory_profiler import profile
+from scipy.sparse.coo import coo_matrix
 from scipy.sparse.csr import csr_matrix
+from scipy.sparse.dok import dok_matrix
 
 from ieml.commons import cached_property
 from ieml.dictionary.script.script import MultiplicativeScript, AdditiveScript, NullScript
@@ -101,21 +104,21 @@ class RelationsGraph:
 
         self.relations = {}
         contains = self._compute_contains()
-        self.relations['contains'] = contains
-        self.relations['contained'] = self.relations['contains'].transpose()
+        self.relations['contains'] = csr_matrix(contains)
+        self.relations['contained'] = csr_matrix(self.relations['contains'].transpose())
 
         father = self._compute_father()
 
         for i, r in enumerate(['_substance', '_attribute', '_mode']):
-            self.relations['father' + r] = father[i, :, :]
+            self.relations['father' + r] = dok_matrix(father[i])
 
         siblings = self._compute_siblings()
-        self.relations['opposed'] = siblings[0]
-        self.relations['associated'] = siblings[1]
-        self.relations['crossed'] = siblings[2]
-        self.relations['twin'] = siblings[3]
+        self.relations['opposed'] = dok_matrix(siblings[0])
+        self.relations['associated'] = dok_matrix(siblings[1])
+        self.relations['crossed'] = dok_matrix(siblings[2])
+        self.relations['twin'] = dok_matrix(siblings[3])
 
-        self._do_inhibitions()
+        # self._do_inhibitions()
 
         for i, r in enumerate(['_substance', '_attribute', '_mode']):
             self.relations['child' + r] = self.relations['father' + r].transpose()
@@ -132,7 +135,7 @@ class RelationsGraph:
 
         table = self._compute_table_rank(self.relations['contained'])
         for i in range(6):
-            self.relations['table_%d'%i] = table[i, :, :]
+            self.relations['table_%d'%i] = table[i]
 
         missing = {s for s in RELATIONS if s not in self.relations}
         if missing:
@@ -143,14 +146,21 @@ class RelationsGraph:
     def _compute_table_rank(self, contained):
         print("\t\t[*] Computing tables relations")
 
-        _tables_rank = np.zeros((6, len(self.dictionary), len(self.dictionary)), np.bool)
+        tables_rank = [([], []) for _ in range(6)]
+
+        indices = [
+            set(l) for l in np.split(contained.indices, contained.indptr)[1:-1]
+        ]
 
         for root in self.dictionary.roots:
             for t0, t1 in combinations(self.dictionary.roots[root], 2):
-                commons = [self.dictionary.index[i] for i in np.where(contained[t0.index, :] & contained[t1.index, :])[0]]
-                _tables_rank[max(map(lambda t: t.rank, commons)), t0.index, t1.index] = True
+                commons = [self.dictionary.index[i] for i in indices[t0.index] & indices[t1.index]]
 
-        return _tables_rank + _tables_rank.transpose((0, 2, 1))
+                rank = max(map(lambda t: t.rank, commons))
+                tables_rank[rank][0].extend((t0.index, t1.index))
+                tables_rank[rank][1].extend((t1.index, t0.index))
+
+        return [coo_matrix(([True]*len(i), (i, j)), shape=self.shape, dtype=np.bool) for i, j in tables_rank]
 
     def _do_inhibitions(self):
         print("\t\t[*] Performing inhibitions")
@@ -165,16 +175,24 @@ class RelationsGraph:
     def _compute_contains(self):
         print("\t\t[*] Computing contains/contained relations")
         # contain/contained
-        contains = np.diag(np.ones(len(self.dictionary), dtype=np.int8))
+
+        # contains = coo_matrix(
+        #     ([True]*len(self.dictionary), (, list(range(len(self.dictionary))))),
+        #     shape=(len(self.dictionary), len(self.dictionary)), dtype=np.bool)
+        #     # np.diag(np.ones(len(self.dictionary), dtype=np.bool))
+
+        i = list(range(len(self.dictionary)))
+        j = list(range(len(self.dictionary)))
         for r_p, v in self.dictionary.roots.items():
             paradigms = {t for t in v if t.script.paradigm}
 
             for p in paradigms:
                 _contains = [self.dictionary.terms[ss].index for ss in p.script.singular_sequences] + \
                             [k.index for k in paradigms if k.script in p.script]
-                contains[p.index, _contains] = 1
+                i.extend(repeat(p.index, len(_contains)))
+                j.extend(_contains)
 
-        return contains
+        return coo_matrix(([True] * len(i), (i, j)), shape=self.shape, dtype=np.bool)
 
     def _compute_father(self):
         print("\t\t[*] Computing father/child relations")
@@ -193,7 +211,9 @@ class RelationsGraph:
 
             return result
 
-        father = np.zeros((3, len(self.dictionary), len(self.dictionary)), dtype=np.bool)
+        # father = coo_matrix((3, len(self.dictionary), len(self.dictionary)), dtype=np.bool)
+
+        father = [([], []) for _ in range(3)]
 
         for t in self.dictionary.terms.values():
             s = t.script
@@ -202,11 +222,15 @@ class RelationsGraph:
                 if len(sub_s.children) == 0 or isinstance(sub_s, NullScript):
                     continue
 
-                for i in range(3):
-                    fathers_indexes = _recurse_script(sub_s.children[i])
-                    father[i, t.index, fathers_indexes] = True
+                for i, s in enumerate(('father_substance', 'father_attribute', 'father_mode')):
+                    if s in t.inhibitions:
+                        continue
 
-        return father
+                    fathers_indexes = _recurse_script(sub_s.children[i])
+                    father[i][0].extend(repeat(t.index, len(fathers_indexes)))
+                    father[i][1].extend(fathers_indexes)
+
+        return [coo_matrix(([True] * len(i), (i, j)), shape=self.shape, dtype=np.bool) for i, j in father]
 
     def _compute_siblings(self):
         # siblings
@@ -232,11 +256,18 @@ class RelationsGraph:
                    _opposed_sibling(s0.children[0], s1.children[0]) and \
                    _opposed_sibling(s0.children[1], s1.children[1])
 
-        siblings = np.zeros((4, len(self.dictionary), len(self.dictionary)), dtype=np.int8)
+        # siblings = coo_matrix((4, len(self.dictionary), len(self.dictionary)), dtype=np.bool)
+
+        siblings = [([], []) for _ in range(4)]
 
         print("\t\t[*] Computing siblings relations")
 
         for root in self.dictionary.roots:
+            _inhib_opposed = 'opposed' not in root.inhibitions
+            _inhib_associated = 'associated' not in root.inhibitions
+            _inhib_crossed = 'crossed' not in root.inhibitions
+            _inhib_twin = 'twin' not in root.inhibitions
+
             if root.script.layer == 0:
                 continue
             _twins = []
@@ -250,27 +281,36 @@ class RelationsGraph:
 
                 for t1 in [t for j, t in enumerate(self.dictionary.roots[root])
                            if j > i and isinstance(t.script, MultiplicativeScript)]:
-                    if _opposed_sibling(t0.script, t1.script):
-                        siblings[0, t0.index, t1.index] = 1
-                        siblings[0, t1.index, t0.index] = 1
 
-                    if _associated_sibling(t0.script, t1.script):
-                        siblings[1, t0.index, t1.index] = 1
-                        siblings[1, t1.index, t0.index] = 1
+                    if _inhib_opposed and _opposed_sibling(t0.script, t1.script):
+                        siblings[0][0].extend((t0.index, t1.index))
+                        siblings[0][1].extend((t1.index, t0.index))
 
-                    if _crossed_sibling(t0.script, t1.script):
-                        siblings[2, t0.index, t1.index] = 1
-                        siblings[2, t1.index, t0.index] = 1
+                    if _inhib_associated and _associated_sibling(t0.script, t1.script):
+                        siblings[1][0].extend((t0.index, t1.index))
+                        siblings[1][1].extend((t1.index, t0.index))
 
-            _twins = sorted(_twins, key=lambda t: t.script.cardinal)
-            for card, g in groupby(_twins, key=lambda t: t.script.cardinal):
-                twin_indexes = [t.index for t in g]
+                    if _inhib_crossed and _crossed_sibling(t0.script, t1.script):
+                        siblings[2][0].extend((t0.index, t1.index))
+                        siblings[2][1].extend((t1.index, t0.index))
 
-                if len(twin_indexes) > 1:
-                    index0, index1 = list(zip(*permutations(twin_indexes, r=2)))
-                    siblings[3, index0, index1] = 1
+            if _inhib_twin:
+                _twins = sorted(_twins, key=lambda t: t.script.cardinal)
+                for card, g in groupby(_twins, key=lambda t: t.script.cardinal):
+                    twin_indexes = [t.index for t in g]
 
-        return siblings
+                    if len(twin_indexes) > 1:
+                        index0, index1 = list(zip(*permutations(twin_indexes, r=2)))
+                        siblings[3][0].extend(index0)
+                        siblings[3][1].extend(index1)
+
+                    # siblings[3, index0, index1] = True
+
+        return [coo_matrix(([True]*len(i), (i, j)), shape=self.shape, dtype=np.bool) for i, j in siblings]
+
+    @property
+    def shape(self):
+        return (len(self.dictionary), len(self.dictionary))
 
     def __setstate__(self, state):
         self.relations = state['relations']
