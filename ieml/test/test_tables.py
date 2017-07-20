@@ -365,3 +365,6 @@ class TableGenerationTest(unittest.TestCase):
         self.assertEqual(list(tables[0].headers), tab_headers, "Tab headers are generated correctly")
         self.assertTrue((tables[0].cells == cells).all(), "Cells are generated correctly")
         self.assertTrue(tables[0].paradigm == script, "Table has correct paradigm")
+
+    def test_tables_term(self):
+        term("B:.S:.n.-k.-+n.-n.S:.U:.-+n.B:.U:.-+n.T:.A:.-'+B:.B:.n.-k.-+n.-u.S:.-+u.B:.-+u.T:.-'").tables_term

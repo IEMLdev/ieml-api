@@ -65,44 +65,88 @@ def get_matrix(name, version):
 # |                   |Child |         |GChild |          |GGChild |
 # 0                   C     C+k        (1+C+-k)/2        1-k       1
 
-def _relation_value(reltype, max_rank=None):
-    C = 1. / 3
-    k = 1. / 8
+# def _relation_value(reltype, max_rank=None):
+#     C = 1. / 3
+#     k = 1. / 8
+#
+#     def _sam_to_float(reltype):
+#         MAP = {'s': 1, 'a': 2, 'm': 3}
+#         res = 1.
+#         for c in reltype:
+#             res *= MAP[c] / 3.
+#         return res
+#
+#     if reltype == 'Nll':
+#         return 0, RELATIONS_TYPES, RelationType.Null
+#     elif reltype == 'associated':
+#         return C * 1. / 4, RELATIONS_TYPES[reltype], RelationType.Associated
+#     elif reltype == 'opposed':
+#         return C * 1. / 2, RELATIONS_TYPES[reltype], RelationType.Opposed
+#     elif reltype == 'crossed':
+#         return C * 3. / 4, RELATIONS_TYPES[reltype], RelationType.Crossed
+#     elif reltype == 'twin':
+#         return C, RELATIONS_TYPES[reltype], RelationType.Twin
+#     elif reltype.startswith('table_'):
+#         i = int(reltype[6:7])
+#         # rank
+#         # available slot: 2, 4
+#         ratio = float(max_rank - i) / max_rank
+#         slot = 2 if ratio < 0.5 else 4
+#         return C + k + (1 - 2*k - C) * ratio, (slot, max_rank - i), RelationType['Rank_%d'%i]
+#     else:
+#         #sam
+#         if len(reltype) == 1:
+#             return C + k * _sam_to_float(reltype), RELATIONS_TYPES[reltype], RelationType['Etymology_%s'%reltype]
+#         elif len(reltype) == 2:
+#             return (1 + C - k) / 2 + k * _sam_to_float(reltype), RELATIONS_TYPES[reltype], RelationType['Etymology_%s'%reltype]
+#         elif len(reltype) == 3:
+#             return 1 - k + k * _sam_to_float(reltype), RELATIONS_TYPES[reltype], RelationType['Etymology_%s'%reltype]
+#         else:
+#             ValueError("Invalid relation %s"%str(reltype))
+#
 
-    def _sam_to_float(reltype):
-        MAP = {'s': 1, 'a': 2, 'm': 3}
-        res = 1.
-        for c in reltype:
-            res *= MAP[c] / 3.
-        return res
+def get_relation(t0, t1, prefix=None):
+    if prefix is None:
+        reltype = min({r for r in t0.relations.to(t1) if r not in ('contained', 'contains')},
+                          key=lambda r: RELATIONS_TYPES[r])
 
-    if reltype == 'Nll':
-        return 0, RELATIONS_TYPES, RelationType.Null
-    elif reltype == 'associated':
-        return C * 1. / 4, RELATIONS_TYPES[reltype], RelationType.Associated
-    elif reltype == 'opposed':
-        return C * 1. / 2, RELATIONS_TYPES[reltype], RelationType.Opposed
-    elif reltype == 'crossed':
-        return C * 3. / 4, RELATIONS_TYPES[reltype], RelationType.Crossed
-    elif reltype == 'twin':
-        return C, RELATIONS_TYPES[reltype], RelationType.Twin
-    elif reltype.startswith('table_'):
-        i = int(reltype[6:7])
-        # rank
-        # available slot: 2, 4
-        ratio = float(max_rank - i) / max_rank
-        slot = 2 if ratio < 0.5 else 4
-        return C + k + (1 - 2*k - C) * ratio, (slot, max_rank - i), RelationType['Rank_%d'%i]
-    else:
-        #sam
-        if len(reltype) == 1:
-            return C + k * _sam_to_float(reltype), RELATIONS_TYPES[reltype], RelationType['Etymology_%s'%reltype]
-        elif len(reltype) == 2:
-            return (1 + C - k) / 2 + k * _sam_to_float(reltype), RELATIONS_TYPES[reltype], RelationType['Etymology_%s'%reltype]
-        elif len(reltype) == 3:
-            return 1 - k + k * _sam_to_float(reltype), RELATIONS_TYPES[reltype], RelationType['Etymology_%s'%reltype]
+        if reltype == 'associated':
+            return RelationType.Associated
+        elif reltype == 'opposed':
+            return RelationType.Opposed
+        elif reltype == 'crossed':
+            return RelationType.Crossed
+        elif reltype == 'twin':
+            return RelationType.Twin
+        elif reltype.startswith('table_'):
+            return RelationType['Rank_%d'%int(reltype[6:7])]
         else:
-            ValueError("Invalid relation %s"%str(reltype))
+            raise NotImplemented
+    else:
+        type = 'Child' if t0.layer < t1.layer else 'Father'
+        return RelationType['%s_%s'%(type, prefix)]
+
+
+RELATION_ORDER_FROM_MAX_RANK = {
+    i: ['Equal', 'Associated', 'Opposed', 'Crossed', 'Twin', 'Father'] for i in range(6)
+}
+
+RELATION_ORDER_FROM_MAX_RANK[0] += ['Rank_0', 'Child', 'FatherFather', 'ChildChild', 'FatherFatherFather', 'ChildChildChild', 'Null']
+RELATION_ORDER_FROM_MAX_RANK[1] += ['Rank_1', 'Child', 'FatherFather', 'ChildChild', 'Rank_0','FatherFatherFather', 'ChildChildChild', 'Null']
+RELATION_ORDER_FROM_MAX_RANK[2] += ['Rank_2', 'Child', 'FatherFather', 'Rank_1', 'ChildChild', 'Rank_0', 'FatherFatherFather', 'ChildChildChild', 'Null']
+RELATION_ORDER_FROM_MAX_RANK[3] += ['Rank_3', 'Child', 'Rank_2', 'FatherFather', 'Rank_1', 'ChildChild', 'Rank_0', 'FatherFatherFather', 'ChildChildChild', 'Null']
+RELATION_ORDER_FROM_MAX_RANK[4] += ['Rank_4', 'Child', 'Rank_3', 'Rank_2', 'FatherFather', 'Rank_1', 'ChildChild', 'Rank_0', 'FatherFatherFather', 'ChildChildChild', 'Null']
+RELATION_ORDER_FROM_MAX_RANK[5] += ['Rank_5', 'Child', 'Rank_4', 'Rank_3', 'Rank_2', 'FatherFather', 'Rank_1', 'ChildChild', 'Rank_0', 'FatherFatherFather', 'ChildChildChild', 'Null']
+
+
+def get_relation_value(relation, t0):
+    relation_name = relation.name
+    if relation_name.startswith('Father_'):
+        relation_name = 'Father' * (len(relation_name) - 7)
+    elif relation_name.startswith('Child_'):
+        relation_name = 'Child' * (len(relation_name) - 6)
+
+    return RELATION_ORDER_FROM_MAX_RANK[t0.max_rank].index(relation_name)
 
 
 def _build_distance_matrix(version):
@@ -118,60 +162,46 @@ def _build_distance_matrix(version):
                 if len(prefix) < 2:
                     yield from _enumerate_ancestors(t1, prefix=prefix + k)
 
-
     d = Dictionary(version)
-    # relation_matrix = np.empty(shape=(len(d),) * 2,
-    #                         dtype=[('distance', 'f4'),('slot', 'i4', (2,)), ('reltype', 'S16')])
 
-    distance_matrix = np.empty(shape=(len(d),) * 2, dtype='f4')
-    order_matrix = np.empty(shape=(len(d),) * 2, dtype='i4')
-    relation_type_matrix = np.empty(shape=(len(d),) * 2, dtype='i4')
+    def _put(mat,d, i, j):
+        mat[0].append(d)
+        mat[1].append(i)
+        mat[2].append(j)
 
-    # relation_matrix['reltype'] = 'none'
-    # relation_matrix['slot'] = (0, 0)
-    # relation_matrix['distance'] = 1.0
+    order_matrix = ([], [], [])
+    relation_type_matrix = ([], [], [])
 
     for root in d.roots:
-        max_rank = max(t.rank for t in root.relations.contains if len(t) != 1) + 1
-
         for t0, t1 in combinations(root.relations.contains, 2):
-
-            reltype = min({r for r in t0.relations.to(t1) if r not in ('contained', 'contains')},
-                          key=lambda r: RELATIONS_TYPES[r])
-
-
-            v, order, reltype = _relation_value(reltype, max_rank=max_rank)
-            distance_matrix[t0.index, t1.index] = 1 - v
-            order_matrix[t0.index, t1.index] = order[0] * 100 + order[1]
-            relation_type_matrix[t0.index, t1.index] = int(reltype)
+            _put(relation_type_matrix, int(get_relation(t0, t1)), t0.index, t1.index)
+            _put(relation_type_matrix, int(get_relation(t1, t0)), t1.index, t0.index)
 
     for layer in d.layers:
         for t0 in layer:
             for prefix, t1 in _enumerate_ancestors(t0):
-                v, order, reltype = _relation_value(prefix)
-                distance_matrix[t0.index, t1.index] = 1 - v
-                order_matrix[t0.index, t1.index] = order[0] * 100 + order[1]
-                relation_type_matrix[t0.index, t1.index] = int(reltype)
+                rel = get_relation(t0, t1, prefix=prefix)
+                _put(relation_type_matrix, int(rel), t0.index, t1.index)
+                _put(order_matrix, get_relation_value(rel, t0), t0.index, t1.index)
 
-    distance_matrix = distance_matrix + distance_matrix.transpose()
-    order_matrix = order_matrix + order_matrix.transpose()
-    relation_type_matrix = relation_type_matrix + relation_type_matrix.transpose()
+                rel = get_relation(t1, t0, prefix=prefix)
+                _put(relation_type_matrix, int(rel), t1.index, t0.index)
+                _put(order_matrix, get_relation_value(rel, t1), t1.index, t0.index)
 
     for i in range(len(d)):
-        distance_matrix[i, i] = 1.0
-        order_matrix[i, i] = 0
-        relation_type_matrix[i, i] = int(RelationType.Equal)
+        _put(relation_type_matrix, int(RelationType.Equal), i, i)
+        _put(order_matrix, 0, i, i)
 
-    distance_matrix = csr_matrix(distance_matrix)
-    order_matrix = csr_matrix(order_matrix)
-    relation_type_matrix = csr_matrix(relation_type_matrix)
+    build_mat = lambda mat: csr_matrix((mat[0], (mat[1], mat[2])), dtype=np.int8)
 
-    return {'distance' : distance_matrix,
-            'order': order_matrix,
-            'relation': relation_type_matrix}
-
-
-
+    # distance_matrix = build_mat(distance_matrix)
+    # order_matrix = build_mat(order_matrix)
+    relation_type_matrix = build_mat(relation_type_matrix)
+    order_matrix = build_mat(order_matrix)
+    # 'distance': distance_matrix,
+    # 'order': order_matrix,
+    return {'relation': relation_type_matrix,
+            'order': order_matrix}
 
 
 # Ordre sur les relations:
@@ -197,6 +227,7 @@ def _enumerate_ancestors(t, prefix=''):
 
 def _build_ancestor_matrix(version):
     d = Dictionary(version)
+
     matrix = np.empty(shape=(len(d),) * 2, dtype=[('relation', "U8"), ('prefix', "U8")])
 
     for layer in d.layers:
@@ -212,7 +243,7 @@ def _build_ancestor_matrix(version):
 
 
 MATRIX_BUILD = {
-    'distance': _build_distance_matrix,
+    # 'distance': _build_distance_matrix,
     'order': _build_distance_matrix,
     'relation': _build_distance_matrix,
     'ancestor': _build_ancestor_matrix
@@ -246,23 +277,13 @@ RelationType = unique(IntEnum('RelationType', {
     'Twin': 4,
     'Opposed': 5,
     **{'Rank_%d'%i: 6 + i  for i in range(6)},
-    **{'Etymology_%s'%''.join(s): int(11 + (3 ** i - 1) / 2 + j) for i in range(1, 4) for j, s in enumerate(product('sam', repeat=i))}
+
+    **{'Child_%s'%''.join(s): int(11 + (3 ** i - 1) / 2 + j) for i in range(1, 4) for j, s in
+       enumerate(product('sam', repeat=i))},
+
+    **{'Father_%s' % ''.join(s): int(50 + (3 ** i - 1) / 2 + j) for i in range(1, 4) for j, s in
+       enumerate(product('sam', repeat=i))}
 }))
-
-
-RELATION_ORDER_FROM_MAX_RANK = {
-    i: ['Equal', 'Associated', 'Opposed', 'Crossed', 'Twin', 'Father'] for i in range(6)
-}
-
-# RELATION_ORDER_FROM_MAX_RANK[0] += ['Rank_0', 'Child', 'FatherFather', 'ChildChild', 'FatherFatherFather', 'ChildChildChild']
-RELATION_ORDER_FROM_MAX_RANK[0] += ['Rank_0', 'Child', 'FatherFather', 'ChildChild', 'FatherFatherFather', 'ChildChildChild']
-RELATION_ORDER_FROM_MAX_RANK[1] += ['Rank_1', 'Child', 'FatherFather', 'ChildChild', 'Rank_0','FatherFatherFather', 'ChildChildChild']
-RELATION_ORDER_FROM_MAX_RANK[2] += ['Rank_2', 'Child', 'FatherFather', 'Rank_1', 'ChildChild', 'Rank_0', 'FatherFatherFather', 'ChildChildChild']
-RELATION_ORDER_FROM_MAX_RANK[3] += ['Rank_3', 'Child', 'Rank_2', 'FatherFather', 'Rank_1', 'ChildChild', 'Rank_0', 'FatherFatherFather', 'ChildChildChild']
-RELATION_ORDER_FROM_MAX_RANK[4] += ['Rank_4', 'Child', 'Rank_3', 'Rank_2', 'FatherFather', 'Rank_1', 'ChildChild', 'Rank_0', 'FatherFatherFather', 'ChildChildChild']
-RELATION_ORDER_FROM_MAX_RANK[5] += ['Rank_5', 'Child', 'Rank_4', 'Rank_3', 'Rank_2', 'FatherFather', 'Rank_1', 'ChildChild', 'Rank_0', 'FatherFatherFather', 'ChildChildChild']
-
-
 
 
 # class RelationTerm:
