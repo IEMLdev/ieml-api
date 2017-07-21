@@ -12,7 +12,6 @@ from ...dictionary import Dictionary
 
 from .lexer import get_lexer, tokens
 
-
 def _add(lp1, p2):
     return lp1[0] + [p2[0]], lp1[1] + p2[1]
 
@@ -59,7 +58,7 @@ class IEMLParser(metaclass=Singleton):
 
             return self.root
         else:
-            raise CannotParse(s)
+            raise CannotParse(s, "Invalid ieml object.")
 
     # Parsing rules
     def p_ieml_proposition(self, p):
@@ -188,11 +187,8 @@ class IEMLParser(metaclass=Singleton):
 
     def p_error(self, p):
         if p:
-            print("Syntax error at '%s' (%d, %d)" % (p.value, p.lineno, p.lexpos))
+            msg = "Syntax error at '%s' (%d, %d)" % (p.value, p.lineno, p.lexpos)
         else:
-            print("Syntax error at EOF")
+            msg = "Syntax error at EOF"
 
-        raise CannotParse(self._ieml)
-
-if __name__ == '__main__':
-    print(str(IEMLParser().parse('[wa.]')))
+        raise CannotParse(self._ieml, msg)

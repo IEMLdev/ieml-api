@@ -1,4 +1,5 @@
 import copy
+import logging
 import pickle
 from urllib.request import urlretrieve, urlopen
 import datetime
@@ -11,6 +12,7 @@ from .. import get_configuration, ieml_folder
 from ..constants import LANGUAGES
 import xml.etree.ElementTree as ET
 
+logger = logging.getLogger(__name__)
 VERSIONS_FOLDER = os.path.join(ieml_folder, get_configuration().get('VERSIONS', 'versionsfolder'))
 
 if not os.path.isdir(VERSIONS_FOLDER):
@@ -106,7 +108,7 @@ class DictionaryVersion:
         if not os.path.isfile(file):
             DICTIONARY_BUCKET_URL = get_configuration().get('VERSIONS', 'versionsurl')
             url = urllib.parse.urljoin(DICTIONARY_BUCKET_URL, file_name)
-            print("\t[*] Downloading dictionary %s at %s" % (file_name, url))
+            logger.log(logging.INFO, "Downloading dictionary %s at %s" % (file_name, url))
 
             urlretrieve(url, file)
 
@@ -275,18 +277,14 @@ def create_dictionary_version(old_version=None, add=None, update=None, remove=No
 
 
 def save_dictionary_to_cache(dictionary):
-    print("\t[*] Saving dictionary cache to disk (%s)" % dictionary.version.cache)
+    logger.log(logging.INFO, "Saving dictionary cache to disk (%s)" % dictionary.version.cache)
 
     with open(dictionary.version.cache, 'wb') as fp:
         pickle.dump(dictionary, fp, protocol=4)
 
 
 def load_dictionary_from_cache(version):
-    print("\t[*] Loading dictionary from disk (%s)" % version.cache)
+    logger.log(logging.INFO, "Loading dictionary from disk (%s)" % version.cache)
 
     with open(version.cache, 'rb') as fp:
         return pickle.load(fp)
-
-
-if __name__ == '__main__':
-    print(get_available_dictionary_version())

@@ -132,23 +132,3 @@ def factorize(script):
 def inverse_relation(relation_name):
     from ..relations import INVERSE_RELATIONS
     return INVERSE_RELATIONS[relation_name]
-
-
-if __name__ == '__main__':
-    from ieml.script.parser import ScriptParser
-    script = ScriptParser().parse("M:M:.U:M:.-+F:F:.-+F:O:.A:.T:.-")
-
-    l = ['S:A:A:.','B:A:A:.','T:A:A:.', 'S:A:B:.', 'B:A:B:.', 'T:A:B:.']
-    _fail = ['S:A:A:.', 'T:A:B:.', 'B:A:B:.', 'S:A:B:.', 'T:A:A:.', 'B:A:A:.']
-
-    l2 = map(lambda e: e + '.', remarkable_multiplication_lookup_table.values())
-
-    seqs = ['S:A:A:.', 'S:B:T:.', 'S:S:T:.', 'A:U:A:.', 'B:B:T:.']
-    saa_ = ScriptParser().parse("t.i.-s.i.-'u.T:.-U:.-'O:O:.-',B:.-',_M:.-',_;")
-    sqq_ = ScriptParser().parse("M:M:.o.-M:M:.o.-E:.-+s.u.-'")
-    sdd_ = ScriptParser().parse("M:M:.-O:M:.-E:.-+s.y.-'+M:M:.-M:O:.-E:.-+s.y.-'")
-    shh_ = ScriptParser().parse("i.B:.-+u.M:.-")
-    soo_ = ScriptParser().parse("M:O:.")
-    ast_seqs = [script]
-    print(str(soo_))
-    print(str(factorize(soo_)))

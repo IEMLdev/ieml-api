@@ -1,3 +1,4 @@
+import logging
 import os
 import pickle
 from enum import Enum, unique, IntEnum
@@ -8,6 +9,9 @@ import numpy as np
 from scipy.sparse.csr import csr_matrix
 
 from ieml.dictionary.dictionary import Dictionary
+
+logger = logging.getLogger(__name__)
+
 
 def default_metric(dictionary_version):
     mat = get_matrix('distance', dictionary_version)
@@ -49,7 +53,7 @@ def get_matrix(name, version):
         with open(file, 'rb') as fp:
             return pickle.load(fp)
     else:
-        print("\t[*] Building distance matrix %s."%name)
+        logger.log(logging.INFO, "Building distance matrix '%s'."%name)
         mat = MATRIX_BUILD[name](version)
         for k, v in mat.items():
             file_name = '/tmp/cache_%s_%s.npy' % (k, str(version))

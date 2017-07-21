@@ -1,6 +1,8 @@
 import ply.lex as lxr
 import logging
 
+logger = logging.getLogger(__name__)
+
 tokens = (
    'PLUS',
 
@@ -37,7 +39,7 @@ def get_script_lexer(module=None):
 
     # Error handling rule
     def t_error(t):
-        print("Illegal character '%s'" % t.value[0])
+        logger.log(logging.ERROR, "Illegal character '%s'" % t.value[0])
         t.lexer.skip(1)
 
     return lxr.lex(module=module, errorlog=logging)

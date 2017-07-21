@@ -3,6 +3,8 @@ import logging
 
 from ..constants import COORDINATES_KINDS
 
+logger = logging.getLogger(__name__)
+
 tokens = (
    'COORD_KIND',
    'COORD_INDEX',
@@ -24,25 +26,7 @@ def get_lexer(module=None):
 
     # Error handling rule
     def t_error(t):
-        print("Illegal character '%s'" % t.value[0])
+        logger.log(logging.ERROR, "Illegal character '%s'" % t.value[0])
         t.lexer.skip(1)
 
     return lxr.lex(module=module, errorlog=logging)
-
-
-if __name__ == "__main__":
-    # Test it out
-    data = "t:sa:sa0:f"
-
-
-    # Give the lexer some input
-    lexer = get_lexer()
-    lexer.input(data)
-
-    # Tokenize
-    while True:
-        tok = lexer.token()
-        if not tok:
-            break      # No more input
-        print(tok)
-

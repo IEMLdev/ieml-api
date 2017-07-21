@@ -23,17 +23,3 @@ class ProjectionSet:
     def ratio(self):
         return len(self.projection) * len(self.terms) / len(self.table)
 
-if __name__ == '__main__':
-    from ieml.usl import random_usl
-    from ieml.usl.template import Template
-
-    usls = list(Template("[([O:M:.]+[x.M:M:.-])]", ['r0', 'r1']))
-
-    paradigms = [t for t in term("M:O:.M:M:.-").relations.contains if len(t) != 1 and t.ntable == 1]
-
-    projections = [ProjectionSet(Table(p), usls) for p in paradigms]
-
-    projections= sorted(projections, key=lambda p: p.ratio, reverse=True)
-
-    proj = ProjectionSet(Table("M:O:.M:M:.-"), usls)
-    print(proj)

@@ -1,3 +1,4 @@
+import logging
 from collections import defaultdict
 from ieml.commons import cached_property
 from ieml.dictionary.relations import RelationsGraph
@@ -10,6 +11,7 @@ from .script import script
 from ieml import get_configuration
 
 USE_CACHE = get_configuration().get("RELATIONS", "cacherelations")
+logger = logging.getLogger(__name__)
 
 
 class DictionarySingleton(type):
@@ -56,8 +58,7 @@ class Dictionary(metaclass=DictionarySingleton):
         self.relations_graph = None
 
         self._populate()
-
-        print("\t[*] Dictionary loaded (version: %s, nb_roots: %d, nb_terms: %d)"%
+        logger.log(logging.INFO, "Dictionary loaded (version: %s, nb_roots: %d, nb_terms: %d)"%
               (str(self.version), len(self.roots), len(self)))
 
     @cached_property
@@ -105,7 +106,7 @@ class Dictionary(metaclass=DictionarySingleton):
                 raise ValueError("No parent candidate for the table produced by term %s" % str(s))
 
             if len(candidates) > 1:
-                print("\t[!] Multiple parent candidate for the table produced by script %s: {%s} "
+                logger.log(logging.ERROR, "Multiple parent candidate for the table produced by script %s: {%s} "
                       "choosing the smaller one." % (str(s), ', '.join([str(c[0]) for c in candidates])))
 
             parent, regular = min(candidates, key=lambda t: t[0])

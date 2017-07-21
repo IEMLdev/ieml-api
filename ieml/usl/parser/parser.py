@@ -29,7 +29,7 @@ class USLParser(metaclass=Singleton):
         if self.root is not None:
             return self.root
         else:
-            raise CannotParse(s)
+            raise CannotParse(s, "Invalid usl.")
 
     # Parsing rules
     def p_usl(self, p):
@@ -38,11 +38,9 @@ class USLParser(metaclass=Singleton):
 
     def p_error(self, p):
         if p:
-            print("Syntax error at '%s' (%d, %d)" % (p.value, p.lineno, p.lexpos))
+            msg = "Syntax error at '%s' (%d, %d)" % (p.value, p.lineno, p.lexpos)
         else:
-            print("Syntax error at EOF")
+            msg = "Syntax error at EOF"
 
-        raise CannotParse(self.usl)
+        raise CannotParse(self.usl, msg)
 
-if __name__ == '__main__':
-    print(str(USLParser().parse('{[wa.]}')))

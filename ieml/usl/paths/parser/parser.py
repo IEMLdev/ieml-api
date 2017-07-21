@@ -25,6 +25,7 @@ class PathParser(metaclass=Singleton):
     def t_parse(self, s):
         """Parses the input string, and returns a reference to the created AST's root"""
         self.root = None
+        self.path = s
         self.parser.parse(s, lexer=self.lexer, debug=False)
 
         if self.root is not None:
@@ -33,7 +34,7 @@ class PathParser(metaclass=Singleton):
 
             return self.root
         else:
-            raise CannotParse(s)
+            raise CannotParse(s, "Invalid path.")
 
     def p_path(self, p):
         """path : additive_path"""
@@ -95,6 +96,8 @@ class PathParser(metaclass=Singleton):
 
     def p_error(self, p):
         if p:
-            print("Syntax error at '%s' (%d, %d)" % (p.value, p.lineno, p.lexpos))
+            msg = "Syntax error at '%s' (%d, %d)" % (p.value, p.lineno, p.lexpos)
         else:
-            print("Syntax error at EOF")
+            msg = "Syntax error at EOF"
+
+        raise CannotParse(self.path, msg)

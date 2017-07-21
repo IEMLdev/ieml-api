@@ -1,10 +1,11 @@
+import logging
 from collections import namedtuple
 
 from ..commons import IEMLObjects, cached_property
 from ..constants import LANGUAGES
 from .relations import Relations
 from .script import script as _script
-
+logger = logging.getLogger(__name__)
 Translations = namedtuple('Translations', list(LANGUAGES))
 Translations.__getitem__ = lambda self, item: self.__getattribute__(item) if item in LANGUAGES \
     else tuple.__getitem__(self, item)
@@ -92,7 +93,7 @@ class Term(IEMLObjects):
         if not isinstance(item, Term):
             item = term(item, dictionary=self.dictionary)
         elif item.dictionary != self.dictionary:
-            print("\t[!] Comparison between different dictionary.")
+            logger.log(logging.ERROR, "Comparison between different dictionary.")
             return False
 
         return item.script in self.script

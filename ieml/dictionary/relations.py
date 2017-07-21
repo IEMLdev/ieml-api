@@ -1,3 +1,4 @@
+import logging
 from collections import OrderedDict, defaultdict
 from itertools import groupby, combinations, permutations, chain, repeat
 
@@ -9,7 +10,7 @@ from scipy.sparse.dok import dok_matrix
 from ieml.commons import cached_property
 from ieml.dictionary.script.script import MultiplicativeScript, AdditiveScript, NullScript
 
-
+logger = logging.getLogger(__name__)
 RELATIONS = [
             'contains',         # 0
             'contained',        # 1
@@ -99,7 +100,7 @@ class RelationsGraph:
         }
 
     def _compute_relations(self):
-        print("\t[*] Computing relations")
+        logger.log(logging.INFO, "Computing relations")
 
         self.relations = {}
         contains = self._compute_contains()
@@ -143,7 +144,7 @@ class RelationsGraph:
         self.relations = {reltype: csr_matrix(self.relations[reltype]) for reltype in RELATIONS}
 
     def _compute_table_rank(self, contained):
-        print("\t\t[*] Computing tables relations")
+        logger.log(logging.DEBUG, "Computing tables relations")
 
         tables_rank = [([], []) for _ in range(6)]
 
@@ -162,7 +163,7 @@ class RelationsGraph:
         return [coo_matrix(([True]*len(i), (i, j)), shape=self.shape, dtype=np.bool) for i, j in tables_rank]
 
     def _do_inhibitions(self):
-        print("\t\t[*] Performing inhibitions")
+        logger.log(logging.DEBUG, "Performing inhibitions")
 
         for r in self.dictionary.roots:
             inhibitions = self.dictionary.inhibitions[r]
@@ -172,7 +173,7 @@ class RelationsGraph:
                 self.relations[rel][indexes, :] = 0
 
     def _compute_contains(self):
-        print("\t\t[*] Computing contains/contained relations")
+        logger.log(logging.DEBUG, "Computing contains/contained relations")
         # contain/contained
 
         # contains = coo_matrix(
@@ -194,7 +195,7 @@ class RelationsGraph:
         return coo_matrix(([True] * len(i), (i, j)), shape=self.shape, dtype=np.bool)
 
     def _compute_father(self):
-        print("\t\t[*] Computing father/child relations")
+        logger.log(logging.DEBUG, "Computing father/child relations")
 
         def _recurse_script(script):
             result = []
@@ -259,7 +260,7 @@ class RelationsGraph:
 
         siblings = [([], []) for _ in range(4)]
 
-        print("\t\t[*] Computing siblings relations")
+        logger.log(logging.DEBUG, "Computing siblings relations")
 
         for root in self.dictionary.roots:
             _inhib_opposed = 'opposed' not in root.inhibitions

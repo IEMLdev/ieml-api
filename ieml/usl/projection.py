@@ -16,7 +16,6 @@ for t in inverse_terms:
     inverse_root[t.root].extend(inverse_terms[t])
 
 roots = sorted(inverse_root, key=lambda t: len(inverse_root[t]), reverse=True)
-print([(str(t), len(inverse_root[t])) for t in roots])
 
 
 def best_partitions(term, collection):

@@ -59,7 +59,6 @@ class Script(TreeStructure):
         """
         instance = super(Script, cls).__new__(cls)
         if 'str' in kwargs:
-            # print("initialize %s"%kwargs['str'])
             instance._str = kwargs['str']
 
         return instance

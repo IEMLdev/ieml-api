@@ -36,14 +36,15 @@ class ScriptParser(metaclass=Singleton):
         if self.root is not None:
             return self.root
         else:
-            raise CannotParse(s)
+            raise CannotParse(s, "Invalid script.")
 
     def p_error(self, p):
         if p:
-            print("Syntax error at '%s' (%d, %d)" % (p.value, p.lineno, p.lexpos))
+            msg = "Syntax error at '%s' (%d, %d)" % (p.value, p.lineno, p.lexpos)
         else:
-            print("Syntax error at EOF")
-        raise CannotParse(self.script)
+            msg = "Syntax error at EOF"
+
+        raise CannotParse(self.script, msg)
 
     # Rules
     def p_term(self, p):

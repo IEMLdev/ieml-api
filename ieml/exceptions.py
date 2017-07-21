@@ -11,11 +11,12 @@ class InvalidPathException(Exception):
 
 
 class CannotParse(Exception):
-    def __init__(self, s):
+    def __init__(self, s, msg):
         self.s = s
+        self.msg = msg
 
     def __str__(self):
-        return "Unable to parse the following string %s."%str(self.s)
+        return "Unable to parse the following string '%s'. %s"%(str(self.s), str(self.msg))
 
 
 class InvalidIEMLObjectArgument(Exception):
