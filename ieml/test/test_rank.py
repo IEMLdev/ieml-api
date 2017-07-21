@@ -38,18 +38,18 @@ class RankComputationTest(unittest.TestCase):
         term = self.dic.terms[sc("O:M:.M:M:.-+M:M:.O:M:.-")]
         # Build table for the paradigm of rank 3 (root_table.headers[1][2])
         root_table = term.tables[1]
-        root_table = root_table.rows[2].tables[0]
+        root_table = root_table.rows[2]
         h = root_table.rows[0]
 
-        self.assertEqual(term.rank, 5)
+        self.assertEqual(h.rank, 5)
 
     def test_paradigm_from_multiple_tables(self):
         term = self.dic.terms[sc("S:M:.e.-M:M:.u.-wa.e.-'+B:M:.e.-M:M:.a.-wa.e.-'+T:M:.e.-M:M:.i.-wa.e.-'")]
-        self.assertEquals(term.rank, 1)
+        self.assertEqual(term.rank, 1)
 
     def test_additive_parent_paradigm(self):
         term = self.dic.terms[sc("O:M:.M:M:.-")]
-        self.assertEquals(term.rank, 1)
+        self.assertEqual(term.rank, 1)
 
     def test_rank0(self):
         self.assertListEqual([t for t in Dictionary() if t.rank == 0], sorted(Dictionary().roots))

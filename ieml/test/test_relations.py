@@ -22,11 +22,6 @@ class TestRelations(TestCase):
         r0 = [t for t in Dictionary()]
         self.assertListEqual(r0, sorted(r0))
 
-    def test_relations_graph(self):
-        m = Dictionary().relations_graph(['etymology', 'inclusion'])
-        s = len(Dictionary())
-        self.assertEqual(m.shape, (s, s))
-
 
     def test_inhibitions(self):
         for t in Dictionary():
