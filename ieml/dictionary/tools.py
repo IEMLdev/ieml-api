@@ -21,7 +21,7 @@ def term(arg, dictionary=None):
 
 @singledispatch
 def _term(arg, dictionary):
-    raise NotImplemented
+    raise ValueError("Insuported class %s for %s"%(arg.__class__.__name__, str(arg)))
 
 _term.register(Term, lambda arg, dictionary: arg)
 _term.register(int, lambda arg, dictionary: dictionary.index[arg])
