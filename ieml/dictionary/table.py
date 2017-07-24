@@ -170,7 +170,6 @@ class Table1D(Table):
     def cells(self):
         return np.vectorize(lambda sc: self.dictionary.terms[sc])(self.script.cells[0][:, 0, 0])
 
-
     def __getitem__(self, item):
         return self.cells[item]
 
