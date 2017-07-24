@@ -4,6 +4,7 @@ from functools import lru_cache
 import os
 import ply.yacc as yacc
 
+from ieml.exceptions import InvalidScript
 from ....exceptions import CannotParse
 from ..script import AdditiveScript, MultiplicativeScript, NullScript
 from ....constants import REMARKABLE_ADDITION
@@ -31,7 +32,10 @@ class ScriptParser(metaclass=Singleton):
     def t_parse(self, s):
         self.root = None
         self.script = s
-        self.parser.parse(s, lexer=self.lexer)
+        try:
+            self.parser.parse(s, lexer=self.lexer)
+        except InvalidScript as e:
+            raise CannotParse(self.script, str(e))
 
         if self.root is not None:
             return self.root

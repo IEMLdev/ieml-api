@@ -4,6 +4,7 @@ import ply.yacc as yacc
 
 from ieml.dictionary.terms import Term
 from ieml.dictionary.tools import term
+from ieml.exceptions import TermNotFoundInDictionary
 from ... import parser_folder
 from ...metaclasses import Singleton
 from ...exceptions import CannotParse
@@ -85,7 +86,10 @@ class IEMLParser(metaclass=Singleton):
 
     def p_script(self, p):
         """script : TERM """
-        p[0] = _build(term(p[1]))
+        try:
+            p[0] = _build(term(p[1]))
+        except TermNotFoundInDictionary as e:
+            raise CannotParse(self._ieml, str(e))
 
 
     def p_term(self, p):
