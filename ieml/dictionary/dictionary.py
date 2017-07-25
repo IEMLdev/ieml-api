@@ -1,10 +1,5 @@
-import inspect
 import logging
 from collections import defaultdict
-
-import objgraph
-from future.backports.test.support import gc_collect
-
 from ieml.commons import cached_property
 from ieml.dictionary.relations import RelationsGraph
 from ieml.dictionary.table import Cell, table_class
