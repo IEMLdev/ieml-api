@@ -1,3 +1,4 @@
+import inspect
 import logging
 from collections import defaultdict
 
@@ -35,15 +36,13 @@ class DictionarySingleton(type):
         if cls._instance is None or cls._instance.version != version:
 
             if cls._instance is not None:
-                # objgraph.show_backrefs(cls._instance, filename='chain_%s.png'%str(cls._instance.version))
+                # otherwise memory leak
                 for t in cls._instance.index:
-                    del t.dictionary
-                del cls._instance.relations_graph.dictionary
-                o = cls._instance
-                del cls._instance
-                objgraph.show_backrefs(o, filename='chain_%s.png'%str(o.version))
+                    del t.__dict__
 
-                gc.collect()
+                del cls._instance
+
+                print(gc.collect())
 
             # check cache
             if not version.is_cached or not USE_CACHE:
