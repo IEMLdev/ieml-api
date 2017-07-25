@@ -162,16 +162,6 @@ class RelationsGraph:
 
         return [coo_matrix(([True]*len(i), (i, j)), shape=self.shape, dtype=np.bool) for i, j in tables_rank]
 
-    def _do_inhibitions(self):
-        logger.log(logging.DEBUG, "Performing inhibitions")
-
-        for r in self.dictionary.roots:
-            inhibitions = self.dictionary.inhibitions[r]
-            indexes = [t.index for t in self.dictionary.roots[r]]
-
-            for rel in inhibitions:
-                self.relations[rel][indexes, :] = 0
-
     def _compute_contains(self):
         logger.log(logging.DEBUG, "Computing contains/contained relations")
         # contain/contained

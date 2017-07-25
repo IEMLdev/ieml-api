@@ -87,36 +87,25 @@ def get_matrix(name, version):
 
         return mat[name]
 
-RELATIONS_TYPES = {
-    'associated': 0,
-    'opposed': 1,
-    'crossed': 2,
-    'twin': 3,
-    'table_5': 4,
-    'table_4': 5,
-    'table_3': 6,
-    'table_2': 7,
-    'table_1': 8,
-    'table_0': 9
-}
 
 def get_relation(t0, t1, prefix=None):
     if prefix is None:
-        reltype = min({r for r in t0.relations.to(t1) if r not in ('contained', 'contains')},
-                          key=lambda r: RELATIONS_TYPES[r])
-
-        if reltype == 'associated':
-            return RelationType.Associated
-        elif reltype == 'opposed':
-            return RelationType.Opposed
-        elif reltype == 'crossed':
-            return RelationType.Crossed
-        elif reltype == 'twin':
-            return RelationType.Twin
-        elif reltype.startswith('table_'):
-            return RelationType['Rank_%d'%int(reltype[6:7])]
-        else:
-            raise NotImplemented
+        raise NotImplemented
+        # reltype = min({r for r in t0.relations.to(t1) if r not in ('contained', 'contains')},
+        #                   key=lambda r: RELATIONS_TYPES[r])
+        #
+        # if reltype == 'associated':
+        #     return RelationType.Associated
+        # elif reltype == 'opposed':
+        #     return RelationType.Opposed
+        # elif reltype == 'crossed':
+        #     return RelationType.Crossed
+        # elif reltype == 'twin':
+        #     return RelationType.Twin
+        # elif reltype.startswith('table_'):
+        #     return RelationType['Rank_%d'%int(reltype[6:7])]
+        # else:
+        #     raise NotImplemented
     else:
         type = 'Child' if t0.layer < t1.layer else 'Father'
         return RelationType['%s_%s'%(type, prefix)]
@@ -150,6 +139,19 @@ def get_relation_value(relation, t0):
     return RELATION_ORDER_FROM_MAX_RANK[t0.max_rank][relation]
 
 
+RELATIONS_TYPES = [
+    ('associated', RelationType.Associated),
+    ('opposed', RelationType.Opposed),
+    ('crossed', RelationType.Crossed),
+    ('twin', RelationType.Twin),
+    ('table_5', RelationType.Rank_5),
+    ('table_4', RelationType.Rank_4),
+    ('table_3', RelationType.Rank_3),
+    ('table_2', RelationType.Rank_2),
+    ('table_1', RelationType.Rank_1),
+    ('table_0', RelationType.Rank_0)
+]
+
 def _build_distance_matrix(version):
     def _enumerate_ancestors(t, prefix='', seen=None):
         if seen is None:
@@ -170,22 +172,36 @@ def _build_distance_matrix(version):
     d = Dictionary(version)
 
     def _put(mat,d, i, j):
-        mat[0].append(d)
-        mat[1].append(i)
-        mat[2].append(j)
+        mat[0].extend(d)
+        mat[1].extend(i)
+        mat[2].extend(j)
 
     order_matrix = ([], [], [])
     relation_type_matrix = ([], [], [])
 
-    for root in d.roots:
-        for t0, t1 in combinations(root.relations.contains, 2):
-            rel = get_relation(t0, t1)
-            value = get_relation_value(rel, t0)
-            _put(order_matrix, value, t0.index, t1.index)
-            _put(order_matrix, value, t1.index, t0.index)
+    all_indices = {
+        rel : [set(l) for l in np.split(d.relations_graph[rel].indices, d.relations_graph[rel].indptr)[1:-1]]
+        for rel, _ in RELATIONS_TYPES
+    }
 
-            _put(relation_type_matrix, int(rel), t0.index, t1.index)
-            _put(relation_type_matrix, int(rel), t1.index, t0.index)
+    for root in d.roots:
+        past = set()
+        for t0 in root.relations.contains:
+            past.add(t0.index)
+            seen = set(past)
+
+            for rel_graph, rel_type in RELATIONS_TYPES:
+                indices = all_indices[rel_graph][t0.index].difference(seen)
+                if indices:
+                    value = get_relation_value(rel_type, t0)
+
+                    _put(order_matrix, [value] * len(indices), [t0.index] * len(indices), indices)
+                    _put(order_matrix, [value] * len(indices), indices, [t0.index] * len(indices))
+
+                    _put(relation_type_matrix, [int(rel_type)] * len(indices), [t0.index] * len(indices), indices)
+                    _put(relation_type_matrix, [int(rel_type)] * len(indices), indices, [t0.index] * len(indices))
+
+                    seen.update(indices)
 
     for layer in d.layers:
         for t0 in layer:
@@ -193,18 +209,18 @@ def _build_distance_matrix(version):
                 rel = get_relation(t0, t1, prefix=prefix)
                 order = get_relation_value(rel, t0)
 
-                _put(relation_type_matrix, int(rel), t0.index, t1.index)
-                _put(order_matrix, order, t0.index, t1.index)
+                _put(relation_type_matrix, [int(rel)], [t0.index], [t1.index])
+                _put(order_matrix, [order], [t0.index], [t1.index])
 
                 rel = get_relation(t1, t0, prefix=prefix)
                 order = get_relation_value(rel, t1)
 
-                _put(relation_type_matrix, int(rel), t1.index, t0.index)
-                _put(order_matrix, order, t1.index, t0.index)
+                _put(relation_type_matrix, [int(rel)], [t1.index], [t0.index])
+                _put(order_matrix, [order], [t1.index], [t0.index])
 
-    for i in range(len(d)):
-        _put(relation_type_matrix, int(RelationType.Equal), i, i)
-        _put(order_matrix, 0, i, i)
+    indices = list(range(len(d)))
+    _put(relation_type_matrix, [int(RelationType.Equal)] * len(d), indices, indices)
+    _put(order_matrix, [0] * len(d) , indices, indices)
 
     def build_mat(mat):
         assert len(set(zip(mat[1], mat[2]))) == len(list(zip(mat[1], mat[2])))

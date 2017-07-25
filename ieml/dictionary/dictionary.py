@@ -1,5 +1,9 @@
 import logging
 from collections import defaultdict
+
+import objgraph
+from future.backports.test.support import gc_collect
+
 from ieml.commons import cached_property
 from ieml.dictionary.relations import RelationsGraph
 from ieml.dictionary.table import Cell, table_class
@@ -9,6 +13,7 @@ from ..constants import MAX_LAYER
 from .script import script
 
 from ieml import get_configuration
+import gc
 
 USE_CACHE = get_configuration().get("RELATIONS", "cacherelations")
 logger = logging.getLogger(__name__)
@@ -28,6 +33,18 @@ class DictionarySingleton(type):
             raise ValueError("Invalid argument for dictionary creation, expected dictionary version, not %s"%str(args[0]))
 
         if cls._instance is None or cls._instance.version != version:
+
+            if cls._instance is not None:
+                # objgraph.show_backrefs(cls._instance, filename='chain_%s.png'%str(cls._instance.version))
+                for t in cls._instance.index:
+                    del t.dictionary
+                del cls._instance.relations_graph.dictionary
+                o = cls._instance
+                del cls._instance
+                objgraph.show_backrefs(o, filename='chain_%s.png'%str(o.version))
+
+                gc.collect()
+
             # check cache
             if not version.is_cached or not USE_CACHE:
                 cls._instance = super(DictionarySingleton, cls).__call__(version, **kwargs)
