@@ -3,7 +3,6 @@ from collections import namedtuple
 
 from ..commons import IEMLObjects, cached_property
 from ..constants import LANGUAGES
-from .relations import Relations
 from .script import script as _script
 logger = logging.getLogger(__name__)
 Translations = namedtuple('Translations', list(LANGUAGES))

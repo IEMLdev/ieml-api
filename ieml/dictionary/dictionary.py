@@ -34,10 +34,8 @@ class DictionarySingleton(type):
                 # otherwise memory leak
                 for t in cls._instance.index:
                     del t.__dict__
-
                 del cls._instance
-
-                print(gc.collect())
+                gc.collect()
 
             # check cache
             if not version.is_cached or not USE_CACHE:
