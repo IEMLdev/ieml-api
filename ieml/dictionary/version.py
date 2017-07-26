@@ -230,7 +230,7 @@ def create_dictionary_version(old_version=None, add=None, update=None, remove=No
         if 'translations' in add:
             if any(set(state['translations'][l]).intersection(set(add['translations'][l])) for l in LANGUAGES):
                 raise ValueError("Error in creating a new dictionary version, trying to add multiples "
-                                 "translation for the same script.")
+                                 "translation for the script {%s}. Those script may already exists in the dictionary."%', '.join(['"%s": [%s]'%(l, ', '.join('"%s"'%str(t) for t in set(state['translations'][l]).intersection(set(add['translations'][l])))) for l in LANGUAGES]))
 
             state['translations'] = {l: {**state['translations'][l], **add['translations'][l]} for l in LANGUAGES}
 
