@@ -10,7 +10,6 @@ import os
 from ieml.dictionary.relations import RelationsGraph
 from .. import get_configuration, ieml_folder
 from ..constants import LANGUAGES
-import xml.etree.ElementTree as ET
 
 logger = logging.getLogger(__name__)
 VERSIONS_FOLDER = os.path.join(ieml_folder, get_configuration().get('VERSIONS', 'versionsfolder'))
@@ -21,17 +20,8 @@ if not os.path.isdir(VERSIONS_FOLDER):
 
 def get_available_dictionary_version():
     version_url = get_configuration().get('VERSIONS', 'versionsurl')
-    root_node = ET.fromstring(urlopen(version_url).read())
-    all_versions_entry = ({k.tag: k.text for k in list(t)} for t in root_node
-                          if t.tag == '{http://s3.amazonaws.com/doc/2006-03-01/}Contents')
-
-    # sort by date
-    all_versions = sorted(all_versions_entry,
-                          key=lambda t: t['{http://s3.amazonaws.com/doc/2006-03-01/}LastModified'], reverse=True)
-
-    all_versions = [v['{http://s3.amazonaws.com/doc/2006-03-01/}Key'][:-5] for v in all_versions]
-
-    return all_versions
+    from ieml.tools import list_bucket
+    return [v[:-5] for v in list_bucket(version_url)]
 
 
 def latest_dictionary_version():

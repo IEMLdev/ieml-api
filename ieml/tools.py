@@ -146,4 +146,4 @@ def list_bucket(url):
     all_versions = sorted(all_versions_entry,
                           key=lambda t: t['{http://s3.amazonaws.com/doc/2006-03-01/}LastModified'], reverse=True)
 
-    return [v['{http://s3.amazonaws.com/doc/2006-03-01/}Key'][:-5] for v in all_versions]
+    return [v['{http://s3.amazonaws.com/doc/2006-03-01/}Key'] for v in all_versions]
