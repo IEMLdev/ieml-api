@@ -1,7 +1,9 @@
+import xml.etree.ElementTree as ET
 import random
 import itertools
 import functools
 
+from urllib.request import urlopen
 from .commons import IEMLObjects
 from .exceptions import InvalidIEMLObjectArgument
 from .syntax.parser.parser import IEMLParser
@@ -133,3 +135,15 @@ class RandomPoolIEMLObjectGenerator:
             return self.type_to_method[type]()
         except KeyError:
             raise ValueError("Can't generate that type or not an IEMLObject : %s"%str(type))
+
+
+def list_bucket(url):
+    root_node = ET.fromstring(urlopen(url).read())
+    all_versions_entry = ({k.tag: k.text for k in list(t)} for t in root_node
+                          if t.tag == '{http://s3.amazonaws.com/doc/2006-03-01/}Contents')
+
+    # sort by date
+    all_versions = sorted(all_versions_entry,
+                          key=lambda t: t['{http://s3.amazonaws.com/doc/2006-03-01/}LastModified'], reverse=True)
+
+    return [v['{http://s3.amazonaws.com/doc/2006-03-01/}Key'][:-5] for v in all_versions]
