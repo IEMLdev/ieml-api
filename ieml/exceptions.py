@@ -2,12 +2,13 @@ from .constants import MAX_SINGULAR_SEQUENCES
 
 
 class InvalidPathException(Exception):
-    def __init__(self, element, path):
+    def __init__(self, element, path, message):
         self.element = element
         self.path = path
+        self.message = message
 
     def __str__(self):
-        return "Can't access %s in %s, the path is invalid."%(str(self.path), str(self.element))
+        return "Can't access %s in %s, %s."%(str(self.path), str(self.element), str(self.message))
 
 
 class CannotParse(Exception):
