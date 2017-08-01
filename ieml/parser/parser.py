@@ -2,14 +2,12 @@ import logging
 import os
 import ply.yacc as yacc
 
-from ieml.dictionary.terms import Term
 from ieml.dictionary.tools import term
 from ieml.exceptions import TermNotFoundInDictionary
-from ... import parser_folder
-from ...metaclasses import Singleton
-from ...exceptions import CannotParse
-from .. import Word, Morpheme, Clause, SuperClause, Sentence, SuperSentence, Text, Hypertext, Hyperlink, PropositionPath
-from ...dictionary import Dictionary
+from .. import parser_folder
+from ..commons import Singleton
+from ..exceptions import CannotParse
+from ieml.syntax import Word, Morpheme, Clause, SuperClause, Sentence, SuperSentence, Text, Hypertext, Hyperlink, PropositionPath
 
 from .lexer import get_lexer, tokens
 
