@@ -66,7 +66,7 @@ class TestTreeStructure(TestCase):
         while text.children[0] == c0:
             c0 = r.word()
 
-        text2 = replace_paths(text, {'t': c0})
+        text2 = replace_paths(text, {'t0': c0})
         self.assertTrue(c0 in text2)
         self.assertNotEqual(text2, text)
 
