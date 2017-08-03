@@ -42,9 +42,13 @@ class CantGenerateElement(Exception):
     def __str__(self):
         return 'Unable to generate element. %s'%self.message
 
+
 class InvalidScript(Exception):
+    def __init__(self, msg=None):
+        self.msg = msg
+
     def __str__(self):
-        return "Invalid arguments to create a script."
+        return "Invalid arguments to create a script. "+ self.msg if self.msg else ""
 
 
 class InvalidScriptCharacter(InvalidScript):

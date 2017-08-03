@@ -4,7 +4,7 @@ import ply.yacc as yacc
 
 from ieml.dictionary.terms import Term
 from ieml.dictionary.tools import term
-from ieml.exceptions import TermNotFoundInDictionary
+from ieml.exceptions import TermNotFoundInDictionary, InvalidIEMLObjectArgument
 from ... import parser_folder
 from ...metaclasses import Singleton
 from ...exceptions import CannotParse
@@ -45,21 +45,28 @@ class IEMLParser(metaclass=Singleton):
 
     def parse(self, s):
         """Parses the input string, and returns a reference to the created AST's root"""
-        self._ieml = s
-        self.root = None
-        self.hyperlinks = []
-        self.parser.parse(s, lexer=self.lexer)
+        # self._ieml = s
+        # self.root = None
+        # self.hyperlinks = []
 
-        if self.root is not None:
-            if self.hyperlinks:
-                self.root = Hypertext(self.hyperlinks)
+        try:
+            return self.parser.parse(s, lexer=self.lexer)
+        except InvalidIEMLObjectArgument as e:
+            raise CannotParse(s, str(e))
+        except CannotParse as e:
+            e.s = s
+            raise e
 
-            # if isinstance(self.root, Term):
-            #     self.root = Word(root=Morpheme([self.root]))
-
-            return self.root
-        else:
-            raise CannotParse(s, "Invalid ieml object.")
+            # if self.root is not None:
+        #     if self.hyperlinks:
+        #         self.root = Hypertext(self.hyperlinks)
+        #
+        #     # if isinstance(self.root, Term):
+        #     #     self.root = Word(root=Morpheme([self.root]))
+        #
+        #     return self.root
+        # else:
+        #     raise CannotParse(s, "Invalid ieml object.")
 
     # Parsing rules
     def p_ieml_proposition(self, p):
@@ -72,7 +79,7 @@ class IEMLParser(metaclass=Singleton):
                         | superclause
                         | supersentence
                         | text"""
-        self.root = p[1][0]
+        p[0] = p[1][0]
 
     def p_literal_list(self, p):
         """literal_list : literal_list LITERAL
@@ -90,7 +97,6 @@ class IEMLParser(metaclass=Singleton):
             p[0] = _build(term(p[1]))
         except TermNotFoundInDictionary as e:
             raise CannotParse(self._ieml, str(e))
-
 
     def p_term(self, p):
         """term : LBRACKET script RBRACKET"""
@@ -178,8 +184,9 @@ class IEMLParser(metaclass=Singleton):
         p[0] = _build(Text(p[2][0]))
 
         if p[2][1]:
+            raise NotImplementedError("Ieml doesn't support hypertext parsing for the moment.")
             # tuple of the hyperlink (end text, path)
-            self.hyperlinks += [Hyperlink(p[0][0], e[0], PropositionPath(e[1])) for e in p[2][1]]
+            # self.hyperlinks += [Hyperlink(p[0][0], e[0], PropositionPath(e[1])) for e in p[2][1]]
 
     def p_text_list(self, p):
         """text_list : text_list text
@@ -195,4 +202,4 @@ class IEMLParser(metaclass=Singleton):
         else:
             msg = "Syntax error at EOF"
 
-        raise CannotParse(self._ieml, msg)
+        raise CannotParse(None, msg)
