@@ -44,6 +44,10 @@ class Term(IEMLObjects):
             return self.parent.root
 
     @property
+    def is_root(self):
+        return self in self.dictionary.roots
+
+    @property
     def inhibitions(self):
         return self.dictionary.inhibitions[self.root]
 
@@ -102,14 +106,3 @@ class Term(IEMLObjects):
 
     def __iter__(self):
         return self.singular_sequences.__iter__()
-
-    # def __getstate__(self):
-    #     return {
-    #         'script': self.script.__getstate__(),
-    #         'index': self.index,
-    #         'table': self.table.__getstate__()
-    #     }
-    #
-    # def __setstate__(self, state):
-    #     self.index = state['index']
-    #     self.script =

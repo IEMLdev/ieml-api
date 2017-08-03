@@ -21,3 +21,16 @@ class TermsTest(unittest.TestCase):
             d = Dictionary(v)
             for t in d:
                 self.assertEqual(t.dictionary, d)
+
+    def test_root(self):
+        d = Dictionary()
+        roots = set()
+        for r in d.roots:
+            self.assertTrue(r.is_root)
+            roots.add(r)
+
+        for t in d:
+            if t in roots:
+                continue
+            self.assertFalse(t.is_root)
+
