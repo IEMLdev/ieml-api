@@ -24,21 +24,28 @@ class PathParser(metaclass=Singleton):
     @lru_cache(maxsize=1024)
     def t_parse(self, s):
         """Parses the input string, and returns a reference to the created AST's root"""
-        self.root = None
-        self.path = s
-        self.parser.parse(s, lexer=self.lexer, debug=False)
+        # self.root = None
+        # self.path = s
+        try:
+            return self.parser.parse(s, lexer=self.lexer, debug=False)
+        except CannotParse as e:
+            e.s = s
+            raise e
 
-        if self.root is not None:
-            if len(self.root.children) == 1:
-                self.root = self.root.children[0]
-
-            return self.root
-        else:
-            raise CannotParse(s, "Invalid path.")
+        # if self.root is not None:
+        #     if len(self.root.children) == 1:
+        #         self.root = self.root.children[0]
+        #
+        #     return self.root
+        # else:
+        #     raise CannotParse(s, "Invalid path.")
 
     def p_path(self, p):
         """path : additive_path"""
-        self.root = p[1]
+        if len(p[1].children) == 1:
+            p[0] = p[1].children[0]
+        else:
+            p[0] = p[1]
 
     def p_additive_path(self, p):
         """ additive_path : path_sum"""
@@ -100,4 +107,4 @@ class PathParser(metaclass=Singleton):
         else:
             msg = "Syntax error at EOF"
 
-        raise CannotParse(self.path, msg)
+        raise CannotParse(None, msg)

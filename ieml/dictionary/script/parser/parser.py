@@ -19,7 +19,6 @@ class ScriptParser(metaclass=Singleton):
     tokens = tokens
 
     def __init__(self):
-        self.root = None
         self.t_add_rules()
 
         self.lexer = get_script_lexer()
@@ -30,17 +29,10 @@ class ScriptParser(metaclass=Singleton):
 
     @lru_cache(maxsize=10000)
     def t_parse(self, s):
-        self.root = None
-        self.script = s
         try:
-            self.parser.parse(s, lexer=self.lexer)
+            return self.parser.parse(s, lexer=self.lexer)
         except InvalidScript as e:
-            raise CannotParse(self.script, str(e))
-
-        if self.root is not None:
-            return self.root
-        else:
-            raise CannotParse(s, "Invalid script.")
+            raise CannotParse(s, str(e))
 
     def p_error(self, p):
         if p:
@@ -48,7 +40,7 @@ class ScriptParser(metaclass=Singleton):
         else:
             msg = "Syntax error at EOF"
 
-        raise CannotParse(self.script, msg)
+        raise InvalidScript(msg)
 
     # Rules
     def p_term(self, p):
@@ -66,7 +58,7 @@ class ScriptParser(metaclass=Singleton):
                 | additive_script_lvl_5
                 | script_lvl_6
                 | additive_script_lvl_6 """
-        self.root = p[1]
+        p[0] = p[1]
 
     def p_script_lvl_0(self, p):
         """ script_lvl_0 : PRIMITIVE LAYER0_MARK

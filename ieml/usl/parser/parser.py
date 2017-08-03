@@ -22,19 +22,24 @@ class USLParser(metaclass=Singleton):
 
     def parse(self, s):
         """Parses the input string, and returns a reference to the created AST's root"""
-        self.usl = s
-        self.root = None
-        self.parser.parse(s, lexer=self.lexer)
+        # self.usl = s
+        # self.root = None
+        try:
+            return self.parser.parse(s, lexer=self.lexer)
+        except CannotParse as e:
+            e.s = s
+            raise e
 
-        if self.root is not None:
-            return self.root
-        else:
-            raise CannotParse(s, "Invalid usl.")
+        #
+        # if self.root is not None:
+        #     return self.root
+        # else:
+        #     raise CannotParse(s, "Invalid usl.")
 
     # Parsing rules
     def p_usl(self, p):
         """ usl : IEML_OBJECT """
-        self.root = Usl(IEMLParser().parse(p[1]))
+        p[0] = Usl(IEMLParser().parse(p[1]))
 
     def p_error(self, p):
         if p:
@@ -42,5 +47,5 @@ class USLParser(metaclass=Singleton):
         else:
             msg = "Syntax error at EOF"
 
-        raise CannotParse(self.usl, msg)
+        raise CannotParse(None, msg)
 
