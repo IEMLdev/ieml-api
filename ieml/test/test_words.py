@@ -1,7 +1,7 @@
 import unittest
 
 from ieml.dictionary.terms import Term
-from ieml.exceptions import InvalidIEMLObjectArgument
+from ieml.exceptions import InvalidIEMLObjectArgument, CannotParse
 from ieml.dictionary import term
 from ieml.tools import ieml
 from ieml.syntax import Word, Morpheme
@@ -15,7 +15,7 @@ class WordsTest(unittest.TestCase):
         self.assertEqual(str(a), str(b))
 
     def test_word_instanciation(self):
-        with self.assertRaises(InvalidIEMLObjectArgument):
+        with self.assertRaises(CannotParse):
             # "Too many singular sequences"
             ieml("[([O:M:.]+[wa.]+[M:M:.])*([O:O:.M:O:.-])]")
 
