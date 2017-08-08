@@ -53,10 +53,25 @@ class DictionaryVersion:
     def __init__(self, date=None):
         super(DictionaryVersion, self).__init__()
 
+        # A list of str. All the script defined in this dictionary.
         self.terms = None
+
+        # The list of root paradigms defined
         self.roots = None
+
+        # A map root -> list of str. The list of relations to inhibate in this root paradigm
         self.inhibitions = None
+
+        # A map term str -> map fr|en -> str
+        # The translations of each terms in fr and en (can add more languages)
         self.translations = None
+
+        # A map version str -> map old term str -> new term str
+        # To translate old dictionary terms into new ones.
+        # Each keys is a version that modify terms (change theirs script)
+        # The change must be applied in chronological order (from the old version to new one)
+        self.diff = None
+
         self.loaded = False
 
         if date is None:
@@ -83,7 +98,8 @@ class DictionaryVersion:
             'terms': self.terms,
             'roots': self.roots,
             'inhibitions': self.inhibitions,
-            'translations': self.translations
+            'translations': self.translations,
+            'diff': self.diff
         }
 
     def __setstate__(self, state):
@@ -92,6 +108,7 @@ class DictionaryVersion:
         self.roots = state['roots']
         self.inhibitions = state['inhibitions']
         self.translations = state['translations']
+        self.diff = state['diff'] if 'diff' in state else {}
 
         self.loaded = True
 
@@ -99,6 +116,10 @@ class DictionaryVersion:
         return json.dumps(self.__getstate__())
 
     def load(self):
+        """
+        Download the dictionary version and cache the retrieved file.
+        :return: None
+        """
         if self.loaded:
             return
 
@@ -141,6 +162,23 @@ class DictionaryVersion:
     def is_cached(self):
         return os.path.isfile(self.cache)
 
+    def diff_for_version(self, older_version):
+        older_version.load()
+        self.load()
+
+        result = {
+            sc: sc for sc in older_version.terms
+        }
+
+        chronology = sorted(filter(lambda v: v > older_version, (DictionaryVersion(v) for v in self.diff)))
+
+        for v in chronology:
+            for sc_old, sc_new in result.values():
+                if sc_new in self.diff[str(v)]:
+                    result[sc_old] = self.diff[str(v)][sc_new]
+
+        return result
+
 _default_version = None
 
 
@@ -158,7 +196,7 @@ def set_default_dictionary_version(version):
     _default_version = version
 
 
-def create_dictionary_version(old_version=None, add=None, update=None, remove=None, merge=None):
+def create_dictionary_version(old_version=None, add=None, update=None, remove=None):
     """
 
     :param old_version: the dictionary version to build the new version from
@@ -166,9 +204,9 @@ def create_dictionary_version(old_version=None, add=None, update=None, remove=No
                                                 'roots': list of script to add root paradigm,
                                                 'inhibitions': dict {root_p: list of relations to inhibits in this root p}
                                                 'translations': dict {language: {script: traduction}}}
-    :param update: a dict to update the translations and inhibtions
+    :param update: a dict to update the translations and inhibtions or the terms (new mapping)
+            map terms|inhibitions|translations -> old -> new
     :param remove: a list of term to remove, they are removed from root, terms, inhibitions and translations
-    :param merge: a list of dictionary version to merge
     :return:
     """
     v = latest_dictionary_version()
@@ -189,21 +227,23 @@ def create_dictionary_version(old_version=None, add=None, update=None, remove=No
         'terms': copy.deepcopy(old_version.terms),
         'roots': copy.deepcopy(old_version.roots),
         'inhibitions': copy.deepcopy(old_version.inhibitions),
-        'translations': copy.deepcopy(old_version.translations)
+        'translations': copy.deepcopy(old_version.translations),
+        'diff': {**copy.deepcopy(old_version.diff),
+                 str(old_version): {}}
     }
 
-    if merge is not None:
-        for m_version in merge:
-            m_version.load()
-
-            terms_to_add = set(m_version.terms).difference(state['terms'])
-            roots_to_add = set(m_version.roots).difference(state['roots'])
-
-            state['terms'].extend(terms_to_add)
-            state['roots'].extend(roots_to_add)
-            state['inhibitions'].update({r: m_version.inhibitions[r] for r in roots_to_add if r in m_version.inhibitions})
-            for l in LANGUAGES:
-                state['translations'][l].update({s: m_version.translations[l][s] for s in terms_to_add})
+    # if merge is not None:
+    #     for m_version in merge:
+    #         m_version.load()
+    #
+    #         terms_to_add = set(m_version.terms).difference(state['terms'])
+    #         roots_to_add = set(m_version.roots).difference(state['roots'])
+    #
+    #         state['terms'].extend(terms_to_add)
+    #         state['roots'].extend(roots_to_add)
+    #         state['inhibitions'].update({r: m_version.inhibitions[r] for r in roots_to_add if r in m_version.inhibitions})
+    #         for l in LANGUAGES:
+    #             state['translations'][l].update({s: m_version.translations[l][s] for s in terms_to_add})
 
     if remove is not None:
         state['terms'] = list(set(state['terms']).difference(remove))
@@ -215,6 +255,8 @@ def create_dictionary_version(old_version=None, add=None, update=None, remove=No
             for l in LANGUAGES:
                 if r in state['translations'][l]:
                     del state['translations'][l][r]
+
+            state['diff'][str(old_version)][r] = None
 
     if add is not None:
         if 'terms' in add:
@@ -234,15 +276,38 @@ def create_dictionary_version(old_version=None, add=None, update=None, remove=No
 
             state['translations'] = {l: {**state['translations'][l], **add['translations'][l]} for l in LANGUAGES}
 
-
     if update is not None:
         if 'inhibitions' in update:
             for s, l in update['inhibitions'].items():
                 if s not in state['inhibitions']:
                     continue
                 state['inhibitions'][s] = l
+
         if 'translations' in update:
             state['translations'] = {l: {**state['translations'][l], **update['translations'][l]} for l in LANGUAGES}
+
+        if 'terms' in update:
+            state['terms'] = set(t for t in state['terms'] if t not in update['terms'])
+
+            roots = set(state['roots']).intersection(update['terms'])
+            state['roots'] = set(t for t in state['roots'] if t not in update['terms'])
+
+            for t_old in update['terms']:
+                t_new = update['terms'][t_old]
+
+                state['diff'][str(old_version)][t_old] = t_new
+                state['terms'].add(t_new)
+
+                if t_old in roots:
+                    state['roots'].add(t_new)
+
+                for l in LANGUAGES:
+                    state['translations'][l][t_new] = state['translations'][l][t_old]
+                    del state['translations'][l][t_old]
+
+                if t_old in state['inhibitions']:
+                    state['inhibitions'][t_new] = state['inhibitions'][t_old]
+                    del state['inhibitions'][t_old]
 
     dictionary_version = DictionaryVersion(new_date)
     dictionary_version.__setstate__(state)
@@ -288,3 +353,5 @@ def load_dictionary_from_cache(version):
 
     with open(version.cache, 'rb') as fp:
         return pickle.load(fp)
+
+
