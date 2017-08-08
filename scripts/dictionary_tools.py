@@ -1,8 +1,10 @@
 import io
 
 import boto3
+from ieml.dictionary.dictionary import Dictionary
 
 from ieml.constants import LANGUAGES
+from ieml.dictionary.tools import term
 from ieml.dictionary.version import get_available_dictionary_version, create_dictionary_version, \
     DictionaryVersion, latest_dictionary_version
 from ieml.dictionary.script import script, m, NullScript, AdditiveScript
@@ -260,42 +262,74 @@ def upload_to_s3(dictionary_version):
 
     assert dictionary_version in get_available_dictionary_version()
 
+animals_and_vegetebals = {"B:.S:.n.-k.-+n.-n.S:.U:.-+n.B:.U:.-+n.T:.A:.-'+B:.B:.n.-k.-+n.-u.S:.-+u.B:.-+u.T:.-'":
+                          "B:.S:.n.-B:S:+T:.-n.T:.A:.-+n.S:+B:.U:.-'+     B:.B:.n.-B:S:+T:.-u.M:.-'"}
 
-if __name__ == "__main__":
+def factorize_root(root):
+    factorized_root = factorize(root.script)
+
+    to_remove = []
     to_add = {
-        'terms': ["f.o.-f.o.-'E:.-U:.n.-l.-',E:.-U:.M:T:.-l.-'E:.-A:.M:T:.-l.-',_",
-                  "f.o.-f.o.-'E:.-U:.t.-l.-',E:.-U:.M:T:.-l.-'E:.-A:.M:T:.-l.-',_",
-                  "f.o.-f.o.-',n.i.-f.i.-',M:O:.-O:.-',_",
-                  "f.o.-f.o.-',n.i.-f.i.-',M:O:.-O:.-',_+f.o.-f.o.-'E:.-U:.S:+B:T:.-l.-',E:.-U:.M:T:.-l.-'E:.-A:.M:T:.-l.-',_",
-                  "f.o.-f.o.-'E:.-U:.S:+B:T:.-l.-',E:.-U:.M:T:.-l.-'E:.-A:.M:T:.-l.-',_"
-                 ],
-        'roots': ["f.o.-f.o.-',n.i.-f.i.-',M:O:.-O:.-',_+f.o.-f.o.-'E:.-U:.S:+B:T:.-l.-',E:.-U:.M:T:.-l.-'E:.-A:.M:T:.-l.-',_"],
+        'terms': [],
+        'roots': [str(factorized_root)],
         'inhibitions': {
-             "f.o.-f.o.-',n.i.-f.i.-',M:O:.-O:.-',_+f.o.-f.o.-'E:.-U:.S:+B:T:.-l.-',E:.-U:.M:T:.-l.-'E:.-A:.M:T:.-l.-',_": ['father_mode']
+            str(factorized_root): root.inhibitions
         },
         'translations': {
-            'fr': {
-                "f.o.-f.o.-',n.i.-f.i.-',M:O:.-O:.-',_+f.o.-f.o.-'E:.-U:.S:+B:T:.-l.-',E:.-U:.M:T:.-l.-'E:.-A:.M:T:.-l.-',_": "Parties du corps",
-                "f.o.-f.o.-'E:.-U:.n.-l.-',E:.-U:.M:T:.-l.-'E:.-A:.M:T:.-l.-',_": "Parties du corps: le tronc",
-                "f.o.-f.o.-'E:.-U:.t.-l.-',E:.-U:.M:T:.-l.-'E:.-A:.M:T:.-l.-',_": "Parties du corps: la tête",
-                "f.o.-f.o.-',n.i.-f.i.-',M:O:.-O:.-',_": "Parties du corps: membres",
-                "f.o.-f.o.-'E:.-U:.S:+B:T:.-l.-',E:.-U:.M:T:.-l.-'E:.-A:.M:T:.-l.-',_": "Parties du corps: la tête et le tronc"
-            },
-            'en': {
-                "f.o.-f.o.-',n.i.-f.i.-',M:O:.-O:.-',_+f.o.-f.o.-'E:.-U:.S:+B:T:.-l.-',E:.-U:.M:T:.-l.-'E:.-A:.M:T:.-l.-',_": "body parts",
-                "f.o.-f.o.-'E:.-U:.n.-l.-',E:.-U:.M:T:.-l.-'E:.-A:.M:T:.-l.-',_": "Body parts: trunk",
-                "f.o.-f.o.-'E:.-U:.t.-l.-',E:.-U:.M:T:.-l.-'E:.-A:.M:T:.-l.-',_": "Body parts: head",
-                "f.o.-f.o.-',n.i.-f.i.-',M:O:.-O:.-',_": "body parts: limbs",
-                "f.o.-f.o.-'E:.-U:.S:+B:T:.-l.-',E:.-U:.M:T:.-l.-'E:.-A:.M:T:.-l.-',_": "Body parts: head and trunk"
-
-            }
+            'fr': {},
+            'en': {}
         }
     }
-    to_remove = ["f.o.-f.o.-'E:.-U:.n.-l.-',E:.-U:.M:T:.-l.-'E:.-A:.M:T:.-l.-',_",
-                  "f.o.-f.o.-'E:.-U:.t.-l.-',E:.-U:.M:T:.-l.-'E:.-A:.M:T:.-l.-',_",
-                  "f.o.-f.o.-',n.i.-f.i.-',M:O:.-O:.-',_"
-    ]
+
+    for t in Dictionary().roots[root]:
+        to_remove.append(str(t.script))
+        s = factorize(t.script)
+        to_add['terms'].append(str(s))
+        to_add['translations']['fr'][str(s)] = t.translations.fr
+        to_add['translations']['en'][str(s)] = t.translations.en
+
+    return to_remove, to_add
+
+if __name__ == "__main__":
+    # to_add = {
+    #     'terms': ["f.o.-f.o.-'E:.-U:.n.-l.-',E:.-U:.M:T:.-l.-'E:.-A:.M:T:.-l.-',_",
+    #               "f.o.-f.o.-'E:.-U:.t.-l.-',E:.-U:.M:T:.-l.-'E:.-A:.M:T:.-l.-',_",
+    #               "f.o.-f.o.-',n.i.-f.i.-',M:O:.-O:.-',_",
+    #               "f.o.-f.o.-',n.i.-f.i.-',M:O:.-O:.-',_+f.o.-f.o.-'E:.-U:.S:+B:T:.-l.-',E:.-U:.M:T:.-l.-'E:.-A:.M:T:.-l.-',_",
+    #               "f.o.-f.o.-'E:.-U:.S:+B:T:.-l.-',E:.-U:.M:T:.-l.-'E:.-A:.M:T:.-l.-',_"
+    #              ],
+    #     'roots': ["f.o.-f.o.-',n.i.-f.i.-',M:O:.-O:.-',_+f.o.-f.o.-'E:.-U:.S:+B:T:.-l.-',E:.-U:.M:T:.-l.-'E:.-A:.M:T:.-l.-',_"],
+    #     'inhibitions': {
+    #          "f.o.-f.o.-',n.i.-f.i.-',M:O:.-O:.-',_+f.o.-f.o.-'E:.-U:.S:+B:T:.-l.-',E:.-U:.M:T:.-l.-'E:.-A:.M:T:.-l.-',_": ['father_mode']
+    #     },
+    #     'translations': {
+    #         'fr': {
+    #             "f.o.-f.o.-',n.i.-f.i.-',M:O:.-O:.-',_+f.o.-f.o.-'E:.-U:.S:+B:T:.-l.-',E:.-U:.M:T:.-l.-'E:.-A:.M:T:.-l.-',_": "Parties du corps",
+    #             "f.o.-f.o.-'E:.-U:.n.-l.-',E:.-U:.M:T:.-l.-'E:.-A:.M:T:.-l.-',_": "Parties du corps: le tronc",
+    #             "f.o.-f.o.-'E:.-U:.t.-l.-',E:.-U:.M:T:.-l.-'E:.-A:.M:T:.-l.-',_": "Parties du corps: la tête",
+    #             "f.o.-f.o.-',n.i.-f.i.-',M:O:.-O:.-',_": "Parties du corps: membres",
+    #             "f.o.-f.o.-'E:.-U:.S:+B:T:.-l.-',E:.-U:.M:T:.-l.-'E:.-A:.M:T:.-l.-',_": "Parties du corps: la tête et le tronc"
+    #         },
+    #         'en': {
+    #             "f.o.-f.o.-',n.i.-f.i.-',M:O:.-O:.-',_+f.o.-f.o.-'E:.-U:.S:+B:T:.-l.-',E:.-U:.M:T:.-l.-'E:.-A:.M:T:.-l.-',_": "body parts",
+    #             "f.o.-f.o.-'E:.-U:.n.-l.-',E:.-U:.M:T:.-l.-'E:.-A:.M:T:.-l.-',_": "Body parts: trunk",
+    #             "f.o.-f.o.-'E:.-U:.t.-l.-',E:.-U:.M:T:.-l.-'E:.-A:.M:T:.-l.-',_": "Body parts: head",
+    #             "f.o.-f.o.-',n.i.-f.i.-',M:O:.-O:.-',_": "body parts: limbs",
+    #             "f.o.-f.o.-'E:.-U:.S:+B:T:.-l.-',E:.-U:.M:T:.-l.-'E:.-A:.M:T:.-l.-',_": "Body parts: head and trunk"
+    #
+    #         }
+    #     }
+    # }
+    # to_remove = ["f.o.-f.o.-'E:.-U:.n.-l.-',E:.-U:.M:T:.-l.-'E:.-A:.M:T:.-l.-',_",
+    #               "f.o.-f.o.-'E:.-U:.t.-l.-',E:.-U:.M:T:.-l.-'E:.-A:.M:T:.-l.-',_",
+    #               "f.o.-f.o.-',n.i.-f.i.-',M:O:.-O:.-',_"
+    # ]
+
+    to_remove, to_add = factorize_root(term("b.i.-n.i.-'l.i.-n.i.-'+m.+l.i.-f.i.-'+wu.f.A:.-+a.S:.-+i.U:.-+e.O:.-+S:+T:T:.i.-'n.o.-n.o.-'+f.o.-f.o.-'+n.-B:.A:.-+S:+B:.U:.-',"))
+
+
     version = create_dictionary_version(latest_dictionary_version(),
                               add=to_add, remove=to_remove)
     upload_to_s3(version)
     print(version)
+
