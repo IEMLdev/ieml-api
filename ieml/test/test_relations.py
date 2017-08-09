@@ -43,3 +43,7 @@ class TestRelations(TestCase):
         t_ss = term("s.u.-")
 
         self.assertFalse(t_p.relations.to(t_ss, relations_types=['table_2']))
+
+    def test_relations_order(self):
+        t = term("M:M:.u.-")
+        self.assertTupleEqual(t.relations.contains, tuple(sorted(t.relations.contains)))

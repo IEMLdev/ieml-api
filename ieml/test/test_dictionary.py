@@ -21,34 +21,10 @@ class DictionaryTest(TestCase):
         self.assertEqual(sum(len(v) for v in dic.layers), NB_TERMS)
         self.assertListEqual(dic.index, sorted(dic.terms.values()))
 
+    def test_multiple_dictionary(self):
+        d0 = Dictionary()
+        d1 = Dictionary()
+        self.assertEqual(d0, d1)
 
-        # for t, r in dic.ranks.items():
-        #     self.assertIn(r, list(range(0, 7)), "Term %s as a invalid rank of %d"%(str(t), r))
-
-    # def test_remove(self):
-    #     dic = Dictionary()
-    #
-    #     with self.assertRaises(ValueError):
-    #         dic.remove_term(term=term('wa.'))
-    #
-    #     with self.assertRaises(ValueError):
-    #         dic.remove_term(term=term('O:M:.'))
-    #
-    #     l = len(Dictionary())
-    #     for t in ["[O:B:.]", "[O:T:.]", "[U:M:.]", "[A:M:.]", "[O:S:.]"]:
-    #         t = term(t)
-    #         dic.remove_term(term=t)
-    #
-    #     self.assertEqual(len(Dictionary()), l-5)
-    #
-    #     dic.remove_term(term=term('O:M:.'))
-    #
-    #     with self.assertRaises(TermNotFoundInDictionary):
-    #         t = term('O:S:.')
-    #
-    #     dic.compute_relations()
-    #     dic.compute_ranks()
-    #
-    #     self.assertEqual(len(Dictionary()), l-6)
-
-
+        d2 = Dictionary('dictionary_2017-06-07_00:00:00')
+        self.assertNotEqual(d0, d2)

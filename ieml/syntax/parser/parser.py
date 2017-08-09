@@ -1,17 +1,20 @@
 import logging
 import os
-import ply.yacc as yacc
+from functools import partial
 
-from ieml.dictionary.terms import Term
+import ply.yacc as yacc
+from ieml.dictionary.version import DictionaryVersion
+
+from ieml.dictionary.dictionary import Dictionary
 from ieml.dictionary.tools import term
 from ieml.exceptions import TermNotFoundInDictionary, InvalidIEMLObjectArgument
 from ... import parser_folder
 from ...metaclasses import Singleton
 from ...exceptions import CannotParse
 from .. import Word, Morpheme, Clause, SuperClause, Sentence, SuperSentence, Text, Hypertext, Hyperlink, PropositionPath
-from ...dictionary import Dictionary
 
 from .lexer import get_lexer, tokens
+
 
 def _add(lp1, p2):
     return lp1[0] + [p2[0]], lp1[1] + p2[1]
@@ -32,10 +35,47 @@ def _hyperlink(node, text_list):
     return node[0], node[1] + [(text, [node[0]]) for text in text_list[0]]
 
 
-class IEMLParser(metaclass=Singleton):
+class IEMLParserSingleton(type):
+    _instances = {}
+
+    def __call__(cls, *args, **kwargs):
+        if len(args) > 0:
+            kwargs['dictionary'] = args[0]
+            if len(args) > 1:
+                kwargs['from_version'] = args[1]
+        args = ()
+
+        if 'dictionary' not in kwargs or not isinstance(kwargs['dictionary'], Dictionary):
+            dictionary = Dictionary()
+        else:
+            dictionary = kwargs['dictionary']
+
+        from_version = None
+        if 'from_version' in kwargs:
+            if isinstance(kwargs['from_version'], str):
+                from_version = DictionaryVersion(kwargs['from_version'])
+            elif not isinstance(kwargs['from_version'], DictionaryVersion):
+                raise ValueError("Invalid parameter for from_version parameter. Expected DictionaryVersion.")
+            else:
+                from_version = kwargs['from_version']
+
+        key = "%s|%s"%(str(dictionary.version), str(from_version))
+
+        if key not in cls._instances:
+            # this code is to clean up duplicate class if we reload modules
+            cls._instances[key] = super(IEMLParserSingleton, cls).__call__(*(), **{
+                'dictionary': dictionary,
+                'from_version': from_version
+            })
+
+        return cls._instances[key]
+
+class IEMLParser(metaclass=IEMLParserSingleton):
     tokens = tokens
 
-    def __init__(self):
+    def __init__(self, dictionary=None, from_version=None):
+
+        self._get_term = partial(term, dictionary=dictionary, from_version=from_version)
 
         # Build the lexer and parser
         self.lexer = get_lexer()
@@ -94,7 +134,7 @@ class IEMLParser(metaclass=Singleton):
     def p_script(self, p):
         """script : TERM """
         try:
-            p[0] = _build(term(p[1]))
+            p[0] = _build(self._get_term(p[1]))
         except TermNotFoundInDictionary as e:
             raise CannotParse(self._ieml, str(e))
 
