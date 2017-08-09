@@ -2,6 +2,7 @@ from collections import defaultdict
 
 import numpy
 
+from ieml.exceptions import InvalidPathException
 from ieml.tools import ieml
 from ...exceptions import InvalidIEMLObjectArgument
 from ...syntax import SuperSentence, Sentence, Clause, SuperClause, Text, Word, Morpheme
@@ -37,7 +38,6 @@ def _resolve_path_tree_graph(tree_graph, path):
     else:
         coords = list(path.children)
 
-    result = set()
     c0 = coords[0]
     if c0.kind == 's':
         stack = {tree_graph.root}
@@ -52,7 +52,7 @@ def _resolve_path_tree_graph(tree_graph, path):
         _stack = set()
         for s in stack:
             if c.kind == 's':
-                raise ValueError("Double substance s in path [%s]"%str(path))
+                raise InvalidPathException(tree_graph, path, "double substance 's' (root node).")
 
             if c.kind == 'm':
                 if c.index is not None:
@@ -92,19 +92,22 @@ def _resolve_path(obj, path):
         if path.kind == 'r':
             if path.index is not None:
                 return {obj.root.children[path.index]}
-            return set(obj.root.children)
+            return {obj.root}
         else:
             if path.index is not None:
                 return {obj.flexing.children[path.index]}
-            return set(obj.flexing.children)
+            if obj.flexing:
+                return {obj.flexing}
+            else:
+                raise InvalidPathException(obj, path, "no flexing morpheme in this Word.")
 
     if isinstance(obj, Term):
-        raise ValueError("Term not deferencable.")
+        raise InvalidPathException(obj, path, "can't deference a Term.")
 
 
 def resolve(ieml_object, path):
     if ieml_object.__class__ not in path.context.accept:
-        raise ValueError("Can't resolve [%s] on %s"%(str(path), str(ieml_object)))
+        raise InvalidPathException(ieml_object, path, "invalid path context, expected types: {%s}."%', '.join(path.context.accept))
 
     result = set()
     for d in path.develop:

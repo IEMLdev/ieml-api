@@ -1,11 +1,11 @@
-from ..commons import IEMLObjects
+from .commons import IEMLSyntax
 from ..constants import MAX_NODES_IN_SENTENCE
 from ..exceptions import InvalidIEMLObjectArgument, InvalidTreeStructure
 from .words import Word
 from .tree_graph import TreeGraph
 
 
-class AbstractClause(IEMLObjects):
+class AbstractClause(IEMLSyntax):
     def __init__(self, subtype, substance=None, attribute=None, mode=None, children=None):
         if not (substance or children):
             raise ValueError()
@@ -47,11 +47,8 @@ class AbstractClause(IEMLObjects):
     def compute_str(self, children_str):
         return '('+'*'.join(children_str)+')'
 
-    def __getitem__(self, item):
-        return self.children[item]
 
-
-class AbstractSentence(IEMLObjects):
+class AbstractSentence(IEMLSyntax):
     closable = True
 
     def __init__(self, subtype, children, literals=None):

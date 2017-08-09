@@ -1,5 +1,6 @@
 from unittest.case import TestCase
 
+from ieml.exceptions import InvalidPathException
 from ieml.syntax import Sentence, SuperSentence, Clause, SuperClause, Text, Word, Morpheme
 from ieml.dictionary import Term, term
 from ieml.tools import RandomPoolIEMLObjectGenerator
@@ -57,7 +58,7 @@ class TestPaths(TestCase):
 
     def test_resolve(self):
         word = Word(Morpheme([term('wa.')]))
-        p = path('r')
+        p = path('r0')
         elems = resolve(word, p)
         self.assertSetEqual(elems, {term('wa.')})
 
@@ -67,7 +68,7 @@ class TestPaths(TestCase):
         s = Sentence([Clause(word, worda, wordm)])
         p = path('sa:r')
         elems = resolve(s, p)
-        self.assertSetEqual(elems, {term('wu.')})
+        self.assertSetEqual(elems, {Morpheme([term('wu.')])})
 
         p = path('sa0+s0+sm0')
         elems = resolve(s, p)
@@ -87,12 +88,12 @@ class TestPaths(TestCase):
         s = r.sentence()
         p = path("s+a+m + (s+a+m):(r+f)")
         elems = resolve(s, p)
-        self.assertSetEqual(elems, {p for p in s.tree_iter() if isinstance(p, (Word, Term))})
+        self.assertSetEqual(elems, {p for p in s.tree_iter() if isinstance(p, (Word, Morpheme))})
 
         p = path("t + t:(s+a+m+r+f+(s+a+m):(s+a+m+r+f+(s+a+m):(r+f)))")
         usl = random_usl(rank_type=Text)
         elems = resolve(usl.ieml_object, p)
-        self.assertSetEqual(set(e for e in usl.ieml_object.tree_iter() if not isinstance(e, (Text, SuperClause, Clause, Morpheme))), elems)
+        self.assertSetEqual(set(e for e in usl.ieml_object.tree_iter() if not isinstance(e, (Text, SuperClause, Clause, Term))), elems)
 
     def test_enumerate_paths(self):
         r = RandomPoolIEMLObjectGenerator(level=Text)
@@ -177,3 +178,18 @@ class TestPaths(TestCase):
         }
 
         self.assertIsInstance(usl(rules).ieml_object, Word)
+
+    def test_deference(self):
+        rand = RandomPoolIEMLObjectGenerator()
+        w0 = rand.word()
+
+        self.assertEqual(w0['r0'], w0[0][0])
+        self.assertEqual(w0['r'], w0[0])
+
+        w0 = Word.from_term(w0['r0'])
+
+        with self.assertRaises(InvalidPathException):
+            self.assertEqual(w0['f'], w0[1])
+
+
+

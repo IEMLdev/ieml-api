@@ -6,7 +6,7 @@ from ply import yacc
 from ....exceptions import CannotParse
 from .lexer import tokens, get_lexer
 from ..paths import Coordinate, AdditivePath, MultiplicativePath, ContextPath
-from ....metaclasses import Singleton
+from ....commons import Singleton
 
 
 class PathParser(metaclass=Singleton):

@@ -1,12 +1,12 @@
 from itertools import chain
 
-from ..commons import IEMLObjects
+from .commons import IEMLSyntax
 from ..exceptions import InvalidIEMLObjectArgument
 from .sentences import Sentence, SuperSentence
 from .words import Word
 
 
-class Text(IEMLObjects):
+class Text(IEMLSyntax):
     closable = True
 
     def __init__(self, children):

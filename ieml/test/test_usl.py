@@ -47,6 +47,7 @@ class TestUsl(unittest.TestCase):
         ieml = RandomPoolIEMLObjectGenerator(level=Text).text()
         self.assertEqual(Usl(ieml_object=ieml), Usl(ieml_object=ieml))
 
+
 class TextUslTools(unittest.TestCase):
     def test_replace(self):
         u = usl(Word(Morpheme([term('M:')])))

@@ -1,17 +1,15 @@
 import logging
 import os
 from functools import partial
-
 import ply.yacc as yacc
-from ieml.dictionary.version import DictionaryVersion
 
+from ieml.dictionary.version import DictionaryVersion
 from ieml.dictionary.dictionary import Dictionary
 from ieml.dictionary.tools import term
 from ieml.exceptions import TermNotFoundInDictionary, InvalidIEMLObjectArgument
-from ... import parser_folder
-from ...metaclasses import Singleton
-from ...exceptions import CannotParse
-from .. import Word, Morpheme, Clause, SuperClause, Sentence, SuperSentence, Text, Hypertext, Hyperlink, PropositionPath
+from .. import parser_folder
+from ..exceptions import CannotParse
+from ieml.syntax import Word, Morpheme, Clause, SuperClause, Sentence, SuperSentence, Text, Hypertext, Hyperlink, PropositionPath
 
 from .lexer import get_lexer, tokens
 

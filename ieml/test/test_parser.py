@@ -1,10 +1,8 @@
 import unittest
-from _dbus_bindings import Dictionary
-
 from ieml.dictionary.dictionary import Dictionary
 
-from ieml.exceptions import TermNotFoundInDictionary
-from ieml.syntax.parser.parser import IEMLParser
+from ieml.exceptions import TermNotFoundInDictionary, CannotParse
+from ieml.parser.parser import IEMLParser
 from ieml.syntax import Text
 from ieml.tools import RandomPoolIEMLObjectGenerator
 from ieml.dictionary import term
@@ -59,8 +57,11 @@ class TestPropositionParser(unittest.TestCase):
         self.assertEqual(str(self.parser.parse(ss1)), ss1)
 
     def test_invalid_term(self):
-        with self.assertRaises(TermNotFoundInDictionary):
+        with self.assertRaises(CannotParse):
             self.parser.parse("[([A:A:A:.-'])]")
+
+        with self.assertRaises(TermNotFoundInDictionary):
+            term("A:A:A:.")
 
     def test_multiple_ieml_parser(self):
         p0 = IEMLParser()

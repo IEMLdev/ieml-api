@@ -9,7 +9,10 @@ from ...dictionary import Term
 from .constants import COORDINATES_KINDS
 from .exceptions import PathError
 
-Context = namedtuple("Context", ['accept', 'conserve', 'switch'])
+Context = namedtuple("Context",
+                     ['accept',   # the types this context can deference
+                      'conserve', # if this context must imidiately swith to a lower type (mode and morphems)
+                      'switch'])  # the mapping type -> type this context can switch
 
 COORDINATES_CONTEXTS = {
     't': Context(accept={Text}, conserve=False, switch={

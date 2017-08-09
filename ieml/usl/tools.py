@@ -1,8 +1,9 @@
 import random
 
-from ..commons import IEMLObjects, IEMLType
+from ieml.syntax.commons import IEMLSyntax, IEMLSyntaxType
 from ..syntax import Sentence, SuperSentence, Text, Word, Morpheme
-from ..tools import RandomPoolIEMLObjectGenerator, ieml
+from ieml.tools import ieml
+from ..tools import RandomPoolIEMLObjectGenerator
 from ..dictionary import Term
 
 from .paths import path, resolve_ieml_object
@@ -13,7 +14,7 @@ from .usl import Usl
 def usl(arg):
     if isinstance(arg, Usl):
         return arg
-    if isinstance(arg, IEMLObjects):
+    if isinstance(arg, IEMLSyntax):
         if isinstance(arg, Term):
             return Usl(Word(root=Morpheme([arg])))
         return Usl(arg)
@@ -42,7 +43,7 @@ def random_usl(rank_type=None):
     if _ieml_object_generator is None:
         _ieml_object_generator = RandomPoolIEMLObjectGenerator(level=Text)
 
-    if rank_type and not isinstance(rank_type, IEMLType):
+    if rank_type and not isinstance(rank_type, IEMLSyntaxType):
         raise ValueError('The wanted type for the generated usl object must be a IEMLType, here : '
                          '%s'%rank_type.__class__.__name__)
 

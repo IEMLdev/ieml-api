@@ -1,23 +1,18 @@
+import xml.etree.ElementTree as ET
 import random
 import itertools
 import functools
 
-from .commons import IEMLObjects
+from urllib.request import urlopen
+
+from ieml.dictionary.script.script import Script
+from ieml.parser.parser import IEMLParser
+from ieml.syntax.commons import IEMLSyntax
 from .exceptions import InvalidIEMLObjectArgument
-from .syntax.parser.parser import IEMLParser
 from .syntax import Sentence, Clause, SuperSentence, SuperClause, Text, Word, Morpheme
 from .exceptions import CantGenerateElement
 from .dictionary import Term, Dictionary
 
-
-def ieml(arg):
-    if isinstance(arg, IEMLObjects):
-        return arg
-
-    if isinstance(arg, str):
-        return IEMLParser().parse(arg)
-
-    raise ValueError("Invalid argument, c'ant instantiate an IEMLObject from %s."%str(arg))
 
 
 def _loop_result(max_try):
@@ -133,3 +128,24 @@ class RandomPoolIEMLObjectGenerator:
             return self.type_to_method[type]()
         except KeyError:
             raise ValueError("Can't generate that type or not an IEMLObject : %s"%str(type))
+
+
+def list_bucket(url):
+    root_node = ET.fromstring(urlopen(url).read())
+    all_versions_entry = ({k.tag: k.text for k in list(t)} for t in root_node
+                          if t.tag == '{http://s3.amazonaws.com/doc/2006-03-01/}Contents')
+
+    # sort by date
+    all_versions = sorted(all_versions_entry,
+                          key=lambda t: t['{http://s3.amazonaws.com/doc/2006-03-01/}LastModified'], reverse=True)
+
+    return [v['{http://s3.amazonaws.com/doc/2006-03-01/}Key'] for v in all_versions]
+
+
+def ieml(arg):
+    if isinstance(arg, (IEMLSyntax, Term, Script)):
+        return arg
+    if isinstance(arg, str):
+        return IEMLParser().parse(arg)
+
+    raise NotImplemented

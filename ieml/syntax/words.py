@@ -1,10 +1,10 @@
-from ..commons import IEMLObjects
+from .commons import IEMLSyntax
 from ..exceptions import InvalidIEMLObjectArgument
 from ..dictionary import Term
 from ..constants import MAX_SINGULAR_SEQUENCES, MORPHEME_SIZE_LIMIT
 
 
-class Morpheme(IEMLObjects):
+class Morpheme(IEMLSyntax):
     def __init__(self, children):
         if isinstance(children, Term):
             _children = (children,)
@@ -44,7 +44,7 @@ class Morpheme(IEMLObjects):
         return '('+'+'.join(children_str)+')'
 
 
-class Word(IEMLObjects):
+class Word(IEMLSyntax):
     closable = True
 
     def __init__(self, root=None, flexing=None, literals=None, children=None):
@@ -65,7 +65,7 @@ class Word(IEMLObjects):
 
         super().__init__(_children, literals=literals)
 
-        self.cardinal = self.root.cardinal * (self.flexing.cardinal if self.flexing is not None else 1)
+        self.cardinal = self.root.cardinal * (self.flexing.cardinal if self.flexing else 1)
         if self.cardinal > MAX_SINGULAR_SEQUENCES:
             raise InvalidIEMLObjectArgument(Word, "Too many word- singular sequences defined (max: 360) here: %d"%self.cardinal)
 
@@ -81,11 +81,15 @@ class Word(IEMLObjects):
     def flexing(self):
         if len(self.children) > 1:
             return self.children[1]
-        return None
+        return []
 
     def compute_str(self, children_str):
         return '['+'*'.join(children_str)+']'
 
     @property
     def is_term(self):
-        return len(self.root.children) == 1 and self.flexing is None
+        return len(self.root.children) == 1 and not self.flexing
+
+    @staticmethod
+    def from_term(term):
+        return Word(root=Morpheme([term]))

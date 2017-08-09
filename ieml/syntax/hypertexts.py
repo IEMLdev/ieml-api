@@ -1,6 +1,6 @@
 from collections import defaultdict
 
-from ..commons import IEMLObjects
+from .commons import IEMLSyntax
 from ..constants import MAX_NODES_IN_HYPERTEXT, MAX_DEPTH_IN_HYPERTEXT
 from ..exceptions import InvalidIEMLObjectArgument, InvalidTreeStructure
 from ..dictionary import Term
@@ -8,8 +8,6 @@ from .texts import Text
 from .sentences import Sentence, SuperSentence
 from .words import Word
 from .tree_graph import TreeGraph
-
-
 
 
 class PropositionPath:
@@ -50,7 +48,7 @@ class PropositionPath:
         return '/'.join((str(p) for p in self.path))
 
 
-class Hyperlink(IEMLObjects):
+class Hyperlink(IEMLSyntax):
     def __init__(self, substance=None, attribute=None, mode=None, children=None):
 
         if children:
@@ -94,7 +92,7 @@ class Hyperlink(IEMLObjects):
         return '(' + ','.join(children_str) + ')'
 
 
-class Hypertext(IEMLObjects):
+class Hypertext(IEMLSyntax):
     closable = True
 
     def __init__(self, children):

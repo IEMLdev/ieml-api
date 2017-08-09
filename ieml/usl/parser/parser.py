@@ -4,10 +4,10 @@ import ply.yacc as yacc
 
 from ieml import parser_folder
 from ieml.exceptions import CannotParse
-from ieml.syntax.parser import IEMLParser
+from ieml.parser import IEMLParser
 from ieml.usl.parser.lexer import tokens, get_lexer
 from ieml.usl import Usl
-from ieml.metaclasses import Singleton
+from ieml.commons import Singleton
 
 
 class USLParser(metaclass=Singleton):

@@ -1,7 +1,7 @@
 import logging
 from collections import namedtuple
 
-from ..commons import IEMLObjects, cached_property
+from ..commons import cached_property
 from ..constants import LANGUAGES
 from .script import script as _script
 logger = logging.getLogger(__name__)
@@ -10,31 +10,38 @@ Translations.__getitem__ = lambda self, item: self.__getattribute__(item) if ite
     else tuple.__getitem__(self, item)
 
 
-class Term(IEMLObjects):
+class Term:
     closable = True
 
     def __init__(self, script, index, dictionary, parent):
+        super().__init__()
+
         self.dictionary = dictionary
         self.parent = parent
 
         self.script = _script(script)
-        super().__init__([])
 
         self.index = index
 
         # if term in a dictionary, those values will be set
         self.translations = Translations(**{l: self.dictionary.translations[l][self.script] for l in LANGUAGES})
 
-    __hash__ = IEMLObjects.__hash__
-
     def __eq__(self, other):
         return isinstance(other, self.__class__) and self.index == other.index
 
-    def _do_gt(self, other):
+    def __gt__(self, other):
         return self.index > other.index
 
-    def compute_str(self, children_str):
-        return "[" + str(self.script) + "]"
+    def __hash__(self):
+        return hash(self.__str__())
+
+    def __str__(self):
+        return "[%s]" % str(self.script)
+
+    _compute_str = __str__
+
+    def tree_iter(self):
+        yield self
 
     @cached_property
     def root(self):
