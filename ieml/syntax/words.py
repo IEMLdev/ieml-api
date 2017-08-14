@@ -1,12 +1,13 @@
+from ieml.dictionary.terms import Term
+from ieml.syntax.terms import SyntaxTerm
 from .commons import IEMLSyntax
 from ..exceptions import InvalidIEMLObjectArgument
-from ..dictionary import Term
 from ..constants import MAX_SINGULAR_SEQUENCES, MORPHEME_SIZE_LIMIT
 
 
 class Morpheme(IEMLSyntax):
     def __init__(self, children):
-        if isinstance(children, Term):
+        if isinstance(children, SyntaxTerm):
             _children = (children,)
         else:
             try:
@@ -17,8 +18,8 @@ class Morpheme(IEMLSyntax):
         if not 0 < len(_children) <= MORPHEME_SIZE_LIMIT:
             raise InvalidIEMLObjectArgument(Morpheme, "Invalid terms count %d."%len(_children))
 
-        if not all((isinstance(e, Term) for e in _children)):
-            raise InvalidIEMLObjectArgument(Morpheme, "%s do not contain only Term instances."%(str(_children)))
+        if not all((isinstance(e, SyntaxTerm) for e in _children)):
+            raise InvalidIEMLObjectArgument(Morpheme, "%s do not contain only SyntaxTerm instances."%(str(_children)))
 
         # check singular sequences intersection
         singular_sequences = [s for t in _children for s in t.script.singular_sequences]
@@ -92,4 +93,7 @@ class Word(IEMLSyntax):
 
     @staticmethod
     def from_term(term):
-        return Word(root=Morpheme([term]))
+        if isinstance(term, Term):
+            term = SyntaxTerm(term)
+
+        return Word(root=Morpheme(term))

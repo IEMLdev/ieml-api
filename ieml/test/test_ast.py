@@ -5,7 +5,7 @@ import numpy as np
 
 from ieml.syntax import Text, SuperSentence
 from ieml.exceptions import InvalidIEMLObjectArgument, TermNotFoundInDictionary
-from ieml.parser import IEMLParser
+from ieml.syntax.parser import IEMLParser
 from ieml.syntax.sentences import SuperClause
 from ieml.tools import RandomPoolIEMLObjectGenerator
 from ieml.dictionary.script import script as sc
@@ -84,29 +84,29 @@ class TestMorphemesFeatures(unittest.TestCase):
     def test_morpheme_checks(self):
         """Creates a morpheme with conflicting terms"""
         with self.assertRaises(InvalidIEMLObjectArgument):
-            Morpheme([term("E:A:T:."), term("E:.-S:.o.-t.-'"), term("E:.S:.wa.-"), term("E:A:T:.")])
+            Morpheme(map(SyntaxTerm, [term("E:A:T:."), term("E:.-S:.o.-t.-'"), term("E:.S:.wa.-"), term("E:A:T:.")]))
 
     def _make_and_check_morphemes(self):
-        morpheme_a = Morpheme([term("E:A:T:."), term("E:.S:.wa.-"),term("E:.-S:.o.-t.-'")])
-        morpheme_b = Morpheme([term("a.i.-"), term("i.i.-")])
+        morpheme_a = Morpheme(map(SyntaxTerm, [term("E:A:T:."), term("E:.S:.wa.-"),term("E:.-S:.o.-t.-'")]))
+        morpheme_b = Morpheme(map(SyntaxTerm, [term("a.i.-"), term("i.i.-")]))
         return morpheme_a, morpheme_b
 
     def _make_and_check_suffixed_morphemes(self):
-        morpheme_a = Morpheme([term("E:A:T:."), term("E:.S:.wa.-")])
-        morpheme_b = Morpheme([term("E:A:T:."), term("E:.S:.wa.-"),term("E:.-S:.o.-t.-'")])
+        morpheme_a = Morpheme(map(SyntaxTerm, [term("E:A:T:."), term("E:.S:.wa.-")]))
+        morpheme_b = Morpheme(map(SyntaxTerm, [term("E:A:T:."), term("E:.S:.wa.-"),term("E:.-S:.o.-t.-'")]))
         return morpheme_a, morpheme_b
 
     def test_morpheme_reordering(self):
         """Create a new morpheme with terms in the wrong order, and check that it reorders
         after itself after the reorder() method is ran"""
-        new_morpheme = Morpheme([term("E:A:T:."), term("E:.-S:.o.-t.-'"), term("E:.S:.wa.-")])
+        new_morpheme = Morpheme(map(SyntaxTerm, [term("E:A:T:."), term("E:.-S:.o.-t.-'"), term("E:.S:.wa.-")]))
         self.assertEqual(str(new_morpheme.children[2]), "[E:.-S:.o.-t.-']") # last term is right?
 
     def test_morpheme_equality(self):
         """Tests if two morphemes That are declared the same way are said to be equal
          using the regular equality comparison. It also tests terms reordering"""
-        morpheme_a = Morpheme([term("E:A:T:."), term("E:.-S:.o.-t.-'"), term("E:.S:.wa.-")])
-        morpheme_b = Morpheme([term("E:A:T:."), term("E:.S:.wa.-"), term("E:.-S:.o.-t.-'")])
+        morpheme_a = Morpheme(map(SyntaxTerm, [term("E:A:T:."), term("E:.-S:.o.-t.-'"), term("E:.S:.wa.-")]))
+        morpheme_b = Morpheme(map(SyntaxTerm, [term("E:A:T:."), term("E:.S:.wa.-"), term("E:.-S:.o.-t.-'")]))
         self.assertTrue(morpheme_a == morpheme_b)
 
     def test_morpheme_inequality(self):
@@ -123,15 +123,21 @@ class TestMorphemesFeatures(unittest.TestCase):
         # true since morph_a suffix of morph_b
         self.assertTrue(morpheme_b > morpheme_a)
 
+    def test_hashing(self):
+        morpheme_a, morpheme_b = self._make_and_check_suffixed_morphemes()
+        h = {morpheme_a: 1,
+             morpheme_b: 3}
+        self.assertIn(morpheme_a, h)
+
 
 class TestWords(unittest.TestCase):
 
     def setUp(self):
-        self.morpheme_a = Morpheme([term("E:A:T:."), term("E:.S:.wa.-"),term("E:.-S:.o.-t.-'")])
-        self.morpheme_b = Morpheme([term("a.i.-"), term("i.i.-")])
+        self.morpheme_a = Morpheme(map(SyntaxTerm, [term("E:A:T:."), term("E:.S:.wa.-"),term("E:.-S:.o.-t.-'")]))
+        self.morpheme_b = Morpheme(map(SyntaxTerm, [term("a.i.-"), term("i.i.-")]))
         self.word_a = Word(self.morpheme_a, self.morpheme_b)
-        self.word_b = Word(Morpheme([term("E:A:T:."), term("E:.-S:.o.-t.-'"), term("E:.S:.wa.-")]),
-                          Morpheme([term("a.i.-"), term("i.i.-")]))
+        self.word_b = Word(Morpheme(map(SyntaxTerm, [term("E:A:T:."), term("E:.-S:.o.-t.-'"), term("E:.S:.wa.-")])),
+                          Morpheme(map(SyntaxTerm, [term("a.i.-"), term("i.i.-")])))
 
     def test_words_equality(self):
         """Checks that the == operator works well on words build from the same elements"""
@@ -139,7 +145,7 @@ class TestWords(unittest.TestCase):
 
     def test_words_hashing(self):
         """Verifies words can be used as keys in a hashmap"""
-        new_word = Word(Morpheme([term("E:A:T:."), term("E:.-S:.o.-t.-'"), term("E:.S:.wa.-")]))
+        new_word = Word(Morpheme(map(SyntaxTerm, [term("E:A:T:."), term("E:.-S:.o.-t.-'"), term("E:.S:.wa.-")])))
         word_hashmap = {new_word : 1,
                         self.word_a : 2}
         self.assertTrue(self.word_b in word_hashmap)
@@ -163,6 +169,14 @@ class TestClauses(unittest.TestCase):
         a, b, c, d, e, f = tuple(get_words_list())
         clause_a, clause_b = Clause(a,b,c), Clause(a,e,c)
         self.assertTrue(clause_a < clause_b)
+
+    def test_hashing(self):
+        a, b, c, d, e, f = tuple(get_words_list())
+        clause_a, clause_b = Clause(a,b,c), Clause(a,e,c)
+        h = {clause_a: 1,
+             clause_b: 3}
+        self.assertIn(clause_a, h)
+
 
 
 class TestSentences(unittest.TestCase):
@@ -197,6 +211,11 @@ class TestSentences(unittest.TestCase):
         sentence = Sentence([clause_a, clause_b, clause_c, clause_d])
         self.assertEqual(sentence.children, (clause_a, clause_b,clause_c, clause_d))
 
+    def test_hashing(self):
+        s = RandomPoolIEMLObjectGenerator(level=Sentence).sentence()
+        h = {s: 1,
+             2:3}
+        self.assertIn(s, h)
 
 class TestSuperSentence(unittest.TestCase):
 
@@ -210,6 +229,11 @@ class TestSuperSentence(unittest.TestCase):
         except InvalidIEMLObjectArgument as e:
             self.fail()
 
+    def test_hashing(self):
+        s = RandomPoolIEMLObjectGenerator(level=SuperSentence).super_sentence()
+        h = {s: 1,
+             2:3}
+        self.assertIn(s, h)
 
 class TestText(unittest.TestCase):
     def setUp(self):
@@ -223,3 +247,9 @@ class TestText(unittest.TestCase):
         t1 = Text([text0, s0])
         self.assertIn(s0, t1)
         self.assertIn(text0, t1)
+
+    def test_hashing(self):
+        s = RandomPoolIEMLObjectGenerator(level=Text).text()
+        h = {s: 1,
+             2:3}
+        self.assertIn(s, h)

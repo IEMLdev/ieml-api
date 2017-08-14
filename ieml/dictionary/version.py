@@ -1,7 +1,7 @@
 import copy
 import logging
 import pickle
-from urllib.request import urlretrieve, urlopen
+from urllib.request import urlretrieve
 import datetime
 import urllib.parse
 import json

@@ -2,7 +2,7 @@ import random
 import unittest
 
 from ieml.syntax import Sentence, Text, Word, SuperSentence
-from ieml.tools import RandomPoolIEMLObjectGenerator
+from ieml.tools import RandomPoolIEMLObjectGenerator, ieml
 from ieml.usl import usl, Usl
 from ieml.usl.tools import random_usl, replace_paths
 from ieml.test.helper import *
@@ -50,9 +50,9 @@ class TestUsl(unittest.TestCase):
 
 class TextUslTools(unittest.TestCase):
     def test_replace(self):
-        u = usl(Word(Morpheme([term('M:')])))
+        u = usl(Word(Morpheme([ieml('[M:]')])))
         u2 = replace_paths(u, {'r0': '[S:]'})
-        self.assertEqual(u2, usl(Word(Morpheme([term('S:')]))))
+        self.assertEqual(u2, usl(Word(Morpheme([ieml('[S:]')]))))
 
     def test_deference_path(self):
         u = random_usl(rank_type=Text)

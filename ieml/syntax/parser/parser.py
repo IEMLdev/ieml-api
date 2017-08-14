@@ -3,12 +3,14 @@ import os
 from functools import partial
 import ply.yacc as yacc
 
+from ieml.dictionary.terms import Term
 from ieml.dictionary.version import DictionaryVersion
 from ieml.dictionary.dictionary import Dictionary
 from ieml.dictionary.tools import term
 from ieml.exceptions import TermNotFoundInDictionary, InvalidIEMLObjectArgument
-from .. import parser_folder
-from ..exceptions import CannotParse
+from ieml.syntax.terms import SyntaxTerm
+from ... import parser_folder
+from ...exceptions import CannotParse
 from ieml.syntax import Word, Morpheme, Clause, SuperClause, Sentence, SuperSentence, Text, Hypertext, Hyperlink, PropositionPath
 
 from .lexer import get_lexer, tokens
@@ -68,6 +70,7 @@ class IEMLParserSingleton(type):
 
         return cls._instances[key]
 
+
 class IEMLParser(metaclass=IEMLParserSingleton):
     tokens = tokens
 
@@ -108,7 +111,7 @@ class IEMLParser(metaclass=IEMLParserSingleton):
 
     # Parsing rules
     def p_ieml_proposition(self, p):
-        """proposition :  script
+        """proposition : script
                         | term
                         | morpheme
                         | word
@@ -117,7 +120,11 @@ class IEMLParser(metaclass=IEMLParserSingleton):
                         | superclause
                         | supersentence
                         | text"""
-        p[0] = p[1][0]
+        if isinstance(p[1], Term):
+            # script rule
+            p[0] = SyntaxTerm(p[1])
+        else:
+            p[0] = p[1][0]
 
     def p_literal_list(self, p):
         """literal_list : literal_list LITERAL
@@ -132,13 +139,18 @@ class IEMLParser(metaclass=IEMLParserSingleton):
     def p_script(self, p):
         """script : TERM """
         try:
-            p[0] = _build(self._get_term(p[1]))
+            p[0] = self._get_term(p[1])
         except TermNotFoundInDictionary as e:
             raise CannotParse(self._ieml, str(e))
 
     def p_term(self, p):
-        """term : LBRACKET script RBRACKET"""
-        p[0] = p[2]
+        """term : LBRACKET script RBRACKET
+                | LBRACKET script RBRACKET literal_list"""
+        if len(p) == 4:
+            p[0] = _build(SyntaxTerm(p[2]))
+        else:
+            p[0] = _build(SyntaxTerm(p[2], literals=p[4]))
+
 
     def p_proposition_sum(self, p):
         """terms_sum : terms_sum PLUS term

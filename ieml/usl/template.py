@@ -2,6 +2,7 @@ import copy
 import itertools
 import numpy as np
 
+from ieml.syntax.terms import SyntaxTerm
 from ..constants import LANGUAGES
 from ..dictionary import Term, term
 from ..syntax import Word
@@ -37,8 +38,8 @@ class Template:
         self.multiples = []
         for i, p in enumerate(self.paths):
             t = self.model[p]
-            if not isinstance(t, Term) or t.script.cardinal == 1:
-                raise ValueError("Invalid path for template creation [%s]->'%s' leading to a non term object,"
+            if not isinstance(t, SyntaxTerm) or t.script.cardinal == 1:
+                raise ValueError("Invalid path for template creation [%s]->'%s' leading to a non SyntaxTerm object, "
                                  "or the term is not a paradigm."%(str(p), str(t)))
 
             self.multiples.append({

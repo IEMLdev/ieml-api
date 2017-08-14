@@ -2,9 +2,10 @@ import unittest
 from ieml.dictionary.dictionary import Dictionary
 
 from ieml.exceptions import TermNotFoundInDictionary, CannotParse
-from ieml.parser.parser import IEMLParser
+from ieml.syntax.parser.parser import IEMLParser
 from ieml.syntax import Text
-from ieml.tools import RandomPoolIEMLObjectGenerator
+from ieml.syntax.terms import SyntaxTerm
+from ieml.tools import RandomPoolIEMLObjectGenerator, ieml
 from ieml.dictionary import term
 
 
@@ -19,7 +20,6 @@ class TestPropositionParser(unittest.TestCase):
         for i in range(10):
             o = self.rand.term()
             self.assertEqual(self.parser.parse(str(o)), o)
-            self.assertEqual(self.parser.parse(str(o.script)), o)
 
     def test_parse_word(self):
         for i in range(10):
@@ -28,8 +28,8 @@ class TestPropositionParser(unittest.TestCase):
 
     def test_parse_term_plus(self):
         t = term("f.-O:M:.+M:O:.-s.y.-'")
-        to_check = self.parser.parse("[f.-O:M:.+M:O:.-s.y.-']")
-        self.assertEqual(to_check, t)
+        to_check = ieml("[f.-O:M:.+M:O:.-s.y.-']")
+        self.assertEqual(to_check, SyntaxTerm(t))
 
     def test_parse_sentence(self):
         for i in range(10):
@@ -73,3 +73,6 @@ class TestPropositionParser(unittest.TestCase):
 
         p3 = IEMLParser(from_version='dictionary_2017-06-07_00:00:00')
         self.assertNotEqual(p2, p3)
+
+    def test_parse_script(self):
+        self.assertEqual(str(self.parser.parse("A:")), '[A:]')

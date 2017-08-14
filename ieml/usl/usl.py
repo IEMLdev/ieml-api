@@ -1,5 +1,6 @@
 from itertools import islice
 
+from ieml.syntax.terms import SyntaxTerm
 from ..constants import LANGUAGES
 from ..dictionary import Term
 from .paths import Path, enumerate_paths, resolve
@@ -23,7 +24,7 @@ class Usl:
 
     @property
     def paths(self):
-        return self.rules(Term)
+        return self.rules(SyntaxTerm)
 
     def __getitem__(self, item):
         if isinstance(item, Path):

@@ -4,6 +4,7 @@ from itertools import chain, product
 
 from functools import reduce
 
+from ieml.syntax.terms import SyntaxTerm
 from ...syntax import SuperSentence, Sentence, Text, Word
 from ...dictionary import Term
 from .constants import COORDINATES_KINDS
@@ -16,7 +17,7 @@ Context = namedtuple("Context",
 
 COORDINATES_CONTEXTS = {
     't': Context(accept={Text}, conserve=False, switch={
-        Text: {SuperSentence, Sentence, Word, Term}
+        Text: {SuperSentence, Sentence, Word, SyntaxTerm}
     }),
     'a': Context(accept={SuperSentence, Sentence}, conserve=True, switch={
         SuperSentence: {Sentence},
@@ -31,10 +32,10 @@ COORDINATES_CONTEXTS = {
         Sentence: {Word}
     }),
     'r': Context(accept={Word}, conserve=False, switch={
-        Word: {Term}
+        Word: {SyntaxTerm}
     }),
     'f': Context(accept={Word}, conserve=False, switch={
-        Word: {Term}
+        Word: {SyntaxTerm}
     })
 }
 

@@ -20,12 +20,12 @@ def term(arg, dictionary=None, from_version=None):
         raise TermNotFoundInDictionary(arg, dictionary)
 
 @singledispatch
-def _term(arg, dictionary):
+def _term(arg, dictionary, from_version):
     raise ValueError("Unsupported class %s for %s"%(arg.__class__.__name__, str(arg)))
 
-_term.register(Term, lambda arg, dictionary: arg)
-_term.register(int, lambda arg, dictionary: dictionary.index[arg])
-_term.register(Script, lambda arg, dictionary: dictionary.terms[arg])
+_term.register(Term, lambda arg, dictionary, from_version: arg)
+_term.register(int, lambda arg, dictionary, from_version: dictionary.index[arg])
+_term.register(Script, lambda arg, dictionary, from_version: dictionary.terms[arg])
 
 
 @_term.register(str)

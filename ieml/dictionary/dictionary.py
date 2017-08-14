@@ -32,8 +32,8 @@ class DictionarySingleton(type):
 
             if cls._instance is not None:
                 # otherwise memory leak
-                for t in cls._instance.index:
-                    del t.__dict__
+                # for t in cls._instance.index:
+                #     del t.__dict__
                 del cls._instance
                 gc.collect()
 

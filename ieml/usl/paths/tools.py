@@ -3,6 +3,7 @@ from collections import defaultdict
 import numpy
 
 from ieml.exceptions import InvalidPathException
+from ieml.syntax.terms import SyntaxTerm
 from ieml.tools import ieml
 from ...exceptions import InvalidIEMLObjectArgument
 from ...syntax import SuperSentence, Sentence, Clause, SuperClause, Text, Word, Morpheme
@@ -181,7 +182,7 @@ def _tree_graph_path_of_node(tree_graph, node):
     return AdditivePath([MultiplicativePath(_build_coord(node, mode)) for node, mode in nodes])
 
 
-def enumerate_paths(ieml_obj, level=Term):
+def enumerate_paths(ieml_obj, level=SyntaxTerm):
     for p, t in _enumerate_paths(ieml_obj, level=level):
         if len(p) == 1:
             yield p[0], t

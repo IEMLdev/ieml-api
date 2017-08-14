@@ -5,9 +5,9 @@ import functools
 
 from urllib.request import urlopen
 
-from ieml.dictionary.script.script import Script
-from ieml.parser.parser import IEMLParser
+from ieml.syntax.parser.parser import IEMLParser
 from ieml.syntax.commons import IEMLSyntax
+from ieml.syntax.terms import SyntaxTerm
 from .exceptions import InvalidIEMLObjectArgument
 from .syntax import Sentence, Clause, SuperSentence, SuperClause, Text, Word, Morpheme
 from .exceptions import CantGenerateElement
@@ -73,15 +73,16 @@ class RandomPoolIEMLObjectGenerator:
 
     @_loop_result(10)
     def term(self):
-        return random.sample(Dictionary().index, 1)[0]
+        return SyntaxTerm(random.sample(Dictionary().index, 1)[0])
 
     @_loop_result(10)
     def uniterm_word(self):
-        return Word(Morpheme(random.sample(Dictionary().index, 1)))
+        return Word(Morpheme(SyntaxTerm(random.sample(Dictionary().index, 1))))
 
     @_loop_result(10)
     def word(self):
-        return Word(Morpheme(random.sample(Dictionary().index, 3)), Morpheme(random.sample(Dictionary().index, 2)))
+        return Word(Morpheme([SyntaxTerm(t) for t in random.sample(Dictionary().index, 3)]),
+                    Morpheme([SyntaxTerm(t) for t in random.sample(Dictionary().index, 2)]))
 
     def _build_graph_object(self, primitive, mode, object, max_nodes=6):
         nodes = {primitive()}
@@ -143,9 +144,13 @@ def list_bucket(url):
 
 
 def ieml(arg):
-    if isinstance(arg, (IEMLSyntax, Term, Script)):
+    if isinstance(arg, IEMLSyntax):
         return arg
+
     if isinstance(arg, str):
         return IEMLParser().parse(arg)
+
+    if isinstance(arg, Term):
+        return SyntaxTerm(arg)
 
     raise NotImplemented

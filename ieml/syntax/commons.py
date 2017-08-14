@@ -52,6 +52,16 @@ class IEMLSyntax(TreeStructure, metaclass=IEMLSyntaxType):
         super().__init__()
         self.children = tuple(children)
 
+        if self.children:
+            dictionary_version = self.children[0].dictionary_version
+            if any(dictionary_version != c.dictionary_version for c in self.children[1:]):
+                raise InvalidIEMLObjectArgument(self.__class__, "Multiple dictionary versions for this syntax object.")
+
+            self.dictionary_version = dictionary_version
+        elif not self.dictionary_version:
+            raise InvalidIEMLObjectArgument(self.__class__, "No dictionary version specified for this syntax object.")
+
+
         _literals = []
         if literals is not None:
             if isinstance(literals, str):
@@ -64,6 +74,14 @@ class IEMLSyntax(TreeStructure, metaclass=IEMLSyntaxType):
                                                                     "str or a str."%str(literals))
 
         self.literals = tuple(_literals)
+        self._do_precompute_str()
+
+    def set_dictionary_version(self, version):
+        self.dictionary_version = version
+        for c in self.children:
+            c.set_dictionary_version(version)
+
+        self._str = None
         self._do_precompute_str()
 
     def __gt__(self, other):
@@ -87,6 +105,7 @@ class IEMLSyntax(TreeStructure, metaclass=IEMLSyntaxType):
         _literals = ''
         if self.literals:
             _literals = '<' + '><'.join(self.literals) + '>'
+
         return self.compute_str([e._compute_str() for e in self.children]) + _literals
 
     def _do_precompute_str(self):
