@@ -2,10 +2,12 @@ import random
 from collections import defaultdict, Counter
 from itertools import repeat, chain
 from unittest.case import TestCase
+
+from ieml.dictionary.version import create_dictionary_version
 from ieml.syntax.sentences import AbstractSentence, SuperSentence, Sentence
 from ieml.dictionary import Term, term
 from ieml.syntax import Text,Word
-from ieml.tools import RandomPoolIEMLObjectGenerator
+from ieml.tools import RandomPoolIEMLObjectGenerator, ieml
 from ieml.dictionary import script as sc
 from ieml.usl.tools import random_usl, replace_paths, usl
 from ieml.usl.usl import Usl
@@ -111,3 +113,17 @@ class TestUslTools(TestCase):
 
         u = random_usl(rank_type=Word)
         self.assertIsInstance(u.ieml_object, Word)
+
+class TestVersioning(TestCase):
+    def test_word_translation(self):
+        update = {
+            'terms': {
+                "n.-S:.U:.-'T:.-'T:.-',M:.-',S:.-',_": "n.-S:.U:.-'T:.-'T:.-',S:.-',M:.-',_"
+            }
+        }
+
+        v = create_dictionary_version(update=update)
+        p = ieml("[([n.-S:.U:.-'T:.-'T:.-',M:.-',S:.-',_])]")
+        p.set_dictionary_version(v)
+
+        self.assertEqual(str(p), "[([n.-S:.U:.-'T:.-'T:.-',S:.-',M:.-',_])]")

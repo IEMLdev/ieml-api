@@ -36,12 +36,39 @@ def _str_to_date(string):
     return datetime.datetime.strptime(string, '%Y-%m-%d_%H:%M:%S')
 
 
-class DictionaryVersion:
+class DictionaryVersionSingleton(type):
+    _instances = {}
+
+    def __call__(cls, *args, **kwargs):
+        date = args[0] if len(args) == 1 else kwargs['date']
+
+        if date is None:
+            date = get_configuration().get('VERSIONS', 'defaultversion')
+
+        if isinstance(date, str):
+            if date.startswith('dictionary_'):
+                date = _str_to_date(date.split('.')[0].split('_', maxsplit=1)[1])
+            else:
+                date = _str_to_date(date)
+        elif isinstance(date, datetime.date):
+            date = _str_to_date(_date_to_str(date))
+        else:
+            raise ValueError("Invalid date format for dictionary version %s." % _date_to_str(date))
+
+        if date not in cls._instances:
+            cls._instances[date] = super(DictionaryVersionSingleton, cls).__call__(date)
+
+        return cls._instances[date]
+
+
+class DictionaryVersion(metaclass=DictionaryVersionSingleton):
     """
     Track the available versions
     """
-    def __init__(self, date=None):
+    def __init__(self, date):
         super(DictionaryVersion, self).__init__()
+
+        self.date = date
 
         # A list of str. All the script defined in this dictionary.
         self.terms = None
@@ -63,19 +90,6 @@ class DictionaryVersion:
         self.diff = None
 
         self.loaded = False
-
-        if date is None:
-            date = get_configuration().get('VERSIONS', 'defaultversion')
-
-        if isinstance(date, str):
-            if date.startswith('dictionary_'):
-                self.date = self.from_file_name(date).date
-            else:
-                self.date = _str_to_date(date)
-        elif isinstance(date, datetime.date):
-            self.date = date
-        else:
-            raise ValueError("Invalid date format for dictionary version %s." % _date_to_str(date))
 
     def __str__(self):
         return 'dictionary_%s' % _date_to_str(self.date)
@@ -127,21 +141,22 @@ class DictionaryVersion:
             self.__setstate__(json.load(fp))
 
     def __eq__(self, other):
-        return str(self) == str(other)
+        return self.date == other.date
 
     def __hash__(self):
         return str(self).__hash__()
 
     def __lt__(self, other):
-        return self.date < other.date
+        return self.date.__lt__(other.date)
 
     def __gt__(self, other):
-        return self.date > other.date
+        return self.date.__gt__(other.date)
 
-    @staticmethod
-    def from_file_name(file_name):
-        date = _str_to_date(file_name.split('.')[0].split('_', maxsplit=1)[1])
-        return DictionaryVersion(date=date)
+    def __le__(self, other):
+        return self.date.__le__(other.date)
+
+    def __ge__(self, other):
+        return self.date.__ge__(other.date)
 
     @property
     def cache(self):
@@ -160,10 +175,10 @@ class DictionaryVersion:
             sc: sc for sc in older_version.terms
         }
 
-        chronology = sorted(filter(lambda v: v > older_version, (DictionaryVersion(v) for v in self.diff)))
+        chronology = sorted(filter(lambda v: v >= older_version, (DictionaryVersion(v) for v in self.diff)))
 
         for v in chronology:
-            for sc_old, sc_new in result.values():
+            for sc_old, sc_new in result.items():
                 if sc_new in self.diff[str(v)]:
                     result[sc_old] = self.diff[str(v)][sc_new]
 
@@ -343,5 +358,3 @@ def load_dictionary_from_cache(version):
 
     with open(version.cache, 'rb') as fp:
         return pickle.load(fp)
-
-

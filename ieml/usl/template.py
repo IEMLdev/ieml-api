@@ -52,7 +52,7 @@ class Template:
 
         for index in itertools.product(*tuple(range(s) for s in self.template.shape)):
             self.template[index] = replace_paths(self.model, {
-                m['path']: term(m['term'].script.singular_sequences[index[i]]) for i, m in enumerate(self.multiples)
+                m['path']: SyntaxTerm(term(m['term'].script.singular_sequences[index[i]])) for i, m in enumerate(self.multiples)
             })
 
     def get_translations(self, translation_template, mapping=None):

@@ -1,4 +1,5 @@
 from ieml.commons import TreeStructure
+from ieml.dictionary.dictionary import Dictionary
 from ieml.syntax.commons import IEMLSyntax
 
 
@@ -20,14 +21,14 @@ class SyntaxTerm(IEMLSyntax):
     __hash__ = TreeStructure.__hash__
 
     def __str__(self):
-        return str(self.term)
+        return self.term.__str__()
 
     def compute_str(self, children_str):
         return str(self)
 
     def set_dictionary_version(self, version):
-        diff = version.diff_for_version(self.term.dictionary.version)
-        self.term = diff[self.term]
+        self._str = None
+        self.term = Dictionary(version).translate_script_from_version(self.term.dictionary.version, self.term.script)
 
     def __getattr__(self, item):
         if item not in self.__dict__:

@@ -39,44 +39,29 @@ class IEMLParserSingleton(type):
     _instances = {}
 
     def __call__(cls, *args, **kwargs):
-        if len(args) > 0:
-            kwargs['dictionary'] = args[0]
-            if len(args) > 1:
-                kwargs['from_version'] = args[1]
-        args = ()
+        dictionary = args[0] if len(args) > 0 else \
+            kwargs['dictionary'] if 'dictionary' in kwargs else None
 
-        if 'dictionary' not in kwargs or not isinstance(kwargs['dictionary'], Dictionary):
+        if dictionary is None:
             dictionary = Dictionary()
-        else:
-            dictionary = kwargs['dictionary']
 
-        from_version = None
-        if 'from_version' in kwargs:
-            if isinstance(kwargs['from_version'], str):
-                from_version = DictionaryVersion(kwargs['from_version'])
-            elif not isinstance(kwargs['from_version'], DictionaryVersion):
-                raise ValueError("Invalid parameter for from_version parameter. Expected DictionaryVersion.")
-            else:
-                from_version = kwargs['from_version']
+        if not isinstance(dictionary, Dictionary):
+            dictionary = Dictionary(dictionary)
 
-        key = "%s|%s"%(str(dictionary.version), str(from_version))
-
-        if key not in cls._instances:
+        if dictionary.version not in cls._instances:
             # this code is to clean up duplicate class if we reload modules
-            cls._instances[key] = super(IEMLParserSingleton, cls).__call__(*(), **{
-                'dictionary': dictionary,
-                'from_version': from_version
-            })
+            cls._instances[dictionary.version] = \
+                super(IEMLParserSingleton, cls).__call__(dictionary=dictionary)
 
-        return cls._instances[key]
+        return cls._instances[dictionary.version]
 
 
 class IEMLParser(metaclass=IEMLParserSingleton):
     tokens = tokens
 
-    def __init__(self, dictionary=None, from_version=None):
+    def __init__(self, dictionary=None):
 
-        self._get_term = partial(term, dictionary=dictionary, from_version=from_version)
+        self._get_term = partial(term, dictionary=dictionary)
 
         # Build the lexer and parser
         self.lexer = get_lexer()

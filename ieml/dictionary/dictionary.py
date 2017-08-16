@@ -180,3 +180,6 @@ class Dictionary(metaclass=DictionarySingleton):
         else:
             self.version = DictionaryVersion(state['version'])
         self._populate(scripts=state['scripts'], relations=state['relations'])
+
+    def translate_script_from_version(self, version, old_script):
+        return self.terms[script(self.version.diff_for_version(version)[old_script])]
