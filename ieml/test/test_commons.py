@@ -114,6 +114,7 @@ class TestUslTools(TestCase):
         u = random_usl(rank_type=Word)
         self.assertIsInstance(u.ieml_object, Word)
 
+
 class TestVersioning(TestCase):
     def test_word_translation(self):
         update = {

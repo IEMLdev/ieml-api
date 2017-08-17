@@ -24,6 +24,8 @@ MAX_SINGULAR_SEQUENCES = 360
 MAX_SIZE_HEADER = 12
 MAX_LAYER = 6
 
+# max number of terms (arbitrary, this value was chosen for allocate the node id range for drupal)
+MAX_TERMS_IN_DICTIONARY = 18999
 
 LAYER_MARKS = [
     ':',
