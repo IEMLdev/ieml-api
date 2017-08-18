@@ -8,6 +8,7 @@ from urllib.request import urlopen
 from ieml.syntax.parser.parser import IEMLParser
 from ieml.syntax.commons import IEMLSyntax
 from ieml.syntax.terms import SyntaxTerm
+from ieml.dictionary.version import get_default_dictionary_version
 from .exceptions import InvalidIEMLObjectArgument
 from .syntax import Sentence, Clause, SuperSentence, SuperClause, Text, Word, Morpheme
 from .exceptions import CantGenerateElement
@@ -143,14 +144,24 @@ def list_bucket(url):
     return [v['{http://s3.amazonaws.com/doc/2006-03-01/}Key'] for v in all_versions]
 
 
-def ieml(arg):
+def ieml(arg, dictionary_version=None):
+    if not dictionary_version:
+        dictionary_version = get_default_dictionary_version()
+
     if isinstance(arg, IEMLSyntax):
+        if arg.dictionary_version != dictionary_version:
+            arg.set_dictionary_version(dictionary_version)
+
         return arg
 
     if isinstance(arg, str):
-        return IEMLParser().parse(arg)
+        return IEMLParser(Dictionary(dictionary_version)).parse(arg)
 
     if isinstance(arg, Term):
-        return SyntaxTerm(arg)
+        arg = SyntaxTerm(arg)
+        if arg.dictionary_version != dictionary_version:
+            arg.set_dictionary_version(dictionary_version)
+
+        return arg
 
     raise NotImplemented
