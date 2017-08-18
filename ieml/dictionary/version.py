@@ -6,6 +6,7 @@ import datetime
 import urllib.parse
 import json
 import os
+import re
 
 from ieml.dictionary.relations import RelationsGraph
 from .. import get_configuration, ieml_folder
@@ -44,6 +45,9 @@ class DictionaryVersionSingleton(type):
 
         if date is None:
             date = get_configuration().get('VERSIONS', 'defaultversion')
+
+        if isinstance(date, DictionaryVersion):
+            return date
 
         if isinstance(date, str):
             if date.startswith('dictionary_'):
@@ -184,10 +188,30 @@ class DictionaryVersion(metaclass=DictionaryVersionSingleton):
 
         return result
 
-_default_version = None
+
+def _latest_installed_version():
+    version_file_pattern = re.compile("^dictionary_\d{4}-\d{2}-\d{2}_\d{2}:\d{2}:\d{2}\.json")
+
+    all_versions = sorted((file for file in os.listdir(VERSIONS_FOLDER) if version_file_pattern.match(file)))
+
+    if all_versions:
+        return DictionaryVersion(all_versions[-1])
+    else:
+        return None
+
+
+_default_version = _latest_installed_version()
 
 
 def get_default_dictionary_version():
+    """
+    Return the default dictionary version. The version is the latest version installed on
+    the system. If there is none installed yet, it download and install the latest version
+    available online.
+    To upgrade to a newer version, you can run `set_default_dictionary_version(latest_dictionary_version())`
+
+    :return: the default dictionary version
+    """
     if _default_version is None:
         set_default_dictionary_version(latest_dictionary_version())
 
@@ -198,6 +222,7 @@ def set_default_dictionary_version(version):
     global _default_version
     if not isinstance(version, DictionaryVersion):
         version = DictionaryVersion(version)
+
     _default_version = version
 
 

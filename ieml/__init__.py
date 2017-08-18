@@ -54,6 +54,7 @@ init_logging(_config)
 def get_configuration():
     return _config
 
+
 from . import tools
 from . import exceptions
 from . import constants
