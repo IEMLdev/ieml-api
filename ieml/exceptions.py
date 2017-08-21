@@ -87,3 +87,11 @@ class TermNotFoundInDictionary(Exception):
 
     def __str__(self):
         return self.message
+
+
+class ScriptNotDefinedInVersion(Exception):
+    def __init__(self, script, version):
+        self.message = "Script {1} not defined in the dictionary version {1}".format(str(script), str(version))
+
+    def __str__(self):
+        return self.message

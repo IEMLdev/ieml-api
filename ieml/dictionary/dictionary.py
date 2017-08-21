@@ -4,6 +4,7 @@ from ieml.commons import cached_property
 from ieml.dictionary.relations import RelationsGraph
 from ieml.dictionary.table import Cell, table_class
 from ieml.dictionary.version import save_dictionary_to_cache, load_dictionary_from_cache
+from ieml.exceptions import TermNotFoundInDictionary, ScriptNotDefinedInVersion
 from .version import DictionaryVersion, get_default_dictionary_version
 from ..constants import MAX_LAYER
 from .script import script
@@ -182,4 +183,14 @@ class Dictionary(metaclass=DictionarySingleton):
         self._populate(scripts=state['scripts'], relations=state['relations'])
 
     def translate_script_from_version(self, version, old_script):
-        return self.terms[script(self.version.diff_for_version(version)[old_script])]
+        diff = self.version.diff_for_version(version)
+
+        try:
+            new_script = script(diff[old_script])
+        except KeyError:
+            raise ScriptNotDefinedInVersion(old_script, version)
+
+        try:
+            return self.terms[new_script]
+        except KeyError:
+            raise TermNotFoundInDictionary(new_script, self)

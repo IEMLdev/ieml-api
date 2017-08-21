@@ -1,6 +1,7 @@
 import copy
 import logging
 import pickle
+from functools import lru_cache
 from urllib.request import urlretrieve
 import datetime
 import urllib.parse
@@ -171,6 +172,7 @@ class DictionaryVersion(metaclass=DictionaryVersionSingleton):
     def is_cached(self):
         return os.path.isfile(self.cache)
 
+    @lru_cache(5)
     def diff_for_version(self, older_version):
         older_version.load()
         self.load()
