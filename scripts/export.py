@@ -6,6 +6,7 @@ import string
 from collections import defaultdict
 
 import progressbar
+from bidict._bidict import bidict
 
 from ieml.ieml_objects.terms.relations import INVERSE_RELATIONS
 
@@ -13,7 +14,7 @@ from ieml.commons import GRAMMATICAL_CLASS_NAMES
 
 from ieml.ieml_objects.terms import Dictionary, term as _term
 
-MAX_TERMS_DICTIONARY = 50000
+MAX_TERMS_DICTIONARY = 19999
 _drupal_utils = None
 
 
@@ -40,9 +41,9 @@ def _get_drupal_utils():
         _drupal_utils = {
             'drupal_dico': [ieml_term_model(t) for t in Dictionary()]
         }
-        _drupal_utils['all_uuid'] = {
+        _drupal_utils['all_uuid'] = bidict({
                 d['IEML']: 1000 + int(hashlib.sha1(d['IEML'].encode()).hexdigest(), 16) % MAX_TERMS_DICTIONARY for d in _drupal_utils['drupal_dico']
-        }
+        })
 
     return _drupal_utils
 
