@@ -5,6 +5,8 @@ import functools
 
 from urllib.request import urlopen
 
+from ieml.exceptions import CannotParse
+
 from ieml.syntax.parser.parser import IEMLParser
 from ieml.syntax.commons import IEMLSyntax
 from ieml.syntax.terms import SyntaxTerm
@@ -34,9 +36,10 @@ def _loop_result(max_try):
 
 
 class RandomPoolIEMLObjectGenerator:
-    def __init__(self, level=Text, pool_size=20):
+    def __init__(self, level=Text, pool_size=20, dictionary_version=None):
         self.level = level
         self.pool_size = pool_size
+        self.dictionary_version = dictionary_version
 
         if level > Text:
             raise ValueError('Cannot generate object higher than a Text.')
@@ -74,16 +77,16 @@ class RandomPoolIEMLObjectGenerator:
 
     @_loop_result(10)
     def term(self):
-        return SyntaxTerm(random.sample(Dictionary().index, 1)[0])
+        return SyntaxTerm(random.sample(Dictionary(self.dictionary_version).index, 1)[0])
 
     @_loop_result(10)
     def uniterm_word(self):
-        return Word(Morpheme(SyntaxTerm(random.sample(Dictionary().index, 1))))
+        return Word(Morpheme(SyntaxTerm(random.sample(Dictionary(self.dictionary_version).index, 1))))
 
     @_loop_result(10)
     def word(self):
-        return Word(Morpheme([SyntaxTerm(t) for t in random.sample(Dictionary().index, 3)]),
-                    Morpheme([SyntaxTerm(t) for t in random.sample(Dictionary().index, 2)]))
+        return Word(Morpheme([SyntaxTerm(t) for t in random.sample(Dictionary(self.dictionary_version).index, 3)]),
+                    Morpheme([SyntaxTerm(t) for t in random.sample(Dictionary(self.dictionary_version).index, 2)]))
 
     def _build_graph_object(self, primitive, mode, object, max_nodes=6):
         nodes = {primitive()}
@@ -155,7 +158,10 @@ def ieml(arg, dictionary_version=None):
         return arg
 
     if isinstance(arg, str):
-        return IEMLParser(Dictionary(dictionary_version)).parse(arg)
+        try:
+            return IEMLParser(Dictionary(dictionary_version)).parse(arg)
+        except CannotParse as e:
+            raise InvalidIEMLObjectArgument(IEMLSyntax, str(e))
 
     if isinstance(arg, Term):
         arg = SyntaxTerm(arg)
