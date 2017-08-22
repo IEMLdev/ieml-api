@@ -1,6 +1,7 @@
 from functools import singledispatch
 
 from ieml.exceptions import TermNotFoundInDictionary
+from ieml.syntax.terms import SyntaxTerm
 from .version import DictionaryVersion
 from .script import Script
 from .terms import Term
@@ -35,3 +36,8 @@ def _term_str(arg, dictionary=None):
 
 
     return dictionary.terms[arg]
+
+
+@_term.register(SyntaxTerm)
+def _term_syntax(arg, dictionary):
+    return arg.term
