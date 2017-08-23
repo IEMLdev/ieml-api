@@ -1,5 +1,7 @@
+from multiprocessing.dummy import Pool as ThreadPool
 import unittest
 from ieml.dictionary.dictionary import Dictionary
+from ieml.dictionary.script.operator import script
 
 from ieml.exceptions import TermNotFoundInDictionary, CannotParse
 from ieml.syntax.parser.parser import IEMLParser
@@ -76,3 +78,11 @@ class TestPropositionParser(unittest.TestCase):
 
     def test_parse_script(self):
         self.assertEqual(str(self.parser.parse("A:")), '[A:]')
+
+    def test_threading(self):
+        pool = ThreadPool(4)
+        results = pool.map(self.parser.parse, Dictionary().version.terms)
+        self.assertSetEqual({str(t) for t in results}, {'[{0}]'.format(str(t)) for t in Dictionary().version.terms})
+
+        results = pool.map(script, Dictionary().version.terms)
+        self.assertSetEqual({str(t) for t in results}, set(Dictionary().version.terms))

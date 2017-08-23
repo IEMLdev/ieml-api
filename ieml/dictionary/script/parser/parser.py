@@ -13,10 +13,14 @@ from ....commons import Singleton
 from .lexer import get_script_lexer, tokens
 
 from .... import parser_folder
+import threading
 
 
 class ScriptParser(metaclass=Singleton):
     tokens = tokens
+
+    # ply have an internal state , then we forbid two thread try to parse a string simultaneously
+    lock = threading.Lock()
 
     def __init__(self):
         self.t_add_rules()
@@ -29,10 +33,11 @@ class ScriptParser(metaclass=Singleton):
 
     @lru_cache(maxsize=10000)
     def t_parse(self, s):
-        try:
-            return self.parser.parse(s, lexer=self.lexer)
-        except InvalidScript as e:
-            raise CannotParse(s, str(e))
+        with self.lock:
+            try:
+                return self.parser.parse(s, lexer=self.lexer)
+            except InvalidScript as e:
+                raise CannotParse(s, str(e))
 
     def p_error(self, p):
         if p:

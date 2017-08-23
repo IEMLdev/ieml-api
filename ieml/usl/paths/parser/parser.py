@@ -1,5 +1,6 @@
 import logging
 from functools import lru_cache
+import threading
 
 from ply import yacc
 
@@ -11,6 +12,7 @@ from ....commons import Singleton
 
 class PathParser(metaclass=Singleton):
     tokens = tokens
+    lock = threading.Lock()
 
     def __init__(self):
 
@@ -26,11 +28,12 @@ class PathParser(metaclass=Singleton):
         """Parses the input string, and returns a reference to the created AST's root"""
         # self.root = None
         # self.path = s
-        try:
-            return self.parser.parse(s, lexer=self.lexer, debug=False)
-        except CannotParse as e:
-            e.s = s
-            raise e
+        with self.lock:
+            try:
+                return self.parser.parse(s, lexer=self.lexer, debug=False)
+            except CannotParse as e:
+                e.s = s
+                raise e
 
         # if self.root is not None:
         #     if len(self.root.children) == 1:

@@ -1,6 +1,7 @@
 import logging
 import os
 import ply.yacc as yacc
+import threading
 
 from ieml import parser_folder
 from ieml.exceptions import CannotParse
@@ -12,6 +13,7 @@ from ieml.commons import Singleton
 
 class USLParser(metaclass=Singleton):
     tokens = tokens
+    lock = threading.Lock()
 
     def __init__(self):
 
@@ -24,11 +26,12 @@ class USLParser(metaclass=Singleton):
         """Parses the input string, and returns a reference to the created AST's root"""
         # self.usl = s
         # self.root = None
-        try:
-            return self.parser.parse(s, lexer=self.lexer)
-        except CannotParse as e:
-            e.s = s
-            raise e
+        with self.lock:
+            try:
+                return self.parser.parse(s, lexer=self.lexer)
+            except CannotParse as e:
+                e.s = s
+                raise e
 
         #
         # if self.root is not None:

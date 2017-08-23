@@ -14,7 +14,7 @@ from ...exceptions import CannotParse
 from ieml.syntax import Word, Morpheme, Clause, SuperClause, Sentence, SuperSentence, Text, Hypertext, Hyperlink, PropositionPath
 
 from .lexer import get_lexer, tokens
-
+import threading
 
 def _add(lp1, p2):
     return lp1[0] + [p2[0]], lp1[1] + p2[1]
@@ -58,6 +58,7 @@ class IEMLParserSingleton(type):
 
 class IEMLParser(metaclass=IEMLParserSingleton):
     tokens = tokens
+    lock = threading.Lock()
 
     def __init__(self, dictionary=None):
 
@@ -74,14 +75,14 @@ class IEMLParser(metaclass=IEMLParserSingleton):
         # self._ieml = s
         # self.root = None
         # self.hyperlinks = []
-
-        try:
-            return self.parser.parse(s, lexer=self.lexer)
-        except InvalidIEMLObjectArgument as e:
-            raise CannotParse(s, str(e))
-        except CannotParse as e:
-            e.s = s
-            raise e
+        with self.lock:
+            try:
+                return self.parser.parse(s, lexer=self.lexer)
+            except InvalidIEMLObjectArgument as e:
+                raise CannotParse(s, str(e))
+            except CannotParse as e:
+                e.s = s
+                raise e
 
             # if self.root is not None:
         #     if self.hyperlinks:
