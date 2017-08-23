@@ -8,7 +8,7 @@ from ieml.exceptions import TermNotFoundInDictionary, ScriptNotDefinedInVersion
 from .version import DictionaryVersion, get_default_dictionary_version
 from ..constants import MAX_LAYER
 from .script import script
-
+import threading
 from ieml import get_configuration
 import gc
 
@@ -18,6 +18,9 @@ logger = logging.getLogger(__name__)
 
 class DictionarySingleton(type):
     _instance = None
+
+    # Forbid multiple dictionary creation in parallel
+    lock = threading.Lock()
 
     def __call__(cls, *args, **kwargs):
         if len(args) < 1 or not isinstance(args[0], (DictionaryVersion, str)):
@@ -29,23 +32,21 @@ class DictionarySingleton(type):
         else:
             raise ValueError("Invalid argument for dictionary creation, expected dictionary version, not %s"%str(args[0]))
 
-        if cls._instance is None or cls._instance.version != version:
+        with cls.lock:
+            if cls._instance is None or cls._instance.version != version:
 
-            if cls._instance is not None:
-                # otherwise memory leak
-                # for t in cls._instance.index:
-                #     del t.__dict__
-                del cls._instance
-                gc.collect()
+                if cls._instance is not None:
+                    del cls._instance
+                    gc.collect()
 
-            # check cache
-            if not version.is_cached or not USE_CACHE:
-                cls._instance = super(DictionarySingleton, cls).__call__(version, **kwargs)
+                # check cache
+                if not version.is_cached or not USE_CACHE:
+                    cls._instance = super(DictionarySingleton, cls).__call__(version, **kwargs)
 
-                if USE_CACHE:
-                    save_dictionary_to_cache(cls._instance)
-            else:
-                cls._instance = load_dictionary_from_cache(version)
+                    if USE_CACHE:
+                        save_dictionary_to_cache(cls._instance)
+                else:
+                    cls._instance = load_dictionary_from_cache(version)
 
         return cls._instance
 
