@@ -16,7 +16,7 @@ class WordsTest(unittest.TestCase):
         self.assertEqual(str(a), str(b))
 
     def test_word_instanciation(self):
-        with self.assertRaises(CannotParse):
+        with self.assertRaises(InvalidIEMLObjectArgument):
             # "Too many singular sequences"
             ieml("[([O:M:.]+[wa.]+[M:M:.])*([O:O:.M:O:.-])]")
 
