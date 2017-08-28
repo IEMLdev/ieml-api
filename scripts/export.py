@@ -8,11 +8,11 @@ from collections import defaultdict
 import progressbar
 from bidict._bidict import bidict
 
-from ieml.ieml_objects.terms.relations import INVERSE_RELATIONS
+from ieml.dictionary.terms.relations import INVERSE_RELATIONS
 
 from ieml.commons import GRAMMATICAL_CLASS_NAMES
 
-from ieml.ieml_objects.terms import Dictionary, term as _term
+from ieml.dictionary.terms import Dictionary, term as _term
 
 MAX_TERMS_DICTIONARY = 19999
 _drupal_utils = None
