@@ -1,4 +1,5 @@
 # IEML python implementation
+[![Build Status](https://travis-ci.org/IEMLdev/ieml.svg?branch=master)](https://travis-ci.org/IEMLdev/ieml)
 
 IEML is an artificial natural language created by the french philosopher Pierre Levy [blog](https://pierrelevyblog.com/).
 The key idea is to define a unique representation for meaning, that is easily manipulated by an algorithm.
