@@ -1,6 +1,8 @@
 import logging
 from collections import namedtuple
+import re
 
+from ieml.constants import PHONETIC_PUNCTUATION
 from ..commons import cached_property
 from ..constants import LANGUAGES
 from .script import script as _script
@@ -113,3 +115,7 @@ class Term:
 
     def __iter__(self):
         return self.singular_sequences.__iter__()
+
+    @property
+    def phonetic(self):
+        return re.sub('[^a-zA-Z]', '', self.__str__()) + PHONETIC_PUNCTUATION[self.layer]
