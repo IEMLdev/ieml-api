@@ -38,6 +38,10 @@ def _str_to_date(string):
     return datetime.datetime.strptime(string, '%Y-%m-%d_%H:%M:%S')
 
 
+def version_name(date):
+    return "dictionary_{0}".format(_date_to_str(date))
+
+
 class DictionaryVersionSingleton(type):
     _instances = {}
 
@@ -94,10 +98,14 @@ class DictionaryVersion(metaclass=DictionaryVersionSingleton):
         # The change must be applied in chronological order (from the old version to new one)
         self.diff = None
 
+        # A edition history
+        # version str -> term str -> '+' if added in this version or '-' if removed in this version
+        self.history = None
+
         self.loaded = False
 
     def __str__(self):
-        return 'dictionary_%s' % _date_to_str(self.date)
+        return version_name(self.date)
 
     def __getstate__(self):
         self.load()
@@ -118,6 +126,8 @@ class DictionaryVersion(metaclass=DictionaryVersionSingleton):
         self.inhibitions = state['inhibitions']
         self.translations = state['translations']
         self.diff = state['diff'] if 'diff' in state else {}
+
+        self.history = state['history'] if 'history' in state else {str(self): {t: '+' for t in self.terms}}
 
         self.loaded = True
 
@@ -190,6 +200,10 @@ class DictionaryVersion(metaclass=DictionaryVersionSingleton):
 
         return result
 
+    # def get_terms_sorted_by_creation_time(self):
+    #     for v in sorted(self.history):
+    #         self.history[v]
+    #     return sorted(self.terms, sort)
 
 def _latest_installed_version():
     version_file_pattern = re.compile("^dictionary_\d{4}-\d{2}-\d{2}_\d{2}:\d{2}:\d{2}\.json")
@@ -249,6 +263,8 @@ def create_dictionary_version(old_version=None, add=None, update=None, remove=No
         if new_date != last_date:
             break
 
+    new_version_name = version_name(new_date)
+
     if old_version is None:
         old_version = v
 
@@ -261,7 +277,9 @@ def create_dictionary_version(old_version=None, add=None, update=None, remove=No
         'inhibitions': copy.deepcopy(old_version.inhibitions),
         'translations': copy.deepcopy(old_version.translations),
         'diff': {**copy.deepcopy(old_version.diff),
-                 str(old_version): {}}
+                 str(old_version): {}},
+        'history': {**copy.deepcopy(old_version.history),
+                    new_version_name: {}}
     }
 
     # if merge is not None:
@@ -289,12 +307,19 @@ def create_dictionary_version(old_version=None, add=None, update=None, remove=No
                     del state['translations'][l][r]
 
             state['diff'][str(old_version)][r] = None
+            state['history'][new_version_name][r] = '-'
 
     if add is not None:
         if 'terms' in add:
             state['terms'] = list(set(state['terms']).union(add['terms']))
+            for t in add['terms']:
+                state['history'][new_version_name][t] = '+'
+
         if 'roots' in add:
             state['roots'] = list(set(state['roots']).union(add['roots']))
+            for t in add['roots']:
+                state['history'][new_version_name][t] = '+'
+
         if 'inhibitions' in add:
             if set(state['inhibitions']).intersection(set(add['inhibitions'])):
                 raise ValueError("Error in creating a new dictionary versions, trying to add multiples "
@@ -319,6 +344,7 @@ def create_dictionary_version(old_version=None, add=None, update=None, remove=No
             state['translations'] = {l: {**state['translations'][l], **update['translations'][l]} for l in LANGUAGES}
 
         if 'terms' in update:
+
             state['terms'] = set(t for t in state['terms'] if t not in update['terms'])
 
             roots = set(state['roots']).intersection(update['terms'])
@@ -326,6 +352,10 @@ def create_dictionary_version(old_version=None, add=None, update=None, remove=No
 
             for t_old in update['terms']:
                 t_new = update['terms'][t_old]
+
+                # a modify is like an add and delete.
+                state['history'][new_version_name][t_old] = '-'
+                state['history'][new_version_name][t_new] = '+'
 
                 state['diff'][str(old_version)][t_old] = t_new
                 state['terms'].add(t_new)
