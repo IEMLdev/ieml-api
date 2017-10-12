@@ -1,5 +1,7 @@
 from itertools import islice
 
+from ieml.commons import cached_property
+
 from ieml.syntax.terms import SyntaxTerm
 from ..constants import LANGUAGES
 from ..dictionary import Term
@@ -51,3 +53,7 @@ class Usl:
 
     def objects(self, type):
         return set(self.rules(type).values())
+
+    @cached_property
+    def glossary(self):
+        return set(self.rules(Term).values())
