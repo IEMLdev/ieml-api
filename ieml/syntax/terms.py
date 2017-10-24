@@ -38,5 +38,8 @@ class SyntaxTerm(IEMLSyntax):
         return isinstance(other, self.__class__) and self.index == other.index
 
     def __gt__(self, other):
+        if self.__class__ != other.__class__:
+            return self.__class__ > other.__class__
+
         return self.index > other.index
 

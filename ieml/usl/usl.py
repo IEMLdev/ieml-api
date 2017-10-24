@@ -1,6 +1,10 @@
 from itertools import islice
 
+from ieml.commons import cached_property
+from ieml.syntax.commons import IEMLSyntax
+
 from ieml.syntax.terms import SyntaxTerm
+from ieml.syntax.words import Word
 from ..constants import LANGUAGES
 from ..dictionary import Term
 from .paths import Path, enumerate_paths, resolve
@@ -51,3 +55,23 @@ class Usl:
 
     def objects(self, type):
         return set(self.rules(type).values())
+
+    @property
+    def glossary(self):
+        return {t.term for t in self.rules(SyntaxTerm).values()}
+
+    @property
+    def topics(self):
+        return set(w for w in self.rules(Word).values() if not w.is_term)
+
+    def __contains__(self, item):
+        if isinstance(item, (IEMLSyntax, Term)):
+            return item in self.rules(item.__class__).values()
+
+        raise ValueError("Invalid object type, must be a Term or a IEMLSyntax object.")
+
+    def __lt__(self, other):
+        if isinstance(other, Usl):
+            return self.ieml_object < other.ieml_object
+
+        raise NotImplemented()

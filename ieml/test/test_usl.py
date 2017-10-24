@@ -1,5 +1,6 @@
 import random
 import unittest
+from ieml.dictionary import Dictionary
 
 from ieml.syntax import Sentence, Text, Word, SuperSentence
 from ieml.tools import RandomPoolIEMLObjectGenerator, ieml
@@ -46,6 +47,14 @@ class TestUsl(unittest.TestCase):
     def test_equality(self):
         ieml = RandomPoolIEMLObjectGenerator(level=Text).text()
         self.assertEqual(Usl(ieml_object=ieml), Usl(ieml_object=ieml))
+
+    def test_glossary(self):
+        txt = random_usl(Text)
+        self.assertTrue(all(t in Dictionary() for t in txt.glossary))
+        self.assertTrue(all(t in txt for t in txt.glossary))
+
+        with self.assertRaises(ValueError):
+            'test' in txt
 
 
 class TextUslTools(unittest.TestCase):

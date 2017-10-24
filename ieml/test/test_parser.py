@@ -86,3 +86,4 @@ class TestPropositionParser(unittest.TestCase):
 
         results = pool.map(script, Dictionary().version.terms)
         self.assertSetEqual({str(t) for t in results}, set(Dictionary().version.terms))
+
