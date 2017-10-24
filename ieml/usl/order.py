@@ -115,3 +115,14 @@ def display_ranking(w0, word_list):
             print('\t %s'%str(w))
 
 
+if __name__ == '__main__':
+    from pymongo import MongoClient
+    from ieml.tools import ieml
+
+    usls_collection = MongoClient().intlekt.usl
+    words = [{**dict(u), 'ieml': ieml(u['ieml'])} for u in usls_collection.find({"_cls": "USL.Word"})]
+
+    display_ranking(words[0]['ieml'], [w['ieml'] for w in words[1:]])
+
+    print(words)
+
