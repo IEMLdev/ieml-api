@@ -3,7 +3,7 @@ from ieml.syntax.terms import SyntaxTerm
 from .commons import IEMLSyntax
 from ..exceptions import InvalidIEMLObjectArgument
 from ..constants import MAX_SINGULAR_SEQUENCES, MORPHEME_SIZE_LIMIT
-
+import numpy
 
 class Morpheme(IEMLSyntax):
     def __init__(self, children):
@@ -97,3 +97,7 @@ class Word(IEMLSyntax):
             term = SyntaxTerm(term)
 
         return Word(root=Morpheme(term))
+
+    def vector(self):
+        return numpy.array([t.index for t in self.root] + [0] * (MORPHEME_SIZE_LIMIT - len(self.root)) + \
+                           [t.index for t in self.flexing] + [0] * (MORPHEME_SIZE_LIMIT - len(self.flexing)))

@@ -58,10 +58,20 @@ class Usl:
 
     @property
     def glossary(self):
-        return set(self.rules(Term).values())
+        return {t.term for t in self.rules(SyntaxTerm).values()}
+
+    @property
+    def topics(self):
+        return set(w for w in self.rules(Word).values() if not w.is_term)
 
     def __contains__(self, item):
         if isinstance(item, (IEMLSyntax, Term)):
             return item in self.rules(item.__class__).values()
 
         raise ValueError("Invalid object type, must be a Term or a IEMLSyntax object.")
+
+    def __lt__(self, other):
+        if isinstance(other, Usl):
+            return self.ieml_object < other.ieml_object
+
+        raise NotImplemented()

@@ -51,6 +51,10 @@ class TestUsl(unittest.TestCase):
     def test_glossary(self):
         txt = random_usl(Text)
         self.assertTrue(all(t in Dictionary() for t in txt.glossary))
+        self.assertTrue(all(t in txt for t in txt.glossary))
+
+        with self.assertRaises(ValueError):
+            'test' in txt
 
 
 class TextUslTools(unittest.TestCase):
