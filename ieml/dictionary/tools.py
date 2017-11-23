@@ -31,9 +31,11 @@ _term.register(Script, lambda arg, dictionary: dictionary.terms[arg])
 
 @_term.register(str)
 def _term_str(arg, dictionary=None):
+    if not arg:
+        raise TermNotFoundInDictionary(arg, dictionary)
+
     if arg[0] == '[' and arg[-1] == ']':
         arg = arg[1:-1]
-
 
     return dictionary.terms[arg]
 

@@ -1,5 +1,7 @@
 import logging
 from collections import defaultdict
+from itertools import groupby
+
 from ieml.commons import cached_property
 from ieml.dictionary.relations import RelationsGraph
 from ieml.dictionary.table import Cell, table_class
@@ -17,13 +19,18 @@ logger = logging.getLogger(__name__)
 
 
 class DictionarySingleton(type):
+    """
+    This metaclass implements a singleton design pattern.
+    It also ensure that only one dictionary version lives in memory at a time.
+    """
+
     _instance = None
 
     # Forbid multiple dictionary creation in parallel
     lock = threading.Lock()
 
     def __call__(cls, *args, **kwargs):
-        if len(args) < 1 or not isinstance(args[0], (DictionaryVersion, str)):
+        if len(args) < 1:
             version = get_default_dictionary_version()
         elif isinstance(args[0], DictionaryVersion):
             version = args[0]
@@ -52,6 +59,13 @@ class DictionarySingleton(type):
 
 
 class Dictionary(metaclass=DictionarySingleton):
+    """
+    The dictionary is responsible of the instantiation of the Terms that are specified in a DictionaryVersion object.
+    The dictionary hold a reference to all the Script object 
+    He have a reference on all the couple (ScriptTerms
+    """
+
+
     def __init__(self, version=None):
         super().__init__()
 
@@ -60,9 +74,14 @@ class Dictionary(metaclass=DictionarySingleton):
 
         self.version = version
 
-        # buildable elements
+        # populated attributes
+        # a list of all the Script defined in this dictionary
         self.scripts = None
+
+        # a dictionary mapping each script to his term
         self.terms = None
+
+        # the root
         self.roots = None
         self.inhibitions = None
         self.index = None
@@ -72,17 +91,14 @@ class Dictionary(metaclass=DictionarySingleton):
         logger.log(logging.INFO, "Dictionary loaded (version: %s, nb_roots: %d, nb_terms: %d)"%
               (str(self.version), len(self.roots), len(self)))
 
-    @cached_property
+    @property
     def translations(self):
         return self.version.translations
 
-    @cached_property
+    @property
     def layers(self):
-        _layers = [[] for _ in range(MAX_LAYER + 1)]
-        for t in self.index:
-            _layers[t.script.layer].append(t)
-
-        return _layers
+        # index is already ordered by layer
+        return [list(g) for k, g in groupby(self.index, key=lambda t: t.layer)]
 
     def __len__(self):
         return len(self.terms)

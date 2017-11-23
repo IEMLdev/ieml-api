@@ -3,7 +3,7 @@ from ieml.exceptions import InvalidIEMLObjectArgument
 
 
 class IEMLSyntaxType(type):
-    """This metaclass enables the comparison of class times, such as (Sentence > Word) == True"""
+    """This metaclass enables the comparison of class types, such as (Sentence > Word) == True"""
 
     def __init__(cls, name, bases, dct):
         child_list = ['SyntaxTerm', 'Morpheme', 'Word', 'Clause', 'Sentence',

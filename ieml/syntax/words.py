@@ -18,7 +18,7 @@ class Morpheme(IEMLSyntax):
         if not 0 < len(_children) <= MORPHEME_SIZE_LIMIT:
             raise InvalidIEMLObjectArgument(Morpheme, "Invalid terms count %d."%len(_children))
 
-        if not all((isinstance(e, SyntaxTerm) for e in _children)):
+        if not all((isinstance(e, Script) for e in _children)):
             raise InvalidIEMLObjectArgument(Morpheme, "%s do not contain only SyntaxTerm instances."%(str(_children)))
 
         # check singular sequences intersection

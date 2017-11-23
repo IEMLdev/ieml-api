@@ -83,7 +83,7 @@ class NoRemarkableSiblingForAdditiveScript(Exception):
 
 class TermNotFoundInDictionary(Exception):
     def __init__(self, term, dictionary):
-        self.message = "Cannot find term %s in the dictionary %s" % (str(term), str(dictionary.version))
+        self.message = 'Cannot find term "{0}" in the dictionary {1}'.format(str(term), str(dictionary.version))
 
     def __str__(self):
         return self.message
