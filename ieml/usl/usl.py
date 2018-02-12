@@ -64,6 +64,10 @@ class Usl:
     def topics(self):
         return set(w for w in self.rules(Word).values() if not w.is_term)
 
+    @property
+    def topics_words(self):
+        return set(w for w in self.rules(Word).values())
+
     def __contains__(self, item):
         if isinstance(item, (IEMLSyntax, Term)):
             return item in self.rules(item.__class__).values()
