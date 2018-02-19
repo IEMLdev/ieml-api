@@ -219,7 +219,11 @@ class DictionaryVersion(metaclass=DictionaryVersionSingleton):
         for phon, l_t in phonetic_to_terms.items():
             if len(l_t) > 1:
                 for i, c in enumerate(sorted(l_t, key=lambda c: (c[0], LAYER_MARKS.index(c[1][-1])))):
-                    result[phon + "." + str(i)] = c[1]
+                    _key = phon
+                    if i > 0:
+                        _key = _key + "." + str(i)
+
+                    result[_key] = c[1]
             else:
                 result[phon] = l_t[0][1]
 
