@@ -166,11 +166,6 @@ class RelationsGraph:
         logger.log(logging.DEBUG, "Computing contains/contained relations")
         # contain/contained
 
-        # contains = coo_matrix(
-        #     ([True]*len(self.dictionary), (, list(range(len(self.dictionary))))),
-        #     shape=(len(self.dictionary), len(self.dictionary)), dtype=np.bool)
-        #     # np.diag(np.ones(len(self.dictionary), dtype=np.bool))
-
         i = list(range(len(self.dictionary)))
         j = list(range(len(self.dictionary)))
         for r_p, v in self.dictionary.roots.items():
@@ -246,8 +241,6 @@ class RelationsGraph:
                    _opposed_sibling(s0.children[0], s1.children[0]) and \
                    _opposed_sibling(s0.children[1], s1.children[1])
 
-        # siblings = coo_matrix((4, len(self.dictionary), len(self.dictionary)), dtype=np.bool)
-
         siblings = [([], []) for _ in range(4)]
 
         logger.log(logging.DEBUG, "Computing siblings relations")
@@ -293,8 +286,6 @@ class RelationsGraph:
                         index0, index1 = list(zip(*permutations(twin_indexes, r=2)))
                         siblings[3][0].extend(index0)
                         siblings[3][1].extend(index1)
-
-                    # siblings[3, index0, index1] = True
 
         return [coo_matrix(([True]*len(i), (i, j)), shape=self.shape, dtype=np.bool) for i, j in siblings]
 

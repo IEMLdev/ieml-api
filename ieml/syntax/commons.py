@@ -6,7 +6,7 @@ class IEMLSyntaxType(type):
     """This metaclass enables the comparison of class times, such as (Sentence > Word) == True"""
 
     def __init__(cls, name, bases, dct):
-        child_list = ['Morpheme', 'Word', 'Clause', 'Sentence',
+        child_list = ['SyntaxTerm', 'Morpheme', 'Word', 'Clause', 'Sentence',
                       'SuperClause', 'SuperSentence', 'Text',
                       'Hyperlink', 'Hypertext']
 
@@ -58,7 +58,7 @@ class IEMLSyntax(TreeStructure, metaclass=IEMLSyntaxType):
                 raise InvalidIEMLObjectArgument(self.__class__, "Multiple dictionary versions for this syntax object.")
 
             self.dictionary_version = dictionary_version
-        elif not self.dictionary_version:
+        elif not hasattr(self, 'dictionary_version'):
             raise InvalidIEMLObjectArgument(self.__class__, "No dictionary version specified for this syntax object.")
 
 

@@ -41,7 +41,7 @@ _ieml_object_generator = None
 def random_usl(rank_type=None):
     global _ieml_object_generator
     if _ieml_object_generator is None:
-        _ieml_object_generator = RandomPoolIEMLObjectGenerator(level=Text)
+        _ieml_object_generator = RandomPoolIEMLObjectGenerator(level=Text, pool_size=100)
 
     if rank_type and not isinstance(rank_type, IEMLSyntaxType):
         raise ValueError('The wanted type for the generated usl object must be a IEMLType, here : '
@@ -55,6 +55,14 @@ def random_usl(rank_type=None):
             rank_type = Text
 
     return usl(_ieml_object_generator.from_type(rank_type))
+
+
+class RandomUslGenerator:
+    def __init__(self, **kwargs):
+        self.generator = RandomPoolIEMLObjectGenerator(**kwargs)
+
+    def __call__(self, type):
+        return usl(self.generator.from_type(type))
 
 
 def replace_paths(u, rules):

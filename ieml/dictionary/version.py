@@ -156,22 +156,22 @@ class DictionaryVersion(metaclass=DictionaryVersionSingleton):
             self.__setstate__(json.load(fp))
 
     def __eq__(self, other):
-        return self.date == other.date
+        return self.date == DictionaryVersion(other).date
 
     def __hash__(self):
         return str(self).__hash__()
 
     def __lt__(self, other):
-        return self.date.__lt__(other.date)
+        return self.date.__lt__(DictionaryVersion(other).date)
 
     def __gt__(self, other):
-        return self.date.__gt__(other.date)
+        return self.date.__gt__(DictionaryVersion(other).date)
 
     def __le__(self, other):
-        return self.date.__le__(other.date)
+        return self.date.__le__(DictionaryVersion(other).date)
 
     def __ge__(self, other):
-        return self.date.__ge__(other.date)
+        return self.date.__ge__(DictionaryVersion(other).date)
 
     @property
     def cache(self):

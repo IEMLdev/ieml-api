@@ -6,7 +6,7 @@ def readme():
 
 
 setup(name='ieml',
-      version='0.3.0',
+      version='0.3.3',
       description='Implementation of the artificial natural language IEML',
       long_description=readme(),
       classifiers=[
