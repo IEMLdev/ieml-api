@@ -9,6 +9,9 @@ import json
 import os
 import re
 
+from collections import defaultdict
+
+from ieml.constants import LAYER_MARKS
 from ieml.dictionary.relations import RelationsGraph
 from .. import get_configuration, ieml_folder
 from ..constants import LANGUAGES
@@ -40,6 +43,11 @@ def _str_to_date(string):
 
 def version_name(date):
     return "dictionary_{0}".format(_date_to_str(date))
+
+def phonetic(string):
+    for r in LAYER_MARKS:
+        string = string.replace(r, '')
+    return string
 
 
 class DictionaryVersionSingleton(type):
@@ -127,7 +135,7 @@ class DictionaryVersion(metaclass=DictionaryVersionSingleton):
         self.translations = state['translations']
         self.diff = state['diff'] if 'diff' in state else {}
 
-        self.history = state['history'] if 'history' in state else {str(self): {t: '+' for t in self.terms}}
+        self.history = state['history'] if 'history' in state and state['history'] is not None else {str(self): {t: '+' for t in self.terms}}
 
         self.loaded = True
 
@@ -200,10 +208,22 @@ class DictionaryVersion(metaclass=DictionaryVersionSingleton):
 
         return result
 
-    # def get_terms_sorted_by_creation_time(self):
-    #     for v in sorted(self.history):
-    #         self.history[v]
-    #     return sorted(self.terms, sort)
+    def get_phonetic_mapping(self):
+        phonetic_to_terms = defaultdict(list)
+
+        for i, v in enumerate(sorted(self.history)):
+            for t in self.history[v]:
+                phonetic_to_terms[phonetic(t)].append((i, t))
+
+        result = {}
+        for phon, l_t in phonetic_to_terms.items():
+            if len(l_t) > 1:
+                for i, c in enumerate(sorted(l_t, key=lambda c: (c[0], LAYER_MARKS.index(c[1][-1])))):
+                    result[phon + "." + str(i)] = c[1]
+            else:
+                result[phon] = l_t[0][1]
+
+        return result
 
 def _latest_installed_version():
     version_file_pattern = re.compile("^dictionary_\d{4}-\d{2}-\d{2}_\d{2}:\d{2}:\d{2}\.json")
