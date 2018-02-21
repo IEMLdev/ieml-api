@@ -9,6 +9,9 @@ import json
 import os
 import re
 
+from collections import defaultdict
+
+from ieml.constants import LAYER_MARKS
 from ieml.dictionary.relations import RelationsGraph
 from .. import get_configuration, ieml_folder
 from ..constants import LANGUAGES
@@ -36,6 +39,15 @@ def _date_to_str(date):
 
 def _str_to_date(string):
     return datetime.datetime.strptime(string, '%Y-%m-%d_%H:%M:%S')
+
+
+def version_name(date):
+    return "dictionary_{0}".format(_date_to_str(date))
+
+def phonetic(string):
+    for r in LAYER_MARKS:
+        string = string.replace(r, '')
+    return string
 
 
 class DictionaryVersionSingleton(type):
@@ -94,10 +106,14 @@ class DictionaryVersion(metaclass=DictionaryVersionSingleton):
         # The change must be applied in chronological order (from the old version to new one)
         self.diff = None
 
+        # A edition history
+        # version str -> term str -> '+' if added in this version or '-' if removed in this version
+        self.history = None
+
         self.loaded = False
 
     def __str__(self):
-        return 'dictionary_%s' % _date_to_str(self.date)
+        return version_name(self.date)
 
     def __getstate__(self):
         self.load()
@@ -118,6 +134,8 @@ class DictionaryVersion(metaclass=DictionaryVersionSingleton):
         self.inhibitions = state['inhibitions']
         self.translations = state['translations']
         self.diff = state['diff'] if 'diff' in state else {}
+
+        self.history = state['history'] if 'history' in state and state['history'] is not None else {str(self): {t: '+' for t in self.terms}}
 
         self.loaded = True
 
@@ -146,22 +164,22 @@ class DictionaryVersion(metaclass=DictionaryVersionSingleton):
             self.__setstate__(json.load(fp))
 
     def __eq__(self, other):
-        return self.date == other.date
+        return self.date == DictionaryVersion(other).date
 
     def __hash__(self):
         return str(self).__hash__()
 
     def __lt__(self, other):
-        return self.date.__lt__(other.date)
+        return self.date.__lt__(DictionaryVersion(other).date)
 
     def __gt__(self, other):
-        return self.date.__gt__(other.date)
+        return self.date.__gt__(DictionaryVersion(other).date)
 
     def __le__(self, other):
-        return self.date.__le__(other.date)
+        return self.date.__le__(DictionaryVersion(other).date)
 
     def __ge__(self, other):
-        return self.date.__ge__(other.date)
+        return self.date.__ge__(DictionaryVersion(other).date)
 
     @property
     def cache(self):
@@ -190,6 +208,26 @@ class DictionaryVersion(metaclass=DictionaryVersionSingleton):
 
         return result
 
+    def get_phonetic_mapping(self):
+        phonetic_to_terms = defaultdict(list)
+
+        for i, v in enumerate(sorted(self.history)):
+            for t in self.history[v]:
+                phonetic_to_terms[phonetic(t)].append((i, t))
+
+        result = {}
+        for phon, l_t in phonetic_to_terms.items():
+            if len(l_t) > 1:
+                for i, c in enumerate(sorted(l_t, key=lambda c: (c[0], LAYER_MARKS.index(c[1][-1])))):
+                    _key = phon
+                    if i > 0:
+                        _key = _key + "." + str(i)
+
+                    result[_key] = c[1]
+            else:
+                result[phon] = l_t[0][1]
+
+        return result
 
 def _latest_installed_version():
     version_file_pattern = re.compile("^dictionary_\d{4}-\d{2}-\d{2}_\d{2}:\d{2}:\d{2}\.json")
@@ -249,6 +287,8 @@ def create_dictionary_version(old_version=None, add=None, update=None, remove=No
         if new_date != last_date:
             break
 
+    new_version_name = version_name(new_date)
+
     if old_version is None:
         old_version = v
 
@@ -261,7 +301,9 @@ def create_dictionary_version(old_version=None, add=None, update=None, remove=No
         'inhibitions': copy.deepcopy(old_version.inhibitions),
         'translations': copy.deepcopy(old_version.translations),
         'diff': {**copy.deepcopy(old_version.diff),
-                 str(old_version): {}}
+                 str(old_version): {}},
+        'history': {**copy.deepcopy(old_version.history),
+                    new_version_name: {}}
     }
 
     # if merge is not None:
@@ -289,12 +331,19 @@ def create_dictionary_version(old_version=None, add=None, update=None, remove=No
                     del state['translations'][l][r]
 
             state['diff'][str(old_version)][r] = None
+            state['history'][new_version_name][r] = '-'
 
     if add is not None:
         if 'terms' in add:
             state['terms'] = list(set(state['terms']).union(add['terms']))
+            for t in add['terms']:
+                state['history'][new_version_name][t] = '+'
+
         if 'roots' in add:
             state['roots'] = list(set(state['roots']).union(add['roots']))
+            for t in add['roots']:
+                state['history'][new_version_name][t] = '+'
+
         if 'inhibitions' in add:
             if set(state['inhibitions']).intersection(set(add['inhibitions'])):
                 raise ValueError("Error in creating a new dictionary versions, trying to add multiples "
@@ -319,6 +368,7 @@ def create_dictionary_version(old_version=None, add=None, update=None, remove=No
             state['translations'] = {l: {**state['translations'][l], **update['translations'][l]} for l in LANGUAGES}
 
         if 'terms' in update:
+
             state['terms'] = set(t for t in state['terms'] if t not in update['terms'])
 
             roots = set(state['roots']).intersection(update['terms'])
@@ -326,6 +376,10 @@ def create_dictionary_version(old_version=None, add=None, update=None, remove=No
 
             for t_old in update['terms']:
                 t_new = update['terms'][t_old]
+
+                # a modify is like an add and delete.
+                state['history'][new_version_name][t_old] = '-'
+                state['history'][new_version_name][t_new] = '+'
 
                 state['diff'][str(old_version)][t_old] = t_new
                 state['terms'].add(t_new)

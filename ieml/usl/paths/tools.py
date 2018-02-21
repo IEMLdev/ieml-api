@@ -186,6 +186,8 @@ def enumerate_paths(ieml_obj, level=SyntaxTerm):
     for p, t in _enumerate_paths(ieml_obj, level=level):
         if len(p) == 1:
             yield p[0], t
+        elif not p:
+            yield None, t
         else:
             yield ContextPath(p), t
 

@@ -71,3 +71,12 @@ REMARKABLE_ADDITION = {
     "I": {'E', 'U', 'A', 'S', 'B', 'T'}
 }
 
+PHONETIC_PUNCTUATION = [
+    '',
+    '.',
+    '-',
+    '..',
+    '--',
+    '_',
+    '~'
+]

@@ -34,3 +34,15 @@ class TermsTest(unittest.TestCase):
                 continue
             self.assertFalse(t.is_root)
 
+
+    def test_phonetic(self):
+        self.assertEqual(term("A:").phonetic, "A")
+        self.assertEqual(term("wa.").phonetic, "wa.")
+        self.assertEqual(term("we.M:M:.-").phonetic, "weMM-")
+        self.assertEqual(term("E:.-U:.y.-t.-'").phonetic, "EUyt..")
+        self.assertEqual(term("S:.-U:.-'T:.-wa.e.-'t.-x.-s.y.-',").phonetic, "SUTwaetxsy--")
+        self.assertEqual(term("t.i.-s.i.-'u.T:.-U:.-'wo.-',S:.-',_").phonetic, "tisiuTUwoS_")
+        self.assertEqual(term("f.o.-f.o.-',n.i.-f.i.-',x.-A:.-',_E:A:.-',_;").phonetic, "fofonifixAEA~")
+
+        d = Dictionary()
+        self.assertEqual(len(set(t.phonetic for t in d)), len(d))
