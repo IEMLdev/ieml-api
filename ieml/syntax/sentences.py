@@ -2,7 +2,7 @@ from .commons import IEMLSyntax
 from ..constants import MAX_NODES_IN_SENTENCE
 from ..exceptions import InvalidIEMLObjectArgument, InvalidTreeStructure
 from .words import Word
-from .tree_graph import TreeGraph
+from ieml.syntax.tree_graph import TreeGraph
 
 
 class AbstractClause(IEMLSyntax):

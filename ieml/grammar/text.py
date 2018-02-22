@@ -1,0 +1,50 @@
+from itertools import chain
+
+from ieml.exceptions import InvalidIEMLObjectArgument
+from ieml.grammar.usl import Usl
+from ieml.grammar.fact import Fact
+from ieml.grammar.theory import Theory
+from ieml.grammar.topic import Topic
+from ieml.grammar.word import Word
+
+def text(children, literals=None):
+    try:
+        _children = [e for e in children]
+    except TypeError:
+        raise InvalidIEMLObjectArgument(Text, "The argument %s is not iterable." % str(children))
+
+    if not all(isinstance(e, (Word, Topic, Fact, Theory, Text)) for e in _children):
+        raise InvalidIEMLObjectArgument(Text, "Invalid type instance in the list of a text,"
+                                              " must be Word, Sentence, SuperSentence or Text")
+
+    return Text(_children, literals=literals)
+
+
+class Text(Usl):
+    def __init__(self, children, literals=None):
+
+        _children = [Topic(root=(c,), flexing=tuple()) if isinstance(c, Word) else c for c in children]
+
+        _children = list(chain([c for c in _children if not isinstance(c, Text)], *(c.children for c in _children if isinstance(c, Text))))
+        self.children = _children
+
+        super().__init__(sorted(set(_children)), literals=literals)
+
+    def compute_str(self):
+        return '/{0}/'.format('//'.join(str(c) for c in self.children))
+
+    @property
+    def words(self):
+        return set(chain.from_iterable(c.words for c in self.children))
+
+    @property
+    def topics(self):
+        return set(chain.from_iterable(c.topics for c in self.children))
+
+    @property
+    def facts(self):
+        return set(chain.from_iterable(c.facts for c in self.children))
+
+    @property
+    def theories(self):
+        return set(chain.from_iterable(c.theories for c in self.children))

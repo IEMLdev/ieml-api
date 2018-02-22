@@ -7,7 +7,7 @@ from ..dictionary import Term
 from .texts import Text
 from .sentences import Sentence, SuperSentence
 from .words import Word
-from .tree_graph import TreeGraph
+from ieml.syntax.tree_graph import TreeGraph
 
 
 class PropositionPath:

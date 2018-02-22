@@ -18,7 +18,7 @@ class Text(IEMLSyntax):
 
         if not all(isinstance(e, (SyntaxTerm, Word, Sentence, SuperSentence, Text)) for e in _children):
             raise InvalidIEMLObjectArgument(Text, "Invalid type instance in the list of a text,"
-                                                  " must be Word, Sentence, SuperSentence or Text")
+                                                  " must be Word, Topic, Fact, Theory or other Text")
 
         _children = [Word(Morpheme([c])) if isinstance(c, SyntaxTerm) else c for c in _children]
         _children = list(chain([c for c in _children if not isinstance(c, Text)],

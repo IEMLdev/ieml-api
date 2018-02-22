@@ -1,7 +1,7 @@
 from itertools import islice
 
 from ieml.commons import cached_property
-from ieml.syntax.commons import IEMLSyntax
+# from ieml.grammar.usl import Usl
 
 from ieml.syntax.terms import SyntaxTerm
 from ieml.syntax.words import Word

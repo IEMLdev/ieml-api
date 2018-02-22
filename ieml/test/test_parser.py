@@ -4,9 +4,9 @@ from ieml.dictionary.dictionary import Dictionary
 from ieml.dictionary.script.operator import script
 
 from ieml.exceptions import TermNotFoundInDictionary, CannotParse
-from ieml.syntax.parser.parser import IEMLParser
-from ieml.syntax import Text
-from ieml.syntax.terms import SyntaxTerm
+from ieml.grammar.parser.parser import IEMLParser
+from ieml.grammar.theory import Theory
+from ieml.grammar.word import Word
 from ieml.tools import RandomPoolIEMLObjectGenerator, ieml
 from ieml.dictionary import term
 
@@ -14,48 +14,48 @@ from ieml.dictionary import term
 class TestPropositionParser(unittest.TestCase):
 
     def setUp(self):
-        self.rand = RandomPoolIEMLObjectGenerator(level=Text)
+        self.rand = RandomPoolIEMLObjectGenerator(level=Theory)
         self.parser = IEMLParser()
 
-    def test_parse_term(self):
-
-        for i in range(10):
-            o = self.rand.term()
-            self.assertEqual(self.parser.parse(str(o)), o)
-
     def test_parse_word(self):
+
         for i in range(10):
             o = self.rand.word()
+            self.assertEqual(self.parser.parse(str(o)), o)
+
+    def test_parse_topic(self):
+        for i in range(10):
+            o = self.rand.topic()
             self.assertEqual(self.parser.parse(str(o)), o)
 
     def test_parse_term_plus(self):
         t = term("f.-O:M:.+M:O:.-s.y.-'")
         to_check = ieml("[f.-O:M:.+M:O:.-s.y.-']")
-        self.assertEqual(to_check, SyntaxTerm(t))
+        self.assertEqual(to_check, Word(t))
 
     def test_parse_sentence(self):
         for i in range(10):
-            o = self.rand.sentence()
+            o = self.rand.fact()
             self.assertEqual(self.parser.parse(str(o)), o)
 
     def test_parse_super_sentence(self):
         for i in range(10):
-            o = self.rand.word()
+            o = self.rand.theory()
             self.assertEqual(self.parser.parse(str(o)), o)
 
-    def test_parse_text(self):
-        for i in range(10):
-            o = self.rand.text()
-            self.assertEqual(self.parser.parse(str(o)), o)
+    # def test_parse_text(self):
+    #     for i in range(10):
+    #         o = self.rand.text()
+    #         self.assertEqual(self.parser.parse(str(o)), o)
 
     def test_literals(self):
-        w1 = str(self.rand.word()) + "<la\la\>lal\>fd>"
-        w2 = str(self.rand.word()) + "<@!#$#@%{}\>fd>"
+        w1 = str(self.rand.topic()) + "<la\la\>lal\>fd>"
+        w2 = str(self.rand.topic()) + "<@!#$#@%{}\>fd>"
         self.assertEqual(str(self.parser.parse(w1)), w1)
         self.assertEqual(str(self.parser.parse(w2)), w2)
-        s1 = '[('+ '*'.join((w1, w2, str(self.rand.word()))) +')]' + "<!@#$%^&*()_+\<>"
+        s1 = '[('+ '*'.join((w1, w2, str(self.rand.topic()))) +')]' + "<!@#$%^&*()_+\<>"
         self.assertEqual(str(self.parser.parse(s1)), s1)
-        ss1 = '[('+ '*'.join((s1, str(self.rand.sentence()), str(self.rand.sentence()))) + ')]<opopop>'
+        ss1 = '[('+ '*'.join((s1, str(self.rand.fact()), str(self.rand.fact()))) + ')]<opopop>'
         self.assertEqual(str(self.parser.parse(ss1)), ss1)
 
     def test_invalid_term(self):

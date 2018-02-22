@@ -76,6 +76,22 @@ class IEMLSyntax(TreeStructure, metaclass=IEMLSyntaxType):
         self.literals = tuple(_literals)
         self._do_precompute_str()
 
+    @property
+    def words(self):
+        raise NotImplementedError()
+
+    @property
+    def topics(self):
+        raise NotImplementedError()
+
+    @property
+    def facts(self):
+        raise NotImplementedError()
+
+    @property
+    def theories(self):
+        raise NotImplementedError()
+
     def set_dictionary_version(self, version):
         self.dictionary_version = version
         for c in self.children:

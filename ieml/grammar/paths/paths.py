@@ -5,7 +5,6 @@ from itertools import chain, product
 from functools import reduce
 
 from ...grammar import Theory, Fact, Text, Word, Topic
-from ...dictionary import Term
 from .constants import COORDINATES_KINDS
 from .exceptions import PathError
 
@@ -16,25 +15,25 @@ Context = namedtuple("Context",
 
 COORDINATES_CONTEXTS = {
     't': Context(accept={Text}, conserve=False, switch={
-        Text: {Theory, Fact, Word, SyntaxTerm}
+        Text: {Theory, Fact, Topic, Word}
     }),
     'a': Context(accept={Theory, Fact}, conserve=True, switch={
         Theory: {Fact},
-        Fact: {Word}
+        Fact: {Topic}
     }),
     's': Context(accept={Theory, Fact}, conserve=True, switch={
         Theory: {Fact},
-        Fact: {Word}
+        Fact: {Topic}
     }),
     'm': Context(accept={Theory, Fact}, conserve=False, switch={
         Theory: {Fact},
-        Fact: {Word}
+        Fact: {Topic}
     }),
-    'r': Context(accept={Word}, conserve=False, switch={
-        Word: {SyntaxTerm}
+    'r': Context(accept={Topic}, conserve=False, switch={
+        Topic: {Word}
     }),
-    'f': Context(accept={Word}, conserve=False, switch={
-        Word: {SyntaxTerm}
+    'f': Context(accept={Topic}, conserve=False, switch={
+        Topic: {Word}
     })
 }
 
@@ -57,23 +56,23 @@ class Path:
     # - the Text context :
     #    't' is the only literal. If indexed like 'tn' where 'n' is an integer, it represent the n-th element in the
     # text object. This context allow only one character ('t' or 'tn') then it is always followed by ':' or nothing.
-    # It can be followed by a super-Fact, a Fact or a word context.
+    # It can be followed by a super-Fact, a Fact or a Topic context.
     #
     # - the Super Fact and Fact ctx:
     # Begin with 's' or 'sn' but if the 'n' is an integer, it will be ignored. Can be followed by 'an' or 'mn'
     # where 'n' is an integer. When it is followed by 'an' it lead to the the n-th attribute of the current node. Same
     # for 'mn', but for the mode of the n-th attribute (the clause of this node, the n-th attribute and his mode). If
     # it is a mode, it can only be followed by a context switch ':'.
-    # Theory lead to Fact ctx and Fact to word ctx.
+    # Theory lead to Fact ctx and Fact to Topic ctx.
     #
-    # - the Word context:
+    # - the Topic context:
     # Only one literal of the form 'r' | 'rn' | 'f' | 'fn' where 'n' is an integer. These literal cannot be followed by
     # another character. If 'r' it lead all the root terms (the morphem), 'rn' lead only the n-th in the root morphem.
     # Same for 'f'|'fn' and the flexing morphem.
     #
     #  Ex: 't0:sa0:r' -> In a text context (or usl), the first element of the text, which is a Fact,
-    #  then in a Fact context, the word of the first attribute of the root (index on 's' is ignored),
-    #  then in a word context, the roots terms.
+    #  then in a Fact context, the topic of the first attribute of the root (index on 's' is ignored),
+    #  then in a topic context, the roots terms.
     #
     #
     #

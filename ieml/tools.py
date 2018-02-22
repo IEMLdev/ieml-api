@@ -1,21 +1,23 @@
 import xml.etree.ElementTree as ET
 import random
-import itertools
 import functools
+from itertools import chain
 
 from urllib.request import urlopen
 
 from ieml.exceptions import CannotParse
+from ieml.grammar.text import Text, text
+from ieml.grammar.usl import Usl
+from ieml.grammar.fact import Fact, fact
+from ieml.grammar.parser import IEMLParser
+from ieml.grammar.theory import Theory, theory
+from ieml.grammar.topic import Topic, topic
+from ieml.grammar.word import Word
 
-from ieml.syntax.parser.parser import IEMLParser
-from ieml.syntax.commons import IEMLSyntax
-from ieml.syntax.terms import SyntaxTerm
 from ieml.dictionary.version import get_default_dictionary_version
 from .exceptions import InvalidIEMLObjectArgument
-from .syntax import Sentence, Clause, SuperSentence, SuperClause, Text, Word, Morpheme
 from .exceptions import CantGenerateElement
 from .dictionary import Term, Dictionary
-
 
 
 def _loop_result(max_try):
@@ -36,7 +38,7 @@ def _loop_result(max_try):
 
 
 class RandomPoolIEMLObjectGenerator:
-    def __init__(self, level=Text, pool_size=20, dictionary_version=None):
+    def __init__(self, level=Theory, pool_size=20, dictionary_version=None):
         self.level = level
         self.pool_size = pool_size
         self.dictionary_version = dictionary_version
@@ -47,10 +49,10 @@ class RandomPoolIEMLObjectGenerator:
         self._build_pools()
 
         self.type_to_method = {
-            Term: self.term,
             Word: self.word,
-            Sentence: self.sentence,
-            SuperSentence: self.super_sentence,
+            Topic: self.topic,
+            Fact: self.fact,
+            Theory: self.theory,
             Text: self.text
         }
 
@@ -59,36 +61,36 @@ class RandomPoolIEMLObjectGenerator:
         Slow method, retrieve all the terms from the database.
         :return:
         """
-        if self.level >= Word:
+        if self.level >= Topic:
             # words
-            self.words_pool = set(self.word() for i in range(self.pool_size))
+            self.topics_pool = set(self.topic() for i in range(self.pool_size))
 
-        if self.level >= Sentence:
+        if self.level >= Fact:
             # sentences
-            self.sentences_pool = set(self.sentence() for i in range(self.pool_size))
+            self.facts_pool = set(self.fact() for i in range(self.pool_size))
 
-        if self.level >= SuperSentence:
-            self.super_sentences_pool = set(self.super_sentence() for i in range(self.pool_size))
+        if self.level >= Theory:
+            self.theories_pool = set(self.theory() for i in range(self.pool_size))
 
         if self.level >= Text:
-            self.propositions_pool = set(itertools.chain.from_iterable((self.words_pool, self.sentences_pool, self.super_sentences_pool)))
+            self.propositions_pool = set(chain.from_iterable((self.topics_pool, self.facts_pool, self.theories_pool)))
 
         # self.hypertext_pool = set(self.hypertext() for i in range(self.pool_size))
 
     @_loop_result(10)
-    def term(self):
-        return SyntaxTerm(random.sample(Dictionary(self.dictionary_version).index, 1)[0])
-
-    @_loop_result(10)
-    def uniterm_word(self):
-        return Word(Morpheme(SyntaxTerm(random.sample(Dictionary(self.dictionary_version).index, 1))))
-
-    @_loop_result(10)
     def word(self):
-        return Word(Morpheme([SyntaxTerm(t) for t in random.sample(Dictionary(self.dictionary_version).index, 3)]),
-                    Morpheme([SyntaxTerm(t) for t in random.sample(Dictionary(self.dictionary_version).index, 2)]))
+        return Word(random.sample(Dictionary(self.dictionary_version).index, 1)[0])
 
-    def _build_graph_object(self, primitive, mode, object, max_nodes=6):
+    @_loop_result(10)
+    def uniterm_topic(self):
+        return topic([random.sample(Dictionary(self.dictionary_version).index, 1)])
+
+    @_loop_result(10)
+    def topic(self):
+        return topic([Word(t) for t in random.sample(Dictionary(self.dictionary_version).index, 3)],
+                     [Word(t) for t in random.sample(Dictionary(self.dictionary_version).index, 2)])
+
+    def _build_graph_object(self, primitive, mode, max_nodes=6):
         nodes = {primitive()}
         modes = set()
 
@@ -106,27 +108,27 @@ class RandomPoolIEMLObjectGenerator:
                 nodes.add(a)
                 modes.add(m)
 
-                result.add(object(s, a, m))
+                result.add((s, a, m))
                 break
         return result
 
     @_loop_result(10)
-    def sentence(self, max_clause=6):
+    def fact(self, max_clause=6):
         def p():
-            return random.sample(self.words_pool, 1)[0]
+            return random.sample(self.topics_pool, 1)[0]
 
-        return Sentence(self._build_graph_object(p, p, Clause, max_nodes=max_clause))
+        return fact(self._build_graph_object(p, p, max_nodes=max_clause))
 
     @_loop_result(10)
-    def super_sentence(self, max_clause=4):
+    def theory(self, max_clause=4):
         def p():
-            return random.sample(self.sentences_pool, 1)[0]
+            return random.sample(self.facts_pool, 1)[0]
 
-        return SuperSentence(self._build_graph_object(p, p, SuperClause, max_nodes=max_clause))
+        return theory(self._build_graph_object(p, p, max_nodes=max_clause))
 
     @_loop_result(10)
     def text(self):
-        return Text(random.sample(self.propositions_pool, random.randint(1, 8)))
+        return text(random.sample(self.propositions_pool, random.randint(1, 8)))
 
     def from_type(self, type):
         try:
@@ -151,7 +153,7 @@ def ieml(arg, dictionary_version=None):
     if not dictionary_version:
         dictionary_version = get_default_dictionary_version()
 
-    if isinstance(arg, IEMLSyntax):
+    if isinstance(arg, Word):
         if arg.dictionary_version != dictionary_version:
             arg.set_dictionary_version(dictionary_version)
 
@@ -161,10 +163,10 @@ def ieml(arg, dictionary_version=None):
         try:
             return IEMLParser(Dictionary(dictionary_version)).parse(arg)
         except CannotParse as e:
-            raise InvalidIEMLObjectArgument(IEMLSyntax, str(e))
+            raise InvalidIEMLObjectArgument(Usl, str(e))
 
     if isinstance(arg, Term):
-        arg = SyntaxTerm(arg)
+        arg = Word(arg)
         if arg.dictionary_version != dictionary_version:
             arg.set_dictionary_version(dictionary_version)
 

@@ -3,7 +3,6 @@ from collections import defaultdict
 import numpy
 
 from ieml.exceptions import InvalidPathException
-from ieml.syntax.terms import SyntaxTerm
 from ieml.tools import ieml
 from ...exceptions import InvalidIEMLObjectArgument
 from ...grammar import Theory, Fact, Text, Word, Topic
@@ -89,7 +88,7 @@ def _resolve_path(obj, path):
     if isinstance(obj, (Fact, Theory)):
         return _resolve_path_tree_graph(obj.tree_graph, path)
 
-    if isinstance(obj, Word):
+    if isinstance(obj, Topic):
         if path.kind == 'r':
             if path.index is not None:
                 return {obj.root.children[path.index]}
@@ -100,7 +99,7 @@ def _resolve_path(obj, path):
             if obj.flexing:
                 return {obj.flexing}
             else:
-                raise InvalidPathException(obj, path, "no flexing morpheme in this Word.")
+                raise InvalidPathException(obj, path, "no flexing morpheme in this topic.")
 
     if isinstance(obj, Term):
         raise InvalidPathException(obj, path, "can't deference a Term.")
@@ -146,7 +145,7 @@ def _enumerate_paths(ieml_obj, level):
             for p, e in _enumerate_paths(node, level=level):
                 yield [_tree_graph_path_of_node(ieml_obj.tree_graph, node)] + p, e
 
-    if isinstance(ieml_obj, Word):
+    if isinstance(ieml_obj, Topic):
         for i, t in enumerate(ieml_obj.root.children):
             for p, e in _enumerate_paths(t, level=level):
                 yield [path('r%d'%i)] + p, e
@@ -182,7 +181,7 @@ def _tree_graph_path_of_node(tree_graph, node):
     return AdditivePath([MultiplicativePath(_build_coord(node, mode)) for node, mode in nodes])
 
 
-def enumerate_paths(ieml_obj, level=SyntaxTerm):
+def enumerate_paths(ieml_obj, level=Word):
     for p, t in _enumerate_paths(ieml_obj, level=level):
         if len(p) == 1:
             yield p[0], t
@@ -353,7 +352,7 @@ def _build_deps_text(rules):
     return error, result
 
 
-def _build_deps_word(rules):
+def _build_deps_topic(rules):
     result = {
         'r': {
             'indexes': defaultdict(list),
@@ -375,7 +374,7 @@ def _build_deps_word(rules):
             ctx_P = None
 
         if not isinstance(actual_P, Coordinate):
-            raise ResolveError("A word must be defined by a single coordinate.")
+            raise ResolveError("A topic must be defined by a single coordinate.")
 
         if actual_P.index is not None:
             result[actual_P.kind]['indexes'][actual_P.index].append((ctx_P, e))
@@ -395,7 +394,7 @@ def _build_deps_word(rules):
 
         if max(indexes, default=-1) + 1 > len(indexes) + len(generals):
             # if there is more than one missing
-            raise ResolveError("Index missing on word definition.")
+            raise ResolveError("Index missing on topic definition.")
 
         current = []
         length = len(indexes) + len(generals)
@@ -490,18 +489,18 @@ def _resolve_ctx(rules):
 
     type = next(types.__iter__())
 
-    if type == Word:
-        error, deps = _build_deps_word(rules)
+    if type == Topic:
+        error, deps = _build_deps_topic(rules)
         if error:
             return
 
         flexing = None
         if deps['f']:
-            flexing = Morpheme(deps['f'])
+            flexing = deps['f']
         if not deps['r']:
-            raise ResolveError("No root for the word node.")
+            raise ResolveError("No root for the topic node.")
 
-        return Word(Morpheme(deps['r']), flexing)
+        return Topic(deps['r'], flexing)
 
     if type == Text:
         error, deps = _build_deps_text(rules)
@@ -518,12 +517,12 @@ def _resolve_ctx(rules):
         if type == Fact:
             clauses = []
             for s, a, m in deps:
-                clauses.append(Clause(s, a, m))
+                clauses.append((s, a, m))
             return Fact(clauses)
         else:
             clauses = []
             for s, a, m in deps:
-                clauses.append(SuperClause(s, a, m))
+                clauses.append((s, a, m))
             return Theory(clauses)
 
     raise ResolveError("Invalid type inferred %s"%type.__name__)

@@ -2,56 +2,42 @@ import random
 import unittest
 from ieml.dictionary import Dictionary
 
-from ieml.syntax import Sentence, Text, Word, SuperSentence
+from ieml.grammar import Fact, Theory, Text, Topic, Word, Usl, usl, topic
 from ieml.tools import RandomPoolIEMLObjectGenerator, ieml
-from ieml.usl import usl, Usl
-from ieml.usl.tools import random_usl, replace_paths
-from ieml.test.helper import *
+from ieml.grammar.tools import random_usl, replace_paths
 
 
 class TestTexts(unittest.TestCase):
 
     #  TODO : more tests on texts
     def setUp(self):
-        self.rand_gen = RandomPoolIEMLObjectGenerator(level=SuperSentence)
+        self.rand_gen = RandomPoolIEMLObjectGenerator(level=Theory)
 
     def test_text_ordering_simple(self):
         """Just checks that elements created in a text are ordered the right way"""
-        word = self.rand_gen.word()
-        sentence, supersentence = self.rand_gen.sentence(), self.rand_gen.super_sentence()
-        text = Text([supersentence, sentence, word])
+        topic = self.rand_gen.topic()
+        sentence, supersentence = self.rand_gen.fact(), self.rand_gen.theory()
+        text = Text([supersentence, sentence, topic])
 
-        self.assertIsInstance(text.children[0], Word)
-        self.assertIsInstance(text.children[1], Sentence)
-        self.assertIsInstance(text.children[2], SuperSentence)
+        self.assertIn(topic, text.topics)
+        self.assertIn(sentence, text.facts)
+        self.assertIn(supersentence, text.theories)
 
+        self.assertTrue(all(isinstance(t, Word) for t in text.words))
+        self.assertTrue(all(isinstance(t, Topic) for t in text.topics))
+        self.assertTrue(all(isinstance(t, Fact) for t in text.facts))
+        self.assertTrue(all(isinstance(t, Theory) for t in text.theories))
 
-# class TestHypertext(unittest.TestCase):
-#
-#     def test_addhyperlink(self):
-#         """Test if adding an hyperlink trigger a valid recompute"""
-#         pool = RandomPoolIEMLObjectGenerator(level=Sentence)
-#         proposition = Word(Morpheme([pool.term()]))
-#         text2 = Text([Word(Morpheme([pool.term()]))])
-#         text1 = Text([proposition])
-#         hypertext = Hypertext([Hyperlink(text1, text2, PropositionPath([proposition]))])
-#
-#         self.assertNotEqual(str(text1), hypertext._str)
-#         self.assertNotEqual(str(text2), hypertext._str)
-#
-#     def test_parse_hypertext(self):
-#         hype_str = "{/[([o.wa.-])]{/[([t.i.-s.i.-'])]/}/}"
-#         self.assertEqual(str(IEMLParser().parse(hype_str)), hype_str)
 
 class TestUsl(unittest.TestCase):
     def test_equality(self):
         ieml = RandomPoolIEMLObjectGenerator(level=Text).text()
-        self.assertEqual(Usl(ieml_object=ieml), Usl(ieml_object=ieml))
+        self.assertEqual(usl(ieml), usl(str(ieml)))
 
     def test_glossary(self):
         txt = random_usl(Text)
-        self.assertTrue(all(t in Dictionary() for t in txt.glossary))
-        self.assertTrue(all(t in txt for t in txt.glossary))
+        self.assertTrue(all(t.script in Dictionary() for t in txt.words))
+        self.assertTrue(all(t in txt for t in txt.words))
 
         with self.assertRaises(ValueError):
             'test' in txt
@@ -59,9 +45,9 @@ class TestUsl(unittest.TestCase):
 
 class TextUslTools(unittest.TestCase):
     def test_replace(self):
-        u = usl(Word(Morpheme([ieml('[M:]')])))
+        u = topic([usl('[M:]')])
         u2 = replace_paths(u, {'r0': '[S:]'})
-        self.assertEqual(u2, usl(Word(Morpheme([ieml('[S:]')]))))
+        self.assertEqual(u2, topic([usl('[S:]')]))
 
     def test_deference_path(self):
         u = random_usl(rank_type=Text)

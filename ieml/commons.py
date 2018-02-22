@@ -13,10 +13,10 @@ class cached_property:
 
 class TreeStructure:
     def __init__(self):
-        super().__init__()
         self._str = None
         self._paths = None
-        self.children = None  # will be an iterable (list or tuple)
+        self.children = None
+        super().__init__()
 
     def __str__(self):
         return self._str

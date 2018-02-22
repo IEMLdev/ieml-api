@@ -30,7 +30,7 @@ class DictionarySingleton(type):
     lock = threading.Lock()
 
     def __call__(cls, *args, **kwargs):
-        if len(args) < 1:
+        if len(args) < 1 or args[0] is None:
             version = get_default_dictionary_version()
         elif isinstance(args[0], DictionaryVersion):
             version = args[0]
@@ -133,7 +133,7 @@ class Dictionary(metaclass=DictionarySingleton):
                 raise ValueError("No parent candidate for the table produced by term %s" % str(s))
 
             if len(candidates) > 1:
-                logger.log(logging.ERROR, "Multiple parent candidate for the table produced by script %s: {%s} "
+                logger.log(logging.DEBUG, "Multiple parent candidate for the table produced by script %s: {%s} "
                       "choosing the smaller one." % (str(s), ', '.join([str(c[0]) for c in candidates])))
 
             parent, regular = min(candidates, key=lambda t: t[0])

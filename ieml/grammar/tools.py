@@ -1,41 +1,11 @@
 import random
 
-from ieml.grammar.usl import Usl, IEMLSyntaxType
+from ieml.grammar.usl import usl, IEMLSyntaxType
 from ..grammar import Fact, Theory, Text, Word, Topic
 from ieml.tools import ieml
 from ..tools import RandomPoolIEMLObjectGenerator
-from ..dictionary import Term
 
-from .paths import path, resolve_ieml_object
-from .parser import USLParser
-from .usl import Usl
-
-
-def usl(arg):
-    if isinstance(arg, Usl):
-        return arg
-
-    if isinstance(arg, Usl):
-        if isinstance(arg, Term):
-            return Usl(Word(arg))
-        return Usl(arg)
-
-    if isinstance(arg, str):
-        return USLParser().parse(arg)
-
-    if isinstance(arg, dict):
-        # map path -> Ieml_object
-        return Usl(resolve_ieml_object(arg))
-
-    try:
-        rules = [(a, b) for a, b in arg]
-    except TypeError:
-        pass
-    else:
-        rules = [(path(a), ieml(b)) for a, b in rules]
-        return Usl(resolve_ieml_object(rules))
-
-    raise ValueError("Invalid argument to create an usl object.")
+from .paths import path
 
 _ieml_objects_types = [Word, Topic, Fact, Theory]
 _ieml_object_generator = None

@@ -13,8 +13,6 @@ Translations.__getitem__ = lambda self, item: self.__getattribute__(item) if ite
 
 
 class Term:
-    # closable = True
-
     def __init__(self, script, index, dictionary, parent):
         super().__init__()
 
