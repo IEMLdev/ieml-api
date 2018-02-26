@@ -44,7 +44,6 @@ def _check_morpheme(words):
         raise InvalidIEMLObjectArgument(Topic, "Singular sequences intersection in %s." %
                                             str([str(t) for t in _words]))
 
-
     return tuple(sorted(_words))
 
 
@@ -74,6 +73,9 @@ class Topic(Usl):
     def _do_gt(self, other):
         return self.root > other.root if self.root != other.root else self.flexing > other.flexing
 
+    def __iter__(self):
+        return self.words.__iter__()
+
     @property
     def words(self):
         return set(self.root + self.flexing)
@@ -89,3 +91,10 @@ class Topic(Usl):
     @property
     def theories(self):
         return {}
+
+    def _set_version(self, version):
+        for r in self.root:
+            r.set_dictionary_version(version)
+
+        for f in self.flexing:
+            f.set_dictionary_version(version)

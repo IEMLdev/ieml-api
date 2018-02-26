@@ -5,7 +5,7 @@ import ply.yacc as yacc
 
 from ieml.dictionary.dictionary import Dictionary
 from ieml.exceptions import TermNotFoundInDictionary, InvalidIEMLObjectArgument
-from ieml.grammar import Text, fact
+from ieml.grammar import Text
 from ieml.grammar.fact import Fact
 from ieml.grammar.theory import Theory
 from ieml.grammar.topic import Topic
@@ -144,13 +144,13 @@ class IEMLParser(metaclass=IEMLParserSingleton):
                 | LBRACKET morpheme TIMES morpheme RBRACKET literal_list"""
 
         if len(p) == 4:
-            p[0] = Topic(root=p[2], flexing=())
+            p[0] = Topic(root=tuple(p[2]), flexing=())
         elif len(p) == 5:
-            p[0] = Topic(root=p[2], flexing=(), literals=p[4])
+            p[0] = Topic(root=tuple(p[2]), flexing=(), literals=p[4])
         elif len(p) == 6:
-            p[0] = Topic(root=p[2], flexing=p[4])
+            p[0] = Topic(root=tuple(p[2]), flexing=tuple(p[4]))
         else:
-            p[0] = Topic(root=p[2], flexing=p[4], literals=p[6])
+            p[0] = Topic(root=tuple(p[2]), flexing=tuple(p[4]), literals=p[6])
 
     # def p_decorated(self, p):
     #     """decorated_word : word
@@ -174,9 +174,9 @@ class IEMLParser(metaclass=IEMLParserSingleton):
         """fact : LBRACKET clauses_sum RBRACKET
                 | LBRACKET clauses_sum RBRACKET literal_list"""
         if len(p) == 4:
-            p[0] = fact(p[2])
+            p[0] = Fact(p[2])
         else:
-            p[0] = fact(p[2], literals=p[4])
+            p[0] = Fact(p[2], literals=p[4])
 
     def p_superclause(self, p):
         """superclause : LPAREN fact TIMES fact TIMES fact RPAREN"""

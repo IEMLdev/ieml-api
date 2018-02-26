@@ -3,6 +3,7 @@ from collections import defaultdict
 import numpy
 
 from ieml.exceptions import InvalidPathException
+from ieml.grammar import topic, text, fact, theory
 from ieml.tools import ieml
 from ...exceptions import InvalidIEMLObjectArgument
 from ...grammar import Theory, Fact, Text, Word, Topic
@@ -77,10 +78,14 @@ def _resolve_path_tree_graph(tree_graph, path):
 def _resolve_path(obj, path):
     """path is a mul of coord or a coord"""
     if obj.__class__ not in path.context.accept:
-        return set()
+        result = set()
+        for ctx in path.context.accept:
+            result |= {e for u in obj[ctx] for e in _resolve_path(u, path)}
+
+        return result
 
     if isinstance(obj, Text):
-        if path.index:
+        if path.index is not None:
             return {obj.children[path.index]}
 
         return set(obj.children)
@@ -91,31 +96,27 @@ def _resolve_path(obj, path):
     if isinstance(obj, Topic):
         if path.kind == 'r':
             if path.index is not None:
-                return {obj.root.children[path.index]}
-            return {obj.root}
+                return {obj.root[path.index]}
+            return set(obj.root)
         else:
             if path.index is not None:
-                return {obj.flexing.children[path.index]}
-            if obj.flexing:
-                return {obj.flexing}
-            else:
-                raise InvalidPathException(obj, path, "no flexing morpheme in this topic.")
-
-    if isinstance(obj, Term):
-        raise InvalidPathException(obj, path, "can't deference a Term.")
+                return {obj.flexing[path.index]}
+            return set(obj.flexing)
 
 
-def resolve(ieml_object, path):
-    if ieml_object.__class__ not in path.context.accept:
-        raise InvalidPathException(ieml_object, path, "invalid path context, expected types: {%s}."%', '.join(path.context.accept))
+def resolve(usl, path):
+    """"""
+
+    # if usl.__class__ not in path.context.accept:
+    #     raise InvalidPathException(usl, path, "invalid path context, expected types: {%s}."%', '.join(path.context.accept))
 
     result = set()
     for d in path.develop:
         if isinstance(d, (Coordinate, MultiplicativePath)):
-            result |= _resolve_path(ieml_object, d)
+            result |= _resolve_path(usl, d)
         else:
             # context path
-            stack = {ieml_object}
+            stack = {usl}
             for c in d.children:
                 _stack = set()
                 for s in stack:
@@ -131,27 +132,32 @@ def resolve(ieml_object, path):
     return result
 
 
-def _enumerate_paths(ieml_obj, level):
-    if isinstance(ieml_obj, level):
-        yield [], ieml_obj
+def _enumerate_paths(usl, level):
+    if isinstance(usl, level):
+        yield [], usl
 
-    if isinstance(ieml_obj, Text):
-        for i, t in enumerate(ieml_obj.children):
+    if isinstance(usl, Text):
+        for i, t in enumerate(usl.children):
             for p, e in _enumerate_paths(t, level=level):
                 yield [path('t%d'%i)] + p, e
 
-    if isinstance(ieml_obj, (Fact, Theory)):
-        for node in set(node for clause in ieml_obj for node in clause):
+    if isinstance(usl, (Theory)):
+        for node in usl.facts:
             for p, e in _enumerate_paths(node, level=level):
-                yield [_tree_graph_path_of_node(ieml_obj.tree_graph, node)] + p, e
+                yield [_tree_graph_path_of_node(usl.tree_graph, node)] + p, e
 
-    if isinstance(ieml_obj, Topic):
-        for i, t in enumerate(ieml_obj.root.children):
+    if isinstance(usl, (Fact)):
+        for node in usl.topics:
+            for p, e in _enumerate_paths(node, level=level):
+                yield [_tree_graph_path_of_node(usl.tree_graph, node)] + p, e
+
+    if isinstance(usl, Topic):
+        for i, t in enumerate(usl.root):
             for p, e in _enumerate_paths(t, level=level):
                 yield [path('r%d'%i)] + p, e
 
-        if ieml_obj.flexing:
-            for i, t in enumerate(ieml_obj.flexing.children):
+        if usl.flexing:
+            for i, t in enumerate(usl.flexing):
                 for p, e in _enumerate_paths(t, level=level):
                     yield [path('f%d' % i)] + p, e
 
@@ -500,14 +506,14 @@ def _resolve_ctx(rules):
         if not deps['r']:
             raise ResolveError("No root for the topic node.")
 
-        return Topic(deps['r'], flexing)
+        return topic(deps['r'], flexing)
 
     if type == Text:
         error, deps = _build_deps_text(rules)
         if error:
             return
 
-        return Text(deps)
+        return text(deps)
 
     if type in (Theory, Fact):
         error, deps = _build_deps_tree_graph(rules)
@@ -518,12 +524,12 @@ def _resolve_ctx(rules):
             clauses = []
             for s, a, m in deps:
                 clauses.append((s, a, m))
-            return Fact(clauses)
+            return fact(clauses)
         else:
             clauses = []
             for s, a, m in deps:
                 clauses.append((s, a, m))
-            return Theory(clauses)
+            return theory(clauses)
 
     raise ResolveError("Invalid type inferred %s"%type.__name__)
 

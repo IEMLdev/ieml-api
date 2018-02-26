@@ -27,7 +27,6 @@ _term.register(Term, lambda arg, dictionary: arg)
 _term.register(int, lambda arg, dictionary: dictionary.index[arg])
 _term.register(Script, lambda arg, dictionary: dictionary.terms[arg])
 
-
 @_term.register(str)
 def _term_str(arg, dictionary=None):
     if not arg:

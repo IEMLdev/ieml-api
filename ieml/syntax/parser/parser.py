@@ -11,7 +11,7 @@ from ieml.exceptions import TermNotFoundInDictionary, InvalidIEMLObjectArgument
 from ieml.syntax.terms import SyntaxTerm
 from ... import parser_folder
 from ...exceptions import CannotParse
-from ieml.grammar import Word, Morpheme, Clause, SuperClause, Sentence, SuperSentence, Text, Hypertext, Hyperlink, PropositionPath
+from ieml.grammar import Word, Topic, Fact, Theory, Text
 
 from .lexer import get_lexer, tokens
 import threading

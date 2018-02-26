@@ -10,7 +10,7 @@ from .exceptions import PathError
 
 Context = namedtuple("Context",
                      ['accept',   # the types this context can deference
-                      'conserve', # if this context must imidiately swith to a lower type (mode and morphems)
+                      'conserve', # if this context must immediately switch to a lower type (mode and morphems)
                       'switch'])  # the mapping type -> type this context can switch
 
 COORDINATES_CONTEXTS = {
@@ -88,7 +88,6 @@ class Path:
     #
     #
 
-
     def __init__(self, children):
         try:
             children = list(children)
@@ -133,7 +132,6 @@ class Path:
             return
 
         # the development is either a mul of coords or a context of mul and coords
-
         accept = set()
         switch = defaultdict(set)
         conserve = False

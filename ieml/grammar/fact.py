@@ -22,24 +22,24 @@ def fact(clause_list, literals=None):
     if any(a == b for a, b, c in _clauses):
         raise InvalidIEMLObjectArgument(Fact, "The attribute and the substance must be distinct for each triples")
 
-    try:
-        tree_graph = TreeGraph(_clauses)
-    except InvalidTreeStructure as e:
-        raise InvalidIEMLObjectArgument(Fact, str(e))
 
-    if len(tree_graph.nodes) > MAX_NODES_IN_SENTENCE:
-        raise InvalidIEMLObjectArgument(Fact, "Too many distinct nodes: %d>%d." %
-                                        (len(tree_graph.nodes), MAX_NODES_IN_SENTENCE))
-
-    dictionary_version = _clauses[0][0].dictionary_version
-    if any(e.dictionary_version != dictionary_version for s in _clauses for e in s):
-        raise InvalidIEMLObjectArgument(Fact, "Incompatible dictionary version in the list of Topic triples")
-
-    return Fact(tree_graph, literals=literals)
-
+    return Fact(_clauses, literals=literals)
 
 class Fact(Usl):
-    def __init__(self, tree_graph, literals=None):
+    def __init__(self, clauses, literals=None):
+        try:
+            tree_graph = TreeGraph(clauses)
+        except InvalidTreeStructure as e:
+            raise InvalidIEMLObjectArgument(Fact, str(e))
+
+        if len(tree_graph.nodes) > MAX_NODES_IN_SENTENCE:
+            raise InvalidIEMLObjectArgument(Fact, "Too many distinct nodes: %d>%d." %
+                                            (len(tree_graph.nodes), MAX_NODES_IN_SENTENCE))
+
+        dictionary_version = clauses[0][0].dictionary_version
+        if any(e.dictionary_version != dictionary_version for s in clauses for e in s):
+            raise InvalidIEMLObjectArgument(Fact, "Incompatible dictionary version in the list of Topic triples")
+
         self.tree_graph = tree_graph
         self.children = tuple(e for stage in self.tree_graph.stages
                           for e in sorted((t[1] for s in stage for t in self.tree_graph.transitions[s])))
@@ -57,6 +57,9 @@ class Fact(Usl):
     def _do_gt(self, other):
         return self.children > other.children
 
+    def __iter__(self):
+        return self.topics.__iter__()
+
     @property
     def words(self):
         return set(chain.from_iterable(c.words for c in self.topics))
@@ -72,3 +75,7 @@ class Fact(Usl):
     @property
     def theories(self):
         return {}
+
+    def _set_version(self, version):
+        for n in self.tree_graph.nodes:
+            n.set_dictionary_version(version)

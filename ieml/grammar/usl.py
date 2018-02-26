@@ -44,6 +44,7 @@ class IEMLSyntaxType(type):
 
 
 class Usl(metaclass=IEMLSyntaxType):
+
     def __init__(self, dictionary_version, literals=None):
         super().__init__()
         self._paths = None
@@ -102,7 +103,7 @@ class Usl(metaclass=IEMLSyntaxType):
         return self.compute_str() + _literals
 
     def __getitem__(self, item):
-        from ieml.usl.paths import Path, path, resolve
+        from ieml.grammar.paths import Path, path, resolve
 
         if isinstance(item, str):
             item = path(item)
@@ -112,7 +113,28 @@ class Usl(metaclass=IEMLSyntaxType):
             if len(res) == 1:
                 return res.__iter__().__next__()
             else:
-                return list(res)
+                return tuple(sorted(res))
+
+        from .word import Word
+        if item == Word:
+            return self.words
+
+        from .topic import Topic
+        if item == Topic:
+            return self.topics
+
+        from .fact import Fact
+        if item == Fact:
+            return self.facts
+
+        from .theory import Theory
+        if item == Theory:
+            return self.theories
+
+        from .text import Text
+        if item == Text:
+            return {self} if self.__class__ == Text else {}
+
 
     def __iter__(self):
         raise NotImplementedError()
@@ -144,6 +166,18 @@ class Usl(metaclass=IEMLSyntaxType):
                    item.facts.issubset(self.facts)   and \
                    item.theories.issubset(self.theories)
 
+    def rules(self, type):
+        from ieml.grammar.paths import enumerate_paths
+        return {path: element for path, element in enumerate_paths(self, level=type)}
+
+    def objects(self, type):
+        return set(self.rules(type).values())
+
+    @property
+    def paths(self):
+        from .word import Word
+        return self.rules(Word)
+
     @property
     def words(self):
         raise NotImplementedError()
@@ -159,6 +193,13 @@ class Usl(metaclass=IEMLSyntaxType):
     @property
     def theories(self):
         raise NotImplementedError()
+
+    def _set_version(self, version):
+        raise NotImplementedError()
+
+    def set_dictionary_version(self, dictionary_version):
+        self._set_version(dictionary_version)
+        self._str = self._compute_str()
 
 
 def usl(arg):
@@ -176,7 +217,7 @@ def usl(arg):
     from ieml.grammar.paths import resolve_ieml_object, path
     if isinstance(arg, dict):
         # map path -> Ieml_object
-        return Usl(resolve_ieml_object(arg))
+        return resolve_ieml_object(arg)
 
     try:
         rules = [(a, b) for a, b in arg]
@@ -184,6 +225,13 @@ def usl(arg):
         pass
     else:
         rules = [(path(a), usl(b)) for a, b in rules]
-        return Usl(resolve_ieml_object(rules))
+        return resolve_ieml_object(rules)
 
     raise NotImplementedError()
+
+
+TYPE_TO_ATTRIBUTE = {'Word': 'words',
+                     'Topic': 'topics',
+                     'Fact': 'facts',
+                     'Theory': 'theories',
+                     'Text': 'texts'}

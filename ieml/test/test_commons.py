@@ -1,16 +1,9 @@
-import random
-from collections import defaultdict, Counter
-from itertools import repeat, chain
 from unittest.case import TestCase
 
 from ieml.dictionary.version import create_dictionary_version
-from ieml.syntax.sentences import AbstractSentence, SuperSentence, Sentence
-from ieml.dictionary import Term, term
-from ieml.syntax import Text,Word
+from ieml.grammar import Text, Word, Usl
+from ieml.grammar.tools import random_usl
 from ieml.tools import RandomPoolIEMLObjectGenerator, ieml
-from ieml.dictionary import script as sc
-from ieml.usl.tools import random_usl, replace_paths, usl
-from ieml.usl.usl import Usl
 
 
 class TestTreeStructure(TestCase):
@@ -112,7 +105,7 @@ class TestUslTools(TestCase):
         self.assertIsInstance(u, Usl)
 
         u = random_usl(rank_type=Word)
-        self.assertIsInstance(u.ieml_object, Word)
+        self.assertIsInstance(u, Word)
 
 
 class TestVersioning(TestCase):
@@ -128,3 +121,16 @@ class TestVersioning(TestCase):
         p.set_dictionary_version(v)
 
         self.assertEqual(str(p), "[([n.-S:.U:.-'T:.-'T:.-',S:.-',M:.-',_])]")
+
+    def test_text_translation(self):
+        update = {
+            'terms': {
+                "n.-S:.U:.-'T:.-'T:.-',M:.-',S:.-',_": "n.-S:.U:.-'T:.-'T:.-',S:.-',M:.-',_"
+            }
+        }
+
+        v = create_dictionary_version(update=update)
+        p = ieml("/[([([n.-S:.U:.-'T:.-'T:.-',M:.-',S:.-',_])]*[([wa.])]*[([we.])])]/")
+        p.set_dictionary_version(v)
+
+        self.assertEqual(str(p), "/[([([n.-S:.U:.-'T:.-'T:.-',S:.-',M:.-',_])]*[([wa.])]*[([we.])])]/")

@@ -153,7 +153,7 @@ def ieml(arg, dictionary_version=None):
     if not dictionary_version:
         dictionary_version = get_default_dictionary_version()
 
-    if isinstance(arg, Word):
+    if isinstance(arg, Usl):
         if arg.dictionary_version != dictionary_version:
             arg.set_dictionary_version(dictionary_version)
 
