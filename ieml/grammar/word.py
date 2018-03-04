@@ -41,20 +41,16 @@ class Word(Usl):
 
         return self.index > other.index
 
-    @property
-    def words(self):
+    def _get_words(self):
         return {self}
 
-    @property
-    def topics(self):
+    def _get_topics(self):
         return {}
 
-    @property
-    def facts(self):
+    def _get_facts(self):
         return {}
 
-    @property
-    def theories(self):
+    def _get_theories(self):
         return {}
 
     def _set_version(self, version):

@@ -41,20 +41,16 @@ class Text(Usl):
     def __iter__(self):
         return self.children.__iter__()
 
-    @property
-    def words(self):
+    def _get_words(self):
         return set(chain.from_iterable(c.words for c in self.children))
 
-    @property
-    def topics(self):
+    def _get_topics(self):
         return set(chain.from_iterable(c.topics for c in self.children))
 
-    @property
-    def facts(self):
+    def _get_facts(self):
         return set(chain.from_iterable(c.facts for c in self.children))
 
-    @property
-    def theories(self):
+    def _get_theories(self):
         return set(chain.from_iterable(c.theories for c in self.children))
 
     def _set_version(self, version):

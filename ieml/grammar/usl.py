@@ -1,6 +1,8 @@
+from cached_property import cached_property
+
 from ieml.dictionary import Term
 from ieml.exceptions import InvalidIEMLObjectArgument
-
+import numpy as np
 
 class IEMLSyntaxType(type):
     """This metaclass enables the comparison of class types, such as (Sentence > Word) == True"""
@@ -178,21 +180,39 @@ class Usl(metaclass=IEMLSyntaxType):
         from .word import Word
         return self.rules(Word)
 
-    @property
+    def _get_words(self):
+        raise NotImplementedError()
+
+    def _get_topics(self):
+        raise NotImplementedError()
+
+    def _get_facts(self):
+        raise NotImplementedError()
+
+    def _get_theories(self):
+        raise NotImplementedError()
+
+    @cached_property
     def words(self):
-        raise NotImplementedError()
+        return tuple(sorted(self._get_words()))
 
-    @property
+    @cached_property
     def topics(self):
-        raise NotImplementedError()
+        return tuple(sorted(self._get_topics()))
 
-    @property
+    @cached_property
     def facts(self):
-        raise NotImplementedError()
+        return tuple(sorted(self._get_facts()))
 
-    @property
+    @cached_property
     def theories(self):
-        raise NotImplementedError()
+        return tuple(sorted(self._get_theories()))
+
+    @cached_property
+    def words_vector(self):
+        v = np.zeros(len(self.dictionary_version.terms))
+        v[[w.index for w in self.words]] = 1
+        return v
 
     def _set_version(self, version):
         raise NotImplementedError()

@@ -6,7 +6,7 @@ def readme():
 
 
 setup(name='ieml',
-      version='0.3.4',
+      version='0.3.5',
       description='Implementation of the artificial natural language IEML',
       long_description=readme(),
       classifiers=[
@@ -26,7 +26,7 @@ setup(name='ieml',
             'numpy',
             'bidict',
             'ply',
-            'scipy',
+            'cached-property'
       ],
       test_suite='nose2.collector.collector',
       tests_require=['nose2'],

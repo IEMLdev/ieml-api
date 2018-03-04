@@ -76,20 +76,16 @@ class Topic(Usl):
     def __iter__(self):
         return self.words.__iter__()
 
-    @property
-    def words(self):
+    def _get_words(self):
         return set(self.root + self.flexing)
 
-    @property
-    def topics(self):
+    def _get_topics(self):
         return {self}
 
-    @property
-    def facts(self):
+    def _get_facts(self):
         return {}
 
-    @property
-    def theories(self):
+    def _get_theories(self):
         return {}
 
     def _set_version(self, version):
