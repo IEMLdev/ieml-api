@@ -90,6 +90,10 @@ class RelationsGraph:
 
         raise NotImplemented
 
+    @cached_property
+    def matrix(self):
+        return sum(self.relations.values()).todense()
+
     def relation_type(self, term, relation_type):
         return [self.dictionary.index[j] for j in
                 self.relations[relation_type][term.index, :].indices]
