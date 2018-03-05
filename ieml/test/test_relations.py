@@ -31,7 +31,7 @@ class TestRelations(TestCase):
                                      "Term %s has relations %s. Must be inhibited"%(str(t), reltype))
 
     def test_relations_matrix(self):
-        m = Dictionary().relations_graph.matrix
+        m = Dictionary().relations_graph.connexity
         self.assertTrue(m.any())
         self.assertFalse(m.all())
         self.assertTrue(m.dtype == bool)

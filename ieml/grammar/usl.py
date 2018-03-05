@@ -1,4 +1,5 @@
 from cached_property import cached_property
+from itertools import islice
 
 from ieml.constants import LANGUAGES
 from ieml.dictionary import Term

@@ -1,3 +1,4 @@
+import random
 import unittest
 
 import numpy as np
@@ -76,51 +77,17 @@ class TesttermsFeatures(unittest.TestCase):
         terms_set = {self.term_b, self.term_a, self.term_c, other_a_instance}
         self.assertEqual(len(terms_set), 3)
 
-#
-# class TestMorphemesFeatures(unittest.TestCase):
-#
-#     def test_morpheme_checks(self):
-#         """Creates a morpheme with conflicting terms"""
-#         with self.assertRaises(InvalidIEMLObjectArgument):
-#             Morpheme(map(SyntaxTerm, [term("E:A:T:."), term("E:.-S:.o.-t.-'"), term("E:.S:.wa.-"), term("E:A:T:.")]))
-#
-#     def _make_and_check_morphemes(self):
-#         morpheme_a = Morpheme(map(SyntaxTerm, [term("E:A:T:."), term("E:.S:.wa.-"),term("E:.-S:.o.-t.-'")]))
-#         morpheme_b = Morpheme(map(SyntaxTerm, [term("a.i.-"), term("i.i.-")]))
-#         return morpheme_a, morpheme_b
-#
-#     def _make_and_check_suffixed_morphemes(self):
-#         morpheme_a = Morpheme(map(SyntaxTerm, [term("E:A:T:."), term("E:.S:.wa.-")]))
-#         morpheme_b = Morpheme(map(SyntaxTerm, [term("E:A:T:."), term("E:.S:.wa.-"),term("E:.-S:.o.-t.-'")]))
-#         return morpheme_a, morpheme_b
-#
-#     def test_morpheme_reordering(self):
-#         """Create a new morpheme with terms in the wrong order, and check that it reorders
-#         after itself after the reorder() method is ran"""
-#         new_morpheme = Morpheme(map(SyntaxTerm, [term("E:A:T:."), term("E:.-S:.o.-t.-'"), term("E:.S:.wa.-")]))
-#         self.assertEqual(str(new_morpheme.children[2]), "[E:.-S:.o.-t.-']") # last term is right?
-#
-#
-#     def test_morpheme_inequality(self):
-#         morpheme_a , morpheme_b = self._make_and_check_morphemes()
-#         self.assertTrue(morpheme_a != morpheme_b)
-#
-#     def test_different_morpheme_comparison(self):
-#         morpheme_a, morpheme_b = self._make_and_check_morphemes()
-#         # true because term("E:A:T:.") < term("a.i.-")
-#         self.assertTrue(morpheme_b > morpheme_a)
-#
-#     def test_suffixed_morpheme_comparison(self):
-#         morpheme_a, morpheme_b = self._make_and_check_suffixed_morphemes()
-#         # true since morph_a suffix of morph_b
-#         self.assertTrue(morpheme_b > morpheme_a)
-#
-#     def test_hashing(self):
-#         morpheme_a, morpheme_b = self._make_and_check_suffixed_morphemes()
-#         h = {morpheme_a: 1,
-#              morpheme_b: 3}
-#         self.assertIn(morpheme_a, h)
+class TestWords(unittest.TestCase):
 
+    def test_word_instanciation(self):
+        w = word("U:")
+        self.assertEqual(w, word('U:', literals=str(random.randint(0, 1000000000))))
+
+    def test_update_literal(self):
+        w = word("U:")
+        w1 = word(w, literals="test")
+        self.assertEqual(w1.literals, ("test",))
+        self.assertEqual(w1.literals, word(w1).literals)
 
 class TestTopics(unittest.TestCase):
 

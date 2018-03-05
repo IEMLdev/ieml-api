@@ -5,9 +5,11 @@ from ieml.grammar.usl import Usl
 
 
 def word(arg, literals=None):
-    if isinstance(arg, Word) and \
-       arg.literals == () if literals is None else literals:
-        return arg
+    if isinstance(arg, Word):
+        if arg.literals != literals and literals is not None:
+            return Word(arg.term, literals=literals)
+        else:
+            return arg
     else:
         return Word(term(arg), literals=literals)
 

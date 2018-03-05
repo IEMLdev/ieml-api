@@ -24,7 +24,7 @@ def text(children, literals=None):
 class Text(Usl):
     def __init__(self, children, literals=None):
 
-        _children = [topic(c) if isinstance(c, Word) else c for c in children]
+        _children = [topic([c]) if isinstance(c, Word) else c for c in children]
         _children = list(chain([c for c in _children if not isinstance(c, Text)],
                                *(c.children for c in _children if isinstance(c, Text))))
         self.children = sorted(set(_children))
