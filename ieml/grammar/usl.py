@@ -1,8 +1,10 @@
 from cached_property import cached_property
 
+from ieml.constants import LANGUAGES
 from ieml.dictionary import Term
 from ieml.exceptions import InvalidIEMLObjectArgument
 import numpy as np
+
 
 class IEMLSyntaxType(type):
     """This metaclass enables the comparison of class types, such as (Sentence > Word) == True"""
@@ -137,7 +139,6 @@ class Usl(metaclass=IEMLSyntaxType):
         if item == Text:
             return {self} if self.__class__ == Text else {}
 
-
     def __iter__(self):
         raise NotImplementedError()
 
@@ -194,19 +195,19 @@ class Usl(metaclass=IEMLSyntaxType):
 
     @cached_property
     def words(self):
-        return tuple(sorted(self._get_words()))
+        return frozenset(self._get_words())
 
     @cached_property
     def topics(self):
-        return tuple(sorted(self._get_topics()))
+        return frozenset(self._get_topics())
 
     @cached_property
     def facts(self):
-        return tuple(sorted(self._get_facts()))
+        return frozenset(self._get_facts())
 
     @cached_property
     def theories(self):
-        return tuple(sorted(self._get_theories()))
+        return frozenset(self._get_theories())
 
     @cached_property
     def words_vector(self):
@@ -221,14 +222,22 @@ class Usl(metaclass=IEMLSyntaxType):
         self._set_version(dictionary_version)
         self._str = self._compute_str()
 
+    def auto_translation(self):
+        result = {}
+        entries = sorted([t for p, t in self.paths.items()])
+        for l in LANGUAGES:
+            result[l] = ' '.join((e.translations[l] for e in islice(entries, 10)))
+
+        return result
+
 
 def usl(arg):
     if isinstance(arg, str):
         from .parser import IEMLParser
         return IEMLParser().parse(arg)
 
-    from .word import Word
     if isinstance(arg, Term):
+        from .word import Word
         return Word(arg)
 
     if isinstance(arg, Usl):
