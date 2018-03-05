@@ -81,7 +81,7 @@ and the grammar defined the syntactics and textual relations between the terms.
 
 
 A syntactic meaning unit is called an USL, for Uniform Semantic Locator. 
-There is four differents types of USL :
+There is five differents types of USL :
  - Word : the basic meaning constituent, you can find all the defined words in the [IEML dictionary](https://dictionary.ieml.io).  
  - Topic: a topic aggregate Words into a root and a flexing morphem, a topic represents a subject, a process. 
  - Fact : a fact is a syntactic tree of topics, a fact symbolizes an event, a description.
