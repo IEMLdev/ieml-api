@@ -91,8 +91,12 @@ class RelationsGraph:
         raise NotImplemented
 
     @cached_property
-    def matrix(self):
-        return sum(self.relations.values()).todense()
+    def connexity(self):
+        """
+        A boolean matrix, m[i, j] == True if there is a relation term(i) -> term(j)
+        :return: a np.matrix (len(dictionary), len(dictionary)) of boolean
+        """
+        return np.matrix(sum(self.relations.values()).todense(), dtype=bool)
 
     def relation_type(self, term, relation_type):
         return [self.dictionary.index[j] for j in

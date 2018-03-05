@@ -1,5 +1,6 @@
 import unittest
 
+from ieml.distance.sort import square_order_matrix
 from ieml.grammar import Fact, Text
 import numpy as np
 
@@ -12,4 +13,4 @@ class TestUslOrder(unittest.TestCase):
 
     def test_diagonal(self):
         d = square_order_matrix([self.generator(Fact) for _ in range(30)])
-        self.assertTrue(np.count_nonzero(np.diag(d)) == 0)
+        self.assertFalse((np.diag(d) == 0).any())

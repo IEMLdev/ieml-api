@@ -12,8 +12,14 @@ You can install the ieml package with pip:
 ```bash
 pip install ieml
 ```
-The library has been developed with python3.5
+The library has been developed with python3.5, but it should work with any python3 versions.
 
+If you want to install it from github:
+```bash
+git clone https://github.com/IEMLdev/ieml
+pip install -r requirements.txt
+python setup.py
+```
 ## Quick start
 
 ### Dictionary
@@ -52,7 +58,7 @@ This return a list of all the neighboors of term t and the type of relation they
 
 You can also access the graph of relation as a numpy array of transitions :
 ```python
-m = dic.relations_graph.matrix
+m = dic.relations_graph.connexity
 ```
 Return a dense numpy array of boolean where `m[i, j]` is true if there is a relation 
 between the term number `i` and the term number `j`.
