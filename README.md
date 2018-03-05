@@ -154,7 +154,7 @@ This method use the semantic distance between words of the dictionary.
 
 ## Learning more
 
-Check the [documentation]() (to be there soon) for more detail on the library usage
+Check the [documentation](http://ieml.readthedocs.io/en/latest/index.html) (to be there soon) for more detail on the library usage
 
  
  
