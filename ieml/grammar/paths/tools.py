@@ -7,8 +7,7 @@ from ieml.grammar import topic, text, fact, theory
 from ieml.tools import ieml
 from ...exceptions import InvalidIEMLObjectArgument
 from ...grammar import Theory, Fact, Text, Word, Topic
-from ...dictionary import Term
-from .exceptions import IEMLObjectResolutionError, ResolveError
+from ...exceptions import IEMLObjectResolutionError, ResolveError
 from .parser import PathParser
 from .paths import Path, Coordinate, MultiplicativePath, AdditivePath, ContextPath
 
