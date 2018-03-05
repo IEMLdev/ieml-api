@@ -30,13 +30,11 @@ class TestRelations(TestCase):
                 self.assertTupleEqual(t.relations[reltype], (),
                                      "Term %s has relations %s. Must be inhibited"%(str(t), reltype))
 
-    # def test_relations_matrix(self):
-    #     for reltype in RELATIONS:
-    #         if reltype in ('father', 'child', 'etymology', 'siblings', 'table'):
-    #             continue
-    #         self.assertEqual(Dictionary().rel(reltype).min(), 0)
-    #         self.assertEqual(Dictionary().rel(reltype).max(), 1,
-    #                          "%s -> max %d"%(reltype, Dictionary().rel(reltype).max()))
+    def test_relations_matrix(self):
+        m = Dictionary().relations_graph.matrix
+        self.assertTrue(m.any())
+        self.assertFalse(m.all())
+        self.assertTrue(m.dtype == bool)
 
     def test_table_relations(self):
         t_p = term("M:M:.u.-")
