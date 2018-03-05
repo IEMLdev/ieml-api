@@ -1,13 +1,11 @@
-from ieml.ieml_objects.sentences import Sentence, Clause
-from ieml.ieml_objects.terms import term
-from ieml.ieml_objects.words import Word, Morpheme
-from ieml.usl.tools import usl
+from ieml.dictionary import term
+from ieml.grammar import topic, fact, usl
 
-root = Word(Morpheme([term("i.i.-"),  # fabriquer
-                     term("a.i.-")]),  # vendre
-            Morpheme([term("E:S:.o.-"),  # vouloir futur
-                      term("E:S:.wa.-"),  # 1ere personne pluriel
-                      term("E:A:T:.")]))  # beaucoup
+root = topic([term("i.i.-"),  # fabriquer
+             term("a.i.-")],  # vendre
+            [term("E:S:.o.-"),  # vouloir futur
+             term("E:S:.wa.-"),  # 1ere personne pluriel
+             term("E:A:T:.")])  # beaucoup
 
 
 objects = [
@@ -23,14 +21,14 @@ objects = [
         }
     },
     {
-        'usl': usl(Sentence([Clause(
+        'usl': usl(fact([(
             root,
-            Word(Morpheme([term("t.i.-s.i.-'u.T:.-U:.-'wo.-',B:.-',_M:.-',_;")])),  # véhicule a roue sans conducteur
-            Word(Morpheme([term("E:E:T:.")]))  # COD
-        ), Clause(
+            topic([term("t.i.-s.i.-'u.T:.-U:.-'wo.-',B:.-',_M:.-',_;")]),  # véhicule a roue sans conducteur
+            topic([term("E:E:T:.")])  # COD
+        ), (
             root,
-            Word(Morpheme([term("S:.-'B:.-'n.-S:.U:.-',")])),  # Europe
-            Word(Morpheme([term("E:T:.f.-")]))  # dans
+            topic([term("S:.-'B:.-'n.-S:.U:.-',")]),  # Europe
+            topic([term("E:T:.f.-")])  # dans
         )])),
         'translations': {
             'FR': "Nous avons l'intention de fabriquer et de vendre beaucoup de nos véhicules à roues sans conducteurs en Europe",

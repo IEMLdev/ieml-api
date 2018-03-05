@@ -1,18 +1,15 @@
 import csv
 import hashlib
-import random
-import string
 
 from collections import defaultdict
 
-import progressbar
 from bidict._bidict import bidict
 
-from ieml.dictionary.terms.relations import INVERSE_RELATIONS
+from ieml.dictionary.relations import INVERSE_RELATIONS
 
-from ieml.commons import GRAMMATICAL_CLASS_NAMES
+from ieml.constants import GRAMMATICAL_CLASS_NAMES
 
-from ieml.dictionary.terms import Dictionary, term as _term
+from ieml.dictionary import Dictionary, term as _term
 
 MAX_TERMS_DICTIONARY = 19999
 _drupal_utils = None
@@ -138,7 +135,7 @@ with open("../data/relations.csv", 'w') as fp:
     fieldnames = ['commentary', 'relation_name', 'relation_type', 'term_dest', 'term_src']
     writer = csv.DictWriter(fp, fieldnames=fieldnames)
     writer.writeheader()
-    for r in progressbar.ProgressBar()(drupal_relations_dump(all=True)):
+    for r in tqdm(drupal_relations_dump(all=True)):
         writer.writerow(r)
 
 
