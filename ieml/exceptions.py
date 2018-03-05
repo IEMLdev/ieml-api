@@ -77,10 +77,6 @@ class IncompatiblesScriptsLayers(InvalidScript):
         return 'Unable to add the two scripts %s, %s they have incompatible layers.'%(str(self.s1), str(self.s2))
 
 
-class NoRemarkableSiblingForAdditiveScript(Exception):
-    pass
-
-
 class TermNotFoundInDictionary(Exception):
     def __init__(self, term, dictionary):
         self.message = 'Cannot find term "{0}" in the dictionary {1}'.format(str(term), str(dictionary.version))
