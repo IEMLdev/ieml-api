@@ -136,7 +136,22 @@ dword(u0, u1)
 ```
 
 For the moments, only the distance on words is supported.
- 
+
+### Collection of USLs
+For a list of USLs, you can compute a square matrix of relative order from each USLs :
+```python
+from ieml.distance.sort import square_order_matrix
+
+usl_list = [random_usl() for _ in range(100)]
+
+m = square_order_matrix(usl_list)
+
+i = 20
+ordered_usls = [usl_list[k] for k in m[i, :]]
+```
+ordered_usls is the list of usl ordered from USLs number i to the farrest USL from USL i in the collection.
+This method use the semantic distance between words of the dictionary.
+
 ## Learning more
 
 Check the [documentation]() (to be there soon) for more detail on the library usage

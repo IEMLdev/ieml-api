@@ -6,17 +6,16 @@ def readme():
 
 
 setup(name='ieml',
-      version='0.3.5',
-      description='Implementation of the artificial natural language IEML',
+      version='1.0.0',
+      description='Python implementation of the artificial natural language IEML',
       long_description=readme(),
       classifiers=[
-            'Development Status :: 3 - Alpha',
             'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
             'Programming Language :: Python :: 3.5',
             'Topic :: Text Processing :: Linguistic',
             'Topic :: Text Processing :: Indexing'
       ],
-      keywords='ieml semantic syntax relations',
+      keywords='ieml semantic-representation syntax semantic-relations semantic-distance',
       url='https://github.com/IEMLdev/ieml',
       author='Louis van Beurden',
       author_email='louis.vanbeurden@gmail.com',
@@ -26,7 +25,8 @@ setup(name='ieml',
             'numpy',
             'bidict',
             'ply',
-            'cached-property'
+            'cached-property',
+            'tqdm'
       ],
       test_suite='nose2.collector.collector',
       tests_require=['nose2'],
