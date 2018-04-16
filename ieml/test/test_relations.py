@@ -1,3 +1,4 @@
+from itertools import product
 from unittest.case import TestCase
 
 from ieml.dictionary import Dictionary, term
@@ -45,3 +46,22 @@ class TestRelations(TestCase):
     def test_relations_order(self):
         t = term("M:M:.u.-")
         self.assertTupleEqual(t.relations.contains, tuple(sorted(t.relations.contains)))
+
+    def test_relations_to(self):
+        self.assertTrue(term('wa.').relations.to(term('we.')))
+
+    def test_neighbours(self):
+        for t in Dictionary():
+            for k in ['contains', 'contained', 'table_0', 'identity']:
+                self.assertIn(k, t.relations.to(t))
+
+            for n in t.relations.neighbours:
+                self.assertTrue(t.relations.to(n))
+
+    def test_root_relations(self):
+        # if two terms are in the same root paradigms they have to have at least relations between them
+        for root in Dictionary().roots:
+            for t0, t1 in product(root.relations.contains, root.relations.contains):
+                self.assertTrue(t0.relations.to(t1))
+
+

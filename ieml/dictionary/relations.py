@@ -30,6 +30,7 @@ RELATIONS = [
             'table_3',
             'table_4',
             'table_5',
+            'identity',  # -1
 
              # 'inclusion',        # 12
              # 'father',           # 13
@@ -63,7 +64,8 @@ INVERSE_RELATIONS = {
     'inclusion': 'inclusion',
     'etymology': 'etymology',        # 15
     'siblings': 'siblings',         # 16
-    'table': 'table'
+    'table': 'table',
+    'identity': 'identity'
 }
 
 
@@ -145,6 +147,8 @@ class RelationsGraph:
         for i in range(6):
             self.relations['table_%d'%i] = table[i]
 
+        self.relations['identity'] = csr_matrix(np.eye(len(self.dictionary)))
+
         missing = {s for s in RELATIONS if s not in self.relations}
         if missing:
             raise ValueError("Missing relations : {%s}"%", ".join(missing))
@@ -164,9 +168,16 @@ class RelationsGraph:
             for t0, t1 in combinations(self.dictionary.roots[root], 2):
                 commons = [self.dictionary.index[i] for i in indices[t0.index] & indices[t1.index]]
 
-                rank = max(map(lambda t: t.rank, commons))
-                tables_rank[rank][0].extend((t0.index, t1.index))
-                tables_rank[rank][1].extend((t1.index, t0.index))
+                ranks = set(map(lambda t: t.rank, commons))
+                for rank in ranks:
+                    tables_rank[rank][0].extend((t0.index, t1.index))
+                    tables_rank[rank][1].extend((t1.index, t0.index))
+
+        for t in self.dictionary:
+            ranks = {self.dictionary.index[i].rank for i in indices[t.index]} - {6}
+            for rank in ranks:
+                tables_rank[rank][0].append(t.index)
+                tables_rank[rank][1].append(t.index)
 
         return [coo_matrix(([True]*len(i), (i, j)), shape=self.shape, dtype=np.bool) for i, j in tables_rank]
 
@@ -334,6 +345,10 @@ class Relations:
         return neighbours
 
     def to(self, term, relations_types=None):
+        from ieml.grammar.word import Word
+        if isinstance(term, Word):
+            term = term.term
+
         if relations_types is None:
             relations_types = RELATIONS
 
@@ -402,5 +417,6 @@ for reltype in {'contains',
                 'table_2',
                 'table_3',
                 'table_4',
-                'table_5'}:
+                'table_5',
+                'identity'}:
     setattr(Relations, reltype, cached_property(get_relation(reltype)))
