@@ -2,9 +2,10 @@ from cached_property import cached_property
 from itertools import islice
 
 from ieml.constants import LANGUAGES
-from ieml.dictionary import Term
+from ieml.dictionary import Term, Dictionary
 from ieml.exceptions import InvalidIEMLObjectArgument
 import numpy as np
+
 
 
 class IEMLSyntaxType(type):
@@ -73,16 +74,16 @@ class Usl(metaclass=IEMLSyntaxType):
         self._str = self._compute_str()
 
     def _do_gt(self, other):
-        raise NotImplementedError()
+        raise NotImplementedError(self.__class__)
 
     def compute_str(self):
-        raise NotImplementedError()
+        raise NotImplementedError(self.__class__)
 
     def __str__(self):
         return self._str
 
     def __hash__(self):
-        """Since the IEML string for any proposition AST is supposed to be unique, it can be used as a hash"""
+        """Since the IEML string for any proposition AST is unique, it can be used as a hash"""
         return self.__str__().__hash__()
 
     def __gt__(self, other):
@@ -178,6 +179,10 @@ class Usl(metaclass=IEMLSyntaxType):
         return set(self.rules(type).values())
 
     @property
+    def dictionary(self):
+        return Dictionary(self.dictionary_version)
+
+    @property
     def paths(self):
         from .word import Word
         return self.rules(Word)
@@ -231,7 +236,10 @@ class Usl(metaclass=IEMLSyntaxType):
 
         return result
 
+    def pretty_print(self):
+        print(self.__repr__())
 
+    
 def usl(arg):
     if isinstance(arg, str):
         from .parser import IEMLParser
@@ -249,13 +257,30 @@ def usl(arg):
         # map path -> Ieml_object
         return resolve_ieml_object(arg)
 
+    # if iterable, can be a list of usl to convert into a text
     try:
-        rules = [(a, b) for a, b in arg]
+        usl_list = list(arg)
     except TypeError:
         pass
     else:
-        rules = [(path(a), usl(b)) for a, b in rules]
-        return resolve_ieml_object(rules)
+        if len(usl_list) == 0:
+            return usl('E:')
+
+        if all(isinstance(u, Usl) for u in usl_list):
+            if len(usl_list) == 1:
+                return usl_list[0]
+            else:
+                from ieml.grammar import text
+                return text(usl_list)
+        else:
+            # list of path objects
+            try:
+                rules = [(a, b) for a, b in usl_list]
+            except TypeError:
+                pass
+            else:
+                rules = [(path(a), usl(b)) for a, b in rules]
+                return resolve_ieml_object(rules)
 
     raise NotImplementedError()
 

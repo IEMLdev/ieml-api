@@ -56,3 +56,9 @@ class Text(Usl):
     def _set_version(self, version):
         for c in self.children:
             c.set_dictionary_version(version)
+
+    def _do_gt(self, other):
+        return self.children > other.children
+
+    def __repr__(self, lang='en'):
+        return "[{}]".format(', '.join([c.__repr__() for c in self.children]))

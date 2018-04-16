@@ -2,6 +2,7 @@ from ieml.commons import TreeStructure
 from ieml.dictionary import Term, term, Dictionary
 from ieml.exceptions import InvalidIEMLObjectArgument
 from ieml.grammar.usl import Usl
+from ieml.constants import LANGUAGES
 
 
 def word(arg, literals=None):
@@ -57,3 +58,6 @@ class Word(Usl):
 
     def _set_version(self, version):
         self.term = Dictionary(version).translate_script_from_version(self.term.dictionary.version, self.term.script)
+
+    def __repr__(self, lang='en'):
+        return "{} ({})".format(str(self), self.term.translations[lang])
