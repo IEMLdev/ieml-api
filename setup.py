@@ -25,6 +25,7 @@ setup(name='ieml',
             'numpy',
             'bidict',
             'ply',
+            'scipy',
             'cached-property',
             'tqdm'
       ],
