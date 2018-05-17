@@ -21,5 +21,4 @@ class TopicsTest(unittest.TestCase):
     def test_promotion(self):
         self.assertIsInstance(usl('[A:]'), Word)
         self.assertIsInstance(topic(['[A:]']), Topic)
-
         self.assertIsInstance(term('[A:]'), Term)

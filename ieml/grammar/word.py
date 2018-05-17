@@ -43,6 +43,9 @@ class Word(Usl):
 
         return self.index > other.index
 
+    def _get_cardinal(self):
+        return self.cardinal
+
     def _get_words(self):
         return {self}
 

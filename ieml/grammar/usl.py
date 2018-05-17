@@ -182,6 +182,9 @@ class Usl(metaclass=IEMLSyntaxType):
         from .word import Word
         return self.rules(Word)
 
+    def _get_cardinal(self):
+        raise NotImplementedError()
+
     def _get_words(self):
         raise NotImplementedError()
 
@@ -215,6 +218,10 @@ class Usl(metaclass=IEMLSyntaxType):
         v = np.zeros(len(self.dictionary_version.terms))
         v[[w.index for w in self.words]] = 1
         return v
+
+    @cached_property
+    def cardinal(self):
+        return self._get_cardinal()
 
     def _set_version(self, version):
         raise NotImplementedError()
