@@ -2,16 +2,17 @@
 [![Build Status](https://travis-ci.org/IEMLdev/ieml.svg?branch=master)](https://travis-ci.org/IEMLdev/ieml)
 
 
-IEML is an artificial language built to allow algorithmic manipulation of meaning.
-It is constituted of a [dictionary of elementary meaning units and theres semantic relations](https://intlekt.io/?comments=I%3A "IEML dictionary") and a syntax that defines nested structures with explicit meaning-composition rules. The grammar is regular, and the semantic relations are explicit (can be automatically computed at every syntactic level).
 
-This language is the theory of the last 20 years of the French philosopher Pierre Levy [blog](https://pierrelevyblog.com/) to empower collective intelligence in the digital media. This language is to be seen as classification of the Internet librarian
-The printing press
+IEML is an artificial language built to allow algorithmic manipulation of meaning.
+It is constituted of a [dictionary of elementary meaning units and their semantic relations](https://intlekt.io/?comments=I%3A "IEML dictionary") and a syntax that defines nested structures with explicit meaning-composition rules. The grammar is regular, and the semantic relations are explicit (can be automatically computed at every syntactic level).
+
+This language is the theory of the last 20 years of the French philosopher Pierre Levy [blog](https://pierrelevyblog.com/) to empower collective intelligence in the digital media. This language is to be seen as classification system for the Internet librarian.
+
 and is made to overcome certain limitation of the natural language for natural langage processing :
     - polysemie of signs : in IEML, the meaning of a sign is embedded in the sign itself. So different meaning will writes with different signs. It also ensure that there is no synonyms.
     - out-of-vocabularies : every proposition in IEML is build from the ~3500 basic meaning units (called words) of the dictionary.
     - interlingua : IEML doesn't use any existing natural language at his core semantics. It doesn't rely on English or French to defines his primitives units.
-    - semantic similarity : we can automatically compute a semantic graph between two IEML propositions
+    - semantic similarity : we can automatically compute a semantic graph between two IEML propositions.
 
 
 ## Install
