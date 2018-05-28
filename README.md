@@ -2,8 +2,16 @@
 [![Build Status](https://travis-ci.org/IEMLdev/ieml.svg?branch=master)](https://travis-ci.org/IEMLdev/ieml)
 
 
-IEML is an artificial natural language created by the french philosopher Pierre Levy [blog](https://pierrelevyblog.com/).
-It is a regular language that can efficiently manipulated algorithmically.
+IEML is an artificial language built to allow algorithmic manipulation of meaning.
+It is constituted of a [dictionary of elementary meaning units and theres semantic relations](https://intlekt.io/?comments=I%3A "IEML dictionary") and a syntax that defines nested structures with explicit meaning-composition rules. The grammar is regular, and the semantic relations are explicit (can be automatically computed at every syntactic level).
+
+This language is the theory of the last 20 years of the French philosopher Pierre Levy [blog](https://pierrelevyblog.com/) to empower collective intelligence in the digital media. This language is to be seen as classification of the Internet librarian
+The printing press
+and is made to overcome certain limitation of the natural language for natural langage processing :
+    - polysemie of signs : in IEML, the meaning of a sign is embedded in the sign itself. So different meaning will writes with different signs. It also ensure that there is no synonyms.
+    - out-of-vocabularies : every proposition in IEML is build from the ~3500 basic meaning units (called words) of the dictionary.
+    - interlingua : IEML doesn't use any existing natural language at his core semantics. It doesn't rely on English or French to defines his primitives units.
+    - semantic similarity : we can automatically compute a semantic graph between two IEML propositions
 
 
 ## Install
@@ -24,11 +32,9 @@ python setup.py
 
 ### Dictionary
 
-The IEML dictionary is a set of basic semantics units. There is 5000 terms defined in the dictionary with 
-3500 words. Statistical algorithms have difficulties to manage big vocabularies where there is few examples 
-for a lot of symbols. This is the often the case in NLP applications with natural languages.
+The IEML dictionary is a set of around ~3500 basic semantics units.
+The dictionary is made of 6 layers of words build on top of each others. The words in the low layers are more abstract and general, while the higher layers are more particular and specific.
 
-However, with the finite set dictionary, this problem does not happen in IEML.   
 
 The last version of the IEML dictionary is automatically downloaded and installed when instanced:
 ```python
@@ -76,8 +82,6 @@ return a Term if the string is a valid IEML term (valid syntax and defined in th
 
 ### Grammar
 
-The dictionary defines the paradigmatics relations between the terms,
-and the grammar defined the syntactics and textual relations between the terms.
 
 
 A syntactic meaning unit is called an USL, for Uniform Semantic Locator. 
@@ -122,7 +126,7 @@ t.facts
 t.theories
 t.texts
 ```
-Each of these properties returns a frozen set of USLs.
+Each of these properties returns a set of USLs of the specific type.
 
 For any couple of usl, you can compute a semantic similarity measure based on the 
 relation matrix of the dictionary :
@@ -135,7 +139,7 @@ u1 = random_usl(Text)
 dword(u0, u1)
 ```
 
-For the moments, only the distance on words is supported.
+For the moments, only a similarity on words is defined.
 
 ### Collection of USLs
 For a list of USLs, you can compute a square matrix of relative order from each USLs :
