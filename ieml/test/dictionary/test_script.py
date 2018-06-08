@@ -1,7 +1,7 @@
 import unittest
 
 from ieml.exceptions import TooManySingularSequences
-from ieml.dictionary.script import script as sc
+from ieml.dictionary.script import script as sc, m
 from ieml.constants import AUXILIARY_CLASS, VERB_CLASS, NOUN_CLASS, PRIMITIVES
 from ieml.dictionary.script import MultiplicativeScript, AdditiveScript
 
@@ -18,6 +18,16 @@ class TestScript(unittest.TestCase):
         self.assertEqual(sc('O:+M:').script_class, NOUN_CLASS)
         self.assertEqual(sc('I:').script_class, NOUN_CLASS)
 
+    def test_multiplication(self):
+        sub = sc('wa.')
+        att = sc('u.')
+        mode = sc('O:.')
+
+        r = m(substance=sub, attribute=att, mode=mode)
+        self.assertEqual(r.layer, 2)
+        self.assertIsInstance(r, MultiplicativeScript)
+        self.assertListEqual(r.children, [sub, att, mode])
+
     def test_multiplicative_layer0_nochildren(self):
         for s in scripts:
             layer0 = [m for m in s.tree_iter() if m.layer == 0 and isinstance(m, MultiplicativeScript)]
@@ -33,7 +43,6 @@ class TestScript(unittest.TestCase):
     def test_too_many_singular_sequences(self):
         with self.assertRaises(TooManySingularSequences):
             sc('F:F:F:.F:F:F:.-')
-
 
     def test_str(self):
         self.assertIsNotNone(MultiplicativeScript(character='A')._str)

@@ -362,7 +362,7 @@ class MultiplicativeScript(Script):
 
         super().__init__(children=_children, character=_character)
 
-        # Compute the attributes of this parser
+        # Compute the attributes of this script
         if self.character:
             self.layer = 0 if self.character in PRIMITIVES else 1
             self.paradigm = False
@@ -385,15 +385,15 @@ class MultiplicativeScript(Script):
         if self.layer != 0:
             # check number of children
             if not len(self.children) == 3:
-                raise InvalidScript()
+                raise InvalidScript("Invalid number of children provided for multiplicative script, expected 3")
 
             # check every child of the same layer
             if not self.children[0].layer == self.children[1].layer == self.children[2].layer:
-                raise InvalidScript()
+                raise InvalidScript("Inconsistent layers in children")
 
             # check layer
             if not self.layer == self.children[0].layer + 1:
-                raise InvalidScript()
+                raise InvalidScript("")
 
         if self.cardinal > MAX_SINGULAR_SEQUENCES:
             raise TooManySingularSequences(self.cardinal)

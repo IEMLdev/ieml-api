@@ -1,6 +1,7 @@
 import copy
 import logging
 import pickle
+from configparser import NoOptionError
 from functools import lru_cache
 from urllib.request import urlretrieve
 import datetime
@@ -11,17 +12,13 @@ import re
 
 from collections import defaultdict
 
+from ieml import VERSIONS_FOLDER, CACHE_VERSIONS_FOLDER
 from ieml.constants import LAYER_MARKS
 from ieml.dictionary.relations import RelationsGraph
-from .. import get_configuration, ieml_folder
+from .. import get_configuration
 from ..constants import LANGUAGES
 
 logger = logging.getLogger(__name__)
-VERSIONS_FOLDER = os.path.join(ieml_folder, get_configuration().get('VERSIONS', 'versionsfolder'))
-
-if not os.path.isdir(VERSIONS_FOLDER):
-    os.mkdir(VERSIONS_FOLDER)
-
 
 def get_available_dictionary_version():
     version_url = get_configuration().get('VERSIONS', 'versionsurl')
@@ -40,7 +37,6 @@ def _date_to_str(date):
 def _str_to_date(string):
     return datetime.datetime.strptime(string, '%Y-%m-%d_%H:%M:%S')
 
-
 def version_name(date):
     return "dictionary_{0}".format(_date_to_str(date))
 
@@ -57,7 +53,7 @@ class DictionaryVersionSingleton(type):
         date = args[0] if len(args) == 1 else kwargs['date']
 
         if date is None:
-            date = get_configuration().get('VERSIONS', 'defaultversion')
+            return get_default_dictionary_version()
 
         if isinstance(date, DictionaryVersion):
             return date
@@ -184,7 +180,7 @@ class DictionaryVersion(metaclass=DictionaryVersionSingleton):
     @property
     def cache(self):
         file_name = "cache_%s.pkl" % str(self)
-        return os.path.join(VERSIONS_FOLDER, file_name)
+        return os.path.join(CACHE_VERSIONS_FOLDER, file_name)
 
     @property
     def is_cached(self):
@@ -229,6 +225,7 @@ class DictionaryVersion(metaclass=DictionaryVersionSingleton):
 
         return result
 
+
 def _latest_installed_version():
     version_file_pattern = re.compile("^dictionary_\d{4}-\d{2}-\d{2}_\d{2}:\d{2}:\d{2}\.json")
 
@@ -253,7 +250,15 @@ def get_default_dictionary_version():
     :return: the default dictionary version
     """
     if _default_version is None:
-        set_default_dictionary_version(latest_dictionary_version())
+        try:
+            version = get_configuration().get('VERSIONS', 'DefaultVersion')
+        except NoOptionError:
+            version = _latest_installed_version()
+            if version is None:
+                # fallback to latest dictionary version available
+                version = latest_dictionary_version()
+
+        set_default_dictionary_version(DictionaryVersion(version))
 
     return _default_version
 

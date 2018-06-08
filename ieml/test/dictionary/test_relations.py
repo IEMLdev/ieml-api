@@ -2,8 +2,7 @@ from itertools import product
 from unittest.case import TestCase
 
 from ieml.dictionary import Dictionary, term
-from ieml.dictionary.relations import RELATIONS
-from ieml.dictionary.script.tools import inverse_relation
+from ieml.dictionary.relations import RELATIONS, INVERSE_RELATIONS
 
 
 class TestRelations(TestCase):
@@ -13,7 +12,7 @@ class TestRelations(TestCase):
 
         for reltype in RELATIONS:
             for tt in r[reltype]:
-                if t not in tt.relations[inverse_relation(reltype)]:
+                if t not in tt.relations[INVERSE_RELATIONS[reltype]]:
                     self.fail('Missing link "%s" --> "%s" (%s) in relations db.'%(str(tt), str(t), reltype))
 
     def test_no_reflexive_relations(self):
@@ -41,7 +40,8 @@ class TestRelations(TestCase):
         t_p = term("M:M:.u.-")
         t_ss = term("s.u.-")
 
-        self.assertFalse(t_p.relations.to(t_ss, relations_types=['table_2']))
+        # M:M:.O:S:.-
+        self.assertTrue(t_p.relations.to(t_ss, relations_types=['table_2']))
 
     def test_relations_order(self):
         t = term("M:M:.u.-")

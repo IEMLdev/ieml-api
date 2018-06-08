@@ -1,5 +1,7 @@
 from bidict import bidict
 
+LIBRARY_VERSION = '1.0.1'
+
 
 GRAMMATICAL_CLASS_NAMES = bidict({
     0: 'AUXILIARY',

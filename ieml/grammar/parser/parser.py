@@ -3,6 +3,7 @@ import os
 from functools import partial
 import ply.yacc as yacc
 
+from ieml import PARSER_FOLDER
 from ieml.dictionary.dictionary import Dictionary
 from ieml.exceptions import TermNotFoundInDictionary, InvalidIEMLObjectArgument
 from ieml.grammar import Text
@@ -10,7 +11,6 @@ from ieml.grammar.fact import Fact
 from ieml.grammar.theory import Theory
 from ieml.grammar.topic import Topic
 from ieml.grammar.word import Word
-from ... import parser_folder
 from ...exceptions import CannotParse
 
 from .lexer import get_lexer, tokens
@@ -67,7 +67,8 @@ class IEMLParser(metaclass=IEMLParserSingleton):
         # Build the lexer and parser
         self.lexer = get_lexer()
         self.parser = yacc.yacc(module=self, errorlog=logging, start='proposition',
-                                debug=False, optimize=True, picklefile=os.path.join(parser_folder, "ieml_parser.pickle"))
+                                debug=False, optimize=True,
+                                picklefile=os.path.join(PARSER_FOLDER, "ieml_parser.pickle"))
         self._ieml = None
 
     def parse(self, s):

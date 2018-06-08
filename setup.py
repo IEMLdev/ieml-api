@@ -4,9 +4,10 @@ def readme():
     with open('README.md') as f:
         return f.read()
 
+from ieml.constants import LIBRARY_VERSION
 
 setup(name='ieml',
-      version='1.0.1',
+      version=LIBRARY_VERSION,
       description='Python implementation of the artificial natural language IEML',
       long_description=readme(),
       classifiers=[
@@ -27,7 +28,8 @@ setup(name='ieml',
             'ply',
             'scipy',
             'cached-property',
-            'tqdm'
+            'tqdm',
+            'appdirs'
       ],
       test_suite='nose2.collector.collector',
       tests_require=['nose2'],

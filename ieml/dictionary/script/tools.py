@@ -2,14 +2,7 @@ import itertools as it
 import numpy as np
 from bidict import bidict
 
-from .script import MultiplicativeScript, Script, AdditiveScript, remarkable_multiplication_lookup_table
-
-
-def old_canonical(script_ast):
-    result = ''
-    for byte in script_ast.canonical:
-        result += chr(byte + ord('a') - 1)
-    return [result]
+from .script import MultiplicativeScript, Script, AdditiveScript
 
 
 def factor(sequences):
@@ -100,7 +93,7 @@ def factor(sequences):
 
 def pack_factorisation(facto_list):
     """
-    :param facto_list: list of parser or tuple of factorisation
+    :param facto_list: list of script or tuple of factorisation
     :return:
     """
     _sum = []
@@ -127,8 +120,3 @@ def factorize(script):
 
     result = pack_factorisation(factor(seqs))
     return result
-
-
-def inverse_relation(relation_name):
-    from ..relations import INVERSE_RELATIONS
-    return INVERSE_RELATIONS[relation_name]

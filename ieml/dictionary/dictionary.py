@@ -47,10 +47,10 @@ class DictionarySingleton(type):
                     gc.collect()
 
                 # check cache
-                if not version.is_cached or not USE_CACHE:
+                if not version.is_cached or not kwargs.get('use_cache', True):
                     cls._instance = super(DictionarySingleton, cls).__call__(version, **kwargs)
 
-                    if USE_CACHE:
+                    if kwargs.get('use_cache', True):
                         save_dictionary_to_cache(cls._instance)
                 else:
                     cls._instance = load_dictionary_from_cache(version)
@@ -65,8 +65,7 @@ class Dictionary(metaclass=DictionarySingleton):
     He have a reference on all the couple (ScriptTerms
     """
 
-
-    def __init__(self, version=None):
+    def __init__(self, version=None, use_cache=True):
         super().__init__()
 
         if isinstance(version, str):

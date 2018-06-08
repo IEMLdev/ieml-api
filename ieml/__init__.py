@@ -5,14 +5,17 @@ from os.path import isfile, isdir, expanduser, join, dirname
 import configparser
 import sys
 
+from appdirs import user_cache_dir, user_data_dir
+
+from ieml.constants import LIBRARY_VERSION
 
 _config = configparser.ConfigParser(interpolation=ExtendedInterpolation())
 _config.read(join(dirname(__file__), 'default_config.conf'))
 
-_HOME_FOLDER = expanduser("~")
-ieml_folder = join(_HOME_FOLDER, _config.get('DEFAULT', 'iemlfolder'))
-_config_file = join(ieml_folder, _config.get('DEFAULT', 'configfile'))
-parser_folder = join(ieml_folder, 'parser')
+VERSIONS_FOLDER = os.path.join(user_data_dir(appname='ieml', appauthor=False, version=LIBRARY_VERSION), 'dictionary_versions')
+
+CACHE_VERSIONS_FOLDER = os.path.join(user_cache_dir(appname='ieml', appauthor=False, version=LIBRARY_VERSION), 'cached_dictionary_versions')
+PARSER_FOLDER = os.path.join(user_cache_dir(appname='ieml', appauthor=False, version=LIBRARY_VERSION), 'parsers')
 
 
 def init_logging(config):
@@ -40,25 +43,19 @@ def init_logging(config):
     root.addHandler(ch)
 
 
-if not isdir(ieml_folder):
-    os.mkdir(ieml_folder)
+if not isdir(VERSIONS_FOLDER):
+    os.makedirs(VERSIONS_FOLDER)
 
-if not isdir(parser_folder):
-    os.mkdir(parser_folder)
+if not isdir(PARSER_FOLDER):
+    os.makedirs(PARSER_FOLDER)
 
-if isfile(_config_file):
-    _config.read(_config_file)
+if not isdir(CACHE_VERSIONS_FOLDER):
+    os.makedirs(CACHE_VERSIONS_FOLDER)
+
+# if isfile(_config_file):
+#     _config.read(_config_file)
 
 init_logging(_config)
 
 def get_configuration():
     return _config
-
-
-# from . import tools
-# from . import exceptions
-# from . import constants
-# from . import syntax
-# from . import dictionary
-# from . import usl
-#

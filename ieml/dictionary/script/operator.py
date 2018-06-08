@@ -29,7 +29,3 @@ def script(arg):
             pass
 
     raise NotImplemented
-
-
-# shorthand
-sc = script
