@@ -2,23 +2,23 @@
 [![Build Status](https://travis-ci.org/IEMLdev/ieml.svg?branch=master)](https://travis-ci.org/IEMLdev/ieml)
 
 IEML is an artificial "natural" language having the following properties:
-    - All the semantic relationships between IEML representations are computable.
-    - Every meaning has only one IEML representation and every IEML representation has only one meaning.
+  * All the semantic relationships between IEML representations are computable.
+  * Every meaning has only one IEML representation and every IEML representation has only one meaning.
 
 The [ieml grammar](https://pierrelevyblog.files.wordpress.com/2014/01/00-grammaire-ieml1.pdf "IEML grammar") is constituted of a [dictionary](https://intlekt.io/?comments=I%3A "IEML dictionary") of elementary meanings units - words - and syntactic rules to combine them into topics, then facts and finally, theories.
 
 This language have been made by the French philosopher [Pierre Levy](https://en.wikipedia.org/wiki/Pierre_L%C3%A9vy).
 
 The language overcomes some inherent limitations of naturals languages for algorithmic manipulation :
-    - text generation : rules-based natural language generation can leverage the regularity of the IEML syntax.
-    - out-of-vocabularies : every proposition in IEML is build from ~3500 words, all defined in the dictionary with their paradigmatic relations.
-    - semantic similarity : we can automatically compute semantic relations between IEML propositions.
-    - as an interlingua : IEML does not use any existing natural language as its core semantics. But everything can be said in IEML can be described in IEML.
-    - interaperobility of ontologies : Each IEML expression will have an unique URL.
+  - text generation : rules-based natural language generation can leverage the regularity of the IEML syntax.
+  - out-of-vocabularies : every proposition in IEML is build from ~3500 words, all defined in the dictionary with their paradigmatic relationships.
+  - semantic similarity : we can automatically compute semantic relations between IEML propositions.
+  - as an interlingua : IEML does not use any existing natural language as its core semantics. But everything can be said in IEML can be described in IEML.
+  - interaperobility of ontologies : Each IEML expression will have an unique URL.
 
 Every meaning has only one IEML representation and every IEML representation has only one meaning :
-    - synonymy : the IEML language has an instrinsic order that ensures that every expression has only one valid representation.
-    - polysemy : All the IEML expressions are built from semantic primitives (dictionary) with meanining composition operators (syntax). The dictionary is not polysemic, the operators are injetive and theirs resulting propositions can not be reduced to its constituents. Therefore, there is no polysemy in IEML.
+  - synonymy : the IEML language has an instrinsic order that ensures that every expression has only one valid representation.
+  - polysemy : All the IEML expressions are built from semantic primitives (dictionary) with meanining composition operators (syntax). The dictionary is not polysemic, the operators are injetive and theirs resulting propositions can not be reduced to its constituents. Therefore, there is no polysemy in IEML.
 From there, we have in IEML a bijection between the signifiers and the signified.
 IEML is then a discrete coordinate system of the semantic space. The IEML expressions are called Uniform Semantic Locators (USLs).
 
