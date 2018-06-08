@@ -1,4 +1,5 @@
 from functools import reduce
+from itertools import zip_longest
 from operator import mul
 
 from ieml.grammar.morpheme import Morpheme
@@ -72,3 +73,18 @@ class Topic(Usl):
 
         for f in self.flexing:
             f.set_dictionary_version(version)
+
+    def __repr__(self, lang='en'):
+        row_format = "{:50s}" * 2
+        print(row_format.format("root", "flexion"))
+
+        clip = lambda s, n: s[:n-3] + '..' if len(s) > n else s
+        res = ''
+        for r, f in zip_longest(self.root, self.flexing, fillvalue=""):
+            if r:
+                r = clip(r.__repr__(lang=lang), 50)
+            if f:
+                f = clip(f.__repr__(lang=lang), 50)
+            res += "{}\n".format(row_format.format(r,f))
+
+        return res

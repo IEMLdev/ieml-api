@@ -33,7 +33,7 @@ def get_lexer(module=None):
     t_SLASH = r'\/'
     t_LITERAL = r'\<(\\\>|[^\>])+\>'
 
-    t_ignore  = ' \t\n'
+    t_ignore  = '{} \t\n'
 
     # Error handling rule
     def t_error(t):
