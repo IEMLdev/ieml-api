@@ -12,8 +12,8 @@ This language have been made by the French philosopher [Pierre Levy](https://en.
 The language overcomes some inherent limitations of naturals languages for algorithmic manipulation :
   - text generation : rules-based natural language generation can leverage the regularity of the IEML syntax.
   - out-of-vocabularies : every proposition in IEML is build from ~3500 words, all defined in the dictionary with their paradigmatic relationships.
-  - semantic similarity : we can automatically compute semantic relations between IEML propositions.
-  - as an interlingua : IEML does not use any existing natural language as its core semantics. But everything can be said in IEML can be described in IEML.
+  - semantic similarities : we can automatically compute semantic relations between IEML propositions.
+  - as an interlingua : IEML does not use any existing natural language as its core semantics. But everything that can be said can be described in IEML.
   - interaperobility of ontologies : Each IEML expression will have an unique URL.
 
 Every meaning has only one IEML representation and every IEML representation has only one meaning :
@@ -22,11 +22,18 @@ Every meaning has only one IEML representation and every IEML representation has
 From there, we have in IEML a bijection between the signifiers and the signified.
 IEML is then a discrete coordinate system of the semantic space. The IEML expressions are called Uniform Semantic Locators (USLs).
 
-IEML is a generative semantic.
-The meaning of the words in the dictionary are conventional but not arbitrary. The meanings that have been chosen respects the paradigmatic relationships defined in the IEML grammar. A definition and synonyms in french and english will soon be available for each word.
-The syntax rules defines composition operators.
+IEML is build from a set of [semantic primes](https://en.wikipedia.org/wiki/Semantic_primes) called the dictionary, and explicit rules of [compositions](https://fr.wikipedia.org/wiki/Combinatoire_s%C3%A9mantique).
 
-The semantic of IEML can not be reduced to logic.
+The meaning of the words in the dictionary are conventional but not arbitrary, because they respects a set of constraints:
+ - Each meaning must not already be present in the dictionary, and you can not express this meaning by composition of existing meanings of the dictionary.
+ - The words are defined in systems (paradigms) and a paradigm must be the broadest possible in the concept.
+ - A words defined in a paradigms is build from 3 more abstract words and the words must contains these meanings.
+ 
+All the words have a french and english translation. A definition and synonyms in french and english will soon be available.
+
+The linguist Anna Wierzbicka showed, with her theory [NSM](https://en.wikipedia.org/wiki/Natural_semantic_metalanguage), that we can define any concept described by a proposition in any natural languages with a set of 61 semantic primes, organised in paradigms.
+
+The semantic of IEML is not a logic description, it can not be reduced to a description of a state of the world. You can also express
 
 ## Install
 
