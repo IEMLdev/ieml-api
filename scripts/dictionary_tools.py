@@ -45,10 +45,10 @@ M:.-O:.-'M:.-wa.e.-'t.x.-s.y.-',  => M:.-O:.-'M:.-wa.e.-'t.-x.-s.y.-', (Pour ré
 """
 
 
-
 def _rotate_sc(s):
     subst, attr, mode = s
     return m(mode, subst, attr)
+
 
 def _rotate_sc_additive(s):
     """
@@ -59,6 +59,7 @@ def _rotate_sc_additive(s):
         return AdditiveScript([_rotate_sc(_s) for _s in s])
     else:
         return _rotate_sc(s)
+
 
 def _double_rotate(s):
     subst, attr, mode = s
@@ -290,6 +291,96 @@ def factorize_root(root):
 
     return to_remove, to_add
 
+def _remove_attr_f(s):
+    """O:O:.f.F:.- -> O:O:.F:.- """
+    subst, attr, mode = s
+    return m(subst, mode)
+
+
+def translate_mouvements_et_milieux(s):
+    """i.f.B:.-+u.f.M:.-O:.-' -> i.B:.-+u.M:.-O:.-'"""
+    subst, attr, mode = s
+    assert isinstance(mode, NullScript)
+
+    if isinstance(subst, AdditiveScript):
+        subst = AdditiveScript([_remove_attr_f(_s) for _s in subst])
+    else:
+        subst = _remove_attr_f(subst)
+
+    return m(subst, attr)
+
+
+def translate_competence_en_curr_data(s):
+    """M:.-O:.-'M:.-wa.e.-'t.-x.-s.y.-',  => t.-x.-s.y.-' wa.e.-', M:M:.-',O:.-',_"""
+    subst, attr, mode = s
+    attr_s, attr_a, attr_m = attr
+    assert isinstance(attr_m, NullScript)
+
+    subst_s, subst_a, subst_m = subst
+    assert isinstance(subst_m, NullScript)
+    first_M = subst_s.children[0].children[0]
+
+    return m(m(mode, m(attr_a)), m(m(m(m(first_M, attr_s.children[0].children[0])))), m(m(subst_a)))
+
+def get_competence_en_curr_data_diff():
+    update = {}
+    remove = []
+    for t in term("M:.-O:.-'M:.-wa.e.-'t.-x.-s.y.-',").relations.contains:
+        if len(t) == 1 or len(t) == 2 or len(t) == 18:
+            update[str(t.script)] = str(translate_competence_en_curr_data(t.script))
+        else:
+            remove.append(str(t.script))
+    return update, remove
+
+def translate_noetic(s):
+    """M:.O:.-O:.O:.-B:.T:.n.-' => s.M:O:.O:O:.-"""
+    subst, attr, mode = s
+    return m(script('s.'),
+             m(subst.children[0].children[0], subst.children[1].children[0]),
+             m(attr.children[0].children[0], attr.children[1].children[0]))
+
+
+def translate_tisse_intl_col(s):
+    """O:M:.-O:M:.-we.h.-' => O:M:.-'O:M:.-'s.o.-k.o.-',"""
+    subst, attr, mode = s
+    return m(m(subst), m(attr), script("s.o.-k.o.-'"))
+
+
+def translate_formes_visuelles(s):
+    """s.u.-'O:M:.-'O:.-',+s.u.-'M:O:.-O:.-'M:.-', => b.-S:.U:.-'O:M:.-'O:.-', + b.-S:.U:.-'M:O:.-O:.-'M:.-',"""
+
+    def set_bSU_subst(s):
+        subst, attr, mode = s
+        return m(script("b.-S:.U:.-'"), attr, mode)
+
+    if isinstance(s, AdditiveScript):
+        return AdditiveScript([set_bSU_subst(i) for i in s.children])
+    else:
+        return set_bSU_subst(s)
+
+
+def translate_update(root, f):
+    update = {'terms':
+                  {str(s.script): str(f(s.script)) for s in term(root).relations.contains}
+              }
+    version = create_dictionary_version(latest_dictionary_version(), update=update)
+    upload_to_s3(version)
+    print(version)
+
+
+def translate_ecosystem_intl_col(s):
+    """O:.M:.- => s.o.-k.o.-'M:O:.-',"""
+    subst, attr, mode = s
+
+    return m(script("s.o.-k.o.-'"), m(m(m(attr.children[0], subst.children[0]))))
+
+
+def translate_ecosystem_intl_col_tern(s):
+    """O:.M:.-M:.-' => s.o.-k.o.-‘M:O:.-‘,M:.-',_"""
+    subst, attr, mode = s
+
+    return m(translate_ecosystem_intl_col(subst), m(m(attr)))
+
 if __name__ == "__main__":
     # to_add = {
     #     'terms': ["f.o.-f.o.-'E:.-U:.n.-l.-',E:.-U:.M:T:.-l.-'E:.-A:.M:T:.-l.-',_",
@@ -325,11 +416,45 @@ if __name__ == "__main__":
     #               "f.o.-f.o.-',n.i.-f.i.-',M:O:.-O:.-',_"
     # ]
 
-    to_remove, to_add = factorize_root(term("b.i.-n.i.-'l.i.-n.i.-'+m.+l.i.-f.i.-'+wu.f.A:.-+a.S:.-+i.U:.-+e.O:.-+S:+T:T:.i.-'n.o.-n.o.-'+f.o.-f.o.-'+n.-B:.A:.-+S:+B:.U:.-',"))
+    # to_remove, to_add = factorize_root(term("b.i.-n.i.-'l.i.-n.i.-'+m.+l.i.-f.i.-'+wu.f.A:.-+a.S:.-+i.U:.-+e.O:.-+S:+T:T:.i.-'n.o.-n.o.-'+f.o.-f.o.-'+n.-B:.A:.-+S:+B:.U:.-',"))
+    #
+    #
+    # version = create_dictionary_version(latest_dictionary_version(),
+    #                           add=to_add, remove=to_remove)
+    # upload_to_s3(version)
+    # print(version)
+    # update = {str(s.script): str(translate_mouvements_et_milieux(s.script)) for s in term("i.f.B:.-+u.f.M:.-O:.-'").relations.contains}
+    # version = create_dictionary_version(latest_dictionary_version(), update=update)
+    # upload_to_s3(version)
+    # print(version)
+    # _up, _rem = get_competence_en_curr_data_diff()
+    # update = {'terms': {
+    #         **{str(s.script): str(translate_mouvements_et_milieux(s.script)) for s in term("i.f.B:.-+u.f.M:.-O:.-'").relations.contains},
+    #         **_up
+    #     },
+    #     'remove': {
+    #         *_rem
+    #     }
+    # }
+    # print('\n'.join("{} => {}".format(a, b) for a, b in _up.items()))
+    # version = create_dictionary_version(latest_dictionary_version(), update=update, remove=_rem)
+    # upload_to_s3(version)
+    # print(version)
 
+    root = "O:.M:.-M:.-'"
+    translator = translate_ecosystem_intl_col_tern
+    "dictionary_2018-06-08_17:07:06"
+    print(str(translator(script(root))))
 
-    version = create_dictionary_version(latest_dictionary_version(),
-                              add=to_add, remove=to_remove)
-    upload_to_s3(version)
+    d = Dictionary("dictionary_2018-06-08_17:07:06")
+    # translate_update("s.u.-'O:M:.-'O:.-',+s.u.-'M:O:.-O:.-'M:.-',", translate_formes_visuelles)
+    diff = {
+        **{str(s.script): str(translate_competence_en_curr_data(s.script)) for s in term("M:.-O:.-'M:.-wa.e.-'t.-x.-s.y.-',", d).relations.contains},
+        # **{str(s.script): str(translate_ecosystem_intl_col_tern(s.script)) for s in term("O:.M:.-M:.-'", d).relations.contains},
+    }
+    import json
+    print(json.dumps(diff, indent=True))
+
+    version = create_dictionary_version(None, diff=diff)
+    # upload_to_s3(version)
     print(version)
-

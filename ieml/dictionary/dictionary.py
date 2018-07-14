@@ -202,11 +202,10 @@ class Dictionary(metaclass=DictionarySingleton):
     def translate_script_from_version(self, version, old_script):
         diff = self.version.diff_for_version(version)
 
-        try:
-            new_script = script(diff[old_script])
-        except KeyError:
+        if old_script not in diff or diff[old_script] is None:
             raise ScriptNotDefinedInVersion(old_script, version)
 
+        new_script = script(diff[old_script])
         try:
             return self.terms[new_script]
         except KeyError:
