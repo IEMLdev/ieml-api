@@ -136,7 +136,7 @@ class IEMLParser(metaclass=IEMLParserSingleton):
 
     def p_morpheme(self, p):
         """morpheme : LPAREN word_sum RPAREN"""
-        p[0] = p[2]
+        p[0] = sorted(p[2])
 
     def p_topic(self, p):
         """topic : LBRACKET morpheme RBRACKET

@@ -198,9 +198,11 @@ class DictionaryVersion(metaclass=DictionaryVersionSingleton):
         chronology = sorted(filter(lambda v: v >= older_version, (DictionaryVersion(v) for v in self.diff)))
 
         for v in chronology:
+            diff = self.diff[str(v)]
             for sc_old, sc_new in result.items():
-                if sc_new in self.diff[str(v)]:
-                    result[sc_old] = self.diff[str(v)][sc_new]
+                if sc_new in diff:
+                    if diff[sc_new]:
+                        result[sc_old] = diff[sc_new]
 
         return result
 
@@ -243,7 +245,7 @@ _default_version = _latest_installed_version()
 def get_default_dictionary_version():
     """
     Return the default dictionary version. The version is the latest version installed on
-    the system. If there is none installed yet, it download and install the latest version
+    the system by default. If there is none installed yet, it download and install the latest version
     available online.
     To upgrade to a newer version, you can run `set_default_dictionary_version(latest_dictionary_version())`
 
@@ -271,7 +273,7 @@ def set_default_dictionary_version(version):
     _default_version = version
 
 
-def create_dictionary_version(old_version=None, add=None, update=None, remove=None):
+def create_dictionary_version(old_version=None, add=None, update=None, remove=None, diff=None):
     """
 
     :param old_version: the dictionary version to build the new version from
@@ -306,7 +308,7 @@ def create_dictionary_version(old_version=None, add=None, update=None, remove=No
         'inhibitions': copy.deepcopy(old_version.inhibitions),
         'translations': copy.deepcopy(old_version.translations),
         'diff': {**copy.deepcopy(old_version.diff),
-                 str(old_version): {}},
+                 str(old_version): diff if diff else {}},
         'history': {**copy.deepcopy(old_version.history),
                     new_version_name: {}}
     }
@@ -373,7 +375,6 @@ def create_dictionary_version(old_version=None, add=None, update=None, remove=No
             state['translations'] = {l: {**state['translations'][l], **update['translations'][l]} for l in LANGUAGES}
 
         if 'terms' in update:
-
             state['terms'] = set(t for t in state['terms'] if t not in update['terms'])
 
             roots = set(state['roots']).intersection(update['terms'])
@@ -399,6 +400,9 @@ def create_dictionary_version(old_version=None, add=None, update=None, remove=No
                 if t_old in state['inhibitions']:
                     state['inhibitions'][t_new] = state['inhibitions'][t_old]
                     del state['inhibitions'][t_old]
+
+            state['terms'] = list(state['terms'])
+            state['roots'] = list(state['roots'])
 
     dictionary_version = DictionaryVersion(new_date)
     dictionary_version.__setstate__(state)
