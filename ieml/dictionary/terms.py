@@ -1,5 +1,4 @@
 import logging
-from collections import namedtuple
 import re
 
 from ieml.constants import PHONETIC_PUNCTUATION
@@ -7,6 +6,9 @@ from ..commons import cached_property
 from ..constants import LANGUAGES
 from .script import script as _script
 logger = logging.getLogger(__name__)
+
+from collections import namedtuple
+
 Translations = namedtuple('Translations', list(LANGUAGES))
 Translations.__getitem__ = lambda self, item: self.__getattribute__(item) if item in LANGUAGES \
     else tuple.__getitem__(self, item)
