@@ -2,7 +2,7 @@ from bidict import bidict
 import os
 
 LIBRARY_VERSION = '1.0.3'
-DICTIONARY_FOLDER = os.path.abspath('../../../../ieml-dictionary/dictionary')
+DICTIONARY_FOLDER = os.path.abspath('/home/louis/code/ieml/ieml-dictionary/dictionary')
 
 GRAMMATICAL_CLASS_NAMES = bidict({
     0: 'AUXILIARY',

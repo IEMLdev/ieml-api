@@ -22,7 +22,7 @@ def _add_translations(translations, ieml, c):
 class FolderWatcherCache:
     def __init__(self, folder, cache_folder='.'):
         self.folder = folder
-        self.cache_folder = cache_folder
+        self.cache_folder = os.path.abspath(cache_folder)
 
     def update(self, obj):
         for c in self._cache_candidates():
@@ -40,26 +40,23 @@ class FolderWatcherCache:
         if len(names) != 1:
             return True
 
+        print(self.cache_file, names[0])
         return self.cache_file != names[0]
 
     @property
     def cache_file(self):
+        res = b""
+        for file in sorted(os.listdir(self.folder)):
+            with open(os.path.join(self.folder, file), 'rb') as fp:
+                res += file.encode('utf8') + b":" + fp.read()
 
-        hasher = hashlib.md5()
-        for file in self._cache_candidates():
-            with open(file, 'rb') as fp:
-                hasher.update(fp.read())
-
-        return ".dictionary-cache.{}".format(hasher.hexdigest())
+        return ".dictionary-cache.{}".format(hashlib.md5(res).hexdigest())
 
     def _cache_candidates(self):
         return [n for n in os.listdir(self.cache_folder) if n.startswith('.dictionary-cache.')]
 
 
 class Dictionary:
-
-    # def save_cache(self):
-
     @classmethod
     def load(cls, folder=DICTIONARY_FOLDER, use_cache=True):
         if use_cache:
@@ -127,9 +124,3 @@ class Dictionary:
 if __name__ == '__main__':
     d = Dictionary.load('/home/louis/code/ieml/ieml-dictionary/dictionary')
     print(len(d))
-    print(d.one_hot("e."))
-    print(d.roots)
-    print(d.scripts)
-    d = Dictionary.load('/home/louis/code/ieml/ieml-dictionary/dictionary')
-    print(d.scripts)
-
