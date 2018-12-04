@@ -2,7 +2,7 @@ import copy
 import itertools
 import numpy as np
 
-from ieml.grammar import Topic, Word
+from ieml.lexicon import Topic, Word
 from ..constants import LANGUAGES
 from ..dictionary import Term, term
 from .paths import path

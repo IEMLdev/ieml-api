@@ -1,6 +1,6 @@
-from .parser import ScriptParser
-from .script import MultiplicativeScript, Script
-from .tools import factorize
+from ieml.dictionary.script.parser import ScriptParser
+from ieml.dictionary.script import MultiplicativeScript, Script
+from ieml.dictionary.script.tools import factorize
 
 
 def m(substance, attribute=None, mode=None):
@@ -12,15 +12,11 @@ def m(substance, attribute=None, mode=None):
 
 
 def script(arg):
-    from ..terms import Term
-
     if isinstance(arg, str):
         s = ScriptParser().parse(arg)
         return s
     elif isinstance(arg, Script):
-        return arg
-    elif isinstance(arg, Term):
-        return arg.script
+        return factorize(arg)
     else:
         try:
             arg = [script(a) for a in arg]

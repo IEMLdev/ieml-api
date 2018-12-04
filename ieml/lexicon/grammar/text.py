@@ -1,12 +1,12 @@
 from itertools import chain
 
 from ieml.exceptions import InvalidIEMLObjectArgument
-from ieml.grammar import topic
-from ieml.grammar.usl import Usl
-from ieml.grammar.fact import Fact
-from ieml.grammar.theory import Theory
-from ieml.grammar.topic import Topic
-from ieml.grammar.word import Word
+from ieml.lexicon.grammar import topic
+from ieml.lexicon.grammar.usl import Usl
+from ieml.lexicon.grammar.fact import Fact
+from ieml.lexicon.grammar.theory import Theory
+from ieml.lexicon.grammar.topic import Topic
+from ieml.lexicon.grammar.word import Word
 
 def text(children, literals=None):
     try:

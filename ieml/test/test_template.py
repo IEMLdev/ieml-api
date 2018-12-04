@@ -1,7 +1,7 @@
 import unittest
 
 from ieml.tools import ieml
-from ieml.grammar.template import Template
+from ieml.lexicon.template import Template
 
 
 class TestTemplate(unittest.TestCase):

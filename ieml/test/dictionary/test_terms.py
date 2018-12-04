@@ -1,7 +1,7 @@
 import unittest
 
-from ieml.dictionary import term, Dictionary
-from ieml.dictionary.version import latest_dictionary_version, get_available_dictionary_version
+from ieml.dictionary_old import term, Dictionary
+from ieml.dictionary_old.version import latest_dictionary_version, get_available_dictionary_version
 
 
 class TermsTest(unittest.TestCase):

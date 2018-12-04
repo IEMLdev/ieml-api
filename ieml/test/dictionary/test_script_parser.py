@@ -1,10 +1,10 @@
 import unittest
 
-from ieml.dictionary.script.parser import ScriptParser
-from ieml.dictionary.script import AdditiveScript, MultiplicativeScript, NullScript
+from ieml.dictionary_old.script.parser import ScriptParser
+from ieml.dictionary_old.script import AdditiveScript, MultiplicativeScript, NullScript
 
-from ieml.dictionary import Dictionary
-from ieml.dictionary.script import script as sc
+from ieml.dictionary_old import Dictionary
+from ieml.dictionary_old.script import script as sc
 from ieml.exceptions import CannotParse
 
 

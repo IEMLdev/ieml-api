@@ -8,8 +8,8 @@ import bidict
 import numpy as np
 from scipy.sparse.csr import csr_matrix
 
-from ieml.dictionary.dictionary import Dictionary
-from ieml.dictionary.tools import term
+from ieml.dictionary_old.dictionary import Dictionary
+from ieml.dictionary_old.tools import term
 
 logger = logging.getLogger(__name__)
 

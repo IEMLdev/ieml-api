@@ -1,12 +1,12 @@
 import unittest
 
 from ieml.constants import DICTIONARY_FOLDER
-from ieml.dictionary2.dictionary import Dictionary
-from ieml.dictionary2.script.parser import ScriptParser
-from ieml.dictionary2.script import AdditiveScript, MultiplicativeScript, NullScript
+from ieml.dictionary.dictionary import Dictionary
+from ieml.dictionary.script.parser import ScriptParser
+from ieml.dictionary.script import AdditiveScript, MultiplicativeScript, NullScript
 
-# from ieml.dictionary2 import Dictionary
-from ieml.dictionary2.script import script as sc
+# from ieml.dictionary import Dictionary
+from ieml.dictionary.script import script as sc
 from ieml.exceptions import CannotParse
 
 

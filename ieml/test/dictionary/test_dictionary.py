@@ -1,7 +1,7 @@
 import os
 
 from ieml.constants import LANGUAGES, MAX_LAYER
-from ieml.dictionary import Dictionary
+from ieml.dictionary_old import Dictionary
 
 from unittest.case import TestCase
 

@@ -3,7 +3,7 @@ import unittest
 from ieml.dictionary.terms import Term
 from ieml.exceptions import InvalidIEMLObjectArgument, CannotParse
 from ieml.dictionary import term
-from ieml.grammar import topic, Word, usl, Topic
+from ieml.lexicon import topic, Word, usl, Topic
 
 
 class TopicsTest(unittest.TestCase):

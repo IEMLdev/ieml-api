@@ -1,19 +1,18 @@
 import random
 
-from ieml.grammar.usl import usl, IEMLSyntaxType
-from ..grammar import Fact, Theory, Text, Word, Topic
-from ieml.tools import ieml
-from ..tools import RandomPoolIEMLObjectGenerator
+from ieml.lexicon.grammar.usl import usl, IEMLSyntaxType
+from ieml.lexicon.grammar import Fact, Theory, Text, Word, Topic
+from ieml.tools import ieml, RandomPoolIEMLObjectGenerator
 
 from .paths import path
 
 _ieml_objects_types = [Word, Topic, Fact, Theory]
 _ieml_object_generator = None
 
-def random_usl(rank_type=None):
+def random_usl(dictionary, rank_type=None):
     global _ieml_object_generator
     if _ieml_object_generator is None:
-        _ieml_object_generator = RandomPoolIEMLObjectGenerator(level=Text, pool_size=100)
+        _ieml_object_generator = RandomPoolIEMLObjectGenerator(dictionary, level=Text, pool_size=100)
 
     if rank_type and not isinstance(rank_type, IEMLSyntaxType):
         raise ValueError('The wanted type for the generated usl object must be a IEMLType, here : '

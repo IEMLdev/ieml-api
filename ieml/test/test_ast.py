@@ -3,9 +3,9 @@ import unittest
 
 import numpy as np
 
-from ieml.grammar import Fact, Theory, Text, theory, text, topic
+from ieml.lexicon import Fact, Theory, Text, theory, text, topic
 from ieml.exceptions import InvalidIEMLObjectArgument, TermNotFoundInDictionary
-from ieml.grammar.parser import IEMLParser
+from ieml.lexicon.parser import IEMLParser
 from ieml.tools import RandomPoolIEMLObjectGenerator
 from ieml.dictionary.script import script as sc
 from ieml.test.helper import *

@@ -1,8 +1,7 @@
-from cached_property import cached_property
 from itertools import islice
 
 from ieml.constants import LANGUAGES
-from ieml.dictionary import Term, Dictionary
+from ieml.dictionary.script import Script
 from ieml.exceptions import InvalidIEMLObjectArgument
 import numpy as np
 
@@ -51,14 +50,14 @@ class IEMLSyntaxType(type):
 
 class Usl(metaclass=IEMLSyntaxType):
 
-    def __init__(self, dictionary_version, literals=None):
+    def __init__(self, literals=None):
         super().__init__()
         self._paths = None
 
-        if dictionary_version:
-            self.dictionary_version = dictionary_version
-        else:
-            raise InvalidIEMLObjectArgument(self.__class__, "No dictionary version specified for this syntax object.")
+        # if dictionary_version:
+        #     self.dictionary_version = dictionary_version
+        # else:
+        #     raise InvalidIEMLObjectArgument(self.__class__, "No dictionary version specified for this syntax object.")
 
         _literals = []
         if literals is not None:
@@ -109,7 +108,7 @@ class Usl(metaclass=IEMLSyntaxType):
         return self.compute_str() + _literals
 
     def __getitem__(self, item):
-        from ieml.grammar.paths import Path, path, resolve
+        from ieml.lexicon.paths import Path, path, resolve
 
         if isinstance(item, str):
             item = path(item)
@@ -172,15 +171,15 @@ class Usl(metaclass=IEMLSyntaxType):
                    item.theories.issubset(self.theories)
 
     def rules(self, type):
-        from ieml.grammar.paths import enumerate_paths
+        from ieml.lexicon.paths import enumerate_paths
         return {path: element for path, element in enumerate_paths(self, level=type)}
 
     def objects(self, type):
         return set(self.rules(type).values())
 
-    @property
-    def dictionary(self):
-        return Dictionary(self.dictionary_version)
+    # @property
+    # def dictionary(self):
+    #     return Dictionary(self.dictionary_version)
 
     @property
     def paths(self):
@@ -202,29 +201,29 @@ class Usl(metaclass=IEMLSyntaxType):
     def _get_theories(self):
         raise NotImplementedError()
 
-    @cached_property
+    @property
     def words(self):
         return frozenset(self._get_words())
 
-    @cached_property
+    @property
     def topics(self):
         return frozenset(self._get_topics())
 
-    @cached_property
+    @property
     def facts(self):
         return frozenset(self._get_facts())
 
-    @cached_property
+    @property
     def theories(self):
         return frozenset(self._get_theories())
 
-    @cached_property
-    def words_vector(self):
-        v = np.zeros(len(self.dictionary_version.terms))
+    @property
+    def words_vector(self, dictionary):
+        v = np.zeros(len(dictionary))
         v[[w.index for w in self.words]] = 1
         return v
 
-    @cached_property
+    @property
     def cardinal(self):
         return self._get_cardinal()
 
@@ -249,17 +248,17 @@ class Usl(metaclass=IEMLSyntaxType):
     
 def usl(arg):
     if isinstance(arg, str):
-        from .parser import IEMLParser
+        from ieml.lexicon.parser import IEMLParser
         return IEMLParser().parse(arg)
 
-    if isinstance(arg, Term):
+    if isinstance(arg, Script):
         from .word import Word
         return Word(arg)
 
     if isinstance(arg, Usl):
         return arg
 
-    from ieml.grammar.paths import resolve_ieml_object, path
+    from ieml.lexicon.paths import resolve_ieml_object, path
     if isinstance(arg, dict):
         # map path -> Ieml_object
         return resolve_ieml_object(arg)
@@ -277,7 +276,7 @@ def usl(arg):
             if len(usl_list) == 1:
                 return usl_list[0]
             else:
-                from ieml.grammar import text
+                from ieml.lexicon import text
                 return text(usl_list)
         else:
             # list of path objects

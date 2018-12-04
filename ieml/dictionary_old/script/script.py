@@ -1,9 +1,9 @@
 import itertools
 import numpy as np
 
-from ieml.exceptions import InvalidScriptCharacter, InvalidScript, IncompatiblesScriptsLayers, TooManySingularSequences
-from ieml.commons import TreeStructure
-from ieml.constants import MAX_LAYER, MAX_SINGULAR_SEQUENCES, MAX_SIZE_HEADER, LAYER_MARKS, PRIMITIVES, \
+from ...exceptions import InvalidScriptCharacter, InvalidScript, IncompatiblesScriptsLayers, TooManySingularSequences
+from ...commons import TreeStructure
+from ...constants import MAX_LAYER, MAX_SINGULAR_SEQUENCES, MAX_SIZE_HEADER, LAYER_MARKS, PRIMITIVES, \
     remarkable_multiplication_lookup_table, REMARKABLE_ADDITION, character_value, AUXILIARY_CLASS, VERB_CLASS, \
     NOUN_CLASS
 
@@ -28,16 +28,16 @@ class Script(TreeStructure):
         # Layer of this parser
         self.layer = None
 
-        # If the script is a paradigm
-        self.is_paradigm = None
+        # If it is a a paradigm
+        self.paradigm = None
 
-        # If the script is the empty script
-        self.is_empty = None
+        # If the parser is composed with E
+        self.empty = None
 
-        # The number of singular sequence (1 for singular sequences)
+        # The number of singular sequence (if paradigm it is one, self)
         self.cardinal = None
 
-        # The singular sequences ordered list
+        # The singular sequences
         self._singular_sequences = None
         self._singular_sequences_set = None
 
@@ -78,7 +78,7 @@ class Script(TreeStructure):
         return self.__hash__() == other.__hash__()
 
     def __hash__(self):
-        """Since the IEML string for a script is its definition, it can be used as a hash"""
+        """Since the IEML string for any proposition AST is supposed to be unique, it can be used as a hash"""
         return self._str.__hash__()
 
     def __lt__(self, other):

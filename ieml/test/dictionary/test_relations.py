@@ -1,8 +1,8 @@
 from itertools import product
 from unittest.case import TestCase
 
-from ieml.dictionary import Dictionary, term
-from ieml.dictionary.relations import RELATIONS, INVERSE_RELATIONS
+from ieml.dictionary_old import Dictionary, term
+from ieml.dictionary_old.relations import RELATIONS, INVERSE_RELATIONS
 
 
 class TestRelations(TestCase):

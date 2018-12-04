@@ -14,7 +14,7 @@ from collections import defaultdict
 
 from ieml import VERSIONS_FOLDER, CACHE_VERSIONS_FOLDER
 from ieml.constants import LAYER_MARKS
-from ieml.dictionary.relations import RelationsGraph
+from ieml.dictionary_old.relations import RelationsGraph
 from .. import get_configuration
 from ..constants import LANGUAGES
 
@@ -407,7 +407,7 @@ def create_dictionary_version(old_version=None, add=None, update=None, remove=No
     dictionary_version = DictionaryVersion(new_date)
     dictionary_version.__setstate__(state)
 
-    from ieml.dictionary import Dictionary
+    from ieml.dictionary_old import Dictionary
 
     if set(old_version.terms) == set(state['terms']) and set(old_version.roots) == set(state['roots']) and \
        all(old_version.inhibitions[s] == state['inhibitions'][s] for s in old_version.inhibitions):

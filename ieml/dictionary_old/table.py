@@ -1,7 +1,7 @@
 import numpy as np
 
 from ieml.commons import cached_property
-from ieml.dictionary.script import script
+from ieml.dictionary_old.script import script
 from .terms import Term
 from .script import Script, factorize
 

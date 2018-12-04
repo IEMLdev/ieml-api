@@ -8,7 +8,7 @@ from scipy.sparse.csr import csr_matrix
 from scipy.sparse.dok import dok_matrix
 
 from ieml.commons import cached_property
-from ieml.dictionary2.script.script import MultiplicativeScript, AdditiveScript, NullScript
+from ieml.dictionary_old.script.script import MultiplicativeScript, AdditiveScript, NullScript
 
 logger = logging.getLogger(__name__)
 RELATIONS = [
@@ -314,7 +314,7 @@ class RelationsGraph:
 
     def __setstate__(self, state):
         self.relations = state['relations']
-        self.dictionary = state['dictionary']
+        self.dictionary = state['dictionary_old']
 
     def __getstate__(self):
         return {
@@ -345,9 +345,9 @@ class Relations:
         return neighbours
 
     def to(self, term, relations_types=None):
-        from ieml.grammar.word import Word
+        from ieml.lexicon.word import Word
         if isinstance(term, Word):
-            term = term.term
+            term = term.script
 
         if relations_types is None:
             relations_types = RELATIONS

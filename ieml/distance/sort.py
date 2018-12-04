@@ -1,4 +1,4 @@
-from ieml.grammar import Usl
+from ieml.lexicon import Usl
 import numpy as np
 
 

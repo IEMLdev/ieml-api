@@ -1,6 +1,6 @@
 import unittest
 
-from ieml.grammar.morpheme import morpheme
+from ieml.lexicon.morpheme import morpheme
 
 
 class MorphemeTestCase(unittest.TestCase):

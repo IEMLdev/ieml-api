@@ -1,11 +1,11 @@
 from unittest.case import TestCase
 
-from ieml.grammar import Text, Word, Theory, Fact, Topic, topic, fact, text
+from ieml.lexicon import Text, Word, Theory, Fact, Topic, topic, fact, text
 from ieml.tools import RandomPoolIEMLObjectGenerator, ieml
 from ieml.exceptions import PathError, IEMLObjectResolutionError
-from ieml.grammar.paths import MultiplicativePath, Coordinate, AdditivePath, ContextPath, path, resolve, enumerate_paths,\
+from ieml.lexicon.paths import MultiplicativePath, Coordinate, AdditivePath, ContextPath, path, resolve, enumerate_paths,\
     resolve_ieml_object
-from ieml.grammar.tools import random_usl, usl
+from ieml.lexicon.tools import random_usl, usl
 
 
 class TestPaths(TestCase):

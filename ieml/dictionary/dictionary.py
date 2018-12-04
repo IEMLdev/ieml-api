@@ -1,211 +1,144 @@
-import logging
-from collections import defaultdict
-from itertools import groupby
+import hashlib
+import dill
 
-from ieml.commons import cached_property
-from ieml.dictionary.relations import RelationsGraph
-from ieml.dictionary.table import Cell, table_class
-from ieml.dictionary.version import save_dictionary_to_cache, load_dictionary_from_cache
-from ieml.exceptions import TermNotFoundInDictionary, ScriptNotDefinedInVersion
-from .version import DictionaryVersion, get_default_dictionary_version
-from ..constants import MAX_LAYER
-from .script import script
-import threading
-from ieml import get_configuration
-import gc
+import sys
 
-USE_CACHE = get_configuration().get("RELATIONS", "cacherelations")
-logger = logging.getLogger(__name__)
+from ieml.constants import LANGUAGES, DICTIONARY_FOLDER
+from ieml.dictionary.relation.relations import RelationsGraph
+from ieml.dictionary.script import script
+import numpy as np
 
+from collections import namedtuple
+import os
+import yaml
 
-class DictionarySingleton(type):
-    """
-    This metaclass implements a singleton design pattern.
-    It also ensure that only one dictionary version lives in memory at a time.
-    """
+from ieml.dictionary.table.table_structure import TableStructure
 
-    _instance = None
-
-    # Forbid multiple dictionary creation in parallel
-    lock = threading.Lock()
-
-    def __call__(cls, *args, **kwargs):
-        if len(args) < 1 or args[0] is None:
-            version = get_default_dictionary_version()
-        elif isinstance(args[0], DictionaryVersion):
-            version = args[0]
-        elif isinstance(args[0], str):
-            version = DictionaryVersion(args[0])
-        else:
-            raise ValueError("Invalid argument for dictionary creation, expected dictionary version, not %s"%str(args[0]))
-
-        with cls.lock:
-            if cls._instance is None or cls._instance.version != version:
-
-                if cls._instance is not None:
-                    del cls._instance
-                    gc.collect()
-
-                # check cache
-                if not version.is_cached or not kwargs.get('use_cache', True):
-                    cls._instance = super(DictionarySingleton, cls).__call__(version, **kwargs)
-
-                    if kwargs.get('use_cache', True):
-                        save_dictionary_to_cache(cls._instance)
-                else:
-                    cls._instance = load_dictionary_from_cache(version)
-
-        return cls._instance
+Translations = namedtuple('Translations', list(LANGUAGES))
+Translations.__getitem__ = lambda self, item: self.__getattribute__(item) if item in LANGUAGES \
+    else tuple.__getitem__(self, item)
 
 
-class Dictionary(metaclass=DictionarySingleton):
-    """
-    The dictionary is responsible of the instantiation of the Terms that are specified in a DictionaryVersion object.
-    The dictionary hold a reference to all the Script object 
-    He have a reference on all the couple (ScriptTerms
-    """
+def _add_translations(translations, ieml, c):
+    translations['fr'][ieml] = c['translations']['fr'].strip()
+    translations['en'][ieml] = c['translations']['en'].strip()
 
-    def __init__(self, version=None, use_cache=True):
-        super().__init__()
 
-        if isinstance(version, str):
-            version = DictionaryVersion(version)
+class FolderWatcherCache:
+    def __init__(self, folder, cache_folder):
+        self.folder = folder
+        self.cache_folder = os.path.abspath(cache_folder)
 
-        self.version = version
+    def update(self, obj):
+        for c in self._cache_candidates():
+            os.remove(c)
 
-        # populated attributes
-        # a list of all the Script defined in this dictionary
-        self.scripts = None
+        with open(self.cache_file, 'wb') as fp:
+            dill.dump(obj, fp)
 
-        # a dictionary mapping each script to his term
-        self.terms = None
+    def get(self):
+        with open(self.cache_file, 'rb') as fp:
+            return dill.load(fp)
 
-        # the root
-        self.roots = None
-        self.inhibitions = None
-        self.index = None
-        self.relations_graph = None
+    def is_pruned(self):
+        names = self._cache_candidates()
+        if len(names) != 1:
+            return True
 
-        self._populate()
-        logger.log(logging.INFO, "Dictionary loaded (version: %s, nb_roots: %d, nb_terms: %d)"%
-              (str(self.version), len(self.roots), len(self)))
+        return self.cache_file != names[0]
 
     @property
-    def translations(self):
-        return self.version.translations
+    def cache_file(self):
+        res = b""
+        for file in sorted(os.listdir(self.folder)):
+            with open(os.path.join(self.folder, file), 'rb') as fp:
+                res += file.encode('utf8') + b":" + fp.read()
 
-    @property
-    def layers(self):
-        # index is already ordered by layer
-        return [list(g) for k, g in groupby(self.index, key=lambda t: t.layer)]
+        return ".dictionary-cache.{}".format(hashlib.md5(res).hexdigest())
+
+    def _cache_candidates(self):
+        return [n for n in os.listdir(self.cache_folder) if n.startswith('.dictionary-cache.')]
+
+
+class Dictionary:
+    @classmethod
+    def load(cls, folder=DICTIONARY_FOLDER, use_cache=True, cache_folder=os.path.abspath('.')):
+        if use_cache:
+            cache = FolderWatcherCache(folder, cache_folder=cache_folder)
+            if not cache.is_pruned():
+                return cache.get()
+
+            print("Dictionary.load: Dictionary files changed. Recomputing cache.", file=sys.stderr)
+
+        print("Dictionary.load: Reading dictionary at {}".format(folder), file=sys.stderr)
+        scripts = []
+        translations = {'fr': {}, 'en': {}}
+        roots = []
+        inhibitions = {}
+
+        n_ss = 0
+        n_p = 0
+        for f in os.listdir(folder):
+            with open(os.path.join(folder, f)) as fp:
+                d = yaml.load(fp)
+
+            root = d['RootParadigm']['ieml']
+            inhibitions[root] = d['RootParadigm']['inhibitions']
+
+            roots.append(root)
+
+            _add_translations(translations, root, d['RootParadigm'])
+            scripts.append(root)
+
+            if d['Terms']:
+                for c in d['Terms']:
+                    n_ss += 1
+                    scripts.append(c['ieml'])
+                    _add_translations(translations, c['ieml'], c)
+
+            if d['Paradigms']:
+                for c in d['Paradigms']:
+                    n_p += 1
+                    scripts.append(c['ieml'])
+                    _add_translations(translations, c['ieml'], c)
+
+        print("Dictionary.load: Read {} root paradigms, {} paradigms and {} semes".format(len(roots), n_p, n_ss), file=sys.stderr)
+
+        print("Dictionary.load: Computing table structure and relations ...", file=sys.stderr)
+        dictionary = cls(scripts=scripts, translations=translations, root_paradigms=roots, inhibitions=inhibitions)
+        print("Dictionary.load: Computing table structure and relations", file=sys.stderr)
+
+        if use_cache:
+            print("Dictionary.load: Updating cache at {}".format(cache.cache_file), file=sys.stderr)
+            cache.update(dictionary)
+
+        return dictionary
+
+    def __init__(self, scripts, root_paradigms, translations, inhibitions):
+        self.scripts = np.array(sorted(script(s) for s in scripts))
+        self.index = {e: i for i, e in enumerate(self.scripts)}
+
+        # list of root paradigms
+        self.roots_idx = sum(self.one_hot(r) for r in root_paradigms)
+
+        # scripts to translations
+        self.translations = np.array([Translations(fr=translations['fr'][s], en=translations['en'][s]) for s in self.scripts])
+
+        # map of root paradigm script -> inhibitions list values
+        self._inhibitions = inhibitions
+
+        # self.tables = TableStructure
+        self.tables = TableStructure(self.scripts, self.roots_idx)
+
+        self.relations = RelationsGraph(dictionary=self)
 
     def __len__(self):
-        return len(self.terms)
+        return self.scripts.__len__()
 
-    def __contains__(self, item):
-        return script(item) in self.terms
+    def one_hot(self, s):
+        return np.eye(len(self))[self.index[s]]
 
-    def __iter__(self):
-        return self.index.__iter__()
 
-    def _define_root(self, root, paradigms, script_index):
-        paradigms = sorted(paradigms, key=len, reverse=True)
-
-        self.terms[root] = table_class(root)(root, index=script_index[root], dictionary=self, parent=None)
-        defined = {self.terms[root]}
-
-        for ss in root.singular_sequences:
-            self.terms[ss] = Cell(script=ss, index=script_index[ss], dictionary=self, parent=self.terms[root])
-
-        for s in paradigms:
-            if s in self.terms:
-                continue
-
-            candidates = set()
-            for t in defined:
-
-                accept, regular = t.accept_script(s)
-                if accept:
-                    candidates |= {(t, regular)}
-
-            if len(candidates) == 0:
-                raise ValueError("No parent candidate for the table produced by term %s" % str(s))
-
-            if len(candidates) > 1:
-                logger.log(logging.DEBUG, "Multiple parent candidate for the table produced by script %s: {%s} "
-                      "choosing the smaller one." % (str(s), ', '.join([str(c[0]) for c in candidates])))
-
-            parent, regular = min(candidates, key=lambda t: t[0])
-
-            self.terms[s] = table_class(s)(script=s,
-                                           index=script_index[s],
-                                           dictionary=self,
-                                           parent=parent,
-                                           regular=regular)
-            defined.add(self.terms[s])
-
-        self.roots[self.terms[root]] = sorted(defined | set(self.terms[root]))
-
-    def _populate(self, scripts=None, relations=None):
-        self.version.load()
-
-        if scripts is None:
-            self.scripts = sorted(script(s) for s in self.version.terms)
-        else:
-            self.scripts = scripts
-
-        script_index = {
-            s: i for i, s in enumerate(self.scripts)
-        }
-        roots = defaultdict(list)
-        root_ss = {}
-        for root in self.version.roots:
-            root = script(root)
-            for ss in root.singular_sequences:
-                root_ss[ss] = root
-
-        for s in self.scripts:
-            if s.cardinal == 1:
-                continue
-
-            roots[root_ss[s.singular_sequences[0]]].append(s)
-
-        self.terms = {}
-        self.roots = {}
-        for root in self.version.roots:
-            self._define_root(root=script(root), paradigms=roots[root], script_index=script_index)
-
-        self.index = sorted(self.terms.values())
-        self.inhibitions = {self.terms[r]: relations_list for r, relations_list in self.version.inhibitions.items()}
-
-        if relations is None:
-            self.relations_graph = RelationsGraph(dictionary=self)
-        else:
-            assert all(rel.shape[0] == len(self) and rel.shape[1] == len(self) for rel in relations)
-            self.relations_graph = relations
-
-    def __getstate__(self):
-        return {
-            'relations': self.relations_graph,
-            'scripts': self.scripts,
-            'version': str(self.version)
-        }
-
-    def __setstate__(self, state):
-        if isinstance(state['version'], DictionaryVersion):
-            self.version = state['version']
-        else:
-            self.version = DictionaryVersion(state['version'])
-        self._populate(scripts=state['scripts'], relations=state['relations'])
-
-    def translate_script_from_version(self, version, old_script):
-        diff = self.version.diff_for_version(version)
-
-        if old_script not in diff or diff[old_script] is None:
-            raise ScriptNotDefinedInVersion(old_script, version)
-
-        new_script = script(diff[old_script])
-        try:
-            return self.terms[new_script]
-        except KeyError:
-            raise TermNotFoundInDictionary(new_script, self)
+if __name__ == '__main__':
+    d = Dictionary.load('/home/louis/code/ieml/ieml-dictionary/dictionary')
+    print(len(d))

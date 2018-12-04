@@ -4,13 +4,15 @@ from functools import lru_cache
 import os
 import ply.yacc as yacc
 
-from ieml.exceptions import InvalidScript, CannotParse
-from ieml.dictionary2.script import AdditiveScript, MultiplicativeScript, NullScript
-from ieml.constants import REMARKABLE_ADDITION
-from ieml.commons import Singleton
-from ieml.dictionary2.script.parser.lexer import get_script_lexer, tokens
+from ieml.exceptions import InvalidScript
+from ....exceptions import CannotParse
+from ..script import AdditiveScript, MultiplicativeScript, NullScript
+from ....constants import REMARKABLE_ADDITION
+from ....commons import Singleton
 
-from ieml import PARSER_FOLDER
+from .lexer import get_script_lexer, tokens
+
+from .... import PARSER_FOLDER
 import threading
 
 

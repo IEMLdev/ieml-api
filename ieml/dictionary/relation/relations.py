@@ -1,16 +1,15 @@
-import logging
-from collections import OrderedDict, defaultdict
+from collections import OrderedDict, defaultdict, namedtuple
 from itertools import groupby, combinations, permutations, chain, repeat
 
 import numpy as np
+import sys
+
 from scipy.sparse.coo import coo_matrix
 from scipy.sparse.csr import csr_matrix
 from scipy.sparse.dok import dok_matrix
 
-from ieml.commons import cached_property
 from ieml.dictionary.script.script import MultiplicativeScript, AdditiveScript, NullScript
 
-logger = logging.getLogger(__name__)
 RELATIONS = [
             'contains',         # 0
             'contained',        # 1
@@ -68,31 +67,24 @@ INVERSE_RELATIONS = {
     'identity': 'identity'
 }
 
+RelationsMatrix = namedtuple('RelationsMatrix', RELATIONS)
+
 
 class RelationsGraph:
     def __init__(self, dictionary):
         super().__init__()
 
-        self.dictionary = dictionary
-        self.relations = None
-        self._compute_relations()
+        # dictionary = dictionary
+        self.relations = RelationsMatrix(**self._compute_relations(dictionary))
 
-    def __getitem__(self, item):
-        if isinstance(item, str) and item in RELATIONS:
-            return self.relations[item]
+    # def __getitem__(self, item):
+    #     s = script(item)
+    #
+    #     return Relations(term=item, relations_graph=self)
+    #
+    #     raise NotImplemented
 
-        if isinstance(item, int):
-            return self.relations[RELATIONS[item]]
-
-        from .terms import Term
-        if isinstance(item, Term):
-            if item.dictionary != self.dictionary:
-                raise ValueError("Invalid dictionary, (%s/%s)"%(str(item.dictionary), str(self.dictionary)))
-            return Relations(term=item, relations_graph=self)
-
-        raise NotImplemented
-
-    @cached_property
+    @property
     def connexity(self):
         """
         A boolean matrix, m[i, j] == True if there is a relation term(i) -> term(j)
@@ -101,7 +93,7 @@ class RelationsGraph:
         return np.matrix(sum(self.relations.values()).todense(), dtype=bool)
 
     def relation_type(self, term, relation_type):
-        return [self.dictionary.index[j] for j in
+        return [dictionary.index[j] for j in
                 self.relations[relation_type][term.index, :].indices]
 
     def neighbours(self, term):
@@ -109,29 +101,34 @@ class RelationsGraph:
             reltype: self.relation_type(term, reltype) for reltype in RELATIONS
         }
 
-    def _compute_relations(self):
-        logger.log(logging.INFO, "Computing relations")
+    @staticmethod
+    def _compute_relations(dictionary):
+        # print("Computing relations", file=sys.stderr)
+        # logger.log(logging.DEBUG, "Computing tables relations")
+        # logger.log(logging.DEBUG, "Computing contains/contained relations")
+        # logger.log(logging.DEBUG, "Computing father/child relations")
+        # print("Computing siblings relations", sys.stderr)
 
-        self.relations = {}
-        contains = self._compute_contains()
-        self.relations['contains'] = csr_matrix(contains)
-        self.relations['contained'] = csr_matrix(self.relations['contains'].transpose())
+        relations = {}
+        contains = RelationsGraph._compute_contains(dictionary)
+        relations['contains'] = csr_matrix(contains)
+        relations['contained'] = csr_matrix(relations['contains'].transpose())
 
-        father = self._compute_father()
+        father = RelationsGraph._compute_father(dictionary)
 
         for i, r in enumerate(['_substance', '_attribute', '_mode']):
-            self.relations['father' + r] = dok_matrix(father[i])
+            relations['father' + r] = dok_matrix(father[i])
 
-        siblings = self._compute_siblings()
-        self.relations['opposed'] = dok_matrix(siblings[0])
-        self.relations['associated'] = dok_matrix(siblings[1])
-        self.relations['crossed'] = dok_matrix(siblings[2])
-        self.relations['twin'] = dok_matrix(siblings[3])
+        siblings = RelationsGraph._compute_siblings(dictionary)
+        relations['opposed'] = dok_matrix(siblings[0])
+        relations['associated'] = dok_matrix(siblings[1])
+        relations['crossed'] = dok_matrix(siblings[2])
+        relations['twin'] = dok_matrix(siblings[3])
 
         # self._do_inhibitions()
 
         for i, r in enumerate(['_substance', '_attribute', '_mode']):
-            self.relations['child' + r] = self.relations['father' + r].transpose()
+            relations['child' + r] = relations['father' + r].transpose()
 
         # self.relations['siblings'] = sum(siblings)
         # self.relations['inclusion'] = np.clip(self.relations['contains'] + self.relations['contained'], 0, 1)
@@ -143,20 +140,20 @@ class RelationsGraph:
         #                           self.relations['child_mode']
         # self.relations['etymology'] = self.relations['father'] + self.relations['child']
 
-        table = self._compute_table_rank(self.relations['contained'])
+        table = RelationsGraph._compute_table_rank(dictionary, relations['contained'])
         for i in range(6):
-            self.relations['table_%d'%i] = table[i]
+            relations['table_%d'%i] = table[i]
 
-        self.relations['identity'] = csr_matrix(np.eye(len(self.dictionary)))
+        relations['identity'] = csr_matrix(np.eye(len(dictionary)))
 
-        missing = {s for s in RELATIONS if s not in self.relations}
+        missing = {s for s in RELATIONS if s not in relations}
         if missing:
             raise ValueError("Missing relations : {%s}"%", ".join(missing))
 
-        self.relations = {reltype: csr_matrix(self.relations[reltype]) for reltype in RELATIONS}
+        return {reltype: csr_matrix(relations[reltype]) for reltype in RELATIONS}
 
-    def _compute_table_rank(self, contained):
-        logger.log(logging.DEBUG, "Computing tables relations")
+    @staticmethod
+    def _compute_table_rank(dictionary, contained):
 
         tables_rank = [([], []) for _ in range(6)]
 
@@ -164,42 +161,52 @@ class RelationsGraph:
             set(l) for l in np.split(contained.indices, contained.indptr)[1:-1]
         ]
 
-        for root in self.dictionary.roots:
-            for t0, t1 in combinations(self.dictionary.roots[root], 2):
-                commons = [self.dictionary.index[i] for i in indices[t0.index] & indices[t1.index]]
+        for root in dictionary.tables.roots:
 
-                ranks = set(map(lambda t: t.rank, commons))
+            for t0, t1 in combinations(dictionary.tables.roots[root], 2):
+                i0 = dictionary.index[t0.script]
+                i1 = dictionary.index[t1.script]
+
+                commons = [dictionary.scripts[i] for i in indices[i0] & indices[i1]]
+                ranks = set(map(lambda t: dictionary.tables.tables[t].rank, commons))
                 for rank in ranks:
-                    tables_rank[rank][0].extend((t0.index, t1.index))
-                    tables_rank[rank][1].extend((t1.index, t0.index))
+                    tables_rank[rank][0].extend((i0, i1))
+                    tables_rank[rank][1].extend((i1, i0))
 
-        for t in self.dictionary:
-            ranks = {self.dictionary.index[i].rank for i in indices[t.index]} - {6}
+        for t in dictionary.scripts:
+            idx = dictionary.index[t]
+            ranks = {dictionary.tables.tables[dictionary.scripts[i]].rank for i in indices[idx]} - {6}
             for rank in ranks:
-                tables_rank[rank][0].append(t.index)
-                tables_rank[rank][1].append(t.index)
+                tables_rank[rank][0].append(idx)
+                tables_rank[rank][1].append(idx)
 
-        return [coo_matrix(([True]*len(i), (i, j)), shape=self.shape, dtype=np.bool) for i, j in tables_rank]
+        shape = [len(dictionary)] * 2
+        return [coo_matrix(([True]*len(i), (i, j)), shape=shape, dtype=np.bool) for i, j in tables_rank]
 
-    def _compute_contains(self):
-        logger.log(logging.DEBUG, "Computing contains/contained relations")
+    @staticmethod
+    def _compute_contains(dictionary):
         # contain/contained
+        shape = [len(dictionary)] * 2
 
-        i = list(range(len(self.dictionary)))
-        j = list(range(len(self.dictionary)))
-        for r_p, v in self.dictionary.roots.items():
+        i = list(range(shape[0]))
+        j = list(range(shape[1]))
+
+        for r_p, v in dictionary.tables.roots.items():
             paradigms = {t for t in v if t.script.paradigm}
 
             for p in paradigms:
-                _contains = [self.dictionary.terms[ss].index for ss in p.script.singular_sequences] + \
-                            [k.index for k in paradigms if k.script in p.script]
-                i.extend(repeat(p.index, len(_contains)))
+                _contains = [dictionary.index[ss] for ss in p.script.singular_sequences] + \
+                            [dictionary.index[k.script] for k in paradigms if k.script in p.script]
+                i.extend(repeat(dictionary.index[p.script], len(_contains)))
                 j.extend(_contains)
 
-        return coo_matrix(([True] * len(i), (i, j)), shape=self.shape, dtype=np.bool)
+        return coo_matrix(([True] * len(i), (i, j)), shape=shape, dtype=np.bool)
 
-    def _compute_father(self):
-        logger.log(logging.DEBUG, "Computing father/child relations")
+    @staticmethod
+    def _compute_father(dictionary):
+
+        shape = [len(dictionary)] * 2
+        scripts = set(dictionary.scripts)
 
         def _recurse_script(script):
             result = []
@@ -207,36 +214,35 @@ class RelationsGraph:
                 if isinstance(sub_s, NullScript):
                     continue
 
-                if sub_s in self.dictionary.terms:
-                    result.append(self.dictionary.terms[sub_s].index)
+                if sub_s in scripts:
+                    result.append(dictionary.index[sub_s])
                 else:
                     if sub_s.layer > 0:
                         result.extend(chain.from_iterable(_recurse_script(c) for c in sub_s.children))
 
             return result
 
-        # father = coo_matrix((3, len(self.dictionary), len(self.dictionary)), dtype=np.bool)
+        # father = coo_matrix((3, len(dictionary), len(dictionary)), dtype=np.bool)
 
         father = [([], []) for _ in range(3)]
 
-        for t in self.dictionary.terms.values():
-            s = t.script
-
+        for s in dictionary.scripts:
             for sub_s in s if isinstance(s, AdditiveScript) else [s]:
                 if len(sub_s.children) == 0 or isinstance(sub_s, NullScript):
                     continue
 
-                for i, s in enumerate(('father_substance', 'father_attribute', 'father_mode')):
-                    if s in t.inhibitions:
+                for i, rel in enumerate(('father_substance', 'father_attribute', 'father_mode')):
+                    if rel in dictionary._inhibitions:
                         continue
 
                     fathers_indexes = _recurse_script(sub_s.children[i])
-                    father[i][0].extend(repeat(t.index, len(fathers_indexes)))
+                    father[i][0].extend(repeat(dictionary.index[s], len(fathers_indexes)))
                     father[i][1].extend(fathers_indexes)
 
-        return [coo_matrix(([True] * len(i), (i, j)), shape=self.shape, dtype=np.bool) for i, j in father]
+        return [coo_matrix(([True] * len(i), (i, j)), shape=shape, dtype=np.bool) for i, j in father]
 
-    def _compute_siblings(self):
+    @staticmethod
+    def _compute_siblings(dictionary):
         # siblings
         # 1 dim => the sibling type
         #  -0 opposed
@@ -262,75 +268,66 @@ class RelationsGraph:
 
         siblings = [([], []) for _ in range(4)]
 
-        logger.log(logging.DEBUG, "Computing siblings relations")
+        for root in dictionary.tables.roots:
+            _inhib_opposed = 'opposed' not in dictionary._inhibitions[root]
+            _inhib_associated = 'associated' not in dictionary._inhibitions[root]
+            _inhib_crossed = 'crossed' not in dictionary._inhibitions[root]
+            _inhib_twin = 'twin' not in dictionary._inhibitions[root]
 
-        for root in self.dictionary.roots:
-            _inhib_opposed = 'opposed' not in root.inhibitions
-            _inhib_associated = 'associated' not in root.inhibitions
-            _inhib_crossed = 'crossed' not in root.inhibitions
-            _inhib_twin = 'twin' not in root.inhibitions
-
-            if root.script.layer == 0:
+            if root.layer == 0:
                 continue
             _twins = []
 
-            for i, t0 in enumerate(self.dictionary.roots[root]):
+            for i, t0 in enumerate(dictionary.tables.roots[root]):
                 if not isinstance(t0.script, MultiplicativeScript):
                     continue
 
                 if t0.script.children[0] == t0.script.children[1]:
                     _twins.append(t0)
 
-                for t1 in [t for j, t in enumerate(self.dictionary.roots[root])
+                for t1 in [t for j, t in enumerate(dictionary.tables.roots[root])
                            if j > i and isinstance(t.script, MultiplicativeScript)]:
 
+                    i0 = dictionary.index[t0.script]
+                    i1 = dictionary.index[t1.script]
+
                     if _inhib_opposed and _opposed_sibling(t0.script, t1.script):
-                        siblings[0][0].extend((t0.index, t1.index))
-                        siblings[0][1].extend((t1.index, t0.index))
+                        siblings[0][0].extend((i0, i1))
+                        siblings[0][1].extend((i1, i0))
 
                     if _inhib_associated and _associated_sibling(t0.script, t1.script):
-                        siblings[1][0].extend((t0.index, t1.index))
-                        siblings[1][1].extend((t1.index, t0.index))
+                        siblings[1][0].extend((i0, i1))
+                        siblings[1][1].extend((i1, i0))
 
                     if _inhib_crossed and _crossed_sibling(t0.script, t1.script):
-                        siblings[2][0].extend((t0.index, t1.index))
-                        siblings[2][1].extend((t1.index, t0.index))
+                        siblings[2][0].extend((i0, i1))
+                        siblings[2][1].extend((i1, i0))
 
             if _inhib_twin:
                 _twins = sorted(_twins, key=lambda t: t.script.cardinal)
                 for card, g in groupby(_twins, key=lambda t: t.script.cardinal):
-                    twin_indexes = [t.index for t in g]
+                    twin_indexes = [dictionary.index[t.script] for t in g]
 
                     if len(twin_indexes) > 1:
                         index0, index1 = list(zip(*permutations(twin_indexes, r=2)))
                         siblings[3][0].extend(index0)
                         siblings[3][1].extend(index1)
 
-        return [coo_matrix(([True]*len(i), (i, j)), shape=self.shape, dtype=np.bool) for i, j in siblings]
+        shape = [len(dictionary)] * 2
+        return [coo_matrix(([True]*len(i), (i, j)), shape=shape, dtype=np.bool) for i, j in siblings]
 
     @property
     def shape(self):
-        return (len(self.dictionary), len(self.dictionary))
-
-    def __setstate__(self, state):
-        self.relations = state['relations']
-        self.dictionary = state['dictionary_old']
-
-    def __getstate__(self):
-        return {
-            'relations': self.relations,
-            'dictionary': self.dictionary
-        }
+        return self.relations.shape
 
 
 class Relations:
-    def __init__(self, term, relations_graph):
+    def __init__(self, script):
         super().__init__()
 
-        self.relations_graph = relations_graph
-        self.term = term
+        self.script = script
 
-    @cached_property
+    @property
     def neighbours(self):
         rels = defaultdict(list)
         for reltype in RELATIONS:
@@ -419,4 +416,4 @@ for reltype in {'contains',
                 'table_4',
                 'table_5',
                 'identity'}:
-    setattr(Relations, reltype, cached_property(get_relation(reltype)))
+    setattr(Relations, reltype, property(get_relation(reltype)))

@@ -1,6 +1,6 @@
 from ieml.dictionary import term
-from ieml.grammar import fact, topic
-from ieml.grammar.word import word
+from ieml.lexicon import fact, topic
+from ieml.lexicon.word import word
 
 
 def get_test_word_instance():

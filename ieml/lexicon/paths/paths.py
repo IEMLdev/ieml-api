@@ -4,9 +4,9 @@ from itertools import chain, product
 
 from functools import reduce
 
-from ...grammar import Theory, Fact, Text, Word, Topic
-from .constants import COORDINATES_KINDS
-from ...exceptions import PathError
+from ieml.lexicon.grammar import Theory, Fact, Text, Word, Topic
+from ieml.lexicon.paths.constants import COORDINATES_KINDS
+from ieml.exceptions import PathError
 
 Context = namedtuple("Context",
                      ['accept',   # the types this context can deference

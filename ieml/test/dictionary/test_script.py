@@ -1,9 +1,9 @@
 import unittest
 
 from ieml.exceptions import TooManySingularSequences
-from ieml.dictionary.script import script as sc, m
+from ieml.dictionary_old.script import script as sc, m
 from ieml.constants import AUXILIARY_CLASS, VERB_CLASS, NOUN_CLASS, PRIMITIVES
-from ieml.dictionary.script import MultiplicativeScript, AdditiveScript
+from ieml.dictionary_old.script import MultiplicativeScript, AdditiveScript
 
 scripts = list(map(sc, ["O:.E:M:.-"]))
 

@@ -3,13 +3,13 @@ from collections import defaultdict
 import numpy
 
 from ieml.exceptions import InvalidPathException
-from ieml.grammar import topic, text, fact, theory
+from ieml.lexicon.grammar import topic, text, fact, theory
 from ieml.tools import ieml
-from ...exceptions import InvalidIEMLObjectArgument
-from ...grammar import Theory, Fact, Text, Word, Topic
-from ...exceptions import IEMLObjectResolutionError, ResolveError
-from .parser import PathParser
-from .paths import Path, Coordinate, MultiplicativePath, AdditivePath, ContextPath
+from ieml.exceptions import InvalidIEMLObjectArgument
+from ieml.lexicon.grammar import Theory, Fact, Text, Word, Topic
+from ieml.exceptions import IEMLObjectResolutionError, ResolveError
+from ieml.lexicon.paths.parser import PathParser
+from ieml.lexicon.paths.paths import Path, Coordinate, MultiplicativePath, AdditivePath, ContextPath
 
 
 def path(p):

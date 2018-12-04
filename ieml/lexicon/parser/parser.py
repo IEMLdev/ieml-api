@@ -6,12 +6,12 @@ import ply.yacc as yacc
 from ieml import PARSER_FOLDER
 from ieml.dictionary.dictionary import Dictionary
 from ieml.exceptions import TermNotFoundInDictionary, InvalidIEMLObjectArgument
-from ieml.grammar import Text
-from ieml.grammar.fact import Fact
-from ieml.grammar.theory import Theory
-from ieml.grammar.topic import Topic
-from ieml.grammar.word import Word
-from ...exceptions import CannotParse
+from ieml.lexicon.grammar import Text
+from ieml.lexicon.grammar.fact import Fact
+from ieml.lexicon.grammar.theory import Theory
+from ieml.lexicon.grammar.topic import Topic
+from ieml.lexicon.grammar.word import Word
+from ieml.exceptions import CannotParse
 
 from .lexer import get_lexer, tokens
 import threading

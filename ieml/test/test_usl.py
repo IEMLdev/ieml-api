@@ -2,16 +2,17 @@ import random
 import unittest
 from ieml.dictionary import Dictionary
 
-from ieml.grammar import Fact, Theory, Text, Topic, Word, Usl, usl, topic
+from ieml.lexicon.grammar import Fact, Theory, Text, Topic, Word, Usl, usl, topic
 from ieml.tools import RandomPoolIEMLObjectGenerator, ieml
-from ieml.grammar.tools import random_usl, replace_paths
+from ieml.lexicon.tools import random_usl, replace_paths
 
 
 class TestTexts(unittest.TestCase):
 
     #  TODO : more tests on texts
     def setUp(self):
-        self.rand_gen = RandomPoolIEMLObjectGenerator(level=Theory)
+        self.d = Dictionary.load()
+        self.rand_gen = RandomPoolIEMLObjectGenerator(self.d, level=Theory)
 
     def test_text_ordering_simple(self):
         """Just checks that elements created in a text are ordered the right way"""

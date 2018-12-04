@@ -2,11 +2,11 @@ from functools import reduce
 from itertools import zip_longest
 from operator import mul
 
-from ieml.grammar.morpheme import Morpheme
-from ieml.grammar.word import Word, word
+from ieml.lexicon.grammar.morpheme import Morpheme
+from ieml.lexicon.grammar.word import Word, word
 from .usl import Usl
-from ..exceptions import InvalidIEMLObjectArgument
-from ..constants import MAX_SINGULAR_SEQUENCES, MORPHEME_SIZE_LIMIT
+from ieml.exceptions import InvalidIEMLObjectArgument
+from ieml.constants import MAX_SINGULAR_SEQUENCES, MORPHEME_SIZE_LIMIT
 
 
 def topic(root, flexing=None, literals=None):

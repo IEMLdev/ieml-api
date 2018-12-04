@@ -2,7 +2,7 @@ import itertools as it
 import numpy as np
 from bidict import bidict
 
-from .script import MultiplicativeScript, Script, AdditiveScript
+from ieml.dictionary.script import MultiplicativeScript, Script, AdditiveScript
 
 
 def factor(sequences):

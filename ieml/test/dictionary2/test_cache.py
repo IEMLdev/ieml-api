@@ -3,7 +3,7 @@ import subprocess
 import unittest
 
 from ieml.constants import DICTIONARY_FOLDER
-from ieml.dictionary2.dictionary import Dictionary, FolderWatcherCache
+from ieml.dictionary.dictionary import Dictionary, FolderWatcherCache
 
 
 class CacheTestCase(unittest.TestCase):

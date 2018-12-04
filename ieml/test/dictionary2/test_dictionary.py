@@ -1,9 +1,9 @@
 import unittest
 
-from ieml.dictionary2.dictionary import Dictionary
+from ieml.dictionary.dictionary import Dictionary
 import numpy as np
 
-from ieml.dictionary2.script import Script
+from ieml.dictionary.script import Script
 
 
 class DictionaryTestCase(unittest.TestCase):
