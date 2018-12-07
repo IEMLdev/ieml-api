@@ -40,6 +40,10 @@ class Table2D(Table):
         self._index = None
 
     @property
+    def ndim(self):
+        return 2
+
+    @property
     def shape(self):
         return self.cells.shape
 
@@ -49,7 +53,7 @@ class Table2D(Table):
 
     @property
     def script_rows(self):
-        return [factorize([t.script for t in line]) for line in self.cells]
+        return [factorize(line) for line in self.cells]
 
     @property
     def columns(self):
@@ -57,7 +61,7 @@ class Table2D(Table):
 
     @property
     def script_columns(self):
-        return [factorize([t.script for t in line]) for line in self.cells.transpose()]
+        return [factorize(line) for line in self.cells.transpose()]
 
     @property
     def cells(self):
@@ -149,18 +153,15 @@ class Table2D(Table):
 
         return False, False
 
-    def pretty_print(self):
-        rows = [['', *(str(s) for s in self.script_columns)]]
-        for row, line in zip(self.script_rows, self.cells):
-            rows.append([str(row), *[str(s) for s in line]])
-
-        for r in rows:
-            print('|'.join(r))
 
 class Table1D(Table):
     def __init__(self, script, parent, regular=False):
         super().__init__(script, parent, regular)
         self._index = None
+
+    @property
+    def ndim(self):
+        return 1
 
     @property
     def shape(self):
@@ -194,6 +195,10 @@ class Table1D(Table):
 
 class Cell(Table1D):
     @property
+    def ndim(self):
+        return 0
+
+    @property
     def rank(self):
         return 6
 
@@ -205,6 +210,10 @@ class TableSet(Table):
         if len(self.script.tables_script) == 1:
             raise ValueError("Invalid script for TableSet creation: %s. Expected a script that generate multiple "
                              "Tables"%str(script))
+
+    @property
+    def ndim(self):
+        return 4
 
     @property
     def tables(self):
@@ -235,6 +244,10 @@ class TableSet(Table):
 class Table3D(TableSet):
     def __getitem__(self, item):
         return self.tables[item[0]][item[1:]]
+
+    @property
+    def ndim(self):
+        return 3
 
 
 def table_class(script):

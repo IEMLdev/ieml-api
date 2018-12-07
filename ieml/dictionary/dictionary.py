@@ -41,7 +41,7 @@ class FolderWatcherCache:
             return dill.load(fp)
 
     def is_pruned(self):
-        names = self._cache_candidates()
+        names = [p for p in self._cache_candidates()]
         if len(names) != 1:
             return True
 
@@ -54,23 +54,26 @@ class FolderWatcherCache:
             with open(os.path.join(self.folder, file), 'rb') as fp:
                 res += file.encode('utf8') + b":" + fp.read()
 
-        return ".dictionary-cache.{}".format(hashlib.md5(res).hexdigest())
+        return os.path.join(self.cache_folder, ".dictionary-cache.{}".format(hashlib.md5(res).hexdigest()))
 
     def _cache_candidates(self):
-        return [n for n in os.listdir(self.cache_folder) if n.startswith('.dictionary-cache.')]
+        return [os.path.join(self.cache_folder, n) for n in os.listdir(self.cache_folder) if n.startswith('.dictionary-cache.')]
 
 
 class Dictionary:
     @classmethod
     def load(cls, folder=DICTIONARY_FOLDER, use_cache=True, cache_folder=os.path.abspath('.')):
+        print("Dictionary.load: Reading dictionary at {}".format(folder), file=sys.stderr)
+
         if use_cache:
             cache = FolderWatcherCache(folder, cache_folder=cache_folder)
             if not cache.is_pruned():
+                print("Dictionary.load: Reading cache at {}".format(cache.cache_file), file=sys.stderr)
+
                 return cache.get()
 
-            print("Dictionary.load: Dictionary files changed. Recomputing cache.", file=sys.stderr)
+            print("Dictionary.load: Dictionary files changed  Recomputing cache.", file=sys.stderr)
 
-        print("Dictionary.load: Reading dictionary at {}".format(folder), file=sys.stderr)
         scripts = []
         translations = {'fr': {}, 'en': {}}
         roots = []
@@ -90,13 +93,13 @@ class Dictionary:
             _add_translations(translations, root, d['RootParadigm'])
             scripts.append(root)
 
-            if d['Terms']:
-                for c in d['Terms']:
+            if 'Semes' in d and d['Semes']:
+                for c in d['Semes']:
                     n_ss += 1
                     scripts.append(c['ieml'])
                     _add_translations(translations, c['ieml'], c)
 
-            if d['Paradigms']:
+            if 'Paradigms' in d and d['Paradigms']:
                 for c in d['Paradigms']:
                     n_p += 1
                     scripts.append(c['ieml'])
@@ -122,7 +125,7 @@ class Dictionary:
         self.roots_idx = sum(self.one_hot(r) for r in root_paradigms)
 
         # scripts to translations
-        self.translations = np.array([Translations(fr=translations['fr'][s], en=translations['en'][s]) for s in self.scripts])
+        self.translations = {s: Translations(fr=translations['fr'][s], en=translations['en'][s]) for s in self.scripts}
 
         # map of root paradigm script -> inhibitions list values
         self._inhibitions = inhibitions
@@ -139,6 +142,14 @@ class Dictionary:
         return np.eye(len(self))[self.index[s]]
 
 
+    def __getitem__(self, item):
+        return self.scripts[self.index[script(item)]]
+
+    def __contains__(self, item):
+        return item in self.index
+
+
+
 if __name__ == '__main__':
     d = Dictionary.load('/home/louis/code/ieml/ieml-dictionary/dictionary')
-    print(len(d))
+    print(d.relations.relation_object('O:O:.'))

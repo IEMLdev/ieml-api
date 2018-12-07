@@ -75,31 +75,24 @@ class RelationsGraph:
         super().__init__()
 
         # dictionary = dictionary
-        self.relations = RelationsMatrix(**self._compute_relations(dictionary))
+        self.relations = self._compute_relations(dictionary)
 
-    # def __getitem__(self, item):
-    #     s = script(item)
-    #
-    #     return Relations(term=item, relations_graph=self)
-    #
-    #     raise NotImplemented
+        self.scripts = dictionary.scripts
+        self.index = dictionary.index
+
+    def object(self, subject, relation):
+        return self.scripts[self.relations[relation][self.index[subject]].indices]
+
+    def relation_object(self, subject):
+        return {relation: self.object(subject, relation) for relation in RELATIONS}
 
     @property
-    def connexity(self):
+    def boolean_matrix(self):
         """
         A boolean matrix, m[i, j] == True if there is a relation term(i) -> term(j)
         :return: a np.matrix (len(dictionary), len(dictionary)) of boolean
         """
         return np.matrix(sum(self.relations.values()).todense(), dtype=bool)
-
-    def relation_type(self, term, relation_type):
-        return [dictionary.index[j] for j in
-                self.relations[relation_type][term.index, :].indices]
-
-    def neighbours(self, term):
-        return {
-            reltype: self.relation_type(term, reltype) for reltype in RELATIONS
-        }
 
     @staticmethod
     def _compute_relations(dictionary):
@@ -316,104 +309,100 @@ class RelationsGraph:
         shape = [len(dictionary)] * 2
         return [coo_matrix(([True]*len(i), (i, j)), shape=shape, dtype=np.bool) for i, j in siblings]
 
-    @property
-    def shape(self):
-        return self.relations.shape
+
+# class Relations:
+#     def __init__(self, script):
+#         super().__init__()
+#
+#         self.script = script
+#
+#     @property
+#     def neighbours(self):
+#         rels = defaultdict(list)
+#         for reltype in RELATIONS:
+#             for t in self[reltype]:
+#                 rels[t].append(reltype)
+#
+#         neighbours = OrderedDict()
+#
+#         for t in sorted(rels):
+#             neighbours[t] = rels[t]
+#
+#         return neighbours
+#
+#     def to(self, term, relations_types=None):
+#         from ieml.lexicon.word import Word
+#         if isinstance(term, Word):
+#             term = term.script
+#
+#         if relations_types is None:
+#             relations_types = RELATIONS
+#
+#         if term not in self.neighbours:
+#             return []
+#
+#         return [reltype for reltype in self.neighbours[term] if reltype in relations_types]
+#
+#     def __iter__(self):
+#         return self.neighbours.__iter__()
+#
+#     def __len__(self):
+#         return len(self.neighbours)
+#
+#     def __contains__(self, item):
+#         return item in self.neighbours
+#
+#     def __getitem__(self, item):
+#         if isinstance(item, int):
+#             item = RELATIONS[item]
+#
+#         if isinstance(item, str):
+#             return getattr(self, item)
+#
+#         raise NotImplemented
+#
+#     @property
+#     def father(self):
+#         return {
+#             's': self.father_substance,
+#             'a': self.father_attribute,
+#             'm': self.father_mode,
+#         }
+#
+#     @property
+#     def child(self):
+#         return {
+#             's': self.child_substance,
+#             'a': self.child_attribute,
+#             'm': self.child_mode,
+#         }
 
 
-class Relations:
-    def __init__(self, script):
-        super().__init__()
-
-        self.script = script
-
-    @property
-    def neighbours(self):
-        rels = defaultdict(list)
-        for reltype in RELATIONS:
-            for t in self[reltype]:
-                rels[t].append(reltype)
-
-        neighbours = OrderedDict()
-
-        for t in sorted(rels):
-            neighbours[t] = rels[t]
-
-        return neighbours
-
-    def to(self, term, relations_types=None):
-        from ieml.lexicon.word import Word
-        if isinstance(term, Word):
-            term = term.script
-
-        if relations_types is None:
-            relations_types = RELATIONS
-
-        if term not in self.neighbours:
-            return []
-
-        return [reltype for reltype in self.neighbours[term] if reltype in relations_types]
-
-    def __iter__(self):
-        return self.neighbours.__iter__()
-
-    def __len__(self):
-        return len(self.neighbours)
-
-    def __contains__(self, item):
-        return item in self.neighbours
-
-    def __getitem__(self, item):
-        if isinstance(item, int):
-            item = RELATIONS[item]
-
-        if isinstance(item, str):
-            return getattr(self, item)
-
-        raise NotImplemented
-
-    @property
-    def father(self):
-        return {
-            's': self.father_substance,
-            'a': self.father_attribute,
-            'm': self.father_mode,
-        }
-
-    @property
-    def child(self):
-        return {
-            's': self.child_substance,
-            'a': self.child_attribute,
-            'm': self.child_mode,
-        }
-
-
-def get_relation(reltype):
-    def getter(self):
-        return tuple(self.relations_graph.relation_type(term=self.term, relation_type=reltype))
-
-    getter.__name__ = reltype
-    return getter
-
-
-for reltype in {'contains',
-                'contained',
-                'father_substance',
-                'child_substance',
-                'father_attribute',
-                'child_attribute',
-                'father_mode',
-                'child_mode',
-                'opposed',
-                'associated',
-                'crossed',
-                'twin',
-                'table_0',
-                'table_1',
-                'table_2',
-                'table_3',
-                'table_4',
-                'table_5',
-                'identity'}:
-    setattr(Relations, reltype, property(get_relation(reltype)))
+# def get_relation(reltype):
+#     def getter(self):
+#         return tuple(self.relations_graph.relation_type(term=self.term, relation_type=reltype))
+#
+#     getter.__name__ = reltype
+#     return getter
+#
+#
+# for reltype in {'contains',
+#                 'contained',
+#                 'father_substance',
+#                 'child_substance',
+#                 'father_attribute',
+#                 'child_attribute',
+#                 'father_mode',
+#                 'child_mode',
+#                 'opposed',
+#                 'associated',
+#                 'crossed',
+#                 'twin',
+#                 'table_0',
+#                 'table_1',
+#                 'table_2',
+#                 'table_3',
+#                 'table_4',
+#                 'table_5',
+#                 'identity'}:
+#     setattr(Relations, reltype, property(get_relation(reltype)))
