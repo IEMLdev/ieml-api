@@ -1,12 +1,12 @@
 import random
 
 from ieml.lexicon.grammar.usl import usl, IEMLSyntaxType
-from ieml.lexicon.grammar import Fact, Theory, Text, Word, Topic
+from ieml.lexicon.grammar import Fact, Theory, Text, Word, Word
 from ieml.tools import ieml, RandomPoolIEMLObjectGenerator
 
 from .paths import path
 
-_ieml_objects_types = [Word, Topic, Fact, Theory]
+_ieml_objects_types = [Word, Word, Fact, Theory]
 _ieml_object_generator = None
 
 def random_usl(dictionary, rank_type=None):

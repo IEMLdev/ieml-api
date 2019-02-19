@@ -17,6 +17,7 @@ class TableStructure:
         tables, root_paradigms = self._build_tables(scripts[np.where(roots_idx)], scripts)
         self.tables = tables
         self.roots = root_paradigms
+        self.table_to_root = {t: r for r, t_s in self.roots.items() for t in t_s}
 
     def __iter__(self):
         yield from self.tables.values()

@@ -1,11 +1,9 @@
 from itertools import chain
 
 from ieml.exceptions import InvalidIEMLObjectArgument
-from ieml.lexicon.grammar import topic
 from ieml.lexicon.grammar.usl import Usl
 from ieml.lexicon.grammar.fact import Fact
 from ieml.lexicon.grammar.theory import Theory
-from ieml.lexicon.grammar.topic import Topic
 from ieml.lexicon.grammar.word import Word
 
 def text(children, literals=None):
@@ -14,7 +12,7 @@ def text(children, literals=None):
     except TypeError:
         raise InvalidIEMLObjectArgument(Text, "The argument %s is not iterable." % str(children))
 
-    if not all(isinstance(e, (Word, Topic, Fact, Theory, Text)) for e in _children):
+    if not all(isinstance(e, (Word, Word, Fact, Theory, Text)) for e in _children):
         raise InvalidIEMLObjectArgument(Text, "Invalid type instance in the list of a text,"
                                               " must be Word, Sentence, SuperSentence or Text")
 
@@ -41,11 +39,11 @@ class Text(Usl):
     def __iter__(self):
         return self.children.__iter__()
 
+    def _get_semes(self):
+        return set(chain.from_iterable(c.semes for c in self.children))
+
     def _get_words(self):
         return set(chain.from_iterable(c.words for c in self.children))
-
-    def _get_topics(self):
-        return set(chain.from_iterable(c.topics for c in self.children))
 
     def _get_facts(self):
         return set(chain.from_iterable(c.facts for c in self.children))

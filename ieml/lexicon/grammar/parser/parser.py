@@ -1,16 +1,13 @@
 import logging
 import os
-from functools import partial
 import ply.yacc as yacc
 
-from ieml import PARSER_FOLDER
-from ieml.dictionary.dictionary import Dictionary
+from ieml.constants import PARSER_FOLDER
+from ieml.dictionary.script import script
 from ieml.exceptions import TermNotFoundInDictionary, InvalidIEMLObjectArgument
-from ieml.lexicon.grammar import Text
+from ieml.lexicon.grammar import Text, word
 from ieml.lexicon.grammar.fact import Fact
 from ieml.lexicon.grammar.theory import Theory
-from ieml.lexicon.grammar.topic import Topic
-from ieml.lexicon.grammar.word import Word
 from ieml.exceptions import CannotParse
 
 from .lexer import get_lexer, tokens
@@ -35,34 +32,33 @@ def _hyperlink(node, text_list):
 
 
 class IEMLParserSingleton(type):
-    _instances = {}
+    _instance = None
 
     def __call__(cls, *args, **kwargs):
-        dictionary = args[0] if len(args) > 0 else \
-            kwargs['dictionary'] if 'dictionary' in kwargs else None
+        # dictionary = args[0] if len(args) > 0 else \
+        #     kwargs['dictionary'] if 'dictionary' in kwargs else None
 
-        if dictionary is None:
-            dictionary = Dictionary()
+        # if dictionary is None:
+        #     dictionary = Dictionary.load()
 
-        if not isinstance(dictionary, Dictionary):
-            dictionary = Dictionary(dictionary)
+        # if not isinstance(dictionary, Dictionary):
+        #     dictionary = Dictionary.load(dictionary)
 
-        if dictionary.version not in cls._instances:
+        if cls._instance is None:
             # this code is to clean up duplicate class if we reload modules
-            cls._instances[dictionary.version] = \
-                super(IEMLParserSingleton, cls).__call__(dictionary=dictionary)
+            cls._instance = super(IEMLParserSingleton, cls).__call__()
 
-        return cls._instances[dictionary.version]
+        return cls._instance
 
 
 class IEMLParser(metaclass=IEMLParserSingleton):
     tokens = tokens
     lock = threading.Lock()
 
-    def __init__(self, dictionary=None):
-        from ieml.dictionary.tools import term
+    def __init__(self):
+        # from ieml.dictionary.tools import term
 
-        self._get_term = partial(term, dictionary=dictionary)
+        # self._get_term = partial(term, dictionary=dictionary)
 
         # Build the lexer and parser
         self.lexer = get_lexer()
@@ -108,14 +104,15 @@ class IEMLParser(metaclass=IEMLParserSingleton):
                 | LBRACKET TERM RBRACKET
                 | LBRACKET TERM RBRACKET literal_list"""
         try:
-            term = self._get_term(p[1 if len(p) == 2 else 2])
+            term = script(p[1 if len(p) == 2 else 2])
         except TermNotFoundInDictionary as e:
             raise CannotParse(self._ieml, str(e))
 
         if len(p) == 5:
-            p[0] = Word(term, literals=p[4])
+            logging.error("Literals not supported on script for the moments, and are ignored.")
+            p[0] = term
         else:
-            p[0] = Word(term)
+            p[0] = term
 
     def p_proposition_sum(self, p):
         """word_sum : word_sum PLUS word
@@ -142,16 +139,23 @@ class IEMLParser(metaclass=IEMLParserSingleton):
         """topic : LBRACKET morpheme RBRACKET
                 | LBRACKET morpheme RBRACKET literal_list
                 | LBRACKET morpheme TIMES morpheme RBRACKET
-                | LBRACKET morpheme TIMES morpheme RBRACKET literal_list"""
+                | LBRACKET morpheme TIMES morpheme RBRACKET literal_list
+                | LBRACKET morpheme TIMES morpheme TIMES morpheme RBRACKET
+                | LBRACKET morpheme TIMES morpheme TIMES morpheme RBRACKET literal_list"""
 
         if len(p) == 4:
-            p[0] = Topic(root=tuple(p[2]), flexing=())
+            p[0] = word(substance=p[2])
         elif len(p) == 5:
-            p[0] = Topic(root=tuple(p[2]), flexing=(), literals=p[4])
+            p[0] = word(substance=p[2], literals=p[4])
         elif len(p) == 6:
-            p[0] = Topic(root=tuple(p[2]), flexing=tuple(p[4]))
+            p[0] = word(substance=p[2], attribute=p[4])
+        elif len(p) == 7:
+            p[0] = word(substance=p[2], attribute=p[4], literals=p[6])
+        elif len(p) == 8:
+            p[0] = word(substance=p[2], attribute=p[4], mode=p[6])
         else:
-            p[0] = Topic(root=tuple(p[2]), flexing=tuple(p[4]), literals=p[6])
+            p[0] = word(substance=p[2], attribute=p[4], mode=p[6], literals=p[8])
+
 
     # def p_decorated(self, p):
     #     """decorated_word : word

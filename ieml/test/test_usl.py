@@ -2,7 +2,7 @@ import random
 import unittest
 from ieml.dictionary import Dictionary
 
-from ieml.lexicon.grammar import Fact, Theory, Text, Topic, Word, Usl, usl, topic
+from ieml.lexicon.grammar import Fact, Theory, Text, Word, Word, Usl, usl, topic
 from ieml.tools import RandomPoolIEMLObjectGenerator, ieml
 from ieml.lexicon.tools import random_usl, replace_paths
 
@@ -20,12 +20,12 @@ class TestTexts(unittest.TestCase):
         sentence, supersentence = self.rand_gen.fact(), self.rand_gen.theory()
         text = Text([supersentence, sentence, topic])
 
-        self.assertIn(topic, text.topics)
+        self.assertIn(topic, text.words)
         self.assertIn(sentence, text.facts)
         self.assertIn(supersentence, text.theories)
 
+        self.assertTrue(all(isinstance(t, Word) for t in text.semes))
         self.assertTrue(all(isinstance(t, Word) for t in text.words))
-        self.assertTrue(all(isinstance(t, Topic) for t in text.topics))
         self.assertTrue(all(isinstance(t, Fact) for t in text.facts))
         self.assertTrue(all(isinstance(t, Theory) for t in text.theories))
 
@@ -37,8 +37,8 @@ class TestUsl(unittest.TestCase):
 
     def test_glossary(self):
         txt = random_usl(Text)
-        self.assertTrue(all(t.script in Dictionary() for t in txt.words))
-        self.assertTrue(all(t in txt for t in txt.words))
+        self.assertTrue(all(t.script in Dictionary() for t in txt.semes))
+        self.assertTrue(all(t in txt for t in txt.semes))
 
         with self.assertRaises(ValueError):
             'test' in txt

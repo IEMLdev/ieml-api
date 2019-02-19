@@ -10,9 +10,9 @@ from ieml.exceptions import CannotParse
 from ieml.lexicon.grammar.text import Text, text
 from ieml.lexicon.grammar.usl import Usl
 from ieml.lexicon.grammar.fact import Fact, fact
-from ieml.lexicon.parser import IEMLParser
+from ieml.lexicon.grammar.parser import IEMLParser
 from ieml.lexicon.grammar.theory import Theory, theory
-from ieml.lexicon.grammar.topic import Topic, topic
+from ieml.lexicon.grammar.topic import Word, topic
 from ieml.lexicon.grammar.word import Word
 
 from .exceptions import InvalidIEMLObjectArgument
@@ -51,7 +51,7 @@ class RandomPoolIEMLObjectGenerator:
 
         self.type_to_method = {
             Word: self.word,
-            Topic: self.topic,
+            Word: self.topic,
             Fact: self.fact,
             Theory: self.theory,
             Text: self.text
@@ -62,7 +62,7 @@ class RandomPoolIEMLObjectGenerator:
         Slow method, retrieve all the terms from the database.
         :return:
         """
-        if self.level >= Topic:
+        if self.level >= Word:
             # words
             self.topics_pool = set(self.topic() for i in range(self.pool_size))
 

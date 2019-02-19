@@ -8,7 +8,7 @@ from ieml.constants import LIBRARY_VERSION
 
 setup(name='ieml',
       version=LIBRARY_VERSION,
-      description='Python implementation of the artificial natural language IEML',
+      description='Python implementation of the language IEML',
       long_description=readme(),
       classifiers=[
             'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
@@ -29,7 +29,11 @@ setup(name='ieml',
             'scipy',
             'cached-property',
             'tqdm',
-            'appdirs'
+            'appdirs',
+            'pygit2',
+            'dill',
+            'pandas',
+            'yaml'
       ],
       test_suite='nose2.collector.collector',
       tests_require=['nose2'],

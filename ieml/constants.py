@@ -1,8 +1,30 @@
 from bidict import bidict
 import os
+from appdirs import user_cache_dir, user_data_dir
 
 LIBRARY_VERSION = '1.0.3'
-DICTIONARY_FOLDER = os.path.abspath('/home/louis/code/ieml/ieml-dictionary/dictionary')
+
+IEMLDB_DEFAULT_GIT_ADDRESS='https://github.com/IEMLdev/ieml-language.git'
+
+# DICTIONARY_FOLDER = os.path.abspath(os.path.join(__file__, '../../definition/dictionary'))
+# LEXICONS_FOLDER = os.path.abspath(os.path.join(__file__, '../../definition/lexicons'))
+
+VERSIONS_FOLDER = os.path.join(user_data_dir(appname='ieml', appauthor=False, version=LIBRARY_VERSION), 'dictionary_versions')
+CACHE_VERSIONS_FOLDER = os.path.join(user_cache_dir(appname='ieml', appauthor=False, version=LIBRARY_VERSION), 'cached_dictionary_versions')
+PARSER_FOLDER = os.path.join(user_cache_dir(appname='ieml', appauthor=False, version=LIBRARY_VERSION), 'parsers')
+
+os.makedirs(VERSIONS_FOLDER, exist_ok=True)
+os.makedirs(PARSER_FOLDER, exist_ok=True)
+os.makedirs(CACHE_VERSIONS_FOLDER, exist_ok=True)
+
+
+def get_iemldb_folder(name):
+    return os.path.join(user_cache_dir(appname='ieml', appauthor=False, version=LIBRARY_VERSION), name)
+
+
+
+# DICTIONARY_SCHEMA_FILE = os.path.abspath(os.path.join(__file__, '../../definition/dictionary_paradigm_schema.yaml'))
+
 
 GRAMMATICAL_CLASS_NAMES = bidict({
     0: 'AUXILIARY',
@@ -14,12 +36,12 @@ AUXILIARY_CLASS = GRAMMATICAL_CLASS_NAMES.inv['AUXILIARY']
 VERB_CLASS = GRAMMATICAL_CLASS_NAMES.inv['VERB']
 NOUN_CLASS = GRAMMATICAL_CLASS_NAMES.inv['NOUN']
 
-LANGUAGES = {
+LANGUAGES = [
     'fr',
     'en'
-}
+]
 
-MORPHEME_SIZE_LIMIT = 6
+CHARACTER_SIZE_LIMIT = 6
 MAX_NODES_IN_SENTENCE = 20
 MAX_DEPTH_IN_HYPERTEXT = 8
 MAX_NODES_IN_HYPERTEXT = 20

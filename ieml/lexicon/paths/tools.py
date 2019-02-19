@@ -6,7 +6,7 @@ from ieml.exceptions import InvalidPathException
 from ieml.lexicon.grammar import topic, text, fact, theory
 from ieml.tools import ieml
 from ieml.exceptions import InvalidIEMLObjectArgument
-from ieml.lexicon.grammar import Theory, Fact, Text, Word, Topic
+from ieml.lexicon.grammar import Theory, Fact, Text, Word, Word
 from ieml.exceptions import IEMLObjectResolutionError, ResolveError
 from ieml.lexicon.paths.parser import PathParser
 from ieml.lexicon.paths.paths import Path, Coordinate, MultiplicativePath, AdditivePath, ContextPath
@@ -92,7 +92,7 @@ def _resolve_path(obj, path):
     if isinstance(obj, (Fact, Theory)):
         return _resolve_path_tree_graph(obj.tree_graph, path)
 
-    if isinstance(obj, Topic):
+    if isinstance(obj, Word):
         if path.kind == 'r':
             if path.index is not None:
                 return {obj.root[path.index]}
@@ -146,11 +146,11 @@ def _enumerate_paths(usl, level):
                 yield [_tree_graph_path_of_node(usl.tree_graph, node)] + p, e
 
     if isinstance(usl, (Fact)):
-        for node in usl.topics:
+        for node in usl.words:
             for p, e in _enumerate_paths(node, level=level):
                 yield [_tree_graph_path_of_node(usl.tree_graph, node)] + p, e
 
-    if isinstance(usl, Topic):
+    if isinstance(usl, Word):
         for i, t in enumerate(usl.root):
             for p, e in _enumerate_paths(t, level=level):
                 yield [path('r%d'%i)] + p, e
@@ -494,7 +494,7 @@ def _resolve_ctx(rules):
 
     type = next(types.__iter__())
 
-    if type == Topic:
+    if type == Word:
         error, deps = _build_deps_topic(rules)
         if error:
             return

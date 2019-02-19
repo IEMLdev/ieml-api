@@ -4,7 +4,7 @@ from itertools import chain, product
 
 from functools import reduce
 
-from ieml.lexicon.grammar import Theory, Fact, Text, Word, Topic
+from ieml.lexicon.grammar import Theory, Fact, Text, Word, Word
 from ieml.lexicon.paths.constants import COORDINATES_KINDS
 from ieml.exceptions import PathError
 
@@ -15,25 +15,25 @@ Context = namedtuple("Context",
 
 COORDINATES_CONTEXTS = {
     't': Context(accept={Text}, conserve=False, switch={
-        Text: {Theory, Fact, Topic, Word}
+        Text: {Theory, Fact, Word, Word}
     }),
     'a': Context(accept={Theory, Fact}, conserve=True, switch={
         Theory: {Fact},
-        Fact: {Topic}
+        Fact: {Word}
     }),
     's': Context(accept={Theory, Fact}, conserve=True, switch={
         Theory: {Fact},
-        Fact: {Topic}
+        Fact: {Word}
     }),
     'm': Context(accept={Theory, Fact}, conserve=False, switch={
         Theory: {Fact},
-        Fact: {Topic}
+        Fact: {Word}
     }),
-    'r': Context(accept={Topic}, conserve=False, switch={
-        Topic: {Word}
+    'r': Context(accept={Word}, conserve=False, switch={
+        Word: {Word}
     }),
-    'f': Context(accept={Topic}, conserve=False, switch={
-        Topic: {Word}
+    'f': Context(accept={Word}, conserve=False, switch={
+        Word: {Word}
     })
 }
 

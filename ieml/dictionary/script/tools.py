@@ -1,4 +1,6 @@
 import itertools as it
+from typing import Union, List
+
 import numpy as np
 from bidict import bidict
 
@@ -110,11 +112,37 @@ def pack_factorisation(facto_list):
         return AdditiveScript(children=_sum)
 
 
-def factorize(script):
+def promote(script: Script, layer: int):
+    """
+    Promote script to layer by multiplying it with null scripts (E:)
+    :param script:
+    :param layer:
+    :return:
+    """
+    old_layer = script.layer
+
+    for l in range(old_layer, layer):
+        script = MultiplicativeScript(children=[script])
+
+    return script
+
+
+def factorize(script: Union[Script, List[Script]],
+              promote: bool = True) -> Script:
+    """
+
+    :param script: The Script or list of Script to factorize
+    :param promote: If script is a list, promote all Script to the layer max(sc.layer for sc in scripts)
+    :return: the factorized script
+    """
     if isinstance(script, Script):
         seqs = script.singular_sequences
     elif isinstance(script, list) or hasattr(script, '__iter__'):
         seqs = list(it.chain.from_iterable(s.singular_sequences for s in script))
+
+        if promote:
+            layer = max(s.layer for s in seqs)
+            seqs = [globals()['promote'](seq, layer) for seq in seqs]
     else:
         raise ValueError
 

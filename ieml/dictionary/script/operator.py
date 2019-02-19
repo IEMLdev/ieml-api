@@ -11,7 +11,7 @@ def m(substance, attribute=None, mode=None):
         raise NotImplemented
 
 
-def script(arg):
+def script(arg, promote=False):
     if isinstance(arg, str):
         s = ScriptParser().parse(arg)
         return s
@@ -20,7 +20,7 @@ def script(arg):
     else:
         try:
             arg = [script(a) for a in arg]
-            return factorize(arg)
+            return factorize(arg, promote=promote)
         except TypeError:
             pass
 

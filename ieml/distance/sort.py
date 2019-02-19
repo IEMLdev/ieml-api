@@ -36,7 +36,7 @@ class QuerySort:
 
     def sort(self, collection):
         def sort_key(u):
-            return self._proximity(u, lambda u: u.words)
+            return self._proximity(u, lambda u: u.semes)
             # self._proximity(u, lambda u: u.topics)
 
         return sorted(collection, key=sort_key)

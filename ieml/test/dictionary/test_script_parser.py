@@ -1,10 +1,12 @@
 import unittest
 
-from ieml.dictionary_old.script.parser import ScriptParser
-from ieml.dictionary_old.script import AdditiveScript, MultiplicativeScript, NullScript
+from ieml.constants import DICTIONARY_FOLDER
+from ieml.dictionary.dictionary import Dictionary
+from ieml.dictionary.script.parser import ScriptParser
+from ieml.dictionary.script import AdditiveScript, MultiplicativeScript, NullScript
 
-from ieml.dictionary_old import Dictionary
-from ieml.dictionary_old.script import script as sc
+# from ieml.dictionary import Dictionary
+from ieml.dictionary.script import script as sc
 from ieml.exceptions import CannotParse
 
 
@@ -70,11 +72,11 @@ class TestTermParser(unittest.TestCase):
         for s in script.singular_sequences:
             self.assertEqual(s.cardinal, 1)
 
-    def test_all_db_term(self):
+    def test_all_scripts(self):
         parser = ScriptParser()
-        terms = [str(term.script) for term in Dictionary()]
-        terms_ast = [parser.parse(term) for term in terms]
-        self.assertListEqual([str(t) for t in terms_ast], terms)
+        terms = [str(script) for script in Dictionary.load().scripts]
+        terms_ast = [str(parser.parse(term)) for term in terms]
+        self.assertListEqual(terms_ast, terms)
 
     def test_reduction_single_add(self):
         script = self.parser.parse("M:.-',M:.-',S:.-'B:.-'n.-S:.U:.-',_")

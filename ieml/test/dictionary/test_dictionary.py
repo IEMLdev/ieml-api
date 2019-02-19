@@ -1,30 +1,33 @@
-import os
+import unittest
 
-from ieml.constants import LANGUAGES, MAX_LAYER
-from ieml.dictionary_old import Dictionary
+from ieml.dictionary.dictionary import Dictionary
+import numpy as np
 
-from unittest.case import TestCase
+from ieml.dictionary.script import Script
 
 
-class DictionaryTest(TestCase):
-    def test_load_dictionary(self):
-        dic = Dictionary()
-        NB_TERMS = len(dic)
+class DictionaryTestCase(unittest.TestCase):
 
-        self.assertEqual(len(dic.index), NB_TERMS)
-        self.assertEqual(len(dic.terms), NB_TERMS)
-        # self.assertEqual(len(dic.relations), 12)
-        for l in LANGUAGES:
-            self.assertEqual(len(dic.translations[l]), NB_TERMS)
+    def setUp(self):
+        self.d = Dictionary.load()
 
-        self.assertEqual(len(dic.layers), MAX_LAYER + 1) # from 0
-        self.assertEqual(sum(len(v) for v in dic.layers), NB_TERMS)
-        self.assertListEqual(dic.index, sorted(dic.terms.values()))
+    def test_scripts(self):
+        self.assertIsInstance(self.d.scripts, np.ndarray)
+        self.assertEqual(self.d.scripts.ndim, 1)
+        self.assertEqual(self.d.scripts.shape, (len(self.d),))
+        for s in self.d.scripts:
+            self.assertIsInstance(s, Script)
 
-    def test_multiple_dictionary(self):
-        d0 = Dictionary()
-        d1 = Dictionary()
-        self.assertEqual(d0, d1)
+    def test_one_hot(self):
+        for i, s in enumerate(self.d.scripts):
+            oh = self.d.one_hot(s)
 
-        d2 = Dictionary('dictionary_2017-06-07_00:00:00')
-        self.assertNotEqual(d0, d2)
+            self.assertIsInstance(oh, np.ndarray)
+            self.assertEqual(oh.ndim, 1)
+            self.assertEqual(oh.shape, (len(self.d),))
+            self.assertEqual(oh.dtype, int)
+
+            self.assertTrue(all(e == 0 for j, e in enumerate(oh) if j != i))
+            # print(oh[i-2:i+2], s)
+
+            self.assertEqual(oh[i], 1)

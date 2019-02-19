@@ -6,11 +6,10 @@ import ply.yacc as yacc
 
 from ieml.exceptions import InvalidScript, CannotParse
 from ieml.dictionary.script import AdditiveScript, MultiplicativeScript, NullScript
-from ieml.constants import REMARKABLE_ADDITION
+from ieml.constants import REMARKABLE_ADDITION, PARSER_FOLDER
 from ieml.commons import Singleton
 from ieml.dictionary.script.parser.lexer import get_script_lexer, tokens
 
-from ieml import PARSER_FOLDER
 import threading
 
 

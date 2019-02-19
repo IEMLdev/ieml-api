@@ -1,11 +1,14 @@
 from itertools import product
 from unittest.case import TestCase
 
-from ieml.dictionary_old import Dictionary, term
-from ieml.dictionary_old.relations import RELATIONS, INVERSE_RELATIONS
+from ieml.dictionary.dictionary import Dictionary
+from ieml.dictionary.relations import RELATIONS, INVERSE_RELATIONS
 
 
 class TestRelations(TestCase):
+    def setUp(self):
+        self.d = Dictionary.load()
+
     def test_symmetry(self):
         t = term('wa.')
         r = t.relations
@@ -19,19 +22,19 @@ class TestRelations(TestCase):
         self.assertEqual(term('O:O:.O:O:.t.-').relations.opposed, ())
 
     def test_index(self):
-        r0 = [t for t in Dictionary()]
+        r0 = [t for t in self.d.scripts]
         self.assertListEqual(r0, sorted(r0))
 
 
     def test_inhibitions(self):
-        for t in Dictionary():
+        for t in self.d:
             # if Dictionary().inhibitions[t]:
             for reltype in t.inhibitions:
                 self.assertTupleEqual(t.relations[reltype], (),
                                      "Term %s has relations %s. Must be inhibited"%(str(t), reltype))
 
     def test_relations_matrix(self):
-        m = Dictionary().relations_graph.connexity
+        m = self.d.relations_graph.connexity
         self.assertTrue(m.any())
         self.assertFalse(m.all())
         self.assertTrue(m.dtype == bool)
@@ -51,7 +54,7 @@ class TestRelations(TestCase):
         self.assertTrue(term('wa.').relations.to(term('we.')))
 
     def test_neighbours(self):
-        for t in Dictionary():
+        for t in self.d:
             for k in ['contains', 'contained', 'table_0', 'identity']:
                 self.assertIn(k, t.relations.to(t))
 
@@ -60,7 +63,7 @@ class TestRelations(TestCase):
 
     def test_root_relations(self):
         # if two terms are in the same root paradigms they have to have at least relations between them
-        for root in Dictionary().roots:
+        for root in self.d.roots:
             for t0, t1 in product(root.relations.contains, root.relations.contains):
                 self.assertTrue(t0.relations.to(t1))
 

@@ -4,7 +4,7 @@ from ieml.dictionary.dictionary import Dictionary
 from ieml.dictionary.script.operator import script
 
 from ieml.exceptions import TermNotFoundInDictionary, CannotParse
-from ieml.lexicon.parser.parser import IEMLParser
+from ieml.lexicon.grammar.parser import IEMLParser
 from ieml.lexicon.theory import Theory
 from ieml.lexicon.word import Word
 from ieml.tools import RandomPoolIEMLObjectGenerator, ieml

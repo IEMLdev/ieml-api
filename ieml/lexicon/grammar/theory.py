@@ -61,11 +61,11 @@ class Theory(Usl):
     def __iter__(self):
         return self.facts.__iter__()
 
+    def _get_semes(self):
+        return set(chain.from_iterable(c.semes for c in self.facts))
+
     def _get_words(self):
         return set(chain.from_iterable(c.words for c in self.facts))
-
-    def _get_topics(self):
-        return set(chain.from_iterable(c.topics for c in self.facts))
 
     def _get_facts(self):
         return set(chain.from_iterable(self.children))

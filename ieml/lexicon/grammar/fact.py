@@ -1,6 +1,6 @@
 from itertools import chain
 
-from ieml.lexicon.grammar.topic import Topic
+from ieml.lexicon.grammar.word import Word
 from .usl import Usl
 from ieml.constants import MAX_NODES_IN_SENTENCE
 from ieml.exceptions import InvalidIEMLObjectArgument, InvalidTreeStructure
@@ -16,7 +16,7 @@ def fact(clause_list, literals=None):
     if _clauses == []:
         raise InvalidIEMLObjectArgument(Fact, "Invalid argument %s is empty" % str(clause_list))
 
-    if any(not isinstance(e, Topic) for s in _clauses for e in s):
+    if any(not isinstance(e, Word) for s in _clauses for e in s):
         raise InvalidIEMLObjectArgument(Fact, "Invalid argument %s is not a list of Topic triples" % str(clause_list))
 
     if any(a == b for a, b, c in _clauses):
@@ -58,12 +58,12 @@ class Fact(Usl):
         return self.children > other.children
 
     def __iter__(self):
-        return self.topics.__iter__()
+        return self.words.__iter__()
+
+    def _get_semes(self):
+        return set(chain.from_iterable(c.semes for c in self.words))
 
     def _get_words(self):
-        return set(chain.from_iterable(c.words for c in self.topics))
-
-    def _get_topics(self):
         return set(chain.from_iterable(self.children))
 
     def _get_facts(self):

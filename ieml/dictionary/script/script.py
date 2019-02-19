@@ -75,7 +75,10 @@ class Script(TreeStructure):
         return AdditiveScript(children=[self, other])
 
     def __eq__(self, other):
-        return self.__hash__() == other.__hash__()
+        if isinstance(other, Script):
+            return self.__hash__() == other.__hash__()
+        else:
+            return super().__eq__(other)
 
     def __hash__(self):
         """Since the IEML string for a script is its definition, it can be used as a hash"""
@@ -356,7 +359,7 @@ class MultiplicativeScript(Script):
             for i in range(len(_children), 3):
                 _children.append(NullScript(layer=layer))
 
-        # Add the character to children corresponding to specific combinaison
+        # Add the character to children corresponding to specific combination
         _str_children = self._render_children(_children, _character)
         if _str_children in remarkable_multiplication_lookup_table:
             _character = remarkable_multiplication_lookup_table[_str_children]

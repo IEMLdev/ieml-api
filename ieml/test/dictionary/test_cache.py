@@ -8,7 +8,7 @@ from ieml.dictionary.dictionary import Dictionary, FolderWatcherCache
 
 class CacheTestCase(unittest.TestCase):
     def setUp(self):
-        self.cache = FolderWatcherCache(DICTIONARY_FOLDER)
+        self.cache = FolderWatcherCache(DICTIONARY_FOLDER, '.')
 
     def test_cache(self):
         Dictionary.load(DICTIONARY_FOLDER)

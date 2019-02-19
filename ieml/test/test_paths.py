@@ -86,18 +86,18 @@ class TestPaths(TestCase):
         s = r.fact()
         p = path("s+a+m + (s+a+m):(r+f)")
         elems = resolve(s, p)
-        self.assertSetEqual(elems, s.topics.union(s.words))
+        self.assertSetEqual(elems, s.words.union(s.semes))
 
         p = path("t + t:(s+a+m+r+f+(s+a+m):(s+a+m+r+f+(s+a+m):(r+f)))")
         usl = random_usl(rank_type=Text)
         elems = resolve(usl, p)
-        self.assertSetEqual(usl.facts.union(usl.topics).union(usl.words).union(usl.theories), elems)
+        self.assertSetEqual(usl.facts.union(usl.words).union(usl.semes).union(usl.theories), elems)
 
     def test_enumerate_paths(self):
         r = RandomPoolIEMLObjectGenerator(level=Text)
         t = r.text()
         e = list(enumerate_paths(t, level=Word))
-        self.assertSetEqual({t[1] for t in e}, t.words)
+        self.assertSetEqual({t[1] for t in e}, t.semes)
 
     def test_rules(self):
         rules0 = [(path('r0'), ieml('wa.'))]
