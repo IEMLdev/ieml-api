@@ -76,6 +76,8 @@ class RelationsGraph:
         # dictionary = dictionary
         self.relations = self._compute_relations(dictionary)
 
+        self.matrix = np.matrix(sum(self.relations.values()).todense())
+
         self.scripts = dictionary.scripts
         self.index = dictionary.index
 
@@ -108,7 +110,7 @@ class RelationsGraph:
         A boolean matrix, m[i, j] == True if there is a relation term(i) -> term(j)
         :return: a np.matrix (len(dictionary), len(dictionary)) of boolean
         """
-        return np.matrix(sum(self.relations.values()).todense(), dtype=bool)
+        return np.matrix(self.matrix, dtype=bool)
 
     @staticmethod
     def _compute_relations(dictionary):
