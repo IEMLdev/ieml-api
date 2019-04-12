@@ -184,7 +184,7 @@ class Dictionary:
                  translations: Dict[str, Dict[str, str]],
                  inhibitions: Dict[str, List[str]],
                  comments: Dict[str, Dict[str, str]]):
-        
+
         self.scripts = np.array(sorted(script(s) for s in scripts))
         self.index = {e: i for i, e in enumerate(self.scripts)}
 
