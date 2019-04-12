@@ -18,12 +18,6 @@ Translations = namedtuple('Translations', list(LANGUAGES))
 Translations.__getitem__ = lambda self, item: self.__getattribute__(item) if item in LANGUAGES \
     else tuple.__getitem__(self, item)
 
-
-def _add_translations(translations, ieml, c):
-    translations['fr'][ieml] = c['translations']['fr'].strip()
-    translations['en'][ieml] = c['translations']['en'].strip()
-
-
 class FolderWatcherCache:
     def __init__(self, folder, cache_folder):
         self.folder = folder
@@ -76,6 +70,11 @@ class Dictionary:
 
         scripts = []
         translations = {'fr': {}, 'en': {}}
+
+        def _add_translations(ieml, c):
+            translations['fr'][ieml] = c['translations']['fr'].strip()
+            translations['en'][ieml] = c['translations']['en'].strip()
+
         roots = []
         inhibitions = {}
 
@@ -90,20 +89,20 @@ class Dictionary:
 
             roots.append(root)
 
-            _add_translations(translations, root, d['RootParadigm'])
+            _add_translations(root, d['RootParadigm'])
             scripts.append(root)
 
             if 'Semes' in d and d['Semes']:
                 for c in d['Semes']:
                     n_ss += 1
                     scripts.append(c['ieml'])
-                    _add_translations(translations, c['ieml'], c)
+                    _add_translations(c['ieml'], c)
 
             if 'Paradigms' in d and d['Paradigms']:
                 for c in d['Paradigms']:
                     n_p += 1
                     scripts.append(c['ieml'])
-                    _add_translations(translations, c['ieml'], c)
+                    _add_translations(c['ieml'], c)
 
         print("Dictionary.load: Read {} root paradigms, {} paradigms and {} semes".format(len(roots), n_p, n_ss), file=sys.stderr)
 
@@ -149,7 +148,7 @@ class Dictionary:
         return item in self.index
 
 
-
 if __name__ == '__main__':
     d = Dictionary.load('/home/louis/code/ieml/ieml-dictionary/dictionary')
-    print(d.relations.relation_object('O:O:.'))
+    rel = d.relations.pandas()
+    print(set(rel[rel['mode'] == 'father_attribute']['attribute']))
