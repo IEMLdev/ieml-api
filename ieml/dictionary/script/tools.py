@@ -17,7 +17,7 @@ def factor(sequences):
         return list(sequences)
 
     # holds the attributes/substances/modes as individual sets in primitives[0]/primitives[1]/primitives[2] respectively
-    primitives = (set(seme) for seme in zip(*sequences))
+    primitives = (sorted(set(seme)) for seme in zip(*sequences))
 
     # same but now there is a bijection between the coordinate system and the primitives semes
     primitives = [bidict({i: s for i, s in enumerate(p_set)}) for p_set in primitives]
@@ -49,6 +49,8 @@ def factor(sequences):
         relations[seq] = cubes
         _computed.add(seq)
 
+    relations = {r: sorted(v) for r,v in relations.items()}
+
     def _neighbours(t1, t2):
         x1, y1, z1 = t1
         x2, y2, z2 = t2
@@ -66,13 +68,13 @@ def factor(sequences):
         candidate.sort(key=lambda e: len(relations[e]), reverse=True)
 
         for r in candidate:
-            _facto = set(it.chain.from_iterable(_neighbours(t, r) for t in factorisation))
+            _facto = sorted(set(it.chain.from_iterable(_neighbours(t, r) for t in factorisation)))
             _candidate = set(candidate)
             for i in _facto:
                 _candidate &= set(relations[i])
 
             if _candidate:
-                yield from _factors(list(_candidate), _facto)
+                yield from _factors(sorted(_candidate), _facto)
             else:
                 yield _facto
 
@@ -84,7 +86,7 @@ def factor(sequences):
     e = _candidate.pop()
     factorisations = next(iter(_factors(list(relations[e]), [e])))
 
-    remaining = set(sequences) - set(scripts[f] for f in factorisations)
+    remaining = sorted(set(sequences) - set(scripts[f] for f in factorisations))
     factorisations = tuple(factor({primitives[i][seme] for seme in semes}) for i, semes in enumerate(zip(*factorisations)))
 
     if remaining:

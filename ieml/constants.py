@@ -105,3 +105,70 @@ PHONETIC_PUNCTUATION = [
     '_',
     '~'
 ]
+
+
+INHIBITABLE_RELATIONS=['father_substance',
+                       'father_attribute',
+                       'father_mode',
+                       'opposed',
+                       'associated',
+                       'crossed',
+                       'twin']
+
+RELATIONS = [
+            'contains',         # 0
+            'contained',        # 1
+            'father_substance', # 2
+            'child_substance',  # 3
+            'father_attribute', # 4
+            'child_attribute',  # 5
+            'father_mode',      # 6
+            'child_mode',       # 7
+            'opposed',          # 8
+            'associated',       # 9
+            'crossed',          # 10
+            'twin',             # 11
+            'table_0',
+            'table_1',
+            'table_2',
+            'table_3',
+            'table_4',
+            'table_5',
+            'identity',  # -1
+
+             # 'inclusion',        # 12
+             # 'father',           # 13
+             # 'child',            # 14
+             # 'etymology',        # 15
+             # 'siblings',         # 16
+             # 'table'             # 17
+             ]
+
+INVERSE_RELATIONS = {
+    'father_substance': 'child_substance',
+    'child_substance': 'father_substance',  # 3
+    'father_attribute': 'child_attribute', # 4
+    'child_attribute': 'father_attribute',  # 5
+    'father_mode': 'child_mode',      # 6
+    'child_mode': 'father_mode',
+    'contains': 'contained',
+    'contained': 'contains',
+    'opposed':'opposed',          # 8
+    'associated':'associated',       # 9
+    'crossed': 'crossed',        # 10
+    'twin': 'twin',
+    'table_0': 'table_0',
+    'table_1': 'table_1',
+    'table_2': 'table_2',
+    'table_3': 'table_3',
+    'table_4': 'table_4',
+    'table_5': 'table_5',
+    'father': 'child',
+    'child': 'father',
+    'inclusion': 'inclusion',
+    'etymology': 'etymology',        # 15
+    'siblings': 'siblings',         # 16
+    'table': 'table',
+    'identity': 'identity'
+}
+

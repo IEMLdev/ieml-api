@@ -9,6 +9,11 @@ scripts = list(map(sc, ["O:.E:M:.-"]))
 
 
 class TestScript(unittest.TestCase):
+    def test_script_sorted(self):
+        assert sc("f.o.-f.o.-',n.i.-f.i.-',x.-O:.-',_M:.-',_;+f.o.-f.o.-',n.i.-f.i.-',x.-O:.-',_E:F:.-',_;") in sorted(
+            map(sc, scripts))
+
+
     def test_script_class(self):
         self.assertEqual(sc('E:').script_class, AUXILIARY_CLASS)
         self.assertEqual(sc('O:').script_class, VERB_CLASS)

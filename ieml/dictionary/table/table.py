@@ -23,10 +23,6 @@ class Table:
         else:
             return max(self.parent.rank, 1) + 1
 
-    # @property
-    # def partitions(self):
-    #     return {t for t in self.relations.contains if isinstance(t, Table) and t.parent == self}
-
 class Table2D(Table):
     def __init__(self, script, parent, regular=False):
         super().__init__(script, parent, regular)

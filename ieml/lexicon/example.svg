@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     width="220" height="260" viewBox="0 -130 110 130">
+<defs>
+</defs>
+<g>
+<g>
+<rect height="30" x="10" fill="#d9eaff" stroke-width="1.0" width="80" stroke="black" y="-40" />
+<text fill="black" font-size="10" x="15.0" y="-28.0">S:</text>
+<text fill="black" font-size="8" x="15.0" y="-17.5">signe</text>
+</g>
+</g>
+<g>
+<g>
+<rect height="30" x="10" fill="#ffe5d7" stroke-width="1.0" width="80" stroke="black" y="-40" />
+<text fill="black" font-size="10" x="15.0" y="-28.0">wa.</text>
+<text fill="black" font-size="8" x="15.0" y="-17.5">agir</text>
+</g>
+<g>
+<rect height="30" x="10" fill="#ffe5d7" stroke-width="1.0" width="80" stroke="black" y="-80" />
+<text fill="black" font-size="10" x="15.0" y="-68.0">wo.</text>
+<text fill="black" font-size="8" x="15.0" y="-57.5">exister</text>
+</g>
+<path fill-opacity="0.5" d="M95,-64.0 L96.66666666666667,-69.0 L90,-65.0 L96.66666666666667,-61.0 L95,-64.0 C109,-64.0,109,-26.0,95,-26.0 L96.66666666666667,-29.0 L90,-25.0 L96.66666666666667,-21.0 L95,-24.0 C111,-24.0,111,-66.0,95,-66.0 Z" fill="red" stroke="black" stroke-width="1" />
+</g>
+</svg>

@@ -1,6 +1,6 @@
 from ieml.dictionary.script.parser import ScriptParser
 from ieml.dictionary.script import MultiplicativeScript, Script
-from ieml.dictionary.script.tools import factorize
+from ieml.dictionary.script import tools
 
 
 def m(substance, attribute=None, mode=None):
@@ -11,17 +11,16 @@ def m(substance, attribute=None, mode=None):
         raise NotImplemented
 
 
-def script(arg, promote=False):
+def script(arg, promote=False, factorize=False):
     if isinstance(arg, str):
         s = ScriptParser().parse(arg)
-        return s
     elif isinstance(arg, Script):
-        return factorize(arg)
+        s = arg
     else:
-        try:
-            arg = [script(a) for a in arg]
-            return factorize(arg, promote=promote)
-        except TypeError:
-            pass
+        raise ValueError("Unsupported type {} for {}".format(arg.__class__, arg))
 
-    raise NotImplemented
+    if factorize:
+        return tools.factorize(s, promote=promote)
+
+    return s
+

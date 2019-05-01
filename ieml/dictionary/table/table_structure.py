@@ -29,6 +29,13 @@ class TableStructure:
     def __getitem__(self, item):
         return self.tables[item]
 
+    def children(self, table: Table):
+        """
+        :param table:
+        :return:
+        """
+        return {t for t in self.tables.values() if t.parent == table}
+
     @staticmethod
     def _define_root(root, paradigms):
         # add a new root paradigm to the tree structure

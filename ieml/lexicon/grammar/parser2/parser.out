@@ -1,0 +1,383 @@
+Created by PLY version 3.11 (http://www.dabeaz.com/ply)
+
+Unused terminals:
+
+    PLUS
+
+Grammar
+
+Rule 0     S' -> proposition
+Rule 1     proposition -> trait
+Rule 2     proposition -> character
+Rule 3     proposition -> word
+Rule 4     morpheme -> MORPHEME
+Rule 5     morpheme_sum -> morpheme_sum morpheme
+Rule 6     morpheme_sum -> morpheme
+Rule 7     trait -> morpheme_sum
+Rule 8     trait_content -> LCHEVRON LCHEVRON trait RCHEVRON RCHEVRON
+Rule 9     trait_function_list -> trait_function_list LCHEVRON trait RCHEVRON
+Rule 10    trait_function_list -> LCHEVRON trait RCHEVRON
+Rule 11    character -> LBRACKET trait_content trait_function_list RBRACKET
+Rule 12    character -> LBRACKET trait_function_list RBRACKET
+Rule 13    character -> LBRACKET trait_content RBRACKET
+Rule 14    word -> LPAREN character TIMES character TIMES character RPAREN
+
+Terminals, with rules where they appear
+
+LBRACKET             : 11 12 13
+LCHEVRON             : 8 8 9 10
+LPAREN               : 14
+MORPHEME             : 4
+PLUS                 : 
+RBRACKET             : 11 12 13
+RCHEVRON             : 8 8 9 10
+RPAREN               : 14
+TIMES                : 14 14
+error                : 
+
+Nonterminals, with rules where they appear
+
+character            : 2 14 14 14
+morpheme             : 5 6
+morpheme_sum         : 5 7
+proposition          : 0
+trait                : 1 8 9 10
+trait_content        : 11 13
+trait_function_list  : 9 11 12
+word                 : 3
+
+Parsing method: LALR
+
+state 0
+
+    (0) S' -> . proposition
+    (1) proposition -> . trait
+    (2) proposition -> . character
+    (3) proposition -> . word
+    (7) trait -> . morpheme_sum
+    (11) character -> . LBRACKET trait_content trait_function_list RBRACKET
+    (12) character -> . LBRACKET trait_function_list RBRACKET
+    (13) character -> . LBRACKET trait_content RBRACKET
+    (14) word -> . LPAREN character TIMES character TIMES character RPAREN
+    (5) morpheme_sum -> . morpheme_sum morpheme
+    (6) morpheme_sum -> . morpheme
+    (4) morpheme -> . MORPHEME
+
+    LBRACKET        shift and go to state 8
+    LPAREN          shift and go to state 9
+    MORPHEME        shift and go to state 2
+
+    trait                          shift and go to state 6
+    word                           shift and go to state 1
+    morpheme_sum                   shift and go to state 7
+    character                      shift and go to state 3
+    morpheme                       shift and go to state 4
+    proposition                    shift and go to state 5
+
+state 1
+
+    (3) proposition -> word .
+
+    $end            reduce using rule 3 (proposition -> word .)
+
+
+state 2
+
+    (4) morpheme -> MORPHEME .
+
+    MORPHEME        reduce using rule 4 (morpheme -> MORPHEME .)
+    RCHEVRON        reduce using rule 4 (morpheme -> MORPHEME .)
+    $end            reduce using rule 4 (morpheme -> MORPHEME .)
+
+
+state 3
+
+    (2) proposition -> character .
+
+    $end            reduce using rule 2 (proposition -> character .)
+
+
+state 4
+
+    (6) morpheme_sum -> morpheme .
+
+    MORPHEME        reduce using rule 6 (morpheme_sum -> morpheme .)
+    $end            reduce using rule 6 (morpheme_sum -> morpheme .)
+    RCHEVRON        reduce using rule 6 (morpheme_sum -> morpheme .)
+
+
+state 5
+
+    (0) S' -> proposition .
+
+
+
+state 6
+
+    (1) proposition -> trait .
+
+    $end            reduce using rule 1 (proposition -> trait .)
+
+
+state 7
+
+    (7) trait -> morpheme_sum .
+    (5) morpheme_sum -> morpheme_sum . morpheme
+    (4) morpheme -> . MORPHEME
+
+    RCHEVRON        reduce using rule 7 (trait -> morpheme_sum .)
+    $end            reduce using rule 7 (trait -> morpheme_sum .)
+    MORPHEME        shift and go to state 2
+
+    morpheme                       shift and go to state 10
+
+state 8
+
+    (11) character -> LBRACKET . trait_content trait_function_list RBRACKET
+    (12) character -> LBRACKET . trait_function_list RBRACKET
+    (13) character -> LBRACKET . trait_content RBRACKET
+    (8) trait_content -> . LCHEVRON LCHEVRON trait RCHEVRON RCHEVRON
+    (9) trait_function_list -> . trait_function_list LCHEVRON trait RCHEVRON
+    (10) trait_function_list -> . LCHEVRON trait RCHEVRON
+
+    LCHEVRON        shift and go to state 13
+
+    trait_function_list            shift and go to state 11
+    trait_content                  shift and go to state 12
+
+state 9
+
+    (14) word -> LPAREN . character TIMES character TIMES character RPAREN
+    (11) character -> . LBRACKET trait_content trait_function_list RBRACKET
+    (12) character -> . LBRACKET trait_function_list RBRACKET
+    (13) character -> . LBRACKET trait_content RBRACKET
+
+    LBRACKET        shift and go to state 8
+
+    character                      shift and go to state 14
+
+state 10
+
+    (5) morpheme_sum -> morpheme_sum morpheme .
+
+    MORPHEME        reduce using rule 5 (morpheme_sum -> morpheme_sum morpheme .)
+    $end            reduce using rule 5 (morpheme_sum -> morpheme_sum morpheme .)
+    RCHEVRON        reduce using rule 5 (morpheme_sum -> morpheme_sum morpheme .)
+
+
+state 11
+
+    (12) character -> LBRACKET trait_function_list . RBRACKET
+    (9) trait_function_list -> trait_function_list . LCHEVRON trait RCHEVRON
+
+    RBRACKET        shift and go to state 15
+    LCHEVRON        shift and go to state 16
+
+
+state 12
+
+    (11) character -> LBRACKET trait_content . trait_function_list RBRACKET
+    (13) character -> LBRACKET trait_content . RBRACKET
+    (9) trait_function_list -> . trait_function_list LCHEVRON trait RCHEVRON
+    (10) trait_function_list -> . LCHEVRON trait RCHEVRON
+
+    RBRACKET        shift and go to state 18
+    LCHEVRON        shift and go to state 19
+
+    trait_function_list            shift and go to state 17
+
+state 13
+
+    (8) trait_content -> LCHEVRON . LCHEVRON trait RCHEVRON RCHEVRON
+    (10) trait_function_list -> LCHEVRON . trait RCHEVRON
+    (7) trait -> . morpheme_sum
+    (5) morpheme_sum -> . morpheme_sum morpheme
+    (6) morpheme_sum -> . morpheme
+    (4) morpheme -> . MORPHEME
+
+    LCHEVRON        shift and go to state 21
+    MORPHEME        shift and go to state 2
+
+    trait                          shift and go to state 20
+    morpheme_sum                   shift and go to state 7
+    morpheme                       shift and go to state 4
+
+state 14
+
+    (14) word -> LPAREN character . TIMES character TIMES character RPAREN
+
+    TIMES           shift and go to state 22
+
+
+state 15
+
+    (12) character -> LBRACKET trait_function_list RBRACKET .
+
+    TIMES           reduce using rule 12 (character -> LBRACKET trait_function_list RBRACKET .)
+    RPAREN          reduce using rule 12 (character -> LBRACKET trait_function_list RBRACKET .)
+    $end            reduce using rule 12 (character -> LBRACKET trait_function_list RBRACKET .)
+
+
+state 16
+
+    (9) trait_function_list -> trait_function_list LCHEVRON . trait RCHEVRON
+    (7) trait -> . morpheme_sum
+    (5) morpheme_sum -> . morpheme_sum morpheme
+    (6) morpheme_sum -> . morpheme
+    (4) morpheme -> . MORPHEME
+
+    MORPHEME        shift and go to state 2
+
+    trait                          shift and go to state 23
+    morpheme_sum                   shift and go to state 7
+    morpheme                       shift and go to state 4
+
+state 17
+
+    (11) character -> LBRACKET trait_content trait_function_list . RBRACKET
+    (9) trait_function_list -> trait_function_list . LCHEVRON trait RCHEVRON
+
+    RBRACKET        shift and go to state 24
+    LCHEVRON        shift and go to state 16
+
+
+state 18
+
+    (13) character -> LBRACKET trait_content RBRACKET .
+
+    TIMES           reduce using rule 13 (character -> LBRACKET trait_content RBRACKET .)
+    RPAREN          reduce using rule 13 (character -> LBRACKET trait_content RBRACKET .)
+    $end            reduce using rule 13 (character -> LBRACKET trait_content RBRACKET .)
+
+
+state 19
+
+    (10) trait_function_list -> LCHEVRON . trait RCHEVRON
+    (7) trait -> . morpheme_sum
+    (5) morpheme_sum -> . morpheme_sum morpheme
+    (6) morpheme_sum -> . morpheme
+    (4) morpheme -> . MORPHEME
+
+    MORPHEME        shift and go to state 2
+
+    trait                          shift and go to state 20
+    morpheme_sum                   shift and go to state 7
+    morpheme                       shift and go to state 4
+
+state 20
+
+    (10) trait_function_list -> LCHEVRON trait . RCHEVRON
+
+    RCHEVRON        shift and go to state 25
+
+
+state 21
+
+    (8) trait_content -> LCHEVRON LCHEVRON . trait RCHEVRON RCHEVRON
+    (7) trait -> . morpheme_sum
+    (5) morpheme_sum -> . morpheme_sum morpheme
+    (6) morpheme_sum -> . morpheme
+    (4) morpheme -> . MORPHEME
+
+    MORPHEME        shift and go to state 2
+
+    trait                          shift and go to state 26
+    morpheme_sum                   shift and go to state 7
+    morpheme                       shift and go to state 4
+
+state 22
+
+    (14) word -> LPAREN character TIMES . character TIMES character RPAREN
+    (11) character -> . LBRACKET trait_content trait_function_list RBRACKET
+    (12) character -> . LBRACKET trait_function_list RBRACKET
+    (13) character -> . LBRACKET trait_content RBRACKET
+
+    LBRACKET        shift and go to state 8
+
+    character                      shift and go to state 27
+
+state 23
+
+    (9) trait_function_list -> trait_function_list LCHEVRON trait . RCHEVRON
+
+    RCHEVRON        shift and go to state 28
+
+
+state 24
+
+    (11) character -> LBRACKET trait_content trait_function_list RBRACKET .
+
+    TIMES           reduce using rule 11 (character -> LBRACKET trait_content trait_function_list RBRACKET .)
+    RPAREN          reduce using rule 11 (character -> LBRACKET trait_content trait_function_list RBRACKET .)
+    $end            reduce using rule 11 (character -> LBRACKET trait_content trait_function_list RBRACKET .)
+
+
+state 25
+
+    (10) trait_function_list -> LCHEVRON trait RCHEVRON .
+
+    RBRACKET        reduce using rule 10 (trait_function_list -> LCHEVRON trait RCHEVRON .)
+    LCHEVRON        reduce using rule 10 (trait_function_list -> LCHEVRON trait RCHEVRON .)
+
+
+state 26
+
+    (8) trait_content -> LCHEVRON LCHEVRON trait . RCHEVRON RCHEVRON
+
+    RCHEVRON        shift and go to state 29
+
+
+state 27
+
+    (14) word -> LPAREN character TIMES character . TIMES character RPAREN
+
+    TIMES           shift and go to state 30
+
+
+state 28
+
+    (9) trait_function_list -> trait_function_list LCHEVRON trait RCHEVRON .
+
+    RBRACKET        reduce using rule 9 (trait_function_list -> trait_function_list LCHEVRON trait RCHEVRON .)
+    LCHEVRON        reduce using rule 9 (trait_function_list -> trait_function_list LCHEVRON trait RCHEVRON .)
+
+
+state 29
+
+    (8) trait_content -> LCHEVRON LCHEVRON trait RCHEVRON . RCHEVRON
+
+    RCHEVRON        shift and go to state 31
+
+
+state 30
+
+    (14) word -> LPAREN character TIMES character TIMES . character RPAREN
+    (11) character -> . LBRACKET trait_content trait_function_list RBRACKET
+    (12) character -> . LBRACKET trait_function_list RBRACKET
+    (13) character -> . LBRACKET trait_content RBRACKET
+
+    LBRACKET        shift and go to state 8
+
+    character                      shift and go to state 32
+
+state 31
+
+    (8) trait_content -> LCHEVRON LCHEVRON trait RCHEVRON RCHEVRON .
+
+    RBRACKET        reduce using rule 8 (trait_content -> LCHEVRON LCHEVRON trait RCHEVRON RCHEVRON .)
+    LCHEVRON        reduce using rule 8 (trait_content -> LCHEVRON LCHEVRON trait RCHEVRON RCHEVRON .)
+
+
+state 32
+
+    (14) word -> LPAREN character TIMES character TIMES character . RPAREN
+
+    RPAREN          shift and go to state 33
+
+
+state 33
+
+    (14) word -> LPAREN character TIMES character TIMES character RPAREN .
+
+    $end            reduce using rule 14 (word -> LPAREN character TIMES character TIMES character RPAREN .)
+

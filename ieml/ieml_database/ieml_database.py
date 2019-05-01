@@ -1,0 +1,671 @@
+import functools
+import hashlib
+import os
+from itertools import product
+from time import time
+from typing import List
+
+from appdirs import user_cache_dir
+
+from ieml.commons import FolderWatcherCache
+from ieml.constants import IEMLDB_DEFAULT_GIT_ADDRESS, LIBRARY_VERSION, LANGUAGES, INHIBITABLE_RELATIONS
+import pygit2
+import logging
+
+from ieml.dictionary import Dictionary
+from ieml.dictionary.script import Script, factorize
+from ieml.ieml_database.db_interface import Translations, Commentary, Inhibitions, IEMLDBInterface
+from ieml.ieml_database.descriptor import DescriptorSet, DESCRIPTORS_CLASS
+from ieml.ieml_database.dictionary_structure import DictionaryStructure
+# from ieml.ieml_database.versions import IEMLDatabaseIO_factory
+# from ieml.ieml_database.versions.ieml_database_io import ScriptDescription
+from ieml.lexicon import Lexicon
+
+logger = logging.getLogger("IEMLDatabase")
+
+
+def monitor_decorator(name):
+    def decorator(f):
+        def wrapper(*args, **kwargs):
+            before = time()
+            res = f(*args, **kwargs)
+            print(name, time() - before)
+            return res
+
+        functools.wraps(wrapper)
+        return wrapper
+
+    return decorator
+
+def init_remote(repo, name, url):
+    remote = repo.remotes.create(name, url)
+    mirror_var = "remote.{}.mirror".format(name)
+    repo.config[mirror_var] = True
+    return remote
+
+
+def _check_script(script):
+    assert isinstance(script, Script)
+    assert factorize(script) == script
+    return script
+
+
+def _check_inhibitions(inhibitions):
+    inhibitions = list(inhibitions)
+    assert all(i in INHIBITABLE_RELATIONS for i in inhibitions)
+    return inhibitions
+
+def _check_descriptors(descriptor):
+    if descriptor is None:
+        descriptor = {}
+
+    for k in LANGUAGES:
+        if k not in descriptor:
+            descriptor[k] = ''
+
+    assert all(isinstance(d, str) for k in LANGUAGES for d in descriptor[k])
+    return descriptor
+
+
+def cache_results_watch_files(_files, name):
+    def decorator(f):
+        def wrapper(*args, **kwargs):
+            use_cache = True #kwargs['use_cache']
+            self = args[0]
+            cache_folder = self.cache_folder
+            db_path = self.folder
+
+            files = [os.path.join(db_path, ff) for ff in _files]
+
+            if use_cache:
+                cache = FolderWatcherCache(files, cache_folder=cache_folder, name=name)
+                if not cache.is_pruned():
+                    logger.info("read_{}.cache: Reading cache at {}".format(name, cache.cache_file))
+                    try:
+                        instance = cache.get()
+                    except Exception:
+                        # cache.prune()
+                        instance = None
+                else:
+                    logger.info("read_{}.cache: Pruned cache at {}".format(name, cache_folder))
+                    instance = None
+
+                if instance:
+                    return instance
+
+            instance = f(*args, **kwargs)
+
+            if use_cache and cache_folder:
+                cache = FolderWatcherCache(files, cache_folder=cache_folder, name=name)
+
+                logger.info("read_{}.cache: Updating cache at {}".format(name, cache.cache_file))
+                cache.update(instance)
+
+            return instance
+
+        functools.wraps(wrapper)
+
+        return wrapper
+
+    return decorator
+
+class IEMLDatabase(IEMLDBInterface):
+    def __init__(self,
+                 git_address=IEMLDB_DEFAULT_GIT_ADDRESS,
+                 branch='master',
+                 commit_id=None,
+                 db_folder=None,
+                 cache_folder=None,
+                 use_cache=True
+                 ):
+
+        self.git_address = git_address
+        self.branch = branch
+        self.commit_id = commit_id
+
+
+        if db_folder:
+            self.folder = os.path.abspath(db_folder)
+        else:
+            self.folder = os.path.join(user_cache_dir(appname='ieml', appauthor=False, version=LIBRARY_VERSION),
+                                       hashlib.md5("{}/{}".format(git_address, branch).encode('utf8')).hexdigest())
+
+        self.use_cache = use_cache
+        self.cache_folder = cache_folder
+        if self.use_cache:
+            if cache_folder is None:
+                self.cache_folder = self.folder
+        else:
+            self.cache_folder = None
+
+        # download database
+        self.update()
+
+        # self.iemldb_io = IEMLDatabaseIO_factory(self.folder)
+
+    @monitor_decorator("Save DB")
+    def save_changes(self, author_name, author_mail, message,
+                     to_add=(), to_remove=(), check_coherency=True):
+        """
+        Files are already modified on disk
+        :param author_name:
+        :param author_mail:
+        :param message:
+        :param to_add:
+        :param to_remove:
+        :return:
+        """
+
+        if check_coherency:
+            try:
+                self.dictionary()
+            except ValueError as e:
+                # roll back
+                self.repo.reset(self.commit_id, pygit2.GIT_RESET_HARD)
+                raise e
+
+        self.commit_files(author_name=author_name,
+                          author_mail=author_mail,
+                          message=message,
+                          to_add=to_add,
+                          to_remove=to_remove)
+
+        for f in to_remove:
+            os.remove(os.path.join(self.folder, f))
+
+    def commit_files(self, author_name, author_mail, message, to_add=(), to_remove=()):
+        if not to_add and not to_remove:
+            return
+
+        repo = pygit2.Repository(self.folder)
+
+        index = repo.index
+
+        # index.read()
+        for f in to_add:
+            index.add(f)
+        #
+        for f in to_remove:
+            index.remove(f)
+        index.write()
+
+        tree = index.write_tree()
+
+        author = pygit2.Signature(author_name, author_mail)
+        # commiter = pygit2.Signature(author_name, author_mail)
+
+        oid = repo.create_commit('refs/heads/{}'.format(self.branch),
+                                 author,
+                                 author,
+                                 message,
+                                 tree,
+                                 [repo.head.peel().hex])
+
+        self.commit_id = oid.hex
+        self.update()
+
+    def update(self):
+        if not os.path.exists(self.folder):
+            repo = pygit2.clone_repository(self.git_address, self.folder, remote=init_remote, checkout_branch=self.branch)
+        else:
+            repo = pygit2.Repository(self.folder)
+
+        if self.commit_id is None:
+            # use most recent of remote
+            remote = repo.remotes[0]
+            remote.fetch()
+            # self.commit_id = repo.lookup_reference('refs/remotes/origin/{}'.format(self.branch)).target
+            self.commit_id = repo.lookup_reference('refs/heads/{}'.format(self.branch)).target
+
+        # try:
+        merge_result, _ = repo.merge_analysis(self.commit_id)
+        # except TypeError as e:
+        #     raise e
+
+        # Up to date, do nothing
+        if merge_result & pygit2.GIT_MERGE_ANALYSIS_UP_TO_DATE:
+            return
+
+        # We can just fastforward
+        elif merge_result & pygit2.GIT_MERGE_ANALYSIS_FASTFORWARD:
+            repo.checkout_tree(repo.get(self.commit_id))
+            master_ref = repo.lookup_reference('refs/heads/{}'.format(self.branch))
+            master_ref.set_target(self.commit_id)
+            repo.head.set_target(self.commit_id)
+        else:
+            raise ValueError("Incompatible history, can't merge origin into {}#{} in folder {}".format(self.branch, self.commit_id,
+                                                                                                       self.folder))
+
+    def push(self, github_username, github_password):
+        repo = pygit2.Repository(self.folder)
+        credentials = pygit2.UserPass(github_username, github_password)
+
+        remote = repo.remotes['origin']
+        callbacks = pygit2.RemoteCallbacks(credentials=credentials)
+        remote.push(['refs/heads/{}'.format(self.branch)], callbacks=callbacks)
+
+
+    @monitor_decorator("Build descriptors")
+    # @cache_results_watch_files('descriptors')
+    def descriptors(self):
+        # before = time()
+        desc = DescriptorSet.from_file(os.path.join(self.folder, DescriptorSet.file[0]))
+        # print("Descriptor read time ", time() - before)
+        return desc
+        # return self.iemldb_io.read_descriptors(self.folder,
+        #                                        cache_folder=self.cache_folder)
+
+    def dictionary_structure(self):
+        return DictionaryStructure.from_file(os.path.join(self.folder, 'structure/dictionary'))
+
+    @monitor_decorator("Build dictionary")
+    @cache_results_watch_files(['structure/dictionary'], 'dictionary_structure')
+    def dictionary(self, use_cache=True):
+        return Dictionary(self.dictionary_structure())
+        # try:
+        # return self.iemldb_io.read_dictionary(self.folder,
+        #                                       cache_folder=self.cache_folder)
+        # except ValueError:
+        #     logger.info("Error loading dictionary, resetting database to last commit.")
+        #     pygit2.Repository(self.folder).reset(self.commit_id, pygit2.GIT_RESET_HARD)
+        #     return self.dictionary()
+
+    def lexicon(self):
+        lexicon_path = os.path.join(self.folder, 'lexicons')
+        return Lexicon.load(lexicon_path)
+
+    @property
+    def repo(self):
+        return pygit2.Repository(self.folder)
+
+    def get_version(self):
+        return (self.branch, self.commit_id)
+
+    def set_version(self, branch, commit_id):
+        self.branch = branch
+        self.commit_id = commit_id
+        self.update()
+
+    @monitor_decorator("create_morpheme_root_paradigm")
+    def create_morpheme_root_paradigm(self,
+                                      script: Script,
+                                      # translations: Translations,
+                                      author_name: str,
+                                      author_mail: str,
+                                      # comments: Commentary=None,
+                                      inhibitions: Inhibitions = ()):
+
+        inhibitions = _check_inhibitions(inhibitions)
+        script = _check_script(script)
+
+        ds = self.dictionary_structure()
+        d = self.dictionary()
+
+        try:
+            ds.get(script)
+            raise ValueError("Script {} already exists in dictionary".format(script))
+        except KeyError:
+            pass
+
+        for ss in script.singular_sequences:
+            try:
+                r = d.tables.root(ss)
+                raise ValueError("Root paradigms {} intersection with script {} ".format(str(r), str(script)))
+            except KeyError:
+                pass
+
+        main_tables = [tt for tt in script.tables_script if tt != script]
+
+        ds.set_value(script, main_tables, inhibitions)
+
+        file = os.path.join(self.folder, 'structure/dictionary')
+        ds.write_to_file(file)
+
+        descriptors = self.descriptors()
+
+        self.save_changes(author_name, author_mail,
+                          "[dictionary] Create root paradigm {} ({}), create {} singular sequences and {} "
+                          "paradigms.".format(str(script),
+                                              " / ".join("{}:{}".format(l, descriptors.get(str(script), l, 'translations')) for l in LANGUAGES),
+                                              len(script.singular_sequences),
+                                              len(main_tables)),
+                          to_add=['structure/dictionary'])
+
+    # def _do_add_paradigm(self, script: Script, translations: Translations, comments: Commentary):
+    #     script = _check_script(script)
+    #     translations = _check_descriptors(translations)
+    #     comments = _check_descriptors(comments)
+    #
+    #     if script.cardinal == 1:
+    #         raise ValueError("Script {} is not a paradigm".format(str(script)))
+    #
+    #     d = self.dictionary()
+    #     if script in d:
+    #         raise ValueError("Paradigm {} already defined".format(str(script)))
+    #
+    #     roots = set()
+    #     for ss in script.singular_sequences:
+    #         try:
+    #             roots.add(d.tables.root(ss))
+    #         except KeyError:
+    #             raise ValueError("The paradigm {} is not fully contained in existing root paradigms".format(str(script)))
+    #
+    #     if len(roots) != 1:
+    #         raise ValueError("The paradigm {} is contained in multiple root paradigms".format(str(script)))
+    #
+    #     root = next(iter(roots))
+    #
+    #     root_description = get_root_script_description(d, root)
+    #     ss_description = [get_script_description(d, ss) for ss in root.singular_sequences]
+    #     p_description = [get_script_description(d, p) for p in d.relations.object(root, 'contains')
+    #                      if p.cardinal != 1 and p != root]
+    #
+    #     p_description.append({
+    #         'ieml': str(script),
+    #         'translations': translations,
+    #         'comments': comments
+    #     })
+    #
+    #     files = self.iemldb_io.write_morpheme_root_paradigm(self.folder,
+    #                                                         root_description,
+    #                                                         ss_description,
+    #                                                         p_description)
+    #
+    #     return files, root
+    @monitor_decorator("add_morpheme_paradigm")
+    def add_morpheme_paradigm(self,
+                              script: Script,
+                              author_name: str,
+                              author_mail: str):
+                              # translations: Translations = None,
+                              # comments: Commentary = None):
+        d = self.dictionary()
+
+        r_cand = set()
+        for ss in script.singular_sequences:
+            try:
+                r_cand.add(d.tables.root(ss))
+            except KeyError:
+                raise ValueError("No root paradigms contains this script {}".format(str(script)))
+
+        assert len(r_cand) == 1, "No root paradigms or too many for script {}".format(str(script))
+
+        root = next(iter(r_cand))
+
+        script = _check_script(script)
+        assert script not in d.scripts, "Script {} already defined in the dictionary".format(str(script))
+
+        ds = self.dictionary_structure()
+        para, inhib = ds.get(root)
+        para = sorted(set(para) | {str(script)})
+        ds.set_value(root, para, inhib)
+
+        file = os.path.join(self.folder, 'structure/dictionary')
+        ds.write_to_file(file)
+
+        descriptors = self.descriptors()
+
+        self.save_changes(author_name, author_mail,
+                          "[dictionary] Create paradigm {} ({}) for root paradigm {} ({})"
+                          .format(str(script),
+                                  " / ".join("{}:{}".format(l,descriptors.get(script,l,'translations')) for l in LANGUAGES),
+                                  str(root),
+                                  " / ".join("{}:{}".format(l, descriptors.get(root,l,'translations')) for l in LANGUAGES)),
+                          to_add=['structure/dictionary'])
+
+    @monitor_decorator("delete_morpheme_root_paradigm")
+    def delete_morpheme_root_paradigm(self,
+                                      script: Script,
+                                      author_name: str,
+                                      author_mail: str):
+        script = _check_script(script)
+        d = self.dictionary()
+        assert script in d.tables.roots
+
+        ds = self.dictionary_structure()
+        try:
+            _ = ds.get(script)
+        except KeyError as e:
+            return
+            # raise e
+
+        ds.structure.drop([str(script)], inplace=True)
+        # del ds.root_paradigms[root_idx]
+
+        file = os.path.join(self.folder, 'structure/dictionary')
+        ds.write_to_file(file)
+
+        # files = self.iemldb_io.delete_morpheme_root_paradigm(self.folder,
+        #                                                      get_root_script_description(d,script))
+        descriptors = self.descriptors()
+
+        self.save_changes(author_name, author_mail,
+                          "[dictionary] Remove root paradigm {} ({})"
+                          .format(str(script),
+                                  " / ".join("{}:{}".format(l, descriptors.get(script, l, 'translations')) for l in LANGUAGES)),
+                          to_add=DictionaryStructure.file)
+
+    # def _do_delete_paradigm(self, script: Script):
+    #     script = _check_script(script)
+    #     d = self.dictionary()
+    #     assert script in d.scripts and script not in d.tables.roots and script.cardinal != 1
+    #
+    #     root = d.tables.root(script)
+    #
+    #     root_description = get_root_script_description(d, root)
+    #     ss_description = [get_script_description(d, ss) for ss in root.singular_sequences]
+    #     p_description = [get_script_description(d, p) for p in d.relations.object(root, 'contains')
+    #                      if p.cardinal != 1 and p != root and p != script]
+    #
+    #     files = self.iemldb_io.write_morpheme_root_paradigm(self.folder,
+    #                                                         root_description,
+    #                                                         ss_description,
+    #                                                         p_description)
+    #     return files, root
+
+    @monitor_decorator("delete_morpheme_paradigm")
+    def delete_morpheme_paradigm(self,
+                                 script: Script,
+                                 author_name: str,
+                                 author_mail: str):
+        d = self.dictionary()
+        # files, root = self._do_delete_paradigm(script)
+
+        script = _check_script(script)
+        assert script in d.scripts and len(script) != 1
+
+        root = d.tables.root(script)
+
+        ds = self.dictionary_structure()
+        paradigms, inhibitions = ds.get(root)
+        # assert script in root_def.paradigms
+
+        paradigms = sorted(set(paradigms) - {str(script)})
+        ds.set_value(root, paradigms, inhibitions)
+
+        file = os.path.join(self.folder, 'structure/dictionary')
+
+        ds.write_to_file(file)
+
+        # files = self.iemldb_io.delete_morpheme_root_paradigm(self.folder,
+        #                                                      get_root_script_description(d,script))
+        descriptors = self.descriptors()
+
+        self.save_changes(author_name, author_mail,
+                          "[dictionary] Remove paradigm {} ({}) from root paradigm {} ({})"
+                          .format(str(script),
+                                  " / ".join("{}:{}".format(l,descriptors.get(script, l, 'translations')) for l in LANGUAGES),
+                                  str(root),
+                                  " / ".join("{}:{}".format(l, descriptors.get(root, l ,'translations')) for l in LANGUAGES)),
+                          to_add=DictionaryStructure.file)
+
+    @monitor_decorator("Set morpheme translations")
+    def set_morpheme_translation(self,
+                                 script: Script,
+                                 translations: Translations,
+                                 author_name: str,
+                                 author_mail: str):
+
+        script = _check_script(script)
+
+        translation = _check_descriptors(translations)
+
+        desc = self.descriptors()
+
+        if all(translation[l] == desc.get(script, l, 'translations') for l in LANGUAGES):
+            return
+
+        old_trans = {l: desc.get(script=script, language=l, descriptor='translations') for l in LANGUAGES}
+
+        for l in LANGUAGES:
+            desc.set_value(script, descriptor='translations', language=l, values=translations[l])
+
+        desc.write_to_file(os.path.join(self.folder, desc.file[0]))
+
+
+
+        self.save_changes(author_name, author_mail,
+                          "[dictionary] Update translation for {} ({}) to ({})"
+                          .format(str(script),
+                                  " / ".join("{}:{}".format(l,old_trans[l]) for l in LANGUAGES),
+                                  " / ".join("{}:{}".format(l,translation[l]) for l in LANGUAGES)),
+                          to_add=DescriptorSet.file, check_coherency=False)
+
+    @monitor_decorator("set_morpheme_comments")
+    def set_morpheme_comments(self, script: Script,
+                                    comments: Translations,
+                                    author_name: str,
+                                    author_mail: str):
+
+        script = _check_script(script)
+
+        comments = _check_descriptors(comments)
+        desc = self.descriptors()
+
+        if all(comments[l] == desc.get(script, l, 'comments') for l in LANGUAGES):
+            return
+
+        old_com = {l: desc.get(script=script, language=l, descriptor='comments') for l in LANGUAGES}
+
+        for l in LANGUAGES:
+            desc.set_value(script, descriptor='comments', language=l, values=comments[l])
+
+        desc.write_to_file(os.path.join(self.folder, desc.file[0]))
+
+        self.save_changes(author_name, author_mail,
+                          "[dictionary] Update comments for {} ({}) to ({})"
+                          .format(str(script),
+                                  " / ".join("{}:{}".format(l,old_com[l]) for l in LANGUAGES),
+                                  " / ".join("{}:{}".format(l,comments[l]) for l in LANGUAGES)),
+                          to_add=DescriptorSet.file)
+
+    @monitor_decorator("set_root_morpheme_inhibitions")
+    def set_root_morpheme_inhibitions(self,
+                                      script: Script,
+                                      inhibitions: List[str],
+                                      author_name: str,
+                                      author_mail: str):
+        d = self.dictionary()
+        script = _check_script(script)
+        inhibitions = _check_inhibitions(inhibitions)
+
+        assert d.tables.root(script) == script
+
+        ds = self.dictionary_structure()
+        para, _inhib_old = ds.get(script)
+
+        if _inhib_old == inhibitions:
+            return
+
+        ds.set_value(script, para, inhibitions)
+
+        ds.write_to_file(os.path.join(self.folder, ds.file[0]))
+        self.save_changes(author_name, author_mail,
+                          "[dictionary] Update comments for {} [{}] to [{}]"
+                          .format(str(script),
+                                  ', '.join(_inhib_old),
+                                  ', '.join(inhibitions)),
+                          to_add=DictionaryStructure.file)
+
+
+
+    @monitor_decorator("update_morpheme_paradigm")
+    def update_morpheme_paradigm(self,
+                                 script_old: Script,
+                                 script_new: Script,
+                                 author_name: str,
+                                 author_mail: str):
+        script_old = _check_script(script_old)
+        script_new = _check_script(script_new)
+
+        if script_old == script_new:
+            return
+
+        assert len(script_old) != 1 or len(script_new) != 1, "Can't update singular sequences, only paradigms"
+
+        d = self.dictionary()
+
+        assert script_old in d.scripts, "Source script not defined in dictionary"
+        assert script_new not in d.scripts, "Target script already defined in dictionary"
+        root_old = d.tables.root(script_old)
+        # root_new = d.tables.root(script_new)
+
+        ds = self.dictionary_structure()
+        try:
+            # 1st case: root paradigm
+            para, inhib = ds.get(script_old)
+            root_new = root_old
+            # then we can update it to a bigger version of it
+            assert script_old in script_new, "Can only update a root paradigm to a bigger version of it"
+
+            ds.structure.drop([str(script_old)], inplace=True)
+            ds.set_value(script_new, para, inhib)
+        except KeyError:
+            # 2nd case paradigm
+            root_new_cand = set()
+            for ss in script_new.singular_sequences:
+                root_new_cand.add(d.tables.root(ss))
+            assert len(root_new_cand) == 1, "No root paradigms or too many for script {}".format(str(script_new))
+            root_new = next(iter(root_new_cand))
+
+            para_old, inhib_old = ds.get(root_old)
+            assert str(script_old) in para_old
+
+            if root_old == root_new:
+                para_old = sorted(set(para_old) - {str(script_old)} | {str(script_new)})
+                ds.set_value(root_old, para_old, inhib_old)
+            else:
+                para_old = sorted(set(para_old) - {str(script_old)})
+                ds.set_value(root_old, para_old, inhib_old)
+
+                para_new, inhib_new = ds.get(root_new)
+                para_new = sorted(set(para_new) | {str(script_new)})
+                ds.set_value(root_new, para_new, inhib_new)
+
+        desc = self.descriptors()
+        # transfers translations
+        for l, k in product(LANGUAGES, DESCRIPTORS_CLASS):
+            desc.set_value(script=script_new,
+                           language=l,
+                           descriptor=k,
+                           values=desc.get(script=script_old,
+                                           language=l,
+                                           descriptor=k))
+
+        ds_file = os.path.join(self.folder, ds.file[0])
+        ds.write_to_file(ds_file)
+
+        desc_file = os.path.join(self.folder, desc.file[0])
+        desc.write_to_file(desc_file)
+
+        self.save_changes(author_name, author_mail,
+                          "[dictionary] Update paradigm IEML from {} to {} ({}),"
+                          " from root paradigm {} ({}) to {} ({})"
+                          .format(str(script_old),
+                                  str(script_new),
+                                  " / ".join("{}:{}".format(l,desc.get(script_new, l, 'translations')) for l in LANGUAGES),
+                                  str(root_old),
+                                  " / ".join("{}:{}".format(l, desc.get(root_old, l, 'translations')) for l in LANGUAGES),
+                                  str(root_new),
+                                  " / ".join("{}:{}".format(l, desc.get(root_new, l, 'translations')) for l in LANGUAGES)),
+                          to_add=[*ds.file, *desc.file])

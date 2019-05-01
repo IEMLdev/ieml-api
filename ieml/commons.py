@@ -1,4 +1,7 @@
-
+import os
+import pickle
+from typing import List
+import hashlib
 
 class cached_property:
     def __init__(self, factory):
@@ -61,3 +64,70 @@ class Singleton(type):
             cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
 
         return cls._instances[cls]
+
+
+class FolderWatcherCache:
+    def __init__(self, files: List[str], cache_folder: str, name: str):
+        """
+        Cache that check if `folder` content has changed. Compute a hash of the files in the folder and
+        get pruned if the content of this folder change.
+
+        :param folder: the folder to watch
+        :param cache_folder: the folder to put the cache file
+        """
+        self.files = sorted(os.path.abspath(f) for f in files)
+        self.cache_folder = os.path.abspath(cache_folder)
+        self.name = name
+
+    def update(self, obj) -> None:
+        """
+        Update the cache content, remove old cache files from the cache directory.
+
+        :param obj: the object to pickle in the cache
+        :return: None
+        """
+        for c in self._cache_candidates():
+            os.remove(c)
+
+        with open(self.cache_file, 'wb') as fp:
+            pickle.dump(obj, fp)
+
+    def get(self) -> object:
+        """
+        Unpickle and return the object stored in the cache file.
+        :return: the stored object
+        """
+        with open(self.cache_file, 'rb') as fp:
+            return pickle.load(fp)
+
+    def is_pruned(self) -> bool:
+        """
+        Return True if the watched folder content has changed.
+        :return: if the folder content changed
+        """
+        names = [p for p in self._cache_candidates()]
+        if len(names) != 1:
+            return True
+
+        return self.cache_file != names[0]
+
+    @property
+    def cache_file(self) -> str:
+        """
+        :return: The cache file absolute path
+        """
+        res = b""
+        for file in self.files:
+            with open(file, 'rb') as fp:
+                res += file.encode('utf8') + b":" + fp.read()
+
+        return os.path.join(self.cache_folder, ".{}-cache.{}".format(self.name, hashlib.md5(res).hexdigest()))
+
+    def _cache_candidates(self) -> List[str]:
+        """
+        Return all the cache files from the cache folder (the pruned and the current one)
+        :return: All the cache files from the cache folder
+        """
+        return [os.path.join(self.cache_folder, n) for n in os.listdir(self.cache_folder)
+                if n.startswith('.{}-cache.'.format(self.name))]
+

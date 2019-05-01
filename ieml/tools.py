@@ -17,7 +17,6 @@ from ieml.lexicon.grammar.word import Word
 
 from .exceptions import InvalidIEMLObjectArgument
 from .exceptions import CantGenerateElement
-from .dictionary import Dictionary
 
 
 def _loop_result(max_try):
