@@ -181,10 +181,10 @@ class IEMLDatabase(IEMLDBInterface):
             if push_password is not None and push_username is not None:
                 self.push(push_username, push_password)
 
-
-        except Exception:
+        except Exception as e:
             traceback.print_exc()
             self.reset(old_commit)
+            raise e
 
         for f in to_remove:
             os.remove(os.path.join(self.folder, f))
