@@ -32,7 +32,7 @@ setup(name='ieml',
             'pygit2',
             'dill',
             'pandas',
-            'yaml'
+            'pyyaml'
       ],
       test_suite='nose2.collector.collector',
       tests_require=['nose2'],
