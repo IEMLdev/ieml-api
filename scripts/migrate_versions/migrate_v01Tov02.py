@@ -7,7 +7,7 @@ from collections import Counter, defaultdict
 from multiprocessing import Pool
 
 from tqdm import tqdm
-
+import json
 from ieml import IEMLDatabase
 from ieml.constants import LANGUAGES
 from ieml.dictionary.table import TableSet
@@ -44,8 +44,16 @@ relation_name_table = {
 COMMENTS_URL = "https://intlekt.io/api/comments/{}/"
 
 
+def get_last_version():
+    with open('/home/louis/code/ieml/backups/dictionary_2019-04-26_18_44_02.json') as fp:
+        return json.load(fp)
+
+
 def _download_comment(script):
-    return get(COMMENTS_URL.format(script)).json()
+    try:
+        return get(COMMENTS_URL.format(script)).json()
+    except Exception:
+        return []
 
 
 def download_comments(scripts):
@@ -66,39 +74,39 @@ def download_comments(scripts):
 
 
 def download_last_version():
-    URL_VERSION='https://dictionary.ieml.io/api/version'
+    # URL_VERSION='https://dictionary.ieml.io/api/version'
+    #
+    # version = get(URL_VERSION).json()
+    # # print("Downloading dictionary version {}".format(version))
+    # # URL = 'https://dictionary.ieml.io/api/all?version={}'.format(version)
+    # #
+    # URL_INHIBITIONS = 'https://dictionary.ieml.io/api/relations/visibility?version={}&ieml='.format(version)
+    all_d = get_last_version()
 
-    version = get(URL_VERSION).json()
-    print("Downloading dictionary version {}".format(version))
-    URL = 'https://dictionary.ieml.io/api/all?version={}'.format(version)
 
-    URL_INHIBITIONS = 'https://dictionary.ieml.io/api/relations/visibility?version={}&ieml='.format(version)
-    all_d = get(URL).json()
-
-
-    translations = defaultdict(dict)
+    translations = all_d['translations']
     comments = defaultdict(list)
-    roots = []
-    inhibitions = {}
-    scripts = []
+    roots = all_d['roots']
+    inhibitions = all_d['inhibitions']
+    scripts = all_d['terms']
 
-    for s in all_d:
-        script = sc(s['IEML'], factorize=True)
+    # for s in :
+    #     script = sc(s['IEML'], factorize=True)
         # assert s['IEML'] == str(script), "{} != {}".format(s['IEML'], str(script))
 
-        if s['ROOT_PARADIGM']:
-            roots.append(script)
-            res = get(URL_INHIBITIONS + urllib.parse.quote_plus(str(s['IEML'])))
-            assert res.status_code == 200, res.text
-            inhibitions[script] = [relation_name_table[i] for i in res.json()]
+        # if s['ROOT_PARADIGM']:
+        #     roots.append(script)
+        #     # res = get(URL_INHIBITIONS + urllib.parse.quote_plus(str(s['IEML'])))
+        #     # assert res.status_code == 200, res.text
+        #     inhibitions[script] = [relation_name_table[i] for i in res.json()]
 
-        scripts.append(script)
-        translations['fr'][script] = s['FR']
-        translations['en'][script] = s['EN']
+        # scripts.append(script)
+        # translations['fr'][script] = s['FR']
+        # translations['en'][script] = s['EN']
 
 
-    print(translations)
-    return scripts, translations, roots, inhibitions, download_comments(scripts)
+    # print(translations)
+    return scripts, translations, roots, inhibitions, comments #download_comments(scripts)
 
 def get_script_description(dictionary,desc, script):
     s = sc(script, factorize=True)
@@ -167,14 +175,14 @@ def clean_up_translations(desc):
 
 def migrate(db, author_name, author_mail):
     db_folder = db.folder
-    io_old = IEMLDatabaseIOv01
+    old_desc = db.descriptors()
     scripts, translations, roots, inhibitions, comments = download_last_version()#io_old._do_read_dictionary(db_folder=db_folder)
 
-    scripts = [sc(s, factorize=True) for s in scripts]
+    scripts = sorted(set(sc(s, factorize=True) for s in scripts))
     roots = [sc(r, factorize=True) for r in roots]
     inhibitions = {sc(r, factorize=True): [re.sub('-', '_', rel) for rel in v] for r, v in inhibitions.items()}
     translations = {l: {s: [v[s]] for s in v} for l, v in translations.items()}
-    comments = {l: {s: [v[s]] for s in v} for l, v in comments.items()}
+    comments = {l: {s: old_desc.get(s, l, 'comments') for s in scripts} for l in LANGUAGES}
 
     print(inhibitions)
     ds = DictionaryStructure.from_structure(scripts, roots, inhibitions)
@@ -184,8 +192,8 @@ def migrate(db, author_name, author_mail):
 
     ds_f = os.path.join(db_folder, ds.file[0])
     desc_f = os.path.join(db_folder, desc.file[0])
-    os.mkdir(os.path.join(db_folder,'structure'))
-    os.mkdir(os.path.join(db_folder,'descriptors'))
+    # os.mkdir(os.path.join(db_folder,'structure'))
+    # os.mkdir(os.path.join(db_folder,'descriptors'))
     ds.write_to_file(ds_f)
     desc.write_to_file(desc_f)
 
@@ -197,12 +205,13 @@ def migrate(db, author_name, author_mail):
     db.save_changes(author_name, author_mail,
                     "[dictionary] Migrate to format v02",
                     to_add=to_add + ['version'],
-                    to_remove=[os.path.join('dictionary', f) for f in os.listdir(os.path.join(db_folder, 'dictionary'))],
+                    to_remove=[],
                     check_coherency=True)
 
-    shutil.rmtree(os.path.join(db_folder, 'dictionary'))
+    # shutil.rmtree(os.path.join(db_folder, 'dictionary'))
 
-
+    db.push("ogrergo", "SompN23PZN")
+    
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()

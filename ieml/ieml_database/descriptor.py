@@ -66,12 +66,12 @@ class DescriptorSet:
         for l in LANGUAGES:
             for d in DESCRIPTORS_CLASS:
                 try:
-                    keys = keys.union(kwargs[d][l])
+                    keys = keys.union(map(str, kwargs[d][l]))
                 except KeyError:
                     pass
 
         index = []
-        for k in map(lambda e: sc(e, factorize=True), keys):
+        for k in set(map(lambda e: sc(e, factorize=True), keys)):
             for l in LANGUAGES:
                 for desc in DESCRIPTORS_CLASS:
                     v = kwargs[desc].get(l, {k: []}).get(k, [])

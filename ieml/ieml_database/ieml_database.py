@@ -1,6 +1,7 @@
 import functools
 import hashlib
 import os
+import traceback
 from itertools import product
 from time import time
 from typing import List
@@ -173,7 +174,14 @@ class IEMLDatabase(IEMLDBInterface):
         for f in to_remove:
             os.remove(os.path.join(self.folder, f))
 
-    def commit_files(self, author_name, author_mail, message, to_add=(), to_remove=()):
+    def commit_files(self,
+                     author_name,
+                     author_mail,
+                     message,
+                     to_add=(),
+                     to_remove=(),
+                     push_username=None,
+                     push_password=None):
         if not to_add and not to_remove:
             return
 
@@ -193,16 +201,28 @@ class IEMLDatabase(IEMLDBInterface):
 
         author = pygit2.Signature(author_name, author_mail)
         # commiter = pygit2.Signature(author_name, author_mail)
-
-        oid = repo.create_commit('refs/heads/{}'.format(self.branch),
-                                 author,
-                                 author,
-                                 message,
-                                 tree,
-                                 [repo.head.peel().hex])
-
-        self.commit_id = oid.hex
         self.update()
+        old_commit = self.commit_id
+        try:
+            oid = repo.create_commit('refs/heads/{}'.format(self.branch),
+                                     author,
+                                     author,
+                                     message,
+                                     tree,
+                                     [repo.head.peel().hex])
+
+            self.commit_id = oid.hex
+            self.update()
+
+            if push_password is not None and push_username is not None:
+                self.push(push_username, push_password)
+        except Exception as e:
+            traceback.print_exc()
+            self.reset(old_commit)
+
+    def reset(self, commit_id):
+        repo = pygit2.Repository(self.folder)
+        repo.reset(commit_id, pygit2.GIT_RESET_HARD)
 
     def update(self):
         if not os.path.exists(self.folder):
@@ -214,8 +234,8 @@ class IEMLDatabase(IEMLDBInterface):
             # use most recent of remote
             remote = repo.remotes[0]
             remote.fetch()
-            # self.commit_id = repo.lookup_reference('refs/remotes/origin/{}'.format(self.branch)).target
-            self.commit_id = repo.lookup_reference('refs/heads/{}'.format(self.branch)).target
+            self.commit_id = repo.lookup_reference('refs/remotes/origin/{}'.format(self.branch)).target
+            # self.commit_id = repo.lookup_reference('refs/heads/{}'.format(self.branch)).target
 
         # try:
         merge_result, _ = repo.merge_analysis(self.commit_id)

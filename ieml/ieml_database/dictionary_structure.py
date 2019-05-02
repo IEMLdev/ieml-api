@@ -36,6 +36,9 @@ class DictionaryStructure:
         _check_roots(roots)
         root_to_paradigms = defaultdict(list)
 
+        for r in roots:
+            root_to_paradigms[str(r)] = []
+
         for s in scripts:
             if s.cardinal == 1 or s in roots:
                 # ignore ss and roots
