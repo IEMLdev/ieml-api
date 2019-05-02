@@ -146,7 +146,9 @@ class IEMLDatabase(IEMLDBInterface):
 
     @monitor_decorator("Save DB")
     def save_changes(self, author_name, author_mail, message,
-                     to_add=(), to_remove=(), check_coherency=True):
+                     to_add=(), to_remove=(), check_coherency=True,
+                     push_username=None,
+                     push_password=None):
         """
         Files are already modified on disk
         :param author_name:
@@ -165,11 +167,24 @@ class IEMLDatabase(IEMLDBInterface):
                 self.repo.reset(self.commit_id, pygit2.GIT_RESET_HARD)
                 raise e
 
-        self.commit_files(author_name=author_name,
-                          author_mail=author_mail,
-                          message=message,
-                          to_add=to_add,
-                          to_remove=to_remove)
+        self.update()
+        old_commit = self.commit_id
+        try:
+
+            self.commit_files(author_name=author_name,
+                              author_mail=author_mail,
+                              message=message,
+                              to_add=to_add,
+                              to_remove=to_remove)
+            self.update()
+
+            if push_password is not None and push_username is not None:
+                self.push(push_username, push_password)
+
+
+        except Exception:
+            traceback.print_exc()
+            self.reset(old_commit)
 
         for f in to_remove:
             os.remove(os.path.join(self.folder, f))
@@ -179,9 +194,7 @@ class IEMLDatabase(IEMLDBInterface):
                      author_mail,
                      message,
                      to_add=(),
-                     to_remove=(),
-                     push_username=None,
-                     push_password=None):
+                     to_remove=()):
         if not to_add and not to_remove:
             return
 
@@ -201,24 +214,15 @@ class IEMLDatabase(IEMLDBInterface):
 
         author = pygit2.Signature(author_name, author_mail)
         # commiter = pygit2.Signature(author_name, author_mail)
-        self.update()
-        old_commit = self.commit_id
-        try:
-            oid = repo.create_commit('refs/heads/{}'.format(self.branch),
-                                     author,
-                                     author,
-                                     message,
-                                     tree,
-                                     [repo.head.peel().hex])
+        oid = repo.create_commit('refs/heads/{}'.format(self.branch),
+                                 author,
+                                 author,
+                                 message,
+                                 tree,
+                                 [repo.head.peel().hex])
 
-            self.commit_id = oid.hex
-            self.update()
+        self.commit_id = oid.hex
 
-            if push_password is not None and push_username is not None:
-                self.push(push_username, push_password)
-        except Exception as e:
-            traceback.print_exc()
-            self.reset(old_commit)
 
     def reset(self, commit_id):
         repo = pygit2.Repository(self.folder)
@@ -313,7 +317,9 @@ class IEMLDatabase(IEMLDBInterface):
                                       author_name: str,
                                       author_mail: str,
                                       # comments: Commentary=None,
-                                      inhibitions: Inhibitions = ()):
+                                      inhibitions: Inhibitions = (),
+                                      push_username=None,
+                                      puch_password=None):
 
         inhibitions = _check_inhibitions(inhibitions)
         script = _check_script(script)
@@ -349,7 +355,9 @@ class IEMLDatabase(IEMLDBInterface):
                                               " / ".join("{}:{}".format(l, descriptors.get(str(script), l, 'translations')) for l in LANGUAGES),
                                               len(script.singular_sequences),
                                               len(main_tables)),
-                          to_add=['structure/dictionary'])
+                          to_add=['structure/dictionary'],
+                            push_username=push_username,
+                            push_password=puch_password)
 
     # def _do_add_paradigm(self, script: Script, translations: Translations, comments: Commentary):
     #     script = _check_script(script)
@@ -396,7 +404,9 @@ class IEMLDatabase(IEMLDBInterface):
     def add_morpheme_paradigm(self,
                               script: Script,
                               author_name: str,
-                              author_mail: str):
+                              author_mail: str,
+                              push_username=None,
+                              puch_password=None):
                               # translations: Translations = None,
                               # comments: Commentary = None):
         d = self.dictionary()
@@ -431,13 +441,17 @@ class IEMLDatabase(IEMLDBInterface):
                                   " / ".join("{}:{}".format(l,descriptors.get(script,l,'translations')) for l in LANGUAGES),
                                   str(root),
                                   " / ".join("{}:{}".format(l, descriptors.get(root,l,'translations')) for l in LANGUAGES)),
-                          to_add=['structure/dictionary'])
+                          to_add=['structure/dictionary'],
+                            push_username=push_username,
+                            push_password=puch_password)
 
     @monitor_decorator("delete_morpheme_root_paradigm")
     def delete_morpheme_root_paradigm(self,
                                       script: Script,
                                       author_name: str,
-                                      author_mail: str):
+                                      author_mail: str,
+                                      push_username=None,
+                                      puch_password=None):
         script = _check_script(script)
         d = self.dictionary()
         assert script in d.tables.roots
@@ -463,7 +477,9 @@ class IEMLDatabase(IEMLDBInterface):
                           "[dictionary] Remove root paradigm {} ({})"
                           .format(str(script),
                                   " / ".join("{}:{}".format(l, descriptors.get(script, l, 'translations')) for l in LANGUAGES)),
-                          to_add=DictionaryStructure.file)
+                          to_add=DictionaryStructure.file,
+                            push_username=push_username,
+                            push_password=puch_password)
 
     # def _do_delete_paradigm(self, script: Script):
     #     script = _check_script(script)
@@ -487,7 +503,9 @@ class IEMLDatabase(IEMLDBInterface):
     def delete_morpheme_paradigm(self,
                                  script: Script,
                                  author_name: str,
-                                 author_mail: str):
+                                 author_mail: str,
+                                      push_username=None,
+                                      puch_password=None):
         d = self.dictionary()
         # files, root = self._do_delete_paradigm(script)
 
@@ -517,14 +535,18 @@ class IEMLDatabase(IEMLDBInterface):
                                   " / ".join("{}:{}".format(l,descriptors.get(script, l, 'translations')) for l in LANGUAGES),
                                   str(root),
                                   " / ".join("{}:{}".format(l, descriptors.get(root, l ,'translations')) for l in LANGUAGES)),
-                          to_add=DictionaryStructure.file)
+                          to_add=DictionaryStructure.file,
+                            push_username=push_username,
+                            push_password=puch_password)
 
     @monitor_decorator("Set morpheme translations")
     def set_morpheme_translation(self,
                                  script: Script,
                                  translations: Translations,
                                  author_name: str,
-                                 author_mail: str):
+                                 author_mail: str,
+                                      push_username=None,
+                                      puch_password=None):
 
         script = _check_script(script)
 
@@ -549,13 +571,17 @@ class IEMLDatabase(IEMLDBInterface):
                           .format(str(script),
                                   " / ".join("{}:{}".format(l,old_trans[l]) for l in LANGUAGES),
                                   " / ".join("{}:{}".format(l,translation[l]) for l in LANGUAGES)),
-                          to_add=DescriptorSet.file, check_coherency=False)
+                          to_add=DescriptorSet.file, check_coherency=False,
+                            push_username=push_username,
+                            push_password=puch_password)
 
     @monitor_decorator("set_morpheme_comments")
     def set_morpheme_comments(self, script: Script,
                                     comments: Translations,
                                     author_name: str,
-                                    author_mail: str):
+                                    author_mail: str,
+                                      push_username=None,
+                                      puch_password=None):
 
         script = _check_script(script)
 
@@ -577,14 +603,18 @@ class IEMLDatabase(IEMLDBInterface):
                           .format(str(script),
                                   " / ".join("{}:{}".format(l,old_com[l]) for l in LANGUAGES),
                                   " / ".join("{}:{}".format(l,comments[l]) for l in LANGUAGES)),
-                          to_add=DescriptorSet.file)
+                          to_add=DescriptorSet.file,
+                            push_username=push_username,
+                            push_password=puch_password)
 
     @monitor_decorator("set_root_morpheme_inhibitions")
     def set_root_morpheme_inhibitions(self,
                                       script: Script,
                                       inhibitions: List[str],
                                       author_name: str,
-                                      author_mail: str):
+                                      author_mail: str,
+                                      push_username=None,
+                                      puch_password=None):
         d = self.dictionary()
         script = _check_script(script)
         inhibitions = _check_inhibitions(inhibitions)
@@ -605,7 +635,9 @@ class IEMLDatabase(IEMLDBInterface):
                           .format(str(script),
                                   ', '.join(_inhib_old),
                                   ', '.join(inhibitions)),
-                          to_add=DictionaryStructure.file)
+                          to_add=DictionaryStructure.file,
+                            push_username=push_username,
+                            push_password=puch_password)
 
 
 
@@ -614,7 +646,9 @@ class IEMLDatabase(IEMLDBInterface):
                                  script_old: Script,
                                  script_new: Script,
                                  author_name: str,
-                                 author_mail: str):
+                                 author_mail: str,
+                                      push_username=None,
+                                      puch_password=None):
         script_old = _check_script(script_old)
         script_new = _check_script(script_new)
 
@@ -688,4 +722,6 @@ class IEMLDatabase(IEMLDBInterface):
                                   " / ".join("{}:{}".format(l, desc.get(root_old, l, 'translations')) for l in LANGUAGES),
                                   str(root_new),
                                   " / ".join("{}:{}".format(l, desc.get(root_new, l, 'translations')) for l in LANGUAGES)),
-                          to_add=[*ds.file, *desc.file])
+                          to_add=[*ds.file, *desc.file],
+                            push_username=push_username,
+                            push_password=puch_password)
