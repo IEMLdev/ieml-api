@@ -4,10 +4,9 @@ def readme():
     with open('README.md') as f:
         return f.read()
 
-from ieml.constants import LIBRARY_VERSION
 
 setup(name='ieml',
-      version=LIBRARY_VERSION,
+      version="1.0.4",
       description='Python implementation of the language IEML',
       long_description=readme(),
       classifiers=[
