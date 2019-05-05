@@ -210,8 +210,7 @@ def migrate(db, author_name, author_mail):
 
     # shutil.rmtree(os.path.join(db_folder, 'dictionary'))
 
-    db.push("ogrergo", "SompN23PZN")
-    
+
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
@@ -219,78 +218,13 @@ if __name__ == '__main__':
     parser.add_argument('author_email', type=str)
 
     parser.add_argument('--folder', type=str)
+    parser.add_argument('--github_username', type=str)
+    parser.add_argument('--github_password', type=str)
 
     args = parser.parse_args()
 
     folder = args.folder
-    # sttr = "B:.S:.n.-'we.O:O:.t.-'+E:.-T:.n.+f.-+U:.n.+S:+T:S:.-l.-',"
-    # assert str(sc(sttr, factorize=True)) == sttr
-    # cnt = Counter()
-    # from tqdm import  tqdm
-    # for i in tqdm(range(1000)):
-    #     ss =sc(sttr, factorize=True)
-    #     cnt[len(ss.tables_script)] += 1
-    #
-    # print(cnt.most_common())
-    #
-    #
-    # r_plant = sc("B:.S:.n.-'we.O:O:.t.-'+E:.-T:.n.+f.-+U:.n.+S:+T:S:.-l.-',", factorize=True)
-    # r_part = sc("B:.S:.n.-'E:.-U:.n.+S:+T:S:.-l.-',")
-    # t_plant = TableSet(r_plant, parent=None)
-    # t_plant.accept_script(r_part)
-    #
-    # assert r_part in r_plant.tables_script
 
     db = IEMLDatabase(db_folder=folder)
 
     migrate(db, args.author_name, args.author_email)
-    # io_old = db.iemldb_io
-    # io_new = IEMLDatabaseIOv02
-    #
-    # dictionary = db.dictionary()
-    #
-    # driver = IEMLDatabaseIOMeta.versions_map['0.2']
-    #
-    # folder = db.folder
-    # dic_path = os.path.join(folder, 'dictionary')
-    #
-    # to_remove = [os.path.join('dictionary',f) for f in os.listdir(dic_path)]
-    #
-    # shutil.rmtree(dic_path)
-    #
-    # os.mkdir(dic_path)
-    # os.mkdir(os.path.join(dic_path, 'structure'))
-    # os.mkdir(os.path.join(dic_path, 'descriptors'))
-    # for l in LANGUAGES:
-    #     os.mkdir(os.path.join(dic_path, 'descriptors', l))
-    #     for d in ['translations', 'comments']:
-    #         os.mkdir(os.path.join(dic_path, 'descriptors', l, d))
-    #
-    #
-    # to_add = []
-    #
-    # desc = DescriptorSet.from_folder()
-    #
-    # for root in dictionary.tables.roots:
-    #
-    #     root_description = get_root_script_description(dictionary, desc,root)
-    #     ss_description = [get_script_description(dictionary, desc,ss) for ss in root.singular_sequences]
-    #     p_description = [get_script_description(dictionary, desc,p) for p in dictionary.relations.object(root, 'contains')
-    #                      if p.cardinal != 1 and p != root]
-    #
-    #     files = io_new.write_morpheme_root_paradigm(folder,
-    #                                                 root_description,
-    #                                                 ss_description,
-    #                                                 p_description)
-    #     to_add.extend(files)
-    #
-    #
-    # with open(os.path.join(folder, 'version'), 'w') as fp:
-    #     fp.write(IEMLDatabaseIOv02.version)
-    #
-    # to_add.append('version')
-    #
-    # db.commit_files(args.author_name, args.author_email,
-    #                 '[dictionary] Migrating database from version 0.1 to 0.2',
-    #                 to_add=to_add,
-    #                 to_remove=to_remove)
