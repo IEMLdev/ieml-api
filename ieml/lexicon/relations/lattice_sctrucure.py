@@ -19,8 +19,8 @@ class LatticeStructure:
         self.words_to_latticeNode, self.roots = self._build_hierarchie(words)
 
     def __getitem__(self, item) -> LatticeNode :
+        # if item in
         return self.words_to_latticeNode[item]
-
     @staticmethod
     def _build_hierarchie(words: List[Word]):
         word_to_parents = {w: set() for w in words}
@@ -29,13 +29,13 @@ class LatticeStructure:
         word_to_contained_by = {w: set() for w in words}
 
         for w0 in words:
-            for w1 in w0.ancestors:
-                if w1 in word_to_parents:
-                    word_to_parents[w0].add(w1)
-                    word_to_child[w1].add(w0)
+            # for w1 in w0:
+            #     if w1 in word_to_parents:
+            #         word_to_parents[w0].add(w1)
+            #         word_to_child[w1].add(w0)
 
             for w1 in w0.singular_sequences:
-                if w1 in word_to_parents:
+                if w1 in words:
                     word_to_contains[w0].add(w1)
                     word_to_contained_by[w1].add(w0)
 

@@ -1,4 +1,3 @@
-from ieml.lexicon import Usl
 import numpy as np
 
 

@@ -4,7 +4,7 @@ import os
 import traceback
 from itertools import product
 from time import time
-from typing import List
+from typing import List, Dict
 
 from appdirs import user_cache_dir
 
@@ -15,15 +15,19 @@ import logging
 
 from ieml.dictionary import Dictionary
 from ieml.dictionary.script import Script, factorize
-from ieml.ieml_database.db_interface import Translations, Commentary, Inhibitions, IEMLDBInterface
 from ieml.ieml_database.descriptor import DescriptorSet, DESCRIPTORS_CLASS
 from ieml.ieml_database.dictionary_structure import DictionaryStructure
 # from ieml.ieml_database.versions import IEMLDatabaseIO_factory
 # from ieml.ieml_database.versions.ieml_database_io import ScriptDescription
+from ieml.ieml_database.lexicon.lexicon_descriptor import LexiconDescriptorSet
+from ieml.ieml_database.lexicon.lexicon_structure import LexiconStructure
 from ieml.lexicon import Lexicon
+from ieml.lexicon.syntax import LexicalItem
 
 logger = logging.getLogger("IEMLDatabase")
 
+Inhibitions = List[str]
+Translations = Comments = Dict[str, List[str]]
 
 def monitor_decorator(name):
     def decorator(f):
@@ -49,6 +53,20 @@ def _check_script(script):
     assert isinstance(script, Script)
     assert factorize(script) == script
     return script
+
+def _check_lexical_item(ieml):
+    assert isinstance(ieml, LexicalItem)
+    return ieml
+
+
+def _check_ieml(ieml):
+    if isinstance(ieml, Script):
+        return _check_script(ieml)
+    elif isinstance(ieml, LexicalItem):
+        return _check_lexical_item(ieml)
+    else:
+        assert False, "Invalid ieml {}".format(ieml)
+
 
 
 def _check_inhibitions(inhibitions):
@@ -110,7 +128,14 @@ def cache_results_watch_files(_files, name):
 
     return decorator
 
-class IEMLDatabase(IEMLDBInterface):
+
+class IEMLDatabase:
+    # descriptor_dictionary_file = 'dictionary/descriptors'
+    structure_dictionary_file = 'structure/dictionary'
+    descriptors_folder = 'descriptors'
+    structure_lexicon_folder = 'structure/lexicons'
+
+
     def __init__(self,
                  git_address=IEMLDB_DEFAULT_GIT_ADDRESS,
                  branch='master',
@@ -141,8 +166,6 @@ class IEMLDatabase(IEMLDBInterface):
 
         # download database
         self.update()
-
-        # self.iemldb_io = IEMLDatabaseIO_factory(self.folder)
 
     @monitor_decorator("Save DB")
     def save_changes(self, author_name, author_mail, message,
@@ -213,7 +236,7 @@ class IEMLDatabase(IEMLDBInterface):
         tree = index.write_tree()
 
         author = pygit2.Signature(author_name, author_mail)
-        # commiter = pygit2.Signature(author_name, author_mail)
+
         oid = repo.create_commit('refs/heads/{}'.format(self.branch),
                                  author,
                                  author,
@@ -222,7 +245,6 @@ class IEMLDatabase(IEMLDBInterface):
                                  [repo.head.peel().hex])
 
         self.commit_id = oid.hex
-
 
     def reset(self, commit_id):
         repo = pygit2.Repository(self.folder)
@@ -268,42 +290,41 @@ class IEMLDatabase(IEMLDBInterface):
         callbacks = pygit2.RemoteCallbacks(credentials=credentials)
         remote.push(['refs/heads/{}'.format(self.branch)], callbacks=callbacks)
 
-
-    @monitor_decorator("Build descriptors")
-    # @cache_results_watch_files('descriptors')
-    def descriptors(self):
-        # before = time()
-        desc = DescriptorSet.from_file(os.path.join(self.folder, DescriptorSet.file[0]))
-        # print("Descriptor read time ", time() - before)
-        return desc
-        # return self.iemldb_io.read_descriptors(self.folder,
-        #                                        cache_folder=self.cache_folder)
+    # def descriptors(self):
+    #     desc = DescriptorSet.from_folder(os.path.join(self.folder, IEMLDatabase.descriptor_dictionary_file))
+    #     return desc
 
     def dictionary_structure(self):
-        return DictionaryStructure.from_file(os.path.join(self.folder, 'structure/dictionary'))
+        return DictionaryStructure.from_file(os.path.join(self.folder, IEMLDatabase.structure_dictionary_file))
 
     @monitor_decorator("Build dictionary")
-    @cache_results_watch_files(['structure/dictionary'], 'dictionary_structure')
+    @cache_results_watch_files([structure_dictionary_file], 'dictionary_structure')
     def dictionary(self, use_cache=True):
         return Dictionary(self.dictionary_structure())
-        # try:
-        # return self.iemldb_io.read_dictionary(self.folder,
-        #                                       cache_folder=self.cache_folder)
-        # except ValueError:
-        #     logger.info("Error loading dictionary, resetting database to last commit.")
-        #     pygit2.Repository(self.folder).reset(self.commit_id, pygit2.GIT_RESET_HARD)
-        #     return self.dictionary()
 
-    def lexicon(self):
-        lexicon_path = os.path.join(self.folder, 'lexicons')
-        return Lexicon.load(lexicon_path)
+    # def lexicon(self):
+    #     lexicon_path = os.path.join(self.folder, 'lexicon')
+    #     return Lexicon.load(lexicon_path)
+    @monitor_decorator("Build descriptors")
+    def descriptors(self):
+        return LexiconDescriptorSet.from_folder(self.folder)
+
+    def lexicon_structure(self, domains):
+        assert 'descriptors' not in domains
+        return LexiconStructure.from_folder(os.path.join(self.folder, self.structure_lexicon_folder), domains)
+
+    @monitor_decorator("Build Lexicon")
+    def lexicon(self, domains):
+        if domains == 'all':
+            domains = [f for f in os.listdir(os.path.join(self.folder, self.structure_lexicon_folder)) if f != 'descriptors']
+        return Lexicon(self.lexicon_structure(domains), dictionary=self.dictionary(), descriptors=self.descriptors())
 
     @property
     def repo(self):
         return pygit2.Repository(self.folder)
 
     def get_version(self):
-        return (self.branch, self.commit_id)
+        return self.branch, self.commit_id
 
     def set_version(self, branch, commit_id):
         self.branch = branch
@@ -313,13 +334,11 @@ class IEMLDatabase(IEMLDBInterface):
     @monitor_decorator("create_morpheme_root_paradigm")
     def create_morpheme_root_paradigm(self,
                                       script: Script,
-                                      # translations: Translations,
                                       author_name: str,
                                       author_mail: str,
-                                      # comments: Commentary=None,
                                       inhibitions: Inhibitions = (),
                                       push_username=None,
-                                      puch_password=None):
+                                      push_password=None):
 
         inhibitions = _check_inhibitions(inhibitions)
         script = _check_script(script)
@@ -355,60 +374,17 @@ class IEMLDatabase(IEMLDBInterface):
                                               " / ".join("{}:{}".format(l, descriptors.get(str(script), l, 'translations')) for l in LANGUAGES),
                                               len(script.singular_sequences),
                                               len(main_tables)),
-                          to_add=['structure/dictionary'],
-                            push_username=push_username,
-                            push_password=puch_password)
+                          to_add=[IEMLDatabase.structure_dictionary_file],
+                          push_username=push_username,
+                          push_password=push_password)
 
-    # def _do_add_paradigm(self, script: Script, translations: Translations, comments: Commentary):
-    #     script = _check_script(script)
-    #     translations = _check_descriptors(translations)
-    #     comments = _check_descriptors(comments)
-    #
-    #     if script.cardinal == 1:
-    #         raise ValueError("Script {} is not a paradigm".format(str(script)))
-    #
-    #     d = self.dictionary()
-    #     if script in d:
-    #         raise ValueError("Paradigm {} already defined".format(str(script)))
-    #
-    #     roots = set()
-    #     for ss in script.singular_sequences:
-    #         try:
-    #             roots.add(d.tables.root(ss))
-    #         except KeyError:
-    #             raise ValueError("The paradigm {} is not fully contained in existing root paradigms".format(str(script)))
-    #
-    #     if len(roots) != 1:
-    #         raise ValueError("The paradigm {} is contained in multiple root paradigms".format(str(script)))
-    #
-    #     root = next(iter(roots))
-    #
-    #     root_description = get_root_script_description(d, root)
-    #     ss_description = [get_script_description(d, ss) for ss in root.singular_sequences]
-    #     p_description = [get_script_description(d, p) for p in d.relations.object(root, 'contains')
-    #                      if p.cardinal != 1 and p != root]
-    #
-    #     p_description.append({
-    #         'ieml': str(script),
-    #         'translations': translations,
-    #         'comments': comments
-    #     })
-    #
-    #     files = self.iemldb_io.write_morpheme_root_paradigm(self.folder,
-    #                                                         root_description,
-    #                                                         ss_description,
-    #                                                         p_description)
-    #
-    #     return files, root
     @monitor_decorator("add_morpheme_paradigm")
     def add_morpheme_paradigm(self,
                               script: Script,
                               author_name: str,
                               author_mail: str,
                               push_username=None,
-                              puch_password=None):
-                              # translations: Translations = None,
-                              # comments: Commentary = None):
+                              push_password=None):
         d = self.dictionary()
 
         r_cand = set()
@@ -441,9 +417,9 @@ class IEMLDatabase(IEMLDBInterface):
                                   " / ".join("{}:{}".format(l,descriptors.get(script,l,'translations')) for l in LANGUAGES),
                                   str(root),
                                   " / ".join("{}:{}".format(l, descriptors.get(root,l,'translations')) for l in LANGUAGES)),
-                          to_add=['structure/dictionary'],
-                            push_username=push_username,
-                            push_password=puch_password)
+                          to_add=[IEMLDatabase.structure_dictionary_file],
+                          push_username=push_username,
+                          push_password=push_password)
 
     @monitor_decorator("delete_morpheme_root_paradigm")
     def delete_morpheme_root_paradigm(self,
@@ -451,7 +427,7 @@ class IEMLDatabase(IEMLDBInterface):
                                       author_name: str,
                                       author_mail: str,
                                       push_username=None,
-                                      puch_password=None):
+                                      push_password=None):
         script = _check_script(script)
         d = self.dictionary()
         assert script in d.tables.roots
@@ -464,48 +440,28 @@ class IEMLDatabase(IEMLDBInterface):
             # raise e
 
         ds.structure.drop([str(script)], inplace=True)
-        # del ds.root_paradigms[root_idx]
 
         file = os.path.join(self.folder, 'structure/dictionary')
         ds.write_to_file(file)
 
-        # files = self.iemldb_io.delete_morpheme_root_paradigm(self.folder,
-        #                                                      get_root_script_description(d,script))
         descriptors = self.descriptors()
 
         self.save_changes(author_name, author_mail,
                           "[dictionary] Remove root paradigm {} ({})"
                           .format(str(script),
                                   " / ".join("{}:{}".format(l, descriptors.get(script, l, 'translations')) for l in LANGUAGES)),
-                          to_add=DictionaryStructure.file,
-                            push_username=push_username,
-                            push_password=puch_password)
+                          to_add=[IEMLDatabase.structure_dictionary_file],
+                          push_username=push_username,
+                          push_password=push_password)
 
-    # def _do_delete_paradigm(self, script: Script):
-    #     script = _check_script(script)
-    #     d = self.dictionary()
-    #     assert script in d.scripts and script not in d.tables.roots and script.cardinal != 1
-    #
-    #     root = d.tables.root(script)
-    #
-    #     root_description = get_root_script_description(d, root)
-    #     ss_description = [get_script_description(d, ss) for ss in root.singular_sequences]
-    #     p_description = [get_script_description(d, p) for p in d.relations.object(root, 'contains')
-    #                      if p.cardinal != 1 and p != root and p != script]
-    #
-    #     files = self.iemldb_io.write_morpheme_root_paradigm(self.folder,
-    #                                                         root_description,
-    #                                                         ss_description,
-    #                                                         p_description)
-    #     return files, root
 
     @monitor_decorator("delete_morpheme_paradigm")
     def delete_morpheme_paradigm(self,
                                  script: Script,
                                  author_name: str,
                                  author_mail: str,
-                                      push_username=None,
-                                      puch_password=None):
+                                 push_username=None,
+                                 push_password=None):
         d = self.dictionary()
         # files, root = self._do_delete_paradigm(script)
 
@@ -535,86 +491,85 @@ class IEMLDatabase(IEMLDBInterface):
                                   " / ".join("{}:{}".format(l,descriptors.get(script, l, 'translations')) for l in LANGUAGES),
                                   str(root),
                                   " / ".join("{}:{}".format(l, descriptors.get(root, l ,'translations')) for l in LANGUAGES)),
-                          to_add=DictionaryStructure.file,
-                            push_username=push_username,
-                            push_password=puch_password)
+                          to_add=[IEMLDatabase.structure_dictionary_file],
+                          push_username=push_username,
+                          push_password=push_password)
 
-    @monitor_decorator("Set morpheme translations")
-    def set_morpheme_translation(self,
-                                 script: Script,
-                                 translations: Translations,
-                                 author_name: str,
-                                 author_mail: str,
-                                      push_username=None,
-                                      puch_password=None):
-
-        script = _check_script(script)
-
-        translation = _check_descriptors(translations)
-
-        desc = self.descriptors()
-
-        if all(translation[l] == desc.get(script, l, 'translations') for l in LANGUAGES):
-            return
-
-        old_trans = {l: desc.get(script=script, language=l, descriptor='translations') for l in LANGUAGES}
-
-        for l in LANGUAGES:
-            desc.set_value(script, descriptor='translations', language=l, values=translations[l])
-
-        desc.write_to_file(os.path.join(self.folder, desc.file[0]))
-
-
-
-        self.save_changes(author_name, author_mail,
-                          "[dictionary] Update translation for {} ({}) to ({})"
-                          .format(str(script),
-                                  " / ".join("{}:{}".format(l,old_trans[l]) for l in LANGUAGES),
-                                  " / ".join("{}:{}".format(l,translation[l]) for l in LANGUAGES)),
-                          to_add=DescriptorSet.file, check_coherency=False,
-                            push_username=push_username,
-                            push_password=puch_password)
-
-    @monitor_decorator("set_morpheme_comments")
-    def set_morpheme_comments(self, script: Script,
-                                    comments: Translations,
-                                    author_name: str,
-                                    author_mail: str,
-                                      push_username=None,
-                                      puch_password=None):
-
-        script = _check_script(script)
-
-        comments = _check_descriptors(comments)
-        desc = self.descriptors()
-
-        if all(comments[l] == desc.get(script, l, 'comments') for l in LANGUAGES):
-            return
-
-        old_com = {l: desc.get(script=script, language=l, descriptor='comments') for l in LANGUAGES}
-
-        for l in LANGUAGES:
-            desc.set_value(script, descriptor='comments', language=l, values=comments[l])
-
-        desc.write_to_file(os.path.join(self.folder, desc.file[0]))
-
-        self.save_changes(author_name, author_mail,
-                          "[dictionary] Update comments for {} ({}) to ({})"
-                          .format(str(script),
-                                  " / ".join("{}:{}".format(l,old_com[l]) for l in LANGUAGES),
-                                  " / ".join("{}:{}".format(l,comments[l]) for l in LANGUAGES)),
-                          to_add=DescriptorSet.file,
-                            push_username=push_username,
-                            push_password=puch_password)
+    # @monitor_decorator("Set morpheme translations")
+    # def set_morpheme_translation(self,
+    #                              script: Script,
+    #                              translations: Translations,
+    #                              author_name: str,
+    #                              author_mail: str,
+    #                              push_username=None,
+    #                              push_password=None):
+    #
+    #     script = _check_script(script)
+    #
+    #     translation = _check_descriptors(translations)
+    #
+    #     desc = self.descriptors()
+    #
+    #     if all(translation[l] == desc.get(script, l, 'translations') for l in LANGUAGES):
+    #         return
+    #
+    #     old_trans = {l: desc.get(script=script, language=l, descriptor='translations') for l in LANGUAGES}
+    #
+    #     for l in LANGUAGES:
+    #         desc.set_value(script, descriptor='translations', language=l, values=translations[l])
+    #
+    #     desc.write_to_file(os.path.join(self.folder, desc.file[0]))
+    #
+    #     self.save_changes(author_name, author_mail,
+    #                       "[dictionary] Update translation for {} ({}) to ({})"
+    #                       .format(str(script),
+    #                               " / ".join("{}:{}".format(l,old_trans[l]) for l in LANGUAGES),
+    #                               " / ".join("{}:{}".format(l,translation[l]) for l in LANGUAGES)),
+    #                       to_add=[IEMLDatabase.descriptor_dictionary_file],
+    #                       check_coherency=False,
+    #                       push_username=push_username,
+    #                       push_password=push_password)
+    #
+    # @monitor_decorator("set_morpheme_comments")
+    # def set_morpheme_comments(self, script: Script,
+    #                                 comments: Comments,
+    #                                 author_name: str,
+    #                                 author_mail: str,
+    #                                 push_username=None,
+    #                                 push_password=None):
+    #
+    #     script = _check_script(script)
+    #
+    #     comments = _check_descriptors(comments)
+    #     desc = self.descriptors()
+    #
+    #     if all(comments[l] == desc.get(script, l, 'comments') for l in LANGUAGES):
+    #         return
+    #
+    #     old_com = {l: desc.get(script=script, language=l, descriptor='comments') for l in LANGUAGES}
+    #
+    #     for l in LANGUAGES:
+    #         desc.set_value(script, descriptor='comments', language=l, values=comments[l])
+    #
+    #     desc.write_to_file(os.path.join(self.folder, desc.file[0]))
+    #
+    #     self.save_changes(author_name, author_mail,
+    #                       "[dictionary] Update comments for {} ({}) to ({})"
+    #                       .format(str(script),
+    #                               " / ".join("{}:{}".format(l,old_com[l]) for l in LANGUAGES),
+    #                               " / ".join("{}:{}".format(l,comments[l]) for l in LANGUAGES)),
+    #                       to_add=[IEMLDatabase.descriptor_dictionary_file],
+    #                       push_username=push_username,
+    #                       push_password=push_password)
 
     @monitor_decorator("set_root_morpheme_inhibitions")
     def set_root_morpheme_inhibitions(self,
                                       script: Script,
-                                      inhibitions: List[str],
+                                      inhibitions: Inhibitions,
                                       author_name: str,
                                       author_mail: str,
                                       push_username=None,
-                                      puch_password=None):
+                                      push_password=None):
         d = self.dictionary()
         script = _check_script(script)
         inhibitions = _check_inhibitions(inhibitions)
@@ -635,9 +590,9 @@ class IEMLDatabase(IEMLDBInterface):
                           .format(str(script),
                                   ', '.join(_inhib_old),
                                   ', '.join(inhibitions)),
-                          to_add=DictionaryStructure.file,
-                            push_username=push_username,
-                            push_password=puch_password)
+                          to_add=[IEMLDatabase.structure_dictionary_file],
+                          push_username=push_username,
+                          push_password=push_password)
 
 
 
@@ -647,8 +602,8 @@ class IEMLDatabase(IEMLDBInterface):
                                  script_new: Script,
                                  author_name: str,
                                  author_mail: str,
-                                      push_username=None,
-                                      puch_password=None):
+                                 push_username=None,
+                                 push_password=None):
         script_old = _check_script(script_old)
         script_new = _check_script(script_new)
 
@@ -722,6 +677,100 @@ class IEMLDatabase(IEMLDBInterface):
                                   " / ".join("{}:{}".format(l, desc.get(root_old, l, 'translations')) for l in LANGUAGES),
                                   str(root_new),
                                   " / ".join("{}:{}".format(l, desc.get(root_new, l, 'translations')) for l in LANGUAGES)),
-                          to_add=[*ds.file, *desc.file],
-                            push_username=push_username,
-                            push_password=puch_password)
+                          to_add=[IEMLDatabase.structure_dictionary_file, IEMLDatabase.descriptor_dictionary_file],
+                          push_username=push_username,
+                          push_password=push_password)
+
+
+    @monitor_decorator("create_lexical_paradigm")
+    def create_lexical_paradigm(self,
+                                lexeme,
+                                domain,
+                                author_name: str,
+                                author_mail: str,
+                                 push_username=None,
+                                 push_password=None):
+
+        assert isinstance(lexeme, LexicalItem) and len(lexeme) != 1
+
+        lex = self.lexicon_structure('all')
+        lex.add_paradigm(paradigm=lexeme, domain=domain)
+
+        lex.write_to_folder(self.folder)
+
+        self.save_changes(author_name, author_mail,
+                          "[lexicon] Create paradigm {}"
+                          .format(str(lexeme)),
+
+                          to_add=[self.structure_lexicon_folder + '/' + domain],
+                          push_username=push_username,
+                          push_password=push_password)
+
+    def set_translation(self,
+                        ieml,
+                        translations: Translations,
+                        author_name: str,
+                        author_mail: str,
+                        push_username=None,
+                        push_password=None):
+
+        ieml = _check_ieml(ieml)
+
+        translation = _check_descriptors(translations)
+
+        desc = self.descriptors()
+
+        if all(translation[l] == desc.get(ieml, l, 'translations') for l in LANGUAGES):
+            return
+
+        old_trans = {l: desc.get(ieml=ieml, language=l, descriptor='translations') for l in LANGUAGES}
+
+        for l in LANGUAGES:
+            desc.set_value(ieml, descriptor='translations', language=l, values=translations[l])
+
+        desc.write_to_folder(self.folder)
+
+        self.save_changes(author_name, author_mail,
+                          "[descriptors] Update translation for {} ({}) to ({})"
+                          .format(str(ieml),
+                                  " / ".join("{}:{}".format(l,old_trans[l]) for l in LANGUAGES),
+                                  " / ".join("{}:{}".format(l,translation[l]) for l in LANGUAGES)),
+                          to_add=desc.get_files(),
+                          check_coherency=False,
+                          push_username=push_username,
+                          push_password=push_password)
+
+
+    def set_comments(self,
+                     ieml,
+                     comments: Comments,
+                     author_name: str,
+                     author_mail: str,
+                     push_username=None,
+                     push_password=None):
+
+        ieml = _check_ieml(ieml)
+
+        comments = _check_descriptors(comments)
+
+        desc = self.descriptors()
+
+        if all(comments[l] == desc.get(ieml, l, 'comments') for l in LANGUAGES):
+            return
+
+        old_trans = {l: desc.get(ieml=ieml, language=l, descriptor='comments') for l in LANGUAGES}
+
+        for l in LANGUAGES:
+            desc.set_value(ieml, descriptor='comments', language=l, values=comments[l])
+
+        desc.write_to_folder(self.folder)
+
+        self.save_changes(author_name, author_mail,
+                          "[descriptors] Update comments for {} ({}) to ({})"
+                          .format(str(ieml),
+                                  " / ".join("{}:{}".format(l,old_trans[l]) for l in LANGUAGES),
+                                  " / ".join("{}:{}".format(l,comments[l]) for l in LANGUAGES)),
+                          to_add=desc.get_files(),
+                          check_coherency=False,
+                          push_username=push_username,
+                          push_password=push_password)

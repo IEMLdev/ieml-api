@@ -19,6 +19,8 @@ tokens = (
    'LBRACKET',
    'RBRACKET',
 
+    'GROUP_MULTIPLICITY'
+
    # 'L_CURLY_BRACKET',
    # 'R_CURLY_BRACKET',
    #
@@ -42,6 +44,8 @@ def get_lexer(module=None):
     # t_R_CURLY_BRACKET = r'\}'
     # t_SLASH = r'\/'
     # t_LITERAL = r'\<(\\\>|[^\>])+\>'
+
+    t_GROUP_MULTIPLICITY = r'm\d+'
 
     t_ignore  = '{} \t\n'
 

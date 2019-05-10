@@ -171,8 +171,6 @@ def clean_up_translations(desc):
             desc.set_value(sc, l, k, v_res)
 
 
-
-
 def migrate(db, author_name, author_mail):
     db_folder = db.folder
     old_desc = db.descriptors()
@@ -190,10 +188,9 @@ def migrate(db, author_name, author_mail):
     add_missing_foot_hand(ds, desc)
     clean_up_translations(desc)
 
-    ds_f = os.path.join(db_folder, ds.file[0])
-    desc_f = os.path.join(db_folder, desc.file[0])
-    # os.mkdir(os.path.join(db_folder,'structure'))
-    # os.mkdir(os.path.join(db_folder,'descriptors'))
+    ds_f = os.path.join(db_folder, ds.file)
+    desc_f = os.path.join(db_folder, desc.file)
+
     ds.write_to_file(ds_f)
     desc.write_to_file(desc_f)
 

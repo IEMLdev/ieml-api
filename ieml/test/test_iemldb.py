@@ -13,13 +13,15 @@ class IEMLDBTest(unittest.TestCase):
         self.db = IEMLDatabase(db_folder=self.DB_FOLDER)
 
     def test_factorised(self):
-        scripts, translations, roots, inhibitions, comments = self.db.iemldb_io._do_read_dictionary(self.db.folder)
-        _scripts = set(map(lambda s: script(s, factorize=True),map(lambda s: script(s, factorize=True), scripts)))
+        dic = self.db.dictionary()
 
-        for s in scripts:
+
+        _scripts = set(map(lambda s: script(s, factorize=True),map(lambda s: script(s, factorize=True), dic.scripts)))
+
+        for s in dic.scripts:
             assert s in _scripts, str(s)
 
-        for r in roots:
+        for r in dic.tables.roots:
             assert r in _scripts, str(r)
 
 
@@ -35,8 +37,8 @@ class IEMLDBTest(unittest.TestCase):
 
     def test_edition(self):
         sc = script('O:O:O:.')
-        translations = {'fr': 'test-fr','en':'test-en'}
-        comments = {'fr': 'fr-c', 'en': 'en-c'}
+        translations = {'fr': ['test-fr', 'second descripteur'],'en':['test-en', 'second descriptor']}
+        comments = {'fr': ['fr-c'], 'en': ['en-c']}
         inhibitions = ['father_substance', 'crossed']
         author_mail = 'test@test.st'
         author_name = 'testor'
@@ -44,9 +46,24 @@ class IEMLDBTest(unittest.TestCase):
         version0 = self.db.get_version()
 
         self.db.create_morpheme_root_paradigm(script=sc,
-                                         translations=translations,
-                                         comments=comments,
+                                         # translations=translations,
+                                         # comments=comments,
                                          inhibitions=inhibitions,
+                                         author_mail=author_mail,
+                                         author_name=author_name)
+
+
+        self.db.set_morpheme_translation(script=sc,
+                                         translations=translations,
+                                         # comments=comments,
+                                         # inhibitions=inhibitions,
+                                         author_mail=author_mail,
+                                         author_name=author_name)
+
+        self.db.set_morpheme_comments(script=sc,
+                                         # translations=translations,
+                                         comments=comments,
+                                         # inhibitions=inhibitions,
                                          author_mail=author_mail,
                                          author_name=author_name)
 
@@ -74,18 +91,19 @@ class IEMLDBTest(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             self.db.create_morpheme_root_paradigm(script=sc,
-                                                 translations=translations,
-                                                 comments=comments,
+                                                 # translations=translations,
+                                                 # comments=comments,
                                                  inhibitions=inhibitions,
                                                  author_mail=author_mail,
                                                  author_name=author_name)
+
 
         v = self.db.get_version()
         assert v == version1
 
         with self.assertRaises(ValueError):
             self.db.add_morpheme_paradigm(sc,
-                                          translations=translations,
+                                          # translations=translations,
                                           author_mail=author_mail,
                                           author_name=author_name)
 
@@ -100,9 +118,12 @@ class IEMLDBTest(unittest.TestCase):
 
         for i, p in enumerate(para):
             self.db.add_morpheme_paradigm(p,
-                                          translations=trans(i, p),
+                                          # translations=trans(i, p),
                                           author_mail=author_mail,
                                           author_name=author_name)
+            self.db.set_morpheme_translation(script=p, translations=trans(i, p),
+                                             author_mail=author_mail,
+                                             author_name=author_name)
         version0 = self.db.get_version()
         assert version1 != version0
         d = self.db.dictionary()
@@ -114,7 +135,7 @@ class IEMLDBTest(unittest.TestCase):
 
         trans2 = lambda i, e: {l: str(p) + ' 2 ' + str(i) + l for l in LANGUAGES}
         for i, p in enumerate(para):
-            self.db.update_morpheme_translation(p,
+            self.db.set_morpheme_translation(p,
                                                 translations=trans2(i, p),
                                             author_mail=author_mail,
                                             author_name=author_name)
