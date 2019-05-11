@@ -131,7 +131,7 @@ class LexiconDescriptorSet:
 
     def __init__(self, descriptors=None):
         if descriptors is None:
-            descriptors= pd.DataFrame(columns=['ieml', 'language', 'descriptor', 'values'])
+            descriptors = pd.DataFrame(columns=['ieml', 'language', 'descriptor', 'values'])
 
         self.descriptors = descriptors.set_index(['ieml', 'language', 'descriptor'], verify_integrity=True, drop=True)
 
@@ -225,7 +225,7 @@ class LexiconDescriptorSet:
         return len(self.descriptors)
 
     def __iter__(self):
-        return iter(self.descriptors)
+        return iter(self.descriptors.iterrows())
 
     def __contains__(self, item):
         return self.is_defined(item)
