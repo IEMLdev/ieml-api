@@ -51,6 +51,7 @@ class Script(TreeStructure):
 
         # class of the parser, one of the following : VERB (1), AUXILIARY (0), and NOUN (2)
         self.script_class = None
+        self.grammatical_class = None
 
     # def __new__(cls, *args, **kwargs):
     #     """
@@ -266,6 +267,7 @@ class AdditiveScript(Script):
             raise TooManySingularSequences(self.cardinal)
 
         self.script_class = max(c.script_class for c in self)
+        self.grammatical_class = self.script_class
 
         self.__order()
         self._do_precompute_str()
@@ -385,6 +387,8 @@ class MultiplicativeScript(Script):
             self.script_class = VERB_CLASS if self.character in REMARKABLE_ADDITION['O'] else NOUN_CLASS
         else:
             self.script_class = self.children[0].script_class
+
+        self.grammatical_class = self.script_class
 
         if self.layer != 0:
             # check number of children
@@ -513,6 +517,7 @@ class NullScript(Script):
         self._do_precompute_str()
         self.canonical = bytes([character_value[self.character]] * pow(3, self.layer))
         self.script_class = AUXILIARY_CLASS
+        self.grammatical_class = self.script_class
 
     def __iter__(self):
         if self.layer == 0:

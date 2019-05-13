@@ -13,7 +13,7 @@ from ieml.dictionary.script import Script
 from ieml.ieml_database.lexicon.lexicon_structure import LEVELS_CLASSES
 from ieml.lexicon.grammar.parser2 import IEMLParser
 from ieml.lexicon.grammar.parser2.lexer import TERM_REGEX
-from ieml.lexicon.syntax import MorphemeSerie, Trait, Character, Word, LexicalItem
+from ieml.lexicon.syntax import PolyMorpheme, Word, Phrase, LexicalItem
 
 DESCRIPTORS_CLASS=['comments', 'translations']
 
@@ -56,13 +56,13 @@ def monitor_decorator(name):
 def get_level_from_ieml(ieml):
     ieml = str(ieml)
     if ieml.startswith('['):
-        return 'character'
-    elif ieml.startswith('('):
         return 'word'
-    elif ieml.startswith('<'):
-        return 'trait'
+    elif ieml.startswith('{'):
+        return 'phrase'
+    # elif ieml.startswith('<'):
+    #     return 'sentence'
     elif ' ' in ieml:
-        return 'morpheme_serie'
+        return 'poly_morpheme'
     else:
         assert re.fullmatch(TERM_REGEX, ieml)
         return 'morpheme'
@@ -77,26 +77,26 @@ def get_key(obj):
     elif obj.empty:
         return 'E:', 'morpheme'
 
-    elif isinstance(obj, MorphemeSerie):
+    elif isinstance(obj, PolyMorpheme):
         if not obj.groups and len(obj.constant) == 1:
             return get_key(obj.constant[0])
         else:
-            return str(obj), 'morpheme_serie'
-    elif isinstance(obj, Trait):
-        if not obj.periphery:
-            return get_key(obj.core)
-        else:
-            return str(obj), 'trait'
-    elif isinstance(obj, Character):
+            return str(obj), 'poly_morpheme'
+    # elif isinstance(obj, Traitv1):
+    #     if not obj.periphery:
+    #         return get_key(obj.core)
+    #     else:
+    #         return str(obj), 'trait'
+    elif isinstance(obj, Word):
         if not obj.functions:
             return get_key(obj.content)
         else:
-            return str(obj), 'character'
-    elif isinstance(obj, Word):
+            return str(obj), 'word'
+    elif isinstance(obj, Phrase):
         if obj.attribute.empty and obj.mode.empty:
             return get_key(obj.substance)
         else:
-            return str(obj), 'word'
+            return str(obj), 'phrase'
 
 
 class LexiconDescriptorSet:
@@ -127,7 +127,7 @@ class LexiconDescriptorSet:
     """
 
     sub_folder = 'descriptors'
-    LEVELS = ['morpheme', 'morpheme_serie', 'trait', 'character', 'word']
+    LEVELS = ['morpheme', 'poly_morpheme', 'word', 'phrase']
 
     def __init__(self, descriptors=None):
         if descriptors is None:

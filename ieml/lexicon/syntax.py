@@ -4,7 +4,7 @@ from typing import List
 from collections import defaultdict, OrderedDict
 
 from ieml.constants import MORPHEME_SERIE_SIZE_LIMIT_CONTENT, \
-    TRAIT_SIZE_LIMIT_CONTENT, MORPHEMES_GRAMMATICAL_MARKERS
+    TRAIT_SIZE_LIMIT_CONTENT, MORPHEMES_GRAMMATICAL_MARKERS, AUXILIARY_CLASS
 from ieml.dictionary.script import Script
 
 
@@ -20,6 +20,7 @@ class LexicalItem:
     def __init__(self):
         self._singular_sequences = None
         self._str = None
+        self.grammatical_class = None
 
     def __str__(self):
         return self._str
@@ -57,11 +58,11 @@ class LexicalItem:
             return set(item.singular_sequences).issubset(set(self.singular_sequences))
 
 
-def check_morpheme_serie(ms):
-    assert all(isinstance(s, Script) for s in ms.constant), "A morpheme serie constant must be made of morphemes"
+def check_polymorpheme(ms):
+    assert all(isinstance(s, Script) for s in ms.constant), "A trait constant must be made of morphemes"
     assert all(isinstance(g[0], tuple) and all(isinstance(gg, Script) for gg in g[0])
                and isinstance(g[1], int) for g in ms.groups), \
-        "A morpheme serie group must be made of a list of (Morpheme list, multiplicity)"
+        "A trait group must be made of a list of (Morpheme list, multiplicity)"
 
     assert tuple(sorted(ms.groups)) == ms.groups
     assert tuple(sorted(ms.constant)) == ms.constant
@@ -72,7 +73,7 @@ def check_morpheme_serie(ms):
     assert len(all_morphemes) == sum(len(g) for g in all_group), "The groups and constants must be disjoint"
 
 
-class MorphemeSerie(LexicalItem):
+class PolyMorpheme(LexicalItem):
     def __init__(self, constant: List[Script]=(), groups=()):
         super().__init__()
 
@@ -83,6 +84,8 @@ class MorphemeSerie(LexicalItem):
                                ["m{}({})".format(mult, ' '.join(map(str, group))) for group, mult
                                     in self.groups]))
 
+        self.grammatical_class = max((s.grammatical_class for s in self.constant),
+                                     default=AUXILIARY_CLASS)
     @property
     def empty(self):
         return not self.constant and not self.groups
@@ -171,7 +174,7 @@ class MorphemeSerie(LexicalItem):
                     yield from product(*(combinations(self.groups[i][0], q + 1) for i in indexes),
                                        *(combinations(self.groups[i][0], q) for i in range(N) if i not in indexes))
 
-        morphemes_series = LastUpdatedOrderedDict()
+        traits = LastUpdatedOrderedDict()
 
         SIZE_LIMIT = MORPHEME_SERIE_SIZE_LIMIT_CONTENT# if is_content else MORPHEME_SERIE_SIZE_LIMIT_FUNCTION
 
@@ -180,129 +183,85 @@ class MorphemeSerie(LexicalItem):
             if len(morpheme_semes) == 0 or len(morpheme_semes) > SIZE_LIMIT:
                 continue
 
-            m = MorphemeSerie(constant=morpheme_semes)
-            morphemes_series[str(m)] = m
-
-        return tuple(morphemes_series.values())
-
-
-def check_trait(trait):
-    check_morpheme_serie(trait.core)
-    check_morpheme_serie(trait.periphery)
-
-    # assert tuple(sorted(trait.core)) == trait.core
-    # assert tuple(sorted(trait.periphery)) == trait.periphery
-
-    # assert all(isinstance(s, Script) and s in dictionary.scripts for s in trait.content + trait.periphery), \
-    #     "Script not defined in dictionary"
-    # assert all(isinstance(g, tuple) and isinstance(g[0], int) and
-    #            all(isinstance(s, Script) and s in dictionary.scripts for s in g[1])
-    #            for g in trait.groups_content + trait.groups_periphery), "Invalid groups"
-
-    # assert all(not s.paradigm for s in [*trait.core, *trait.periphery, *list(zip(*trait.groups_content))[1],
-    #            *list(zip(*trait.groups_periphery))[1]]), "A trait must contains only morphemes singulars sequences"
-
-
-class Trait(LexicalItem):
-    """ <<morph morph> morph morph>"""
-    def __init__(self, core: MorphemeSerie, periphery: MorphemeSerie):
-        super().__init__()
-
-        self.core = core
-        self.periphery = periphery
-
-        self._str = '<{}>'.format('<{}> {}'.format(str(self.core), str(self.periphery)).strip())
-
-    def __lt__(self, other):
-        if isinstance(other, Trait):
-            return self.core < other.core or \
-                   (self.core != other.core and self.periphery < other.periphery)
-        else:
-            return super().__lt__(other)
-
-    def _compute_singular_sequences(self):
-        if self.core.cardinal == 1 and self.periphery.cardinal == 1:
-            return [self]
-
-        traits = LastUpdatedOrderedDict()
-
-        for core, periph in product(self.core.singular_sequences, self.periphery.singular_sequences):
-            morphemes = list(chain(core.constant, periph.constant))
-            if len(morphemes) == 0 or len(morphemes) > TRAIT_SIZE_LIMIT_CONTENT:
-                continue
-
-            t = Trait(core=core, periphery=periph)
-            traits[str(t)] = t
+            m = PolyMorpheme(constant=morpheme_semes)
+            traits[str(m)] = m
 
         return tuple(traits.values())
 
-    @property
-    def empty(self):
-        return self.core.empty and self.periphery.empty
 
 def check_character(c):
     assert (c.empty and len(c.functions) == 0 and c.content.empty and c.klass.empty) or not c.empty, \
         "Empty character must have the E: grammatical class, an empty content and no functions."
-    assert not c.content.empty or (len(c.functions) != 0 and c.content.empty), \
+    assert (c.contents and not all(pm.empty for pm in c.contents)) or (len(c.functions) != 0 and c.content.empty), \
         "An empty content cannot have a function"
-    assert all(isinstance(t, Trait) for t in [c.content, *c.functions]), "A character must be made of Trait"
+    assert all(isinstance(t, PolyMorpheme) for t in c.poly_morphemes), "A character must be made of Trait"
     assert isinstance(c.klass, Script), "A character must indicate its class with a morpheme from [{}]"\
         .format(', '.join(MORPHEMES_GRAMMATICAL_MARKERS))
-    assert all(f.periphery.empty for f in c.functions), "The perifery must be empty the function traits of a character"
 
-    check_trait(c.content)
+    for cc in c.contents:
+        check_polymorpheme(cc)
     for f in c.functions:
-        check_trait(f)
+        for pm in f:
+            check_polymorpheme(pm)
 
-class Character(LexicalItem):
+
+class Word(LexicalItem):
     """[<morpheme_klass> trait_content trait_function0 trait_function1]"""
 
-    def __init__(self, klass: Script, content: Trait, functions: List[Trait]=()):
+    def __init__(self, klass: Script, contents: List[PolyMorpheme]=(), functions: List[List[PolyMorpheme]]=()):
         super().__init__()
 
         self.klass = klass
-        self.content = content
-        self.functions = tuple(sorted(functions))
-
+        self.contents = tuple(sorted(contents))
+        self.functions = tuple(tuple(sorted(f)) for f in functions)
 
         if self.empty:
-            self._str = "[<{}>]".format(str(self.klass))
+            self._str = "[{}]".format(str(self.klass))
         else:
-            self._str = "[{}]".format(
-                "<{}> {}".format(str(self.klass),
-                                 " ".join([str(self.content)] + [str(f) for f in self.functions])).strip())
+            res = ' > '.join(' '.join("({})".format(str(pm)) for pm in c) for c in chain([self.contents], self.functions))
+
+            self._str = "[{} > {}]".format(str(self.klass), res)
+
+        self.grammatical_class = self.klass
 
     @property
     def empty(self):
         return self.klass.empty
 
+    @property
+    def poly_morphemes(self):
+        return [*self.contents, *chain(*self.functions)]
+
     def _compute_singular_sequences(self):
-        if all(t.cardinal == 1 for t in [self.content] + list(self.functions)):
+        if all(pm.cardinal == 1 for pm in self.poly_morphemes):
             return [self]
 
-        traits = [self.content] + list(self.functions)
+        all_poly = [(pm, i) for i, layer in enumerate([self.contents] + list(self.functions)) for pm in layer]
+        all_poly, layers = list(zip(*all_poly))
 
-        characters = LastUpdatedOrderedDict()
+        words = LastUpdatedOrderedDict()
 
-        for tt in product(*[t.singular_sequences for t in traits]):
-            # morphemes = list(chain(core.constant, periph.constant))
-            # if len(morphemes) == 0 or len(morphemes) > TRAIT_SIZE_LIMIT_CONTENT:
-            #     continue
+        for tt in product(*[pm.singular_sequences for pm in all_poly]):
+            res = [[] for _ in range(max(layers) + 1)]
+            for ss, i in zip(tt, layers):
+                res[i].append(ss)
 
-            t = Character(klass=self.klass, content=tt[0], functions=tt[1:])
-            characters[str(t)] = t
+            t = Word(klass=self.klass, contents=res[0], functions=res[1:])
 
-        return tuple(characters.values())
+            words[str(t)] = t
 
-def check_words(w):
+        return tuple(words.values())
+
+
+def check_phrase(w):
     check_character(w.substance)
     check_character(w.attribute)
     check_character(w.mode)
 
 
-class Word(LexicalItem):
+class Phrase(LexicalItem):
     """(character*character*character)"""
-    def __init__(self, substance: Character, attribute: Character, mode: Character):
+    def __init__(self, substance: Word, attribute: Word, mode: Word):
         super().__init__()
 
         self.substance = substance
@@ -324,7 +283,7 @@ class Word(LexicalItem):
                           self.attribute.singular_sequences,
                           self.mode.singular_sequences):
 
-            w = Word(substance=s, attribute=a, mode=m)
+            w = Phrase(substance=s, attribute=a, mode=m)
             words[str(w)] = w
 
         return tuple(words.values())

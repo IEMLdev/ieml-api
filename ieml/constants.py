@@ -172,7 +172,9 @@ INVERSE_RELATIONS = {
     'identity': 'identity'
 }
 
-MORPHEMES_GRAMMATICAL_MARKERS = {'E:.wo.-', 'E:.wa.-', 'E:.wu.-', 'E:.we.-', 'E:'}
+MORPHEMES_GRAMMATICAL_MARKERS = {
+    'E:.wo.-',
+    'E:.wa.-', 'E:.wu.-', 'E:.we.-', 'E:'}
 
 MORPHEME_SERIE_SIZE_LIMIT_CONTENT = 5
 TRAIT_SIZE_LIMIT_CONTENT = 5
