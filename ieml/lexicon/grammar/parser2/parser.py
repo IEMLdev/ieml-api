@@ -69,7 +69,7 @@ class IEMLParser():
         if len(p) == 3:
             logging.error("Literals not supported on script for the moments, and are ignored.")
 
-        if self.dictionary is not None and morpheme not in self.dictionary.scripts:
+        if self.dictionary is not None and morpheme not in self.dictionary:
             raise ValueError("Morpheme {} not defined in dictionary".format(morpheme))
 
         p[0] = morpheme
