@@ -6,6 +6,7 @@ from ieml.commons import TreeStructure
 from ieml.constants import MAX_LAYER, MAX_SINGULAR_SEQUENCES, MAX_SIZE_HEADER, LAYER_MARKS, PRIMITIVES, \
     remarkable_multiplication_lookup_table, REMARKABLE_ADDITION, character_value, AUXILIARY_CLASS, VERB_CLASS, \
     NOUN_CLASS
+from itertools import chain
 
 
 class Script(TreeStructure):
@@ -45,6 +46,7 @@ class Script(TreeStructure):
         self._tables = None
         self._cells = None
         self._tables_script = None
+        self._headers = None
 
         # The canonical string to compare same layer and cardinal parser (__lt__)
         self.canonical = None
@@ -77,7 +79,7 @@ class Script(TreeStructure):
 
     def __eq__(self, other):
         if isinstance(other, Script):
-            return self.__hash__() == other.__hash__()
+            return self._str == other._str
         else:
             return super().__eq__(other)
 
@@ -166,15 +168,22 @@ class Script(TreeStructure):
         if self.cardinal == 1:
             self._cells = (np.array([[[self]]]),)
             self._tables_script = (self,)
+            self._headers = ()
         else:
-            _cells, _tables_script = self._compute_cells()
-            self._cells, self._tables_script = tuple(_cells), tuple(_tables_script)
+            _cells, _tables_script, _headers = self._compute_cells()
+            self._cells, self._tables_script, self._headers = tuple(_cells), tuple(_tables_script), tuple(_headers)
 
     @property
     def cells(self):
         if self._cells is None:
             self._build_tables()
         return self._cells
+
+    @property
+    def headers(self):
+        if self._headers is None:
+            self._build_tables()
+        return self._headers
 
     @property
     def tables_script(self):
@@ -302,12 +311,14 @@ class AdditiveScript(Script):
     def _compute_cells(self):
         # we generate one table per children, unless one children is a singular sequence.
         # if so, we generate one column instead
+        # we generate one set of headers per element in product
 
         if any(not c.paradigm for c in self.children):
             # layer 0 -> column paradigm (like I: F: M: O:)
-            return [np.array([[[s]] for s in self.singular_sequences])], [self]
+            return [np.array([[[s]] for s in self.singular_sequences])], [self], [[[self]]]
 
-        return [t for c in self.children for t in c.cells], [t for c in self.children for t in c.tables_script]
+        return [t for c in self.children for t in c.cells], [t for c in self.children for t in c.tables_script], \
+               list(chain(c.headers for c in self.children))
 
 
 class MultiplicativeScript(Script):
@@ -473,7 +484,8 @@ class MultiplicativeScript(Script):
                     self.children[i] if i != v[1] else s for i in range(3)
                 ])
 
-            return [np.vectorize(resolve_ss)(c) for c in v[0].cells], [map_script(c) for c in v[0].tables_script]
+            return [np.vectorize(resolve_ss)(c) for c in v[0].cells], [map_script(c) for c in v[0].tables_script], \
+                   [[[map_script(h) for h in k] for k in c] for c in v[0].headers]
 
         # more than one plural var, we build a multidimensional array
         # Check the table dimension
@@ -499,10 +511,19 @@ class MultiplicativeScript(Script):
         if len(plurals_child) == 3:
             tables_script = [MultiplicativeScript(children=[self.children[0], self.children[1], ss])
                              for ss in self.children[2].singular_sequences]
+
+            header = [[[MultiplicativeScript(children=[ss_dim, self.children[1], ss]) \
+                        for ss_dim in self.children[0].singular_sequences],
+                      [MultiplicativeScript(children=[self.children[0], ss_dim, ss]) \
+                        for ss_dim in self.children[1].singular_sequences]]
+
+                        for ss in self.children[2].singular_sequences]
         else:
             tables_script = [self]
+            header = [[[MultiplicativeScript(children=[c if ii != i else ss for ii, c in enumerate(self.children)])
+                       for ss in self.children[i].singular_sequences] for _, i in plurals_child]]
 
-        return [result], tables_script
+        return [result], tables_script, header
 
 
 class NullScript(Script):
