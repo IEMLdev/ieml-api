@@ -77,7 +77,7 @@ class Script(TreeStructure):
 
     def __eq__(self, other):
         if isinstance(other, Script):
-            return self.__hash__() == other.__hash__()
+            return self._str == other._str
         else:
             return super().__eq__(other)
 
