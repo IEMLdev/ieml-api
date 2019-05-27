@@ -1,5 +1,6 @@
 import functools
 import hashlib
+import json
 import os
 import traceback
 from itertools import product
@@ -42,6 +43,8 @@ def monitor_decorator(name):
 
     return decorator
 
+
+
 def init_remote(repo, name, url):
     remote = repo.remotes.create(name, url)
     mirror_var = "remote.{}.mirror".format(name)
@@ -74,13 +77,32 @@ def _check_inhibitions(inhibitions):
     assert all(i in INHIBITABLE_RELATIONS for i in inhibitions)
     return inhibitions
 
+def _check_multi_descriptors(descriptor):
+    if descriptor is None:
+        descriptor = {}
+
+    for k in LANGUAGES:
+        if k not in descriptor:
+            descriptor[k] = {}
+
+        for d in DESCRIPTORS_CLASS:
+            if d not in descriptor[k]:
+                descriptor[k][d] = []
+
+    assert all(l in LANGUAGES for l in descriptor)
+    assert all(k in DESCRIPTORS_CLASS and isinstance(descriptor[l][k], list) and
+               all(isinstance(v, str) for v in descriptor[l][k])
+               for l in descriptor for k in descriptor[l])
+    return descriptor
+
+
 def _check_descriptors(descriptor):
     if descriptor is None:
         descriptor = {}
 
     for k in LANGUAGES:
         if k not in descriptor:
-            descriptor[k] = ''
+            descriptor[k] = []
 
     assert all(isinstance(d, str) for k in LANGUAGES for d in descriptor[k])
     return descriptor
@@ -89,7 +111,7 @@ def _check_descriptors(descriptor):
 def cache_results_watch_files(_files, name):
     def decorator(f):
         def wrapper(*args, **kwargs):
-            use_cache = True #kwargs['use_cache']
+            use_cache = args[0].use_cache
             self = args[0]
             cache_folder = self.cache_folder
             db_path = self.folder
@@ -138,14 +160,15 @@ class IEMLDatabase:
 
     def __init__(self,
                  git_address=IEMLDB_DEFAULT_GIT_ADDRESS,
+                 credentials=None,
                  branch='master',
                  commit_id=None,
                  db_folder=None,
                  cache_folder=None,
-                 use_cache=True
-                 ):
+                 use_cache=True):
 
         self.git_address = git_address
+        self.credentials = credentials
         self.branch = branch
         self.commit_id = commit_id
 
@@ -250,16 +273,17 @@ class IEMLDatabase:
         repo = pygit2.Repository(self.folder)
         repo.reset(commit_id, pygit2.GIT_RESET_HARD)
 
-    def update(self):
+    def update(self, remote_name='origin'):
         if not os.path.exists(self.folder):
-            repo = pygit2.clone_repository(self.git_address, self.folder, remote=init_remote, checkout_branch=self.branch)
+            callbacks = pygit2.RemoteCallbacks(credentials=self.credentials)
+            repo = pygit2.clone_repository(self.git_address, self.folder, remote=init_remote, checkout_branch=self.branch, callbacks=callbacks)
         else:
             repo = pygit2.Repository(self.folder)
 
         if self.commit_id is None:
             # use most recent of remote
-            remote = repo.remotes[0]
-            remote.fetch()
+            remote = [r for r in repo.remotes if r.name == remote_name][0]
+            remote.fetch(callbacks=pygit2.RemoteCallbacks(credentials=self.credentials))
             self.commit_id = repo.lookup_reference('refs/remotes/origin/{}'.format(self.branch)).target
             # self.commit_id = repo.lookup_reference('refs/heads/{}'.format(self.branch)).target
 
@@ -282,13 +306,20 @@ class IEMLDatabase:
             raise ValueError("Incompatible history, can't merge origin into {}#{} in folder {}".format(self.branch, self.commit_id,
                                                                                                        self.folder))
 
-    def push(self, github_username, github_password):
+    def push(self, github_username=None, github_password=None,
+                   public_key=None, private_key=None,
+             remote='origin'):
         repo = pygit2.Repository(self.folder)
-        credentials = pygit2.UserPass(github_username, github_password)
 
-        remote = repo.remotes['origin']
+        if github_username is not None and github_password is not None:
+            credentials = pygit2.UserPass(github_username, github_password)
+        else:
+            credentials = self.credentials
+
+        remote = repo.remotes[remote]
         callbacks = pygit2.RemoteCallbacks(credentials=credentials)
         remote.push(['refs/heads/{}'.format(self.branch)], callbacks=callbacks)
+
 
     # def descriptors(self):
     #     desc = DescriptorSet.from_folder(os.path.join(self.folder, IEMLDatabase.descriptor_dictionary_file))
@@ -770,6 +801,40 @@ class IEMLDatabase:
                           .format(str(ieml),
                                   " / ".join("{}:{}".format(l,old_trans[l]) for l in LANGUAGES),
                                   " / ".join("{}:{}".format(l,comments[l]) for l in LANGUAGES)),
+                          to_add=desc.get_files(),
+                          check_coherency=False,
+                          push_username=push_username,
+                          push_password=push_password)
+
+
+
+    def set_descriptors(self,
+                         ieml,
+                         descriptors,
+                         author_name: str,
+                         author_mail: str,
+                         push_username=None,
+                         push_password=None):
+
+        ieml = _check_ieml(ieml)
+
+        descriptors = _check_multi_descriptors(descriptors)
+
+        desc = self.descriptors()
+
+        if all(descriptors[l][d] == desc.get(ieml, l, d) for l in LANGUAGES for d in DESCRIPTORS_CLASS):
+            return
+
+        # old_trans = {l: desc.get(ieml=ieml, language=l, descriptor='comments') for l in LANGUAGES}
+        for d in DESCRIPTORS_CLASS:
+            for l in LANGUAGES:
+                desc.set_value(ieml, descriptor=d, language=l, values=descriptors[l][d])
+
+        desc.write_to_folder(self.folder)
+
+        self.save_changes(author_name, author_mail,
+                          "[descriptors] Update descriptors for {} to {}"
+                          .format(str(ieml), json.dumps(descriptors)),
                           to_add=desc.get_files(),
                           check_coherency=False,
                           push_username=push_username,

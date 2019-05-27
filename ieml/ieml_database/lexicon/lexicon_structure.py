@@ -9,7 +9,7 @@ from typing import List, Dict
 
 from ieml.ieml_database.descriptor import monitor_decorator
 
-LEVELS_CLASSES = ['morpheme', 'morpheme_serie', 'trait', 'character', 'word']
+LEVELS_CLASSES = ['morpheme', 'poly_morpheme', 'word']
 
 
 class LexiconStructure:
