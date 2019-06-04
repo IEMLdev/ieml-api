@@ -1,12 +1,14 @@
 from unittest import TestCase
 
+from ieml import IEMLDatabase
 from ieml.dictionary.dictionary import Dictionary
 from ieml.dictionary.table.table import Table
 
 
 class TestTables(TestCase):
     def setUp(self):
-        self.d = Dictionary.load()
+        self.db = IEMLDatabase(use_cache=False)
+        self.d = self.db.dictionary()
 
     def test_iterable(self):
         try:
