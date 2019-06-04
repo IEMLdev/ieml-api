@@ -127,7 +127,12 @@ class RelationsGraph:
 
         for t in dictionary.scripts:
             idx = dictionary.index[t]
-            ranks = {dictionary.tables.tables[dictionary.scripts[i]].rank for i in indices[idx]} - {6}
+
+            try:
+                ranks = {dictionary.tables.tables[dictionary.scripts[i]].rank for i in indices[idx]} - {6}
+            except KeyError:
+                print(t)
+
             for rank in ranks:
                 tables_rank[rank][0].append(idx)
                 tables_rank[rank][1].append(idx)

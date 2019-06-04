@@ -13,8 +13,8 @@ class TableStructure:
     #       o the coordinates of each cells
     # the table structure defines the rank for the paradigms
 
-    def __init__(self, scripts, roots_idx):
-        tables, root_paradigms = self._build_tables(scripts[np.where(roots_idx)], scripts)
+    def __init__(self, scripts, roots):
+        tables, root_paradigms = self._build_tables(roots, scripts)
         self.tables = tables
         self.roots = root_paradigms
         self.table_to_root = {t: r for r, t_s in self.roots.items() for t in t_s}
@@ -61,7 +61,10 @@ class TableStructure:
                     candidates |= {(t, regular)}
 
             if len(candidates) == 0:
-                raise ValueError("No parent candidate for the table produced by script %s" % str(s))
+                print("TableStructure._define_root: No parent candidate for the table produced by script %s "
+                      "ignoring this script." % (str(s)),
+                      file=sys.stderr)
+                continue
 
             if len(candidates) > 1:
                 print("TableStructure._define_root: Multiple parent candidate for the table produced by script %s: {%s} "
@@ -91,7 +94,6 @@ class TableStructure:
         for s in scripts:
             if s.cardinal == 1:
                 continue
-
             roots[root_ss[s.singular_sequences[0]]].append(s)
 
         root_paradigms = {}
