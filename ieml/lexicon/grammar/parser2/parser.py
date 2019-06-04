@@ -31,9 +31,10 @@ class IEMLParser():
 
         self.dictionary = dictionary
 
-    def parse(self, s):
+    def parse(self, s, factorize_script=False):
         """Parses the input string, and returns a reference to the created AST's root"""
         with self.lock:
+            self.factorize_script = factorize_script
             try:
                 return self.parser.parse(s, lexer=self.lexer)
             except ValueError as e:
@@ -45,7 +46,8 @@ class IEMLParser():
 
     # Parsing rules
     def p_ieml_proposition(self, p):
-        """proposition : poly_morpheme
+        """proposition :  morpheme
+                        | poly_morpheme
                         | word
                         | phrase
                         """
@@ -65,7 +67,7 @@ class IEMLParser():
         """morpheme : MORPHEME"""
                     # | MORPHEME literal_list"""
 
-        morpheme = script(p[1])
+        morpheme = script(p[1], factorize=self.factorize_script)
         if len(p) == 3:
             logging.error("Literals not supported on script for the moments, and are ignored.")
 

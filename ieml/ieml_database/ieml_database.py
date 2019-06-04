@@ -71,7 +71,6 @@ def _check_ieml(ieml):
         assert False, "Invalid ieml {}".format(ieml)
 
 
-
 def _check_inhibitions(inhibitions):
     inhibitions = list(inhibitions)
     assert all(i in INHIBITABLE_RELATIONS for i in inhibitions)
