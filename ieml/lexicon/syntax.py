@@ -78,7 +78,7 @@ class PolyMorpheme(LexicalItem):
         super().__init__()
 
         self.constant = tuple(sorted(constant))
-        self.groups = tuple((tuple(g[0]), g[1]) for g in sorted(groups))
+        self.groups = tuple((tuple(sorted(g[0])), g[1]) for g in sorted(groups))
 
         self._str = ' '.join(chain(map(str, self.constant),
                                ["m{}({})".format(mult, ' '.join(map(str, group))) for group, mult

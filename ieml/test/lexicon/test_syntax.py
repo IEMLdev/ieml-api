@@ -3,6 +3,7 @@ import unittest
 from ieml.lexicon.grammar.parser2 import IEMLParser
 from ieml.lexicon.syntax import Word, Phrase, check_character, check_polymorpheme, PolyMorpheme
 
+# TODO: add test for ordering of morph in polymorph
 
 class TestSyntax(unittest.TestCase):
     def test_polymorpheme(self):
