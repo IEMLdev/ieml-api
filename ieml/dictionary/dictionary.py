@@ -64,18 +64,14 @@ class Dictionary2:
 
             if key == 'inhibition':
                 inhibitions[root].append(value)
-            elif key == 'is_root':
+            elif key == 'is_root' and value[0].lower() == 't':
                 root_paradigms.append(root)
-
 
         # map of root paradigm script -> inhibitions list values
         self._inhibitions = inhibitions
 
-        # remove excluded paradigms
-
         self.scripts = np.array(sorted(scripts.values()))
 
-        # self.tables = TableStructure
         self.tables = TableStructure(self.scripts, root_paradigms)
 
         self.scripts = np.array([s for s in self.scripts if len(s) == 1 or s in self.tables.tables])

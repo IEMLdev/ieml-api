@@ -94,28 +94,19 @@ class GitInterface:
                  credentials=None,
                  branch='master',
                  commit_id=None,
+                 folder=None):
 
-                 db_folder=None,
-                 cache_folder=None,
-                 use_cache=True):
-
+        self.origin = origin
         self.remotes = {'origin': origin}
         self.credentials = credentials
         self.branch = branch
         self.commit_id = commit_id
 
-        if db_folder:
-            self.folder = os.path.abspath(db_folder)
+        if folder:
+            self.folder = os.path.abspath(folder)
         else:
             self.folder = get_local_cache_dir(origin)
 
-        self.use_cache = use_cache
-        self.cache_folder = cache_folder
-        if self.use_cache:
-            if cache_folder is None:
-                self.cache_folder = self.folder
-        else:
-            self.cache_folder = None
 
         # download database
         self.pull(remote='origin')
@@ -129,11 +120,11 @@ class GitInterface:
         self.repo.reset(commit_id, pygit2.GIT_RESET_HARD)
 
     @monitor_decorator('pull')
-    def pull(self, remote='origin'):
+    def pull(self, remote='origin', credentials=None):
         if not os.path.exists(self.folder):
             logger.info("Cloning {} into {}".format(self.remotes['origin'], self.folder))
 
-            callbacks = pygit2.RemoteCallbacks(credentials=self.credentials)
+            callbacks = pygit2.RemoteCallbacks(credentials=credentials if credentials else self.credentials)
 
             def init_remote(repo, name, url):
                 remote = repo.remotes.create(name, url)
@@ -147,9 +138,9 @@ class GitInterface:
         else:
             repo = pygit2.Repository(self.folder)
 
-        if remote == 'origin':
-            # ensure origin is set
-            self.add_remote('origin', self.remotes['origin'])
+        # if remote == 'origin':
+        #     # ensure origin is set
+        #     self.add_remote('origin', self.remotes['origin'])
 
         remote_ = repo.remotes[remote]
         remote_.fetch(callbacks=pygit2.RemoteCallbacks(credentials=self.credentials))
@@ -358,6 +349,48 @@ class Structure:
 
         return dict(res)
 
+def cache_results_watch_files(_files, name):
+    def decorator(f):
+        def wrapper(*args, **kwargs):
+            use_cache = args[0].use_cache
+            self = args[0]
+            cache_folder = self.cache_folder
+            db_path = self.folder
+
+            files = [os.path.join(db_path, ff) for ff in _files]
+
+            if use_cache:
+                cache = FolderWatcherCache(files, cache_folder=cache_folder, name=name)
+                if not cache.is_pruned():
+                    logger.info("read_{}.cache: Reading cache at {}".format(name, cache.cache_file))
+                    try:
+                        instance = cache.get()
+                    except Exception:
+                        # cache.prune()
+                        instance = None
+                else:
+                    logger.info("read_{}.cache: Pruned cache at {}".format(name, cache_folder))
+                    instance = None
+
+                if instance:
+                    return instance
+
+            instance = f(*args, **kwargs)
+
+            if use_cache and cache_folder:
+                cache = FolderWatcherCache(files, cache_folder=cache_folder, name=name)
+
+                logger.info("read_{}.cache: Updating cache at {}".format(name, cache.cache_file))
+                cache.update(instance)
+
+            return instance
+
+        functools.wraps(wrapper)
+
+        return wrapper
+
+    return decorator
+
 
 class _IEMLDatabase:
     CLASS_TO_FOLDER={
@@ -371,8 +404,18 @@ class _IEMLDatabase:
     MAX_IEML_NAME_SIZE = 100
     HASH_SIZE = 10
 
-    def __init__(self, folder):
+    def __init__(self, folder,
+                 cache_folder=None,
+                 use_cache=True):
         self.folder = folder
+
+        self.use_cache = use_cache
+        self.cache_folder = cache_folder
+        if self.use_cache:
+            if cache_folder is None:
+                self.cache_folder = self.folder
+        else:
+            self.cache_folder = None
 
     def filename_of(self, ieml):
         l = str(ieml)
@@ -428,6 +471,7 @@ class _IEMLDatabase:
         return Structure(r)
 
     @monitor_decorator("Get dictionary")
+    @cache_results_watch_files([structure_dictionary_file], 'dictionary')
     def get_dictionary(self):
         return Dictionary2(self.list('morpheme', paradigm=True), self.get_structure())
 
@@ -539,8 +583,8 @@ if __name__ == '__main__':
 
     #
     folder = '/tmp/iemldb_test'
-    # if os.path.isdir(folder):
-    #     shutil.rmtree(folder)
+    if os.path.isdir(folder):
+        shutil.rmtree(folder)
     #
     # # r =
     # # # print(json.dumps(r, indent=True))
@@ -550,6 +594,10 @@ if __name__ == '__main__':
     # # db2.remove_key('wa.', 'en', 'translations')
     # # d = Descriptors(db2.get_pandas())
     # # print(d.get_values('wa.', 'en', 'translations'))
+    gitdb = GitInterface(origin='ssh://git@github.com/ogrergo/ieml-language.git',
+                         credentials=pygit2.Keypair('git', '/home/louis/.ssh/id_rsa.pub', '/home/louis/.ssh/id_rsa', ''),
+                         folder=folder)
+
     db = IEMLDatabase(git_address='ssh://git@github.com/ogrergo/ieml-language.git',
                       db_folder=folder,
                       credentials=pygit2.Keypair('git', '/home/louis/.ssh/id_rsa.pub', '/home/louis/.ssh/id_rsa', ''),)
@@ -565,9 +613,6 @@ if __name__ == '__main__':
     #
     # # v = d.get_values_partial(None, 'fr', None)
     # # print(v)
-    gitdb = GitInterface(origin='ssh://git@github.com/ogrergo/ieml-language.git',
-                         credentials=pygit2.Keypair('git', '/home/louis/.ssh/id_rsa.pub', '/home/louis/.ssh/id_rsa', ''),
-                         db_folder=folder)
 
     signature = pygit2.Signature(args.author_name, args.author_email)
 
@@ -594,6 +639,7 @@ if __name__ == '__main__':
         db2.add_descriptor(p1, 'fr', 'translations', 'parties des mains')
         db2.add_descriptor(p1, 'en', 'translations', 'parts of hands')
 
+    gitdb.push('origin')
     # print(db.get_structure().df)
     # print(len(db.list('morpheme', paradigm=True)))
     # print(len(db.list('morpheme', paradigm=False)))
