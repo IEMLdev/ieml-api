@@ -246,8 +246,8 @@ def _normalize_key(ieml, key, value, parse_ieml=False, partial=False, structure=
             if ieml != str(parsed):
                 raise ValueError("IEML is not normalized: {}".format(ieml))
 
-            if len(parsed) == 1 and structure:
-                raise ValueError("Only paradigms can have a structure: {}".format(ieml))
+            # if len(parsed) == 1 and structure:
+            #     raise ValueError("Only paradigms can have a structure: {}".format(ieml))
 
     if structure:
         if key:
@@ -263,6 +263,10 @@ def _normalize_key(ieml, key, value, parse_ieml=False, partial=False, structure=
 
             if key and key == 'is_root':
                 value = bool(value)
+
+            if key and key == 'is_ignored':
+                value = bool(value)
+
     else:
         if key:
             key = str(key)
@@ -446,13 +450,20 @@ class _IEMLDatabase:
         return os.path.join(p, filename + ext)
 
     @monitor_decorator("list paradigms")
-    def list(self, type, paradigm=True):
+    def list(self, type, paradigm=True, parse=False):
         p = os.path.join(self.folder, type, 'paradigm' if paradigm else 'singular')
         p1 = subprocess.Popen("find -path *.desc -print0".split(), stdout=subprocess.PIPE, cwd=p)
         p2 = subprocess.Popen("xargs -0 cat".split(), stdin=p1.stdout, stdout=subprocess.PIPE, cwd=p)
         p3 = subprocess.Popen(["cut", "-f2", '-d', '"'], stdin=p2.stdout, stdout=subprocess.PIPE, cwd=p)
         p4 = subprocess.Popen(["uniq"], stdin=p3.stdout, stdout=subprocess.PIPE, cwd=p)
-        return [s.strip().decode('utf8') for s in p4.stdout.readlines() if s.strip()]
+
+        res = [s.strip().decode('utf8') for s in p4.stdout.readlines() if s.strip()]
+
+        if parse:
+            parser = IEMLParser()
+            return [parser.parse(s) for s in res]
+
+        return res
 
     @monitor_decorator("Get descriptors")
     def get_descriptors(self):
@@ -471,7 +482,7 @@ class _IEMLDatabase:
         return Structure(r)
 
     @monitor_decorator("Get dictionary")
-    @cache_results_watch_files([structure_dictionary_file], 'dictionary')
+    # @cache_results_watch_files([structure_dictionary_file], 'dictionary')
     def get_dictionary(self):
         return Dictionary2(self.list('morpheme', paradigm=True), self.get_structure())
 
@@ -568,6 +579,23 @@ def migrate(database, out_folder):
 
             # fp.write(json.dumps({'ieml': str(l), **dd}, indent=True))
 
+def ignore_body_parts(gitdb, db):
+    root = script("f.o.-f.o.-',n.i.-f.i.-',M:O:.-O:.-',_+f.o.-f.o.-'E:.-U:.S:+B:T:.-l.-',E:.-U:.M:T:.-l.-'E:.-A:.M:T:.-l.-',_")
+
+    to_ignore = []
+    for ss in db.list('morpheme', paradigm=False, parse=True):
+        if ss in root:
+            to_ignore.append(ss)
+
+    for p in db.list('morpheme', paradigm=True, parse=True):
+        if set(root.singular_sequences).issuperset(p.singular_sequences):
+            to_ignore.append(p)
+    print(len(to_ignore))
+    with gitdb.commit(pygit2.Signature("Louis van Beurden", 'louis.vanbeurden@gmail.com'), "[Ignore] ignore body part root paradigm"):
+        for s in to_ignore:
+            db.add_structure(s, 'is_ignored', True)
+
+
 
 
 if __name__ == '__main__':
@@ -579,7 +607,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    folder = args.folder
+    # folder = args.folder
 
     #
     folder = '/tmp/iemldb_test'
@@ -598,6 +626,10 @@ if __name__ == '__main__':
                          credentials=pygit2.Keypair('git', '/home/louis/.ssh/id_rsa.pub', '/home/louis/.ssh/id_rsa', ''),
                          folder=folder)
 
+    # gitdb = GitInterface(origin='https://github.com/ogrergo/ieml-language.git',
+    #                      credentials=pygit2.Username('git'),
+    #                      folder=folder)
+
     db = IEMLDatabase(git_address='ssh://git@github.com/ogrergo/ieml-language.git',
                       db_folder=folder,
                       credentials=pygit2.Keypair('git', '/home/louis/.ssh/id_rsa.pub', '/home/louis/.ssh/id_rsa', ''),)
@@ -615,15 +647,17 @@ if __name__ == '__main__':
     # # print(v)
 
     signature = pygit2.Signature(args.author_name, args.author_email)
-
+    #
     with gitdb.commit(signature, '[Migration] migrate from 0.3 to 0.4'):
         migrate(db, folder)
 
         with open(os.path.join(folder, 'version'), 'w') as fp:
             fp.write('0.4')
-    # #
+    # # #
     db2 = _IEMLDatabase(gitdb.folder)
-    # #
+
+
+    # # #
     with gitdb.commit(signature, '[Descriptor] add missing translations for hands and feet'):
         root = script("f.o.-f.o.-',n.i.-f.i.-',x.-O:.-',_M:.-',_;+f.o.-f.o.-',n.i.-f.i.-',x.-O:.-',_E:F:.-',_;", factorize=True)
         assert str(root) == "f.o.-f.o.-',n.i.-f.i.-',x.-O:.-',_M:.+E:F:.-',_;"
@@ -639,11 +673,14 @@ if __name__ == '__main__':
         db2.add_descriptor(p1, 'fr', 'translations', 'parties des mains')
         db2.add_descriptor(p1, 'en', 'translations', 'parts of hands')
 
-    gitdb.push('origin')
-    # print(db.get_structure().df)
-    # print(len(db.list('morpheme', paradigm=True)))
-    # print(len(db.list('morpheme', paradigm=False)))
-    # print(len(db.list('polymorpheme', paradigm=False)))
-    # from pympler import asizeof
+    ignore_body_parts(gitdb, db2)
 
-    # print(asizeof.asizeof(db2.get_dictionary()))
+    #
+    gitdb.push('origin')
+    # # print(db.get_structure().df)
+    # # print(len(db.list('morpheme', paradigm=True)))
+    # # print(len(db.list('morpheme', paradigm=False)))
+    # # print(len(db.list('polymorpheme', paradigm=False)))
+    # # from pympler import asizeof
+    #
+    # # print(asizeof.asizeof(db2.get_dictionary()))

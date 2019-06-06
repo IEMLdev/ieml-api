@@ -106,7 +106,7 @@ PHONETIC_PUNCTUATION = [
     '~'
 ]
 
-STRUCTURE_KEYS = ['inhibition', 'is_root']
+STRUCTURE_KEYS = ['inhibition', 'is_root', 'is_ignored']
 
 INHIBITABLE_RELATIONS=['father_substance',
                        'father_attribute',

@@ -55,17 +55,27 @@ class Dictionary2:
 
         root_paradigms = []
         inhibitions = defaultdict(list)
-
+        ignored = []
         for (root, key), (value,) in structure.df.iterrows():
             root = scripts[root]
 
             for ss in root.singular_sequences:
                 scripts[str(ss)] = ss
 
+
             if key == 'inhibition':
                 inhibitions[root].append(value)
             elif key == 'is_root' and value[0].lower() == 't':
                 root_paradigms.append(root)
+            elif key == 'is_ignored' and value[0].lower() == 't':
+                ignored.append(root)
+
+        for s in ignored:
+            root_paradigms.remove(s)
+            if str(s) in scripts:
+                del scripts[s]
+            if s in inhibitions:
+                del inhibitions[s]
 
         # map of root paradigm script -> inhibitions list values
         self._inhibitions = inhibitions
