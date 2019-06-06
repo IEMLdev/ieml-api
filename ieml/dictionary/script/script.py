@@ -318,7 +318,7 @@ class AdditiveScript(Script):
             return [np.array([[[s]] for s in self.singular_sequences])], [self], [[[self]]]
 
         return [t for c in self.children for t in c.cells], [t for c in self.children for t in c.tables_script], \
-               list(chain(c.headers for c in self.children))
+               list(chain(*(c.headers for c in self.children)))
 
 
 class MultiplicativeScript(Script):

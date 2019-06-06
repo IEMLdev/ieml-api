@@ -71,9 +71,9 @@ class Dictionary2:
                 ignored.append(root)
 
         for s in ignored:
-            root_paradigms.remove(s)
-            if str(s) in scripts:
-                del scripts[s]
+            del scripts[str(s)]
+            if s in root_paradigms:
+                root_paradigms.remove(s)
             if s in inhibitions:
                 del inhibitions[s]
 
