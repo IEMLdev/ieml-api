@@ -23,7 +23,7 @@ This project is made to overcome some inherent limitations of natural languages 
   - interpretability of natural language : A new USL can be translated to natural language by using semantic analogies with USLs already defined in the lexicon.
 
 The meaning of a USL (the translations it can get in natural language) must respect a set of constraints:
- - The USL are defined in opposition systems, called paradigms. All the meaning of the USL in a opposition system must (share a part of the meaning)[https://en.wikipedia.org/wiki/Genus%E2%80%93differentia_definition].
+ - The USL are defined in opposition systems, called paradigms. All the meaning of the USL in a opposition system must [share a part of the meaning](https://en.wikipedia.org/wiki/Genus%E2%80%93differentia_definition).
  - The meaning of the USL must respect the semantic relations induced by his structure.
  - The meaning of the USL must be disjoint from the meaning of already defined USL (that can be computed)
  
