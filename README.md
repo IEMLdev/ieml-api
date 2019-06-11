@@ -2,34 +2,32 @@
 [![Build Status](https://travis-ci.org/IEMLdev/ieml.svg?branch=master)](https://travis-ci.org/IEMLdev/ieml)
 
 IEML is an artificial "natural" language having the following properties:
+  * All the IEML expressions (called USL Uniform Semantic Locator) are made by a regular grammar of composition function over a fixed set of basic [semantic primes](https://en.wikipedia.org/wiki/Semantic_primes), called morphemes (browsable [here](https://intlekt.io/?comments=I%3A "IEML dictionary"))
+  * The semantic relations between the USLs are embedded in the structure : theirs morphemes and the composition rules that combine them.
+  * The structure has a unique valid serialisation. This property comes from an intrinsic order defined on the USL.
+  * All the morphemes have disjoint meaning and the composition function have disjoint image.
+    
+ Corollary:
+  * Two different IEML expression express two different meanings. There is no polysemy in IEML.
+  * We cannot express a USL with other USL. There is no synonymy in IEML.
   * All the semantic relationships between IEML representations are computable.
-  * Every meaning has only one IEML representation and every IEML representation has only one meaning.
 
-The [ieml grammar](https://pierrelevyblog.files.wordpress.com/2014/01/00-grammaire-ieml1.pdf "IEML grammar") is constituted of a [dictionary](https://intlekt.io/?comments=I%3A "IEML dictionary") of elementary meanings units - words - and syntactic rules to combine them into topics, then facts and finally, theories.
+IEML is then a discrete coordinate system for the semantic space.
 
-This language have been made by the French philosopher [Pierre Levy](https://en.wikipedia.org/wiki/Pierre_L%C3%A9vy).
+The language is explained in the [ieml grammar](https://pierrelevyblog.files.wordpress.com/2014/01/00-grammaire-ieml1.pdf "IEML grammar"). The basic semantics units are defined in the [dictionary](https://intlekt.io/?comments=I%3A "IEML dictionary"). The USL can be written with the [Intlekt editor](https://intlekt.io) and are saved in a [github database](https://github.com/IEMLdev/ieml-language).
+This language has been made by the French philosopher [Pierre Levy](https://en.wikipedia.org/wiki/Pierre_L%C3%A9vy) and implemented in python by Louis van Beurden.
 
-The language overcomes some inherent limitations of naturals languages for algorithmic manipulation :
-  - text generation : rules-based natural language generation can leverage the regularity of the IEML syntax.
-  - out-of-vocabularies : every proposition in IEML is build from ~3500 words, all defined in the dictionary with their paradigmatic relationships.
-  - semantic similarities : we can automatically compute semantic relations between IEML propositions.
-  - as an interlingua : IEML does not use any existing natural language as its core semantics. But everything that can be said can be described in IEML.
-  - interaperobility of ontologies : Each IEML expression will have an unique URL.
+This project is made to overcome some inherent limitations of natural languages for algorithmic manipulation : 
+  - interoperability of ontologies : Metadata systems suffer from multiple terminologies between different users
+  - semantic similarities : The semantic graphs between concepts is directly embedded in each USL serialisation, we can automatically compute semantic relations between two USLs.
+  - interpretability of natural language : A new USL can be translated to natural language by using semantic analogies with USLs already defined in the lexicon.
 
-Every meaning has only one IEML representation and every IEML representation has only one meaning :
-  - synonymy : the IEML language has an instrinsic order that ensures that every expression has only one valid representation.
-  - polysemy : All the IEML expressions are built from semantic primitives (dictionary) with meanining composition operators (syntax). The dictionary is not polysemic, the operators are injetive and theirs resulting propositions can not be reduced to its constituents. Therefore, there is no polysemy in IEML.
-From there, we have in IEML a bijection between the signifiers and the signified.
-IEML is then a discrete coordinate system of the semantic space. The IEML expressions are called Uniform Semantic Locators (USLs).
-
-IEML is build from a set of [semantic primes](https://en.wikipedia.org/wiki/Semantic_primes) called the dictionary, and explicit rules of [compositions](https://fr.wikipedia.org/wiki/Combinatoire_s%C3%A9mantique).
-
-The meaning of the words in the dictionary are conventional but not arbitrary, because they respects a set of constraints:
- - Each meaning must not already be present in the dictionary, and you can not express this meaning by composition of existing meanings of the dictionary.
- - The words are defined in systems (paradigms) and a paradigm must be the broadest possible in the concept.
- - A words defined in a paradigms is build from 3 more abstract words and the words must contains these meanings.
+The meaning of a USL (the translations it can get in natural language) must respect a set of constraints:
+ - The USL are defined in opposition systems, called paradigms. All the meaning of the USL in a opposition system must (share a part of the meaning)[https://en.wikipedia.org/wiki/Genus%E2%80%93differentia_definition].
+ - The meaning of the USL must respect the semantic relations induced by his structure.
+ - The meaning of the USL must be disjoint from the meaning of already defined USL (that can be computed)
  
-All the words have a french and english translation. A definition and synonyms in french and english will soon be available.
+All the morphemes have a french and english translation, we want to add more natural languages. 
 
 ## Install
 
