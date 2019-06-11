@@ -5,6 +5,9 @@ from ieml.constants import LANGUAGES
 from ieml.dictionary.script import script
 import shutil, os
 
+# TODO: Add tests to transaction that fail : is the state is cleaen ?
+
+
 class IEMLDBTest(unittest.TestCase):
     DB_FOLDER='test_dbfolder'
     def setUp(self):

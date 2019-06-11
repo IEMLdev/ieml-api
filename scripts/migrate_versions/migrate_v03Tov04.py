@@ -1,4 +1,6 @@
 import argparse
+import functools
+import glob
 import hashlib
 import logging
 import operator
@@ -22,6 +24,7 @@ import json
 from hashlib import sha224
 import subprocess
 
+from ieml.commons import FolderWatcherCache
 from ieml.constants import LANGUAGES, INHIBITABLE_RELATIONS, STRUCTURE_KEYS
 from ieml.dictionary import Dictionary
 from ieml.dictionary.dictionary import Dictionary2
@@ -37,6 +40,8 @@ def get_local_cache_dir(origin):
                         hashlib.md5(origin.encode('utf8')).hexdigest())
 
 logger = logging.getLogger('GitInterface')
+logger.setLevel(logging.INFO)
+
 
 class git_transaction:
     def __init__(self, db, signature, message):
@@ -47,6 +52,7 @@ class git_transaction:
     def __enter__(self):
         self.commit_id = self.db.commit_id
 
+        # ignore files at the root
         if self.db.repo.status() != {}:
             raise ValueError("Try to start a transaction on a not clean working dir state, "
                              "please use db.reset() first.")
@@ -56,34 +62,41 @@ class git_transaction:
     def __exit__(self, type, value, traceback):
 
         if type is None:
-            status = self.db.repo.status()
-            if not status:
-                return
+            try:
+                status = self.db.repo.status()
+                if not status:
+                    return
 
-            index = self.db.repo.index
-            index.read()
+                index = self.db.repo.index
+                index.read()
 
-            for f, k in status.items():
-                if k & GIT_STATUS_WT_NEW:
-                    index.add(f)
-                elif k & GIT_STATUS_WT_DELETED:
-                    index.remove(f)
-                elif k & GIT_STATUS_WT_MODIFIED:
-                    index.add(f)
-                elif k & GIT_STATUS_WT_RENAMED:
-                    index.add(f)
+                for f, k in status.items():
+                    if k & GIT_STATUS_WT_NEW:
+                        index.add(f)
+                    elif k & GIT_STATUS_WT_DELETED:
+                        index.remove(f)
+                    elif k & GIT_STATUS_WT_MODIFIED:
+                        index.add(f)
+                    elif k & GIT_STATUS_WT_RENAMED:
+                        index.add(f)
 
-            index.write()
+                index.write()
 
-            tree = index.write_tree()
-            oid = self.db.repo.create_commit('refs/heads/{}'.format(self.db.branch),
-                                             self.signature,
-                                             self.signature,
-                                             self.message,
-                                             tree,
-                                             [self.commit_id])
+                tree = index.write_tree()
+                oid = self.db.repo.create_commit('refs/heads/{}'.format(self.db.branch),
+                                                 self.signature,
+                                                 self.signature,
+                                                 self.message,
+                                                 tree,
+                                                 [self.commit_id])
 
-            self.db.commit_id = oid.hex
+                self.db.commit_id = oid.hex
+            except Exception as e:
+                logger.error("Error commiting, reset to {}".format(self.commit_id))
+                self.db.reset(self.commit_id)
+                # TODO : ensure that the reset is perfect
+                # even when creating a new file in the folder ? untracked
+                raise e
         else:
             self.db.reset(self.commit_id)
 
@@ -117,6 +130,7 @@ class GitInterface:
     def reset(self, commit_id=None):
         if commit_id is None:
             commit_id = self.commit_id
+        #TODO : test if reset is enough : need to checkout working copy ?
         self.repo.reset(commit_id, pygit2.GIT_RESET_HARD)
 
     @monitor_decorator('pull')
@@ -159,6 +173,7 @@ class GitInterface:
         # We can just fastforward
         elif merge_result & pygit2.GIT_MERGE_ANALYSIS_FASTFORWARD:
             logger.info("Merging: fast-forward")
+            self.commit_id = commit_remote
             repo.checkout_tree(repo.get(self.commit_id))
             master_ref = repo.lookup_reference('refs/heads/{}'.format(self.branch))
             master_ref.set_target(self.commit_id)
@@ -241,6 +256,7 @@ def _normalize_key(ieml, key, value, parse_ieml=False, partial=False, structure=
         raise ValueError("IEML and Key can't be null")
 
     if ieml:
+        ieml = str(ieml)
         if parse_ieml:
             parsed = IEMLParser().parse(str(ieml))
             if ieml != str(parsed):
@@ -298,7 +314,7 @@ class Descriptors:
         assert list(df.columns) == ['ieml', 'language', 'descriptor', 'value']
         self.df = df.set_index(['ieml', 'language', 'descriptor']).sort_index()
 
-    @monitor_decorator('get_values')
+    # @monitor_decorator('get_values')
     def get_values(self, ieml, language, descriptor):
         ieml, language, descriptor = _normalize_key(ieml, language, descriptor,
                                                     parse_ieml=False, partial=False)
@@ -307,7 +323,7 @@ class Descriptors:
         except KeyError:
             return []
 
-    @monitor_decorator('get_values_partial')
+    # @monitor_decorator('get_values_partial')
     def get_values_partial(self, ieml, language=None, descriptor=None):
         ieml, language, descriptor = _normalize_key(ieml, language, descriptor,
                                                     parse_ieml=False, partial=True)
@@ -353,7 +369,7 @@ class Structure:
 
         return dict(res)
 
-def cache_results_watch_files(_files, name):
+def cache_results_watch_files(path, name):
     def decorator(f):
         def wrapper(*args, **kwargs):
             use_cache = args[0].use_cache
@@ -361,7 +377,8 @@ def cache_results_watch_files(_files, name):
             cache_folder = self.cache_folder
             db_path = self.folder
 
-            files = [os.path.join(db_path, ff) for ff in _files]
+            files = [ff for ff in glob.glob(os.path.join(db_path, path), recursive=True
+                                                                   )]
 
             if use_cache:
                 cache = FolderWatcherCache(files, cache_folder=cache_folder, name=name)
@@ -482,7 +499,7 @@ class _IEMLDatabase:
         return Structure(r)
 
     @monitor_decorator("Get dictionary")
-    # @cache_results_watch_files([structure_dictionary_file], 'dictionary')
+    @cache_results_watch_files("morpheme/*/*.ieml", 'dictionary')
     def get_dictionary(self):
         return Dictionary2(self.list('morpheme', paradigm=True), self.get_structure())
 
@@ -490,6 +507,8 @@ class _IEMLDatabase:
         ieml, language, descriptor = _normalize_key(ieml, language, descriptor,
                                                          parse_ieml=True, partial=False)
         value = _normalize_value(value)
+        if not value:
+            return
 
         with open(self.path_of(ieml, mkdir=True), 'a') as fp:
             fp.write('"{}" {} {} "{}"\n'.format(
@@ -499,12 +518,29 @@ class _IEMLDatabase:
                 self.escape_value(value)))
 
     @monitor_decorator('remove_key')
-    def remove_descriptor(self, ieml, language, descriptor, value=None):
+    def remove_descriptor(self, ieml, language=None, descriptor=None, value=None):
         ieml, language, descriptor = _normalize_key(ieml, language, descriptor,
-                                                         parse_ieml=True, partial=False)
+                                                         parse_ieml=True, partial=True)
+
+        if not os.path.isfile(self.path_of(ieml, mkdir=True)):
+            return
+
+        if descriptor is None and language is None and value is None:
+            os.remove(self.path_of(ieml, mkdir=True))
+            return
+
+        if descriptor is None or language is None:
+            if language is None:
+                for l in LANGUAGES:
+                    self.remove_descriptor(ieml, l, descriptor)
+            else:
+                for d in DESCRIPTORS_CLASS:
+                    self.remove_descriptor(ieml, language, d)
+            return
 
         if value:
             value = _normalize_value(value)
+
 
         with open(self.path_of(ieml, mkdir=True), "r") as f:
             lines = [l for l in f.readlines()
@@ -519,8 +555,15 @@ class _IEMLDatabase:
         with open(self.path_of(ieml, descriptor=False, mkdir=True), 'a') as fp:
             fp.write('"{}" {} "{}"\n'.format(str(ieml), key, value))
 
-    def remove_structure(self, ieml, key, value=None):
+    def remove_structure(self, ieml, key=None, value=None):
         ieml, key, value = _normalize_key(ieml, key, value, parse_ieml=True, partial=True, structure=True)
+
+        if key is None:
+            os.remove(self.path_of(ieml, descriptor=False, mkdir=True))
+            return
+
+        if not os.path.isfile(self.path_of(ieml, descriptor=False, mkdir=True)):
+            return
 
         with open(self.path_of(ieml, descriptor=False, mkdir=True), "r") as f:
             lines = [l for l in f.readlines()
@@ -634,8 +677,7 @@ if __name__ == '__main__':
                       db_folder=folder,
                       credentials=pygit2.Keypair('git', '/home/louis/.ssh/id_rsa.pub', '/home/louis/.ssh/id_rsa', ''),)
     #
-    # # db2 = _IEMLDatabase(out_folder)
-    # # d = Descriptors(db2.get_pandas())
+    # d = Descriptors(db2.get_pandas())
     # # print(d.get_values('wa.', 'fr', 'translations'))
     # # db2.remove_key('wa.', 'fr', 'translations', 'agir')
     # # d = Descriptors(db2.get_pandas())
@@ -647,7 +689,7 @@ if __name__ == '__main__':
     # # print(v)
 
     signature = pygit2.Signature(args.author_name, args.author_email)
-    #
+
     with gitdb.commit(signature, '[Migration] migrate from 0.3 to 0.4'):
         migrate(db, folder)
 
@@ -657,7 +699,7 @@ if __name__ == '__main__':
     db2 = _IEMLDatabase(gitdb.folder)
 
 
-    # # #
+    # # # #
     with gitdb.commit(signature, '[Descriptor] add missing translations for hands and feet'):
         root = script("f.o.-f.o.-',n.i.-f.i.-',x.-O:.-',_M:.-',_;+f.o.-f.o.-',n.i.-f.i.-',x.-O:.-',_E:F:.-',_;", factorize=True)
         assert str(root) == "f.o.-f.o.-',n.i.-f.i.-',x.-O:.-',_M:.+E:F:.-',_;"
@@ -673,9 +715,28 @@ if __name__ == '__main__':
         db2.add_descriptor(p1, 'fr', 'translations', 'parties des mains')
         db2.add_descriptor(p1, 'en', 'translations', 'parts of hands')
 
-    ignore_body_parts(gitdb, db2)
+    # ignore_body_parts(gitdb, db2)
 
-    #
+    with gitdb.commit(signature, '[Descriptor] remove old descriptors'):
+        sc = script('F:.n.-')
+        db2.remove_descriptor(sc, 'fr', 'translations')
+        db2.remove_descriptor(sc, 'en', 'translations')
+    desc = db2.get_descriptors()
+    with gitdb.commit(signature, '[Descriptor] remove Nan values'):
+        for key, v in list(desc.df[desc.df.value.isna()].iterrows()):
+            db2.remove_descriptor(*key, "")
+            print(key, "remove")
+
+    with gitdb.commit(signature, '[Gitignore] ignore cache'):
+        with open(os.path.join(gitdb.folder, '.gitignore'), 'w') as fp:
+            fp.write(".dictionary-cache.*\n")
+
+    with gitdb.commit(signature, "[Migration] add '.ieml' file for non-root paradigms"):
+        d = db2.get_dictionary()
+        for s in d.scripts:
+            if len(s) != 1 and s not in d.tables.roots:
+                db2.add_structure(s, 'is_root', False)
+
     gitdb.push('origin')
     # # print(db.get_structure().df)
     # # print(len(db.list('morpheme', paradigm=True)))

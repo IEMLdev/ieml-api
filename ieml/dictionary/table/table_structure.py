@@ -3,7 +3,7 @@ from collections import defaultdict
 from itertools import chain
 
 from ieml.dictionary.table.table import *
-
+from ieml.dictionary.script import Script
 
 class TableStructure:
     # define a forest of root paradigm
@@ -93,6 +93,9 @@ class TableStructure:
         # assign each paradigm to its root paradigm
         for s in scripts:
             if s.cardinal == 1:
+                continue
+            if s.singular_sequences[0] not in root_ss:
+                print(s.singular_sequences[0], "not found")
                 continue
             roots[root_ss[s.singular_sequences[0]]].append(s)
 

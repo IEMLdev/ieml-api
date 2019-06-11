@@ -5,6 +5,7 @@ from appdirs import user_cache_dir, user_data_dir
 LIBRARY_VERSION = '1.0.3'
 
 IEMLDB_DEFAULT_GIT_ADDRESS='https://github.com/IEMLdev/ieml-language.git'
+# IEMLDB_DEFAULT_GIT_ADDRESS='https://github.com/ogrergo/ieml-language.git'
 
 # DICTIONARY_FOLDER = os.path.abspath(os.path.join(__file__, '../../definition/dictionary'))
 # LEXICONS_FOLDER = os.path.abspath(os.path.join(__file__, '../../definition/lexicons'))

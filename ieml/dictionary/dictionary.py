@@ -1,5 +1,7 @@
 from collections import defaultdict
 
+from tqdm import tqdm
+
 from ieml.dictionary.relation.relations import RelationsGraph
 from ieml.dictionary.script import script
 import numpy as np
@@ -14,14 +16,14 @@ class Dictionary:
         root_paradigms = []
         inhibitions = {}
 
-        for root, (paradigms, _inhibitions) in dictionary_structure.structure.iterrows():
-            root = script(root, factorize=True)
+        for root, (paradigms, _inhibitions) in tqdm(dictionary_structure.structure.iterrows()):
+            root = script(root, factorize=False)
             root_paradigms.append(root)
             scripts.append(root)
 
             scripts.extend(root.singular_sequences)
 
-            paras = [script(p, factorize=True) for p in paradigms]
+            paras = [script(p, factorize=False) for p in paradigms]
             scripts.extend(paras)
 
             inhibitions[root] = _inhibitions
@@ -36,7 +38,7 @@ class Dictionary:
         self._inhibitions = inhibitions
 
         # self.tables = TableStructure
-        self.tables = TableStructure(self.scripts, self.roots_idx)
+        self.tables = TableStructure(self.scripts, root_paradigms)
 
         self.relations = RelationsGraph(dictionary=self)
 
@@ -51,24 +53,27 @@ class Dictionary:
 
 class Dictionary2:
     def __init__(self, paradigms, structure):
-        scripts = {s: script(s, factorize=True) for s in paradigms}
+        scripts = {s: script(s, factorize=False) for s in tqdm(paradigms)}
 
         root_paradigms = []
         inhibitions = defaultdict(list)
         ignored = []
-        for (root, key), (value,) in structure.df.iterrows():
-            root = scripts[root]
+        for (p, key), (value,) in structure.df.iterrows():
+            if p not in scripts:
+                print(p)
+                continue
+            p = scripts[p]
 
-            for ss in root.singular_sequences:
+            for ss in p.singular_sequences:
                 scripts[str(ss)] = ss
 
 
             if key == 'inhibition':
-                inhibitions[root].append(value)
+                inhibitions[p].append(value)
             elif key == 'is_root' and value[0].lower() == 't':
-                root_paradigms.append(root)
+                root_paradigms.append(p)
             elif key == 'is_ignored' and value[0].lower() == 't':
-                ignored.append(root)
+                ignored.append(p)
 
         for s in ignored:
             del scripts[str(s)]
