@@ -317,6 +317,10 @@ class AdditiveScript(Script):
             # layer 0 -> column paradigm (like I: F: M: O:)
             return [np.array([[[s]] for s in self.singular_sequences])], [self], [[[self]]]
 
+        # cells =
+        # # if the child are multiple tables, merge thems
+        # if
+
         return [t for c in self.children for t in c.cells], [t for c in self.children for t in c.tables_script], \
                list(chain(*(c.headers for c in self.children)))
 

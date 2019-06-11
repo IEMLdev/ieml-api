@@ -220,35 +220,42 @@ class DBTransactions:
         db = _IEMLDatabase(folder=self.gitdb.folder, use_cache=self.use_cache, cache_folder=self.cache_folder)
         d = db.get_dictionary()
         desc = db.get_descriptors()
+        ds = db.get_structure()
 
         assert script_old in d.scripts, "Source script not defined in dictionary"
         assert script_new not in d.scripts, "Target script already defined in dictionary"
         root_old = d.tables.root(script_old)
+        is_root = ds.get_values(script_old, 'is_root')
+        is_root = is_root and is_root[0][0].lower() == 't'
+
+
+        root_new_cand = set()
+        for ss in script_new.singular_sequences:
+            try:
+                root_new_cand.add(d.tables.root(ss))
+            except KeyError:
+                if not is_root:
+                    raise ValueError("")
+
+        assert len(root_new_cand) == 1, "No root paradigms or too many for script {}".format(str(script_new))
+        root_new = next(iter(root_new_cand))
 
         message = "[dictionary] Update paradigm IEML from {} to {}"\
                           .format(str(script_old),
                                   str(script_new),
                                   " / ".join(
                                       "{}:{}".format(l, desc.get_values(script_new, l, 'translations')) for l in LANGUAGES))
-        ds = db.get_structure()
-        is_root = ds.get_values(script_old, 'is_root')
-        if is_root and is_root[0][0].lower() == 't':
+
+        if is_root:
             # 1st case: root paradigm
 
             assert script_old in script_new, "Can only update a root paradigm to a bigger version of it"
+
+
             # then we can update it to a bigger version of it
             old_structure = ds.get_values_partial(script_old)
-
-            root = True
         else:
-            root = False
-
             # 2nd case paradigm
-            root_new_cand = set()
-            for ss in script_new.singular_sequences:
-                root_new_cand.add(d.tables.root(ss))
-            assert len(root_new_cand) == 1, "No root paradigms or too many for script {}".format(str(script_new))
-            root_new = next(iter(root_new_cand))
 
             para_old, inhib_old = ds.get(root_old)
             assert str(script_old) in para_old
@@ -266,16 +273,20 @@ class DBTransactions:
 
         # transfers translations and structure
         with self.gitdb.commit(self.signature, message):
-            if root:
+            if is_root:
                 db.remove_structure(script_old)
+                db.add_structure(script_old, 'is_root', 'False')
 
                 for (_, key), values in old_structure.items():
                     for v in values:
                         db.add_structure(script_new, key, v)
 
+            db.remove_descriptor(script_old)
+
             for (_, l, k), values in desc.get_values_partial(script_old).items():
                 for v in values:
                     db.add_descriptor(script_new, l, k, v)
+                    db.add_descriptor(script_old, l, k, '(translation migrated to {}) '.format(str(script_new)) + v)
 
     def create_lexical_paradigm(self,
                                 lexeme,
