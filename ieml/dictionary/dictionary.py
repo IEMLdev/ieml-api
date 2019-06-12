@@ -75,6 +75,17 @@ class Dictionary2:
             elif key == 'is_ignored' and value[0].lower() == 't':
                 ignored.append(p)
 
+        # ignore all scripts that are not in a root paradigm
+        singular_sequences = set()
+        for r in root_paradigms:
+            if any(ss in singular_sequences for ss in r.singular_sequences):
+                raise ValueError("Root paradigms overlap with {}".format(str(r)))
+            singular_sequences |= r.singular_sequences_set
+
+        for s in scripts.values():
+            if not s.singular_sequences_set.issubset(singular_sequences):
+                ignored.append(s)
+
         for s in ignored:
             del scripts[str(s)]
             if s in root_paradigms:
@@ -96,6 +107,23 @@ class Dictionary2:
         self.roots_idx[[self.index[r] for r in root_paradigms]] = 1
 
         self.relations = RelationsGraph(dictionary=self)
+
+    # def __new__(cls, *args, **kwargs):
+    #     """
+    #     Need this to pickle scripts, the pickler use __hash__ method before unpickling the
+    #     object attribute. Then need to pass the _str.
+    #     """
+    #     instance = super(Dictionary2, cls).__new__(cls)
+    #
+    #     return instance
+    #
+    # def __getnewargs_ex__(self):
+    #     return ((), {
+    #         'str': str(self)
+    #     })
+
+
+
 
     def __len__(self):
         return self.scripts.__len__()

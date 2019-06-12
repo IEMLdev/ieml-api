@@ -108,7 +108,7 @@ class DBTransactions:
                     db.add_descriptor(root, language=l, descriptor='translations', value=v)
 
                 for v in comments[l]:
-                    db.add_descriptor(root, language=l, descriptor='comment', value=v)
+                    db.add_descriptor(root, language=l, descriptor='comments', value=v)
 
         # add main tables header
         # main_tables = [tt for tt in root.tables_script if tt != root]
@@ -157,7 +157,7 @@ class DBTransactions:
                     db.add_descriptor(script, language=l, descriptor='translations', value=v)
 
                 for v in comments[l]:
-                    db.add_descriptor(script, language=l, descriptor='comment', value=v)
+                    db.add_descriptor(script, language=l, descriptor='comments', value=v)
 
     def delete_morpheme_root_paradigm(self,
                                       script: Script, empty_descriptors=True
@@ -235,7 +235,7 @@ class DBTransactions:
                 root_new_cand.add(d.tables.root(ss))
             except KeyError:
                 if not is_root:
-                    raise ValueError("")
+                    raise ValueError("A non root paradigm is defined over singular sequences that are in no paradigms")
 
         assert len(root_new_cand) == 1, "No root paradigms or too many for script {}".format(str(script_new))
         root_new = next(iter(root_new_cand))
@@ -254,25 +254,10 @@ class DBTransactions:
 
             # then we can update it to a bigger version of it
             old_structure = ds.get_values_partial(script_old)
-        else:
-            # 2nd case paradigm
-
-            para_old, inhib_old = ds.get(root_old)
-            assert str(script_old) in para_old
-
-            if root_old == root_new:
-                para_old = sorted(set(para_old) - {str(script_old)} | {str(script_new)})
-                ds.set_value(root_old, para_old, inhib_old)
-            else:
-                para_old = sorted(set(para_old) - {str(script_old)})
-                ds.set_value(root_old, para_old, inhib_old)
-
-                para_new, inhib_new = ds.get(root_new)
-                para_new = sorted(set(para_new) | {str(script_new)})
-                ds.set_value(root_new, para_new, inhib_new)
 
         # transfers translations and structure
         with self.gitdb.commit(self.signature, message):
+
             if is_root:
                 db.remove_structure(script_old)
                 db.add_structure(script_old, 'is_root', 'False')
@@ -280,13 +265,17 @@ class DBTransactions:
                 for (_, key), values in old_structure.items():
                     for v in values:
                         db.add_structure(script_new, key, v)
+            else:
+                db.remove_structure(script_old)
+                db.add_structure(script_new, 'is_root', 'False')
 
             db.remove_descriptor(script_old)
 
             for (_, l, k), values in desc.get_values_partial(script_old).items():
                 for v in values:
                     db.add_descriptor(script_new, l, k, v)
-                    db.add_descriptor(script_old, l, k, '(translation migrated to {}) '.format(str(script_new)) + v)
+                    if is_root:
+                        db.add_descriptor(script_old, l, k, '(translation migrated to {}) '.format(str(script_new)) + v)
 
     def create_lexical_paradigm(self,
                                 lexeme,

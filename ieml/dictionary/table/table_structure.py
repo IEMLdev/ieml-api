@@ -29,6 +29,9 @@ class TableStructure:
     def __getitem__(self, item):
         return self.tables[item]
 
+    def __contains__(self, item):
+        return item in self.tables
+
     def children(self, table: Table):
         """
         :param table:

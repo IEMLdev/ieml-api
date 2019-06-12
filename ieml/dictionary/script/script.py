@@ -55,21 +55,21 @@ class Script(TreeStructure):
         self.script_class = None
         self.grammatical_class = None
 
-    # def __new__(cls, *args, **kwargs):
-    #     """
-    #     Need this to pickle scripts, the pickler use __hash__ method before unpickling the
-    #     object attribute. Then need to pass the _str.
-    #     """
-    #     instance = super(Script, cls).__new__(cls)
-    #     if 'str' in kwargs:
-    #         instance._str = kwargs['str']
-    #
-    #     return instance
-    #
-    # def __getnewargs_ex__(self):
-    #     return ((), {
-    #         'str': str(self)
-    #     })
+    def __new__(cls, *args, **kwargs):
+        """
+        Need this to pickle scripts, the pickler use __hash__ method before unpickling the
+        object attribute. Then need to pass the _str.
+        """
+        instance = super(Script, cls).__new__(cls)
+        if 'str' in kwargs:
+            instance._str = kwargs['str']
+
+        return instance
+
+    def __getnewargs_ex__(self):
+        return ((), {
+            'str': str(self)
+        })
 
     def __add__(self, other):
         if not isinstance(other, Script):

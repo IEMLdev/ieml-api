@@ -132,6 +132,12 @@ class GitInterface:
             commit_id = self.commit_id
         #TODO : test if reset is enough : need to checkout working copy ?
         self.repo.reset(commit_id, pygit2.GIT_RESET_HARD)
+        status = self.repo.status()
+
+        # delete new files
+        for f, k in status.items():
+            if k & GIT_STATUS_WT_NEW:
+                os.remove(f)
 
     @monitor_decorator('pull')
     def pull(self, remote='origin', credentials=None):
@@ -277,12 +283,11 @@ def _normalize_key(ieml, key, value, parse_ieml=False, partial=False, structure=
                 if value not in INHIBITABLE_RELATIONS:
                     raise ValueError("Unsupported inhibition: {}".format(value))
 
-            if key and key == 'is_root':
-                value = bool(value)
-
-            if key and key == 'is_ignored':
-                value = bool(value)
-
+            if key and key in ['is_root', 'is_ignored']:
+                value = json.loads(str(value).lower())
+                if not isinstance(value, bool):
+                    raise ValueError("is_root or is_ignored field only accept boolean, not {}".format(value))
+                value = str(value)
     else:
         if key:
             key = str(key)
@@ -377,8 +382,7 @@ def cache_results_watch_files(path, name):
             cache_folder = self.cache_folder
             db_path = self.folder
 
-            files = [ff for ff in glob.glob(os.path.join(db_path, path), recursive=True
-                                                                   )]
+            files = [ff for ff in glob.glob(os.path.join(db_path, path), recursive=True)]
 
             if use_cache:
                 cache = FolderWatcherCache(files, cache_folder=cache_folder, name=name)
@@ -386,8 +390,9 @@ def cache_results_watch_files(path, name):
                     logger.info("read_{}.cache: Reading cache at {}".format(name, cache.cache_file))
                     try:
                         instance = cache.get()
-                    except Exception:
+                    except Exception as e:
                         # cache.prune()
+                        # raise e
                         instance = None
                 else:
                     logger.info("read_{}.cache: Pruned cache at {}".format(name, cache_folder))
