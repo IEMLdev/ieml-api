@@ -6,7 +6,7 @@ import pygit2
 from ieml import IEMLDatabase
 from ieml.constants import LANGUAGES, INHIBITABLE_RELATIONS, DESCRIPTORS_CLASS
 from ieml.dictionary.script import Script, factorize
-from ieml.lexicon.syntax import LexicalItem
+from ieml.usl import USL
 
 
 def _check_inhibitions(inhibitions):
@@ -21,13 +21,13 @@ def _check_script(script):
 
 
 def _check_lexical_item(ieml):
-    assert isinstance(ieml, LexicalItem)
+    assert isinstance(ieml, USL)
     return ieml
 
 def _check_ieml(ieml):
     if isinstance(ieml, Script):
         return _check_script(ieml)
-    elif isinstance(ieml, LexicalItem):
+    elif isinstance(ieml, USL):
         return _check_lexical_item(ieml)
     else:
         assert False, "Invalid ieml {}".format(ieml)
@@ -284,7 +284,7 @@ class DBTransactions:
                                 push_username=None,
                                 push_password=None):
 
-        assert isinstance(lexeme, LexicalItem) and len(lexeme) != 1
+        assert isinstance(lexeme, USL) and len(lexeme) != 1
 
         lex = self.lexicon_structure('all')
         lex.add_paradigm(paradigm=lexeme, domain=domain)

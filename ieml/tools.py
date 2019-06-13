@@ -10,7 +10,7 @@ from ieml.exceptions import CannotParse
 from ieml.lexicon.grammar.text import Text, text
 from ieml.lexicon.grammar.usl import Usl
 from ieml.lexicon.grammar.fact import Fact, fact
-from ieml.lexicon.grammar.parser import IEMLParser
+from ieml.usl.parser import IEMLParser
 from ieml.lexicon.grammar.theory import Theory, theory
 from ieml.lexicon.grammar.topic import Word, topic
 from ieml.lexicon.grammar.word import Word

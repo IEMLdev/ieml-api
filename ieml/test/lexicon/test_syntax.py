@@ -1,7 +1,7 @@
 import unittest
 
-from ieml.lexicon.grammar.parser import IEMLParser
-from ieml.lexicon.syntax import Word, Phrase, check_character, check_polymorpheme, PolyMorpheme
+from ieml.usl.parser import IEMLParser
+from ieml.lexicon.syntax import Word, check_character, check_polymorpheme, PolyMorpheme
 
 # TODO: add test for ordering of morph in polymorph
 

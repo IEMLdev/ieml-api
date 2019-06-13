@@ -237,7 +237,7 @@ class Usl(metaclass=IEMLSyntaxType):
     
 def usl(arg):
     if isinstance(arg, str):
-        from ieml.lexicon.grammar.parser import IEMLParser
+        from ieml.usl.parser import IEMLParser
         return IEMLParser().parse(arg)
 
     if isinstance(arg, Script):

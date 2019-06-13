@@ -3,6 +3,7 @@ import glob
 import logging
 import os
 import pickle
+from collections import OrderedDict
 from typing import List
 import hashlib
 from time import time
@@ -17,6 +18,13 @@ class cached_property:
         attr = self._factory(instance)
         setattr(instance, self._attr_name, attr)
         return attr
+
+class LastUpdatedOrderedDict(OrderedDict):
+    'Store items in the order the keys were last added'
+    def __setitem__(self, key, value, **kwargs):
+        if key in self:
+            del self[key]
+        OrderedDict.__setitem__(self, key, value, **kwargs)
 
 
 class TreeStructure:

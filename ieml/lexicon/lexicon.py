@@ -1,6 +1,6 @@
 from collections import defaultdict
 from ieml.dictionary import Dictionary
-from ieml.lexicon.grammar.parser import IEMLParser
+from ieml.usl.parser import IEMLParser
 from ieml.lexicon.relations.lattice_sctrucure import LatticeStructure
 
 

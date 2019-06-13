@@ -7,7 +7,7 @@ import pygit2
 from ieml import IEMLDatabase
 from ieml.dictionary.script import script
 from ieml.ieml_database.git_interface import GitInterface
-from ieml.lexicon.grammar.parser import IEMLParser
+from ieml.usl.parser import IEMLParser
 import tqdm
 
 def migrate(database, out_folder):

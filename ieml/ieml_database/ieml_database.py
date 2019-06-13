@@ -1,5 +1,3 @@
-import functools
-import glob
 import logging
 import operator
 from collections import defaultdict
@@ -12,12 +10,12 @@ import json
 from hashlib import sha224
 import subprocess
 
-from ieml.commons import FolderWatcherCache, monitor_decorator, cache_results_watch_files
+from ieml.commons import monitor_decorator, cache_results_watch_files
 from ieml.constants import LANGUAGES, INHIBITABLE_RELATIONS, STRUCTURE_KEYS, DESCRIPTORS_CLASS
 from ieml.dictionary.dictionary import Dictionary
 from ieml.dictionary.script import NullScript, MultiplicativeScript, AdditiveScript
-from ieml.lexicon.grammar.parser import IEMLParser
-from ieml.lexicon.syntax import PolyMorpheme, Word
+from ieml.usl.parser import IEMLParser
+from ieml.usl import PolyMorpheme, Word
 
 
 logger = logging.getLogger('IEMLDatabase')

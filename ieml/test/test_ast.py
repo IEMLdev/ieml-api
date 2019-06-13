@@ -5,7 +5,7 @@ import numpy as np
 
 from ieml.lexicon import Fact, Theory, Text, theory, text, topic
 from ieml.exceptions import InvalidIEMLObjectArgument, TermNotFoundInDictionary
-from ieml.lexicon.grammar.parser import IEMLParser
+from ieml.usl.parser import IEMLParser
 from ieml.tools import RandomPoolIEMLObjectGenerator
 from ieml.dictionary.script import script as sc
 from ieml.test.helper import *

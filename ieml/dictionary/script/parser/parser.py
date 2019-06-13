@@ -25,7 +25,7 @@ class ScriptParser(metaclass=Singleton):
         self.lexer = get_script_lexer()
         self.parser = yacc.yacc(module=self, errorlog=logging, start='term',
                                 debug=False, optimize=True,
-                                picklefile=os.path.join(PARSER_FOLDER, "script_parser.pickle"))
+                                picklefile=os.path.join(PARSER_FOLDER, "morpheme_parser.pickle"))
         # rename the parsing method (can't name it directly parse with lru_cache due to ply checking)
         self.parse = self.t_parse
 
