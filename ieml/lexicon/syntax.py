@@ -10,10 +10,10 @@ from ieml.dictionary.script import Script
 
 class LastUpdatedOrderedDict(OrderedDict):
     'Store items in the order the keys were last added'
-    def __setitem__(self, key, value):
+    def __setitem__(self, key, value, **kwargs):
         if key in self:
             del self[key]
-        OrderedDict.__setitem__(self, key, value)
+        OrderedDict.__setitem__(self, key, value, **kwargs)
 
 
 class LexicalItem:

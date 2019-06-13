@@ -1,7 +1,12 @@
+import functools
+import glob
+import logging
 import os
 import pickle
 from typing import List
 import hashlib
+from time import time
+
 
 class cached_property:
     def __init__(self, factory):
@@ -131,3 +136,61 @@ class FolderWatcherCache:
         return [os.path.join(self.cache_folder, n) for n in os.listdir(self.cache_folder)
                 if n.startswith('.{}-cache.'.format(self.name))]
 
+def monitor_decorator(name):
+    def decorator(f):
+        def wrapper(*args, **kwargs):
+            before = time()
+            res = f(*args, **kwargs)
+            print(name, time() - before)
+            return res
+
+        functools.wraps(wrapper)
+        return wrapper
+
+    return decorator
+
+logger = logging.getLogger("cache_watch_files")
+logger.setLevel(logging.INFO)
+
+def cache_results_watch_files(path, name):
+    def decorator(f):
+        def wrapper(*args, **kwargs):
+            use_cache = args[0].use_cache
+            self = args[0]
+            cache_folder = self.cache_folder
+            db_path = self.folder
+
+            files = [ff for ff in glob.glob(os.path.join(db_path, path), recursive=True)]
+
+            if use_cache:
+                cache = FolderWatcherCache(files, cache_folder=cache_folder, name=name)
+                if not cache.is_pruned():
+                    logger.info("read_{}.cache: Reading cache at {}".format(name, cache.cache_file))
+                    try:
+                        instance = cache.get()
+                    except Exception as e:
+                        # cache.prune()
+                        # raise e
+                        instance = None
+                else:
+                    logger.info("read_{}.cache: Pruned cache at {}".format(name, cache_folder))
+                    instance = None
+
+                if instance:
+                    return instance
+
+            instance = f(*args, **kwargs)
+
+            if use_cache and cache_folder:
+                cache = FolderWatcherCache(files, cache_folder=cache_folder, name=name)
+
+                logger.info("read_{}.cache: Updating cache at {}".format(name, cache.cache_file))
+                cache.update(instance)
+
+            return instance
+
+        functools.wraps(wrapper)
+
+        return wrapper
+
+    return decorator

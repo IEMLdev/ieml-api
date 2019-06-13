@@ -3,11 +3,10 @@ from itertools import product
 
 import pygit2
 
-from ieml.constants import LANGUAGES, INHIBITABLE_RELATIONS
+from ieml import IEMLDatabase
+from ieml.constants import LANGUAGES, INHIBITABLE_RELATIONS, DESCRIPTORS_CLASS
 from ieml.dictionary.script import Script, factorize
-from ieml.ieml_database.descriptor import DESCRIPTORS_CLASS
 from ieml.lexicon.syntax import LexicalItem
-from scripts.migrate_versions.migrate_v03Tov04 import _IEMLDatabase
 
 
 def _check_inhibitions(inhibitions):
@@ -72,7 +71,7 @@ class DBTransactions:
         self.use_cache = use_cache
 
     def create_root_paradigm(self, root, inhibitions, translations, comments):
-        db = _IEMLDatabase(folder=self.gitdb.folder, use_cache=self.use_cache, cache_folder=self.cache_folder)
+        db = IEMLDatabase(folder=self.gitdb.folder, use_cache=self.use_cache, cache_folder=self.cache_folder)
 
         root = _check_script(root)
         if len(root) == 1:
@@ -117,7 +116,7 @@ class DBTransactions:
                               script: Script,
                               translations,
                               comments):
-        db = _IEMLDatabase(folder=self.gitdb.folder, use_cache=self.use_cache, cache_folder=self.cache_folder)
+        db = IEMLDatabase(folder=self.gitdb.folder, use_cache=self.use_cache, cache_folder=self.cache_folder)
         d = db.get_dictionary()
 
         script = _check_script(script)
@@ -162,7 +161,7 @@ class DBTransactions:
     def delete_morpheme_root_paradigm(self,
                                       script: Script, empty_descriptors=True
                                       ):
-        db = _IEMLDatabase(folder=self.gitdb.folder, use_cache=self.use_cache, cache_folder=self.cache_folder)
+        db = IEMLDatabase(folder=self.gitdb.folder, use_cache=self.use_cache, cache_folder=self.cache_folder)
         d = db.get_dictionary()
         descriptors = db.get_descriptors()
 
@@ -184,7 +183,7 @@ class DBTransactions:
 
     def delete_morpheme_paradigm(self,
                                  script: Script):
-        db = _IEMLDatabase(folder=self.gitdb.folder, use_cache=self.use_cache, cache_folder=self.cache_folder)
+        db = IEMLDatabase(folder=self.gitdb.folder, use_cache=self.use_cache, cache_folder=self.cache_folder)
         d = db.get_dictionary()
         descriptors = db.get_descriptors()
 
@@ -217,7 +216,7 @@ class DBTransactions:
 
         assert len(script_old) != 1 or len(script_new) != 1, "Can't update singular sequences, only paradigms"
 
-        db = _IEMLDatabase(folder=self.gitdb.folder, use_cache=self.use_cache, cache_folder=self.cache_folder)
+        db = IEMLDatabase(folder=self.gitdb.folder, use_cache=self.use_cache, cache_folder=self.cache_folder)
         d = db.get_dictionary()
         desc = db.get_descriptors()
         ds = db.get_structure()
@@ -305,7 +304,7 @@ class DBTransactions:
                         descriptor,
                         value):
 
-        db = _IEMLDatabase(folder=self.gitdb.folder, use_cache=self.use_cache, cache_folder=self.cache_folder)
+        db = IEMLDatabase(folder=self.gitdb.folder, use_cache=self.use_cache, cache_folder=self.cache_folder)
 
         ieml = _check_ieml(ieml)
         value = _check_descriptors(value)
@@ -332,7 +331,7 @@ class DBTransactions:
                         ieml,
                         inhibitions):
 
-        db = _IEMLDatabase(folder=self.gitdb.folder, use_cache=self.use_cache, cache_folder=self.cache_folder)
+        db = IEMLDatabase(folder=self.gitdb.folder, use_cache=self.use_cache, cache_folder=self.cache_folder)
 
         ieml = _check_ieml(ieml)
         assert db.get_dictionary().tables.root(ieml) == ieml
