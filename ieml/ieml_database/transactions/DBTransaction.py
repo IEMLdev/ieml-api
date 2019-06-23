@@ -299,7 +299,7 @@ class DBTransactions:
                           push_username=push_username,
                           push_password=push_password)
 
-    def set_descriptors(self,
+    def set_descriptors2(self,
                         ieml,
                         descriptor,
                         value):
@@ -326,6 +326,35 @@ class DBTransactions:
                     db.remove_descriptor(ieml, l, descriptor, e)
                 for e in to_add[l]:
                     db.add_descriptor(ieml, l, descriptor, e)
+
+    def set_descriptors(self,
+                        ieml,
+                        descriptor,
+                        value):
+
+        db = IEMLDatabase(folder=self.gitdb.folder, use_cache=self.use_cache, cache_folder=self.cache_folder)
+
+        ieml = _check_ieml(ieml)
+        value = _check_descriptors(value)
+
+        desc = db.get_descriptors()
+        old_trans = {l: desc.get_values(ieml=ieml, language=l, descriptor=descriptor) for l in LANGUAGES}
+
+        if all(list(value[l]) == list(old_trans[l]) for l in LANGUAGES):
+            return
+
+        # to_add = {l: [e for e in value[l] if e not in old_trans[l]] for l in LANGUAGES}
+        # to_remove = {l: [e for e in old_trans[l] if e not in value[l]] for l in LANGUAGES}
+
+        with self.gitdb.commit(self.signature, '[descriptors] Update {} for {} to {}'.format(descriptor,
+                                                                                             str(ieml),
+                                                                                             json.dumps(value))):
+            db.remove_descriptor(ieml, None, descriptor)
+
+            for l in LANGUAGES:
+                for e in value[l]:
+                    db.add_descriptor(ieml, l, descriptor, e)
+
 
     def set_inhibitions(self,
                         ieml,
