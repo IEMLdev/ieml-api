@@ -95,7 +95,7 @@ class FolderWatcherCache:
             os.remove(c)
 
         with open(self.cache_file, 'wb') as fp:
-            pickle.dump(obj, fp)
+            pickle.dump(obj, fp, protocol=4)
 
     def get(self) -> object:
         """
