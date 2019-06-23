@@ -1,6 +1,6 @@
 import unittest
 
-from ieml.distance.sort import square_order_matrix
+from ieml.usl.distance.sort import square_order_matrix
 from ieml.lexicon import Fact, Text
 import numpy as np
 

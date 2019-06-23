@@ -10,13 +10,16 @@ import json
 from hashlib import sha224
 import subprocess
 
-from ieml.commons import monitor_decorator, cache_results_watch_files
-from ieml.constants import LANGUAGES, INHIBITABLE_RELATIONS, STRUCTURE_KEYS, DESCRIPTORS_CLASS
-from ieml.dictionary.dictionary import Dictionary
-from ieml.dictionary.script import NullScript, MultiplicativeScript, AdditiveScript
-from ieml.usl.parser import IEMLParser
-from ieml.usl import PolyMorpheme, Word
+from tqdm import tqdm
 
+from ieml.commons import monitor_decorator, cache_results_watch_files
+from ieml.constants import LANGUAGES, INHIBITABLE_RELATIONS, STRUCTURE_KEYS, DESCRIPTORS_CLASS, GRAMMATICAL_CLASS_NAMES, \
+    TYPES
+from ieml.dictionary.dictionary import Dictionary
+from ieml.dictionary.script import NullScript, MultiplicativeScript, AdditiveScript, Script
+from ieml.exceptions import CannotParse
+from ieml.usl.parser import IEMLParser
+from ieml.usl import PolyMorpheme, Word, get_index
 
 logger = logging.getLogger('IEMLDatabase')
 logger.setLevel(logging.INFO)
@@ -193,9 +196,14 @@ class IEMLDatabase:
 
         return os.path.join(p, filename + ext)
 
-    @monitor_decorator("list paradigms")
-    def list(self, type, paradigm=True, parse=False):
-        p = os.path.join(self.folder, type, 'paradigm' if paradigm else 'singular')
+    @monitor_decorator("list content")
+    def list(self, type=None, paradigm=None, parse=False):
+        p = self.folder
+        if type:
+            p = os.path.join(p, type)
+            if paradigm is not None:
+                p = os.path.join(p, 'paradigm' if paradigm else 'singular')
+
         p1 = subprocess.Popen("find -path *.desc -print0".split(), stdout=subprocess.PIPE, cwd=p)
         p2 = subprocess.Popen("xargs -0 cat".split(), stdin=p1.stdout, stdout=subprocess.PIPE, cwd=p)
         p3 = subprocess.Popen(["cut", "-f2", '-d', '"'], stdin=p2.stdout, stdout=subprocess.PIPE, cwd=p)
@@ -229,6 +237,41 @@ class IEMLDatabase:
     @cache_results_watch_files("morpheme/*/*.ieml", 'dictionary')
     def get_dictionary(self):
         return Dictionary(self.list('morpheme', paradigm=True), self.get_structure())
+
+    @monitor_decorator("Get list of all usls")
+    @cache_results_watch_files("morpheme/*/*.desc", 'all_usls')
+    def get_list(self):
+        res = {}
+        dictionary = self.get_dictionary()
+        parser = IEMLParser(dictionary=dictionary)
+
+        for (ieml, lang, desc), (v,) in tqdm(self.get_descriptors().df.iterrows()):
+            if ieml not in res:
+                try:
+                    pieml = parser.parse(ieml)
+                except CannotParse:
+                    continue
+
+                assert str(pieml) == ieml
+                i, r = get_index(pieml, dictionary)
+                if i == 0 and isinstance(pieml, PolyMorpheme):
+                    pieml = pieml.constant[0]
+                res[ieml] = {'ieml': str(pieml),
+                             'type': TYPES[i],
+                             'paradigm': len(pieml) != 1,
+                             'class': GRAMMATICAL_CLASS_NAMES[pieml.grammatical_class].lower().capitalize(),
+                             'index': r,
+                             'cardinality': 'singular_sequence' if pieml.cardinal == 1 else \
+                                 ('paradigm' if not isinstance(pieml,
+                                                               Script) or pieml not in dictionary.tables.roots
+                                 else 'root_paradigm'),
+                             'domains': []
+                             }
+            if desc not in res[ieml]:
+                res[ieml][desc] = {l: [] for l in LANGUAGES}
+            res[ieml][desc][lang] = v
+
+        return sorted(res.values(), key=lambda e: e['index'])
 
     def add_descriptor(self, ieml, language, descriptor, value):
         ieml, language, descriptor = _normalize_key(ieml, language, descriptor,

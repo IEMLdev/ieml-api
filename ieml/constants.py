@@ -184,3 +184,5 @@ MORPHEME_SERIE_SIZE_LIMIT_FUNCTION = 3
 
 
 DESCRIPTORS_CLASS = ['translations', 'comments']
+
+TYPES = ['morpheme', 'polymorpheme', 'word', 'phrase']

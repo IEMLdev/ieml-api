@@ -7,8 +7,8 @@ from _pygit2 import GIT_CHECKOUT_FORCE, GIT_CHECKOUT_RECREATE_MISSING, GIT_STATU
 import pygit2
 from appdirs import user_cache_dir
 
-from ieml import LIBRARY_VERSION
 from ieml.commons import monitor_decorator
+from ieml.constants import IEMLDB_DEFAULT_GIT_ADDRESS, LIBRARY_VERSION
 
 logger = logging.getLogger('GitInterface')
 logger.setLevel(logging.INFO)
@@ -78,8 +78,8 @@ class git_transaction:
 
 class GitInterface:
     def __init__(self,
-                 origin,
-                 credentials=None,
+                 origin=IEMLDB_DEFAULT_GIT_ADDRESS,
+                 credentials=pygit2.Username('git'),
                  branch='master',
                  commit_id=None,
                  folder=None):
