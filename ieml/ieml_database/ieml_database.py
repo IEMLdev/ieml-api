@@ -269,7 +269,8 @@ class IEMLDatabase:
                              }
             if desc not in res[ieml]:
                 res[ieml][desc] = {l: [] for l in LANGUAGES}
-            res[ieml][desc][lang] = v
+
+            res[ieml][desc][lang].append(v)
 
         return sorted(res.values(), key=lambda e: e['index'])
 
