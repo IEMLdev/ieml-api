@@ -10,6 +10,7 @@ import json
 from hashlib import sha224
 import subprocess
 
+import sys
 from tqdm import tqdm
 
 from ieml.commons import monitor_decorator, cache_results_watch_files
@@ -197,7 +198,7 @@ class IEMLDatabase:
         return os.path.join(p, filename + ext)
 
     @monitor_decorator("list content")
-    def list(self, type=None, paradigm=None, parse=False):
+    def list(self, type=None, paradigm=None, parse=False, ):
         p = self.folder
         if type:
             p = os.path.join(p, type)
@@ -212,8 +213,14 @@ class IEMLDatabase:
         res = [s.strip().decode('utf8') for s in p4.stdout.readlines() if s.strip()]
 
         if parse:
-            parser = IEMLParser()
-            return [parser.parse(s) for s in res]
+            parser = IEMLParser(dictionary=self.get_dictionary())
+            _res = []
+            for s in res:
+                try:
+                    _res.append(parser.parse(s))
+                except CannotParse as e:
+                    print(e, file=sys.stderr)
+            return _res
 
         return res
 
