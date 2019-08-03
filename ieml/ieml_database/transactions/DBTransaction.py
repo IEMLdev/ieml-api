@@ -9,6 +9,9 @@ from ieml.dictionary.script import Script, factorize
 from ieml.usl import USL
 
 
+def append_idx_to_dict(d, idx):
+    return {k: [vv + str(idx) for vv in v] for k, v in d.items()}
+
 def _check_inhibitions(inhibitions):
     inhibitions = list(inhibitions)
     assert all(i in INHIBITABLE_RELATIONS for i in inhibitions)
@@ -110,6 +113,10 @@ class DBTransactions:
                     db.add_descriptor(root, language=l, descriptor='comments', value=v)
 
         # add main tables header
+        for i, t in enumerate([tt for tt in root.tables_script if tt != root]):
+            self.add_morpheme_paradigm(t,
+                                       translations=append_idx_to_dict(translations, i),
+                                       comments=append_idx_to_dict(comments, i))
         # main_tables = [tt for tt in root.tables_script if tt != root]
 
     def add_morpheme_paradigm(self,
