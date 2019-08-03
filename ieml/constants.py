@@ -183,6 +183,6 @@ TRAIT_SIZE_LIMIT_CONTENT = 5
 MORPHEME_SERIE_SIZE_LIMIT_FUNCTION = 3
 
 
-DESCRIPTORS_CLASS = ['translations', 'comments']
+DESCRIPTORS_CLASS = ['translations', 'comments', 'tags']
 
 TYPES = ['morpheme', 'polymorpheme', 'word', 'phrase']
