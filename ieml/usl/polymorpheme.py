@@ -10,18 +10,30 @@ from ieml.usl import USL
 
 
 def check_polymorpheme(ms):
-    assert all(isinstance(s, Script) for s in ms.constant), "A trait constant must be made of morphemes"
-    assert all(isinstance(g[0], tuple) and all(isinstance(gg, Script) for gg in g[0])
-               and isinstance(g[1], int) for g in ms.groups), \
-        "A trait group must be made of a list of (Morpheme list, multiplicity)"
+    if not all(isinstance(s, Script) for s in ms.constant):
+        raise ValueError("A polymorpheme constant must be made of morphemes")
 
-    assert tuple(sorted(ms.groups)) == ms.groups
-    assert tuple(sorted(ms.constant)) == ms.constant
+    if not all(isinstance(g[0], tuple) and all(isinstance(gg, Script) for gg in g[0])
+               and isinstance(g[1], int) for g in ms.groups):
+        raise ValueError("A trait group must be made of a list of (Morpheme list, multiplicity)")
+
+    if sorted(ms.groups) != list(ms.groups):
+        raise ValueError("Invalid ordering of the polymorpheme groups")
+
+    if any(sorted(g[0]) != list(g[0]) for g in ms.groups):
+        raise ValueError("Invalid ordering of the morphemes in a polymorpheme groups")
+
+    if any(g[0] and g[1] > len(g[0]) for g in ms.groups):
+        raise ValueError("Multiplicity is greater than the number of morphemes in the group.")
+
+    if sorted(ms.constant) != list(ms.constant):
+        raise ValueError("Invalid ordering of the polymorpheme constants")
 
     all_group = [ms.constant, *(g for g, _ in ms.groups)]
     all_morphemes = {str(w): w for g in all_group for w in g}
 
-    assert len(all_morphemes) == sum(len(g) for g in all_group), "The groups and constants must be disjoint"
+    if len(all_morphemes) != sum(len(g) for g in all_group):
+        raise ValueError("The groups and constants must be disjoint")
 
 
 class PolyMorpheme(USL):
@@ -29,7 +41,8 @@ class PolyMorpheme(USL):
         super().__init__()
 
         self.constant = tuple(sorted(constant))
-        self.groups = tuple((tuple(sorted(g[0])), g[1]) for g in sorted(groups))
+        
+        self.groups = tuple(sorted((tuple(sorted(g[0])), g[1]) for g in groups))
 
         self._str = ' '.join(chain(map(str, self.constant),
                                ["m{}({})".format(mult, ' '.join(map(str, group))) for group, mult
