@@ -323,7 +323,7 @@ class IEMLDatabase:
         with open(self.path_of(ieml, mkdir=True), "r", encoding='utf8') as f:
             lines = [l for l in f.readlines()
                      if not l.startswith('"{}" {} {} '.format(str(ieml), language, descriptor) + \
-                                        ('"{}"'.format(self.escape_value(value)) if value else ''))]
+                                        ('"{}"'.format(self.escape_value(value)) if value is not None else ''))]
         with open(self.path_of(ieml), "w", encoding='utf8') as f:
             f.writelines(lines)
 
