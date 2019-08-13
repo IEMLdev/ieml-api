@@ -4,7 +4,7 @@ from collections import defaultdict
 from typing import List
 
 from ieml.commons import LastUpdatedOrderedDict
-from ieml.constants import MORPHEME_SERIE_SIZE_LIMIT_CONTENT, AUXILIARY_CLASS
+from ieml.constants import MORPHEME_SERIE_SIZE_LIMIT_CONTENT, AUXILIARY_CLASS, POLYMORPHEME_MAX_MULTIPLICITY
 from ieml.dictionary.script import Script
 from ieml.usl import USL
 
@@ -23,7 +23,10 @@ def check_polymorpheme(ms):
     if any(sorted(g[0]) != list(g[0]) for g in ms.groups):
         raise ValueError("Invalid ordering of the morphemes in a polymorpheme groups")
 
-    if any(g[0] and g[1] > len(g[0]) for g in ms.groups):
+    if any(g[0] and (int(g[1]) != g[1] or g[1] <= 0 or g[1] > POLYMORPHEME_MAX_MULTIPLICITY) for g in ms.groups):
+        raise ValueError("Multiplicity is not a positive integer in [1, 2, 3].")
+
+    if any(g[0] and g[1] > len(g[0])  for g in ms.groups):
         raise ValueError("Multiplicity is greater than the number of morphemes in the group.")
 
     if sorted(ms.constant) != list(ms.constant):
