@@ -18,6 +18,14 @@ def get_local_cache_dir(origin):
                         hashlib.md5(origin.encode('utf8')).hexdigest())
 
 
+class MergeConflict(Exception):
+    def __init__(self, message, conflicts):
+        self.message = message
+        self.conflicts = conflicts
+
+    def __repr__(self):
+        return self.message
+
 #TODO  normalize repo name with postfix .git
 
 class git_transaction:
@@ -67,7 +75,7 @@ class git_transaction:
                                                  tree,
                                                  [self.commit_id])
 
-                self.db.commit_id = oid.hex
+                self.db.commit_id = oid
             except Exception as e:
                 logger.error("Error commiting, reset to {}".format(self.commit_id))
                 self.db.reset(self.commit_id)
@@ -111,6 +119,7 @@ class GitInterface:
     def reset(self, commit_id=None):
         if commit_id is None:
             commit_id = self.commit_id
+
         #TODO : test if reset is enough : need to checkout working copy ?
         self.repo.reset(commit_id, pygit2.GIT_RESET_HARD)
         status = self.repo.status()
@@ -175,13 +184,12 @@ class GitInterface:
         else:
             commit_target = self.target_commit
 
-        self.commit_id = commit_target
-
         merge_result, _ = repo.merge_analysis(commit_target)
 
         # Up to date, do nothing
         if merge_result & pygit2.GIT_MERGE_ANALYSIS_UP_TO_DATE:
             logger.info("Merging: repository up-to-date")
+            self.commit_id = commit_target
             return
 
         # We can just fastforward
@@ -224,13 +232,32 @@ class GitInterface:
                                        cherry.message, tree_id, [last])
                     repo.state_cleanup()
                 else:
-                    raise ValueError("/!\ Merge conflict : can't cherry-pick locals commits on remote branch")
+                    conflicts = self.list_conflict()
+                    self.reset()
+                    raise MergeConflict(message="can't cherry-pick locals commits on remote branch",
+                                        conflicts=conflicts)
 
-            self.commit_id = last
-            repo.head.set_target(last)
+                self.commit_id = last
+            repo.head.set_target(self.commit_id)
         else:
             #TODO handle merge conflicts here
             raise ValueError("Incompatible history, can't merge origin into {}#{} in folder {}".format(self.branch, commit_target,self.folder))
+
+
+    def list_conflict(self):
+        # ancestor_data = repo.get(ancestor.oid).data.decode('utf8')
+        repo = self.get_repo(credentials=self.credentials)
+        return []
+        #
+        # for ancestor, ours, theirs in repo.index.conflicts:
+        #     if ancestor:
+        #     path = ancestor.path if ancestor is not None else ours.path
+        #
+        #     ours_data = repo.get(ours.oid).data.decode('utf8')
+        #     theirs_data = repo.get(theirs.oid).data.decode('utf8')
+
+
+
 
     @monitor_decorator('push')
     def push(self, remote='origin', force=False):
@@ -261,3 +288,30 @@ class GitInterface:
 
         except KeyError:
             self.repo.remotes.create(name, url)
+
+    def diff(self, commit0, commit1):
+        t0 = self.repo.revparse_single(str(commit0))
+        t1 = self.repo.revparse_single(str(commit1))
+
+        res = {}
+        for patch in self.repo.diff(t0, t1):
+            # per file
+            #         print(patch.text)
+            added = []
+            deleted = []
+
+            line = patch.delta.new_file.path
+
+            for h in patch.hunks:
+                for l in h.lines:
+                    if l.new_lineno == -1:
+                        deleted.append(l.content)
+                    elif l.old_lineno == -1:
+                        added.append(l.content)
+
+            res[line] = {
+                'added': added,
+                'deleted': deleted
+            }
+
+        return res

@@ -1,6 +1,7 @@
 import logging
 import operator
 from collections import defaultdict
+from shlex import quote
 
 import pandas
 from functools import reduce
@@ -11,6 +12,8 @@ from hashlib import sha224
 import subprocess
 
 import sys
+
+from pandas.errors import ParserError
 from tqdm import tqdm
 
 from ieml.commons import monitor_decorator, cache_results_watch_files
@@ -225,8 +228,14 @@ class IEMLDatabase:
         return res
 
     @monitor_decorator("Get descriptors")
-    def get_descriptors(self):
-        p1 = subprocess.Popen("find -path *.desc -print0".split(), stdout=subprocess.PIPE, cwd=self.folder)
+    def get_descriptors(self, files_list=None):
+        if files_list is not None:
+            p1 = subprocess.Popen('echo -ne "{}"'.format('\0'.join(files_list)).split(),
+                                  stdout=subprocess.PIPE, cwd=self.folder)
+        else:
+            p1 = subprocess.Popen("find -path *.desc -print0".split(),
+                                  stdout=subprocess.PIPE, cwd=self.folder)
+
         p2 = subprocess.Popen("xargs -0 cat".split(), stdin=p1.stdout, stdout=subprocess.PIPE, cwd=self.folder)
         r = pandas.read_csv(p2.stdout, sep=' ', header=None)
         r.columns=['ieml', 'language', 'descriptor', 'value']

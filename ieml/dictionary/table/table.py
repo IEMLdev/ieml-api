@@ -27,7 +27,9 @@ class Table2D(Table):
     def __init__(self, script, parent, regular=False):
         super().__init__(script, parent, regular)
 
-        if script.tables_script[0] != script or self.script.cells[0].shape[2] != 1 or self.script.cells[0].shape[1] == 1:
+        # not an TableSet and the 1st table is not 3d (third shape == 1) and not 1d
+        if script.tables_script[0] != script \
+                or self.script.cells[0].shape[2] != 1 or self.script.cells[0].shape[1] == 1:
             raise ValueError("Invalid script for Table creation: %s. Expected a script that lead a 2d table"%str(script))
 
         self._index = None
@@ -46,7 +48,8 @@ class Table2D(Table):
 
     @property
     def script_rows(self):
-        return [factorize(line) for line in self.cells]
+        return self.script.headers[0][0]
+        # return [factorize(line) for line in self.cells]
 
     @property
     def columns(self):
@@ -54,7 +57,8 @@ class Table2D(Table):
 
     @property
     def script_columns(self):
-        return [factorize(line) for line in self.cells.transpose()]
+        return self.script.headers[0][1]
+        # return [factorize(line) for line in self.cells.transpose()]
 
     @property
     def cells(self):

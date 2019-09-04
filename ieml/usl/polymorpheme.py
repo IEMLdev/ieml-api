@@ -38,6 +38,9 @@ def check_polymorpheme(ms):
     if len(all_morphemes) != sum(len(g) for g in all_group):
         raise ValueError("The groups and constants must be disjoint")
 
+    if any(len(m) != 1 for m in all_morphemes.values()):
+        raise ValueError("A polymorpheme can't be made from a morpheme paradigm.")
+
 
 class PolyMorpheme(USL):
     def __init__(self, constant: List[Script]=(), groups=()):
