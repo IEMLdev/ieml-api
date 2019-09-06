@@ -18,7 +18,7 @@ class Dictionary:
         ignored = []
         for (p, key), (value,) in structure.df.iterrows():
             if p not in scripts:
-                print(p)
+                # print(p)
                 continue
             p = scripts[p]
 

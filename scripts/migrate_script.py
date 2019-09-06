@@ -8,6 +8,7 @@ from ieml import IEMLDatabase
 from ieml.dictionary import Dictionary
 from ieml.dictionary.script import script, AdditiveScript, m
 from ieml.dictionary.script.tools import promote
+from ieml.ieml_database.transactions.DBTransaction import DBTransactions
 from scripts.migrate_versions.migrate_v03Tov04 import GitInterface
 
 
@@ -48,96 +49,140 @@ def migrate_EOOMt0(scri):
 
     return m(s, m(_as, m(aas)) ,m(m(aaa, aam)))
 
+
+def migrate_EOETI(scri):
+    "E:.O:.E:T:.+I:.- => O:.E:T:.+I:.-"
+    if not set(scri.singular_sequences).issubset(script("E:.O:.E:T:.+I:.-").singular_sequences_set):
+        return scri
+
+    s, a, _m = scri.children
+    return m(script('S:.'), a, _m)
+
+
 if __name__ == '__main__':
 
-    assert migrate_sOOF(script("s.O:O:.-F:.-'")) == script("s.o.-O:O:.-'F:.-',")
-    assert migrate_EMOto(script("E:M:O:.t.o.-")) == script("E:M:.-O:.-t.o.-'")
+    assert migrate_EOETI(script("E:.O:.E:T:.+I:.-")) == script("S:.O:.E:T:.+I:.-")
+    # assert migrate_EMOto(script("E:M:O:.t.o.-")) == script("E:M:.-O:.-t.o.-'")
+    #
+    # assert migrate_EOOMt0(script("E:.-'O:O:.-M:.t.o.-',")) == script("E:.-'O:O:.-M:.-'t.o.-',")
 
-    assert migrate_EOOMt0(script("E:.-'O:O:.-M:.t.o.-',")) == script("E:.-'O:O:.-M:.-'t.o.-',")
 
 
 if __name__ == '__main__':
 
-    # folder = '/tmp/migrate_script_iemldb'
-    # if os.path.isdir(folder):
-    #     shutil.rmtree(folder)
+    folder = '/tmp/migrate_script_iemldb'
+    if os.path.isdir(folder):
+        shutil.rmtree(folder)
     # os.mkdir(folder)
     git_address = "https://github.com/IEMLdev/ieml-language.git"
 
-    db = IEMLDatabase(git_address=git_address,
-                         credentials=credentials,
-                         # db_folder=folder,
-                      cache_folder='/tmp/')
-
-    dic = db.dictionary()
-    desc = db.descriptors()
-    dic_struct = db.dictionary_structure()
-
+    credentials = pygit2.Keypair('ogrergo', '~/.ssh/id_rsa.pub', '~/.ssh/id_rsa', None)
     gitdb = GitInterface(origin=git_address,
-                         credentials=credentials,
-                         folder=db.folder,
-                         )
-    to_translate = [("E:.-'O:O:.-M:.t.o.-',", migrate_EOOMt0),
-                    ("s.O:O:.-F:.-'", migrate_sOOF),
-                    ("E:M:O:.t.o.-", migrate_EMOto)]
+                 credentials=credentials,
+                 folder=folder)
     signature = pygit2.Signature("Louis van Beurden", "louis.vanbeurden@gmail.com")
-    for s, migrate in to_translate:
-        for ss in dic.scripts:
-            ss_ = migrate(ss)
-            if ss == ss_:
-                continue
 
-            old_d = desc.get(ss)
-            for (ieml, l, k), v in old_d.items():
-                desc.set_value(ss_, l, k, v)
-                desc.set_value(ss, l, k, [])
-                # desc.descriptors.drop([ieml, l, k], inplace=True)
+    db = IEMLDatabase(folder=folder, use_cache=False)
 
-            if ss in dic.tables.roots:
-                paradigms, inhibitions = dic_struct.get(ss)
-                dic_struct.set_value(ss_, [str(migrate(script(ps))) for ps in paradigms], inhibitions)
-                dic_struct.structure.drop([str(ss)], inplace=True)
+    to_migrate = {}
+    desc = db.get_descriptors()
+    struct = db.get_structure()
 
-        print("Migrating", str(s))
-        with gitdb.commit(signature, "[Translate script] Translate paradigm {}".format(str(s))):
-            desc.write_to_folder(gitdb.folder)
-            dic_struct.write_to_file(os.path.join(gitdb.folder, 'structure/dictionary'))
+    for s in db.get_dictionary().scripts:
+        s2 = migrate_EOETI(s)
+        if s2 != s:
+            to_migrate[s] = s2
 
-    paradigms = []
-    for s in ("s.M:O:.O:O:.-", "O:O:.M:O:.s.-"):
-        _paradigms, _ = dic_struct.get(s)
-        paradigms.extend(_paradigms + [str(s)])
-        # dic_struct.set_value(ss_, [str(migrate(script(ps))) for ps in paradigms], inhibitions)
-        dic_struct.structure.drop([str(s)], inplace=True)
+    print(to_migrate)
 
-    root = script("O:O:.M: O:.s.-+s.M:O:.O:O:.-")
-    dic_struct.set_value(root, paradigms, [])
+    with gitdb.commit(signature, "[Translate script] Translate paradigm from 'E:.O:.E:T:.+I:.-' to 'O:.E:T:.+I:.-'"):
+        for s_old, s_new in to_migrate.items():
+            db.remove_structure(s_old)
+            for (_, key), values in struct.get_values_partial(s_old).items():
+                for v in values:
+                    db.add_structure(s_new, key, v)
 
-    desc.set_value(root, 'fr', 'translations', ["noms et verbes noétiques"])
-    desc.set_value(root, 'en', 'translations', ["noetics nouns and verbs"])
+            db.remove_descriptor(s_old)
+            for (_, lang, d), values in desc.get_values_partial(s_old).items():
+                for v in values:
+                    db.add_descriptor(s_new, lang, d, v)
 
-    with gitdb.commit(signature, "[Translate script] Merging paradigms s.M:O:.O:O:.- and O:O:.M:O:.s.-"):
-        desc.write_to_folder(gitdb.folder)
-        dic_struct.write_to_file(os.path.join(gitdb.folder, 'structure/dictionary'))
 
-    db = IEMLDatabase(git_address=git_address,
-                         credentials=credentials,
-                         # db_folder=folder,
-                      cache_folder='/tmp/')
 
-    dic = db.dictionary()
-    desc = db.descriptors()
-
-    gitdb.push('origin')
-# def find_transform(previous, next):
-#     """map root paradigm previous to next # same table structure"""
-#     previous = script(previous, factorize=True)
-#     next = script(next, factorize=True)
+#     db = IEMLDatabase(=git_address,
+#                          credentials=credentials,
+#                          # db_folder=folder,
+#                       cache_folder='/tmp/')
 #
-#     assert previous in dic.tables.roots
+#     dic = db.dictionary()
+#     desc = db.descriptors()
+#     dic_struct = db.dictionary_structure()
 #
-#     if previous.layer != next.layer:
-#         if previous.layer < next.layer:
+#     gitdb = GitInterface(origin=git_address,
+#                          credentials=credentials,
+#                          folder=db.folder,
+#                          )
+#     to_translate = [("E:.-'O:O:.-M:.t.o.-',", migrate_EOOMt0),
+#                     ("s.O:O:.-F:.-'", migrate_sOOF),
+#                     ("E:M:O:.t.o.-", migrate_EMOto)]
+#     signature = pygit2.Signature("Louis van Beurden", "louis.vanbeurden@gmail.com")
+#     for s, migrate in to_translate:
+#         for ss in dic.scripts:
+#             ss_ = migrate(ss)
+#             if ss == ss_:
+#                 continue
+#
+#             old_d = desc.get(ss)
+#             for (ieml, l, k), v in old_d.items():
+#                 desc.set_value(ss_, l, k, v)
+#                 desc.set_value(ss, l, k, [])
+#                 # desc.descriptors.drop([ieml, l, k], inplace=True)
+#
+#             if ss in dic.tables.roots:
+#                 paradigms, inhibitions = dic_struct.get(ss)
+#                 dic_struct.set_value(ss_, [str(migrate(script(ps))) for ps in paradigms], inhibitions)
+#                 dic_struct.structure.drop([str(ss)], inplace=True)
+#
+#         print("Migrating", str(s))
+#         with gitdb.commit(signature, "[Translate script] Translate paradigm {}".format(str(s))):
+#             desc.write_to_folder(gitdb.folder)
+#             dic_struct.write_to_file(os.path.join(gitdb.folder, 'structure/dictionary'))
+#
+#     paradigms = []
+#     for s in ("s.M:O:.O:O:.-", "O:O:.M:O:.s.-"):
+#         _paradigms, _ = dic_struct.get(s)
+#         paradigms.extend(_paradigms + [str(s)])
+#         # dic_struct.set_value(ss_, [str(migrate(script(ps))) for ps in paradigms], inhibitions)
+#         dic_struct.structure.drop([str(s)], inplace=True)
+#
+#     root = script("O:O:.M: O:.s.-+s.M:O:.O:O:.-")
+#     dic_struct.set_value(root, paradigms, [])
+#
+#     desc.set_value(root, 'fr', 'translations', ["noms et verbes noétiques"])
+#     desc.set_value(root, 'en', 'translations', ["noetics nouns and verbs"])
+#
+#     with gitdb.commit(signature, "[Translate script] Merging paradigms s.M:O:.O:O:.- and O:O:.M:O:.s.-"):
+#         desc.write_to_folder(gitdb.folder)
+#         dic_struct.write_to_file(os.path.join(gitdb.folder, 'structure/dictionary'))
+#
+#     db = IEMLDatabase(git_address=git_address,
+#                          credentials=credentials,
+#                          # db_folder=folder,
+#                       cache_folder='/tmp/')
+#
+#     dic = db.dictionary()
+#     desc = db.descriptors()
+#
+#     gitdb.push('origin')
+# # def find_transform(previous, next):
+# #     """map root paradigm previous to next # same table structure"""
+# #     previous = script(previous, factorize=True)
+# #     next = script(next, factorize=True)
+# #
+# #     assert previous in dic.tables.roots
+# #
+# #     if previous.layer != next.layer:
+# #         if previous.layer < next.layer:
 #             return partial(promote, layer=
 #
 #     return
@@ -146,8 +191,8 @@ if __name__ == '__main__':
 #     dic = IEMLDatabase().dictionary()
 #     previous = "s.o.-O:O:.-'F:.-',"
 #     trans = find_transform(previous, " s.O:O:.-F:.-'")
-#
-#     mapping = {}
-#
-#     for s in dic.tables.roots[previous]:
-#         mapping[s] = trans(s)
+
+    # mapping = {}
+    #
+    # for s in dic.tables.roots[previous]:
+    #     mapping[s] = trans(s)

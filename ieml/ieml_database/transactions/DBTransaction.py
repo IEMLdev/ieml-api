@@ -67,9 +67,9 @@ def _check_multi_descriptors(descriptor):
 
 
 class DBTransactions:
-    def __init__(self, gitdb, author_name, author_email, cache_folder, use_cache=True):
+    def __init__(self, gitdb, signature, cache_folder, use_cache=True):
         self.gitdb = gitdb
-        self.signature = pygit2.Signature(author_name, author_email)
+        self.signature = signature
         self.cache_folder = cache_folder
         self.use_cache = use_cache
 

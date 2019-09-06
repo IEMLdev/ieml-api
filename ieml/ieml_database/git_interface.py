@@ -29,19 +29,22 @@ class MergeConflict(Exception):
 #TODO  normalize repo name with postfix .git
 
 class git_transaction:
-    def __init__(self, db, signature, message):
+    def __init__(self,
+                 db,
+                 signature,
+                 message):
+
         self.db = db
         self.signature = signature
         self.message = message
 
     def __enter__(self):
-        self.commit_id = self.db.commit_id
+        self.commit_id = self.db.repo.head.target
 
         # ignore files at the root
         if self.db.repo.status() != {}:
             raise ValueError("Try to start a transaction on a not clean working dir state, "
                              "please use db.reset() first.")
-        return
 
     @monitor_decorator("Commit transaction")
     def __exit__(self, type, value, traceback):
@@ -68,7 +71,7 @@ class git_transaction:
                 index.write()
 
                 tree = index.write_tree()
-                oid = self.db.repo.create_commit('refs/heads/{}'.format(self.db.branch),
+                oid = self.db.repo.create_commit(self.db.repo.head.name,
                                                  self.signature,
                                                  self.signature,
                                                  self.message,
@@ -93,65 +96,76 @@ class GitInterface:
                  branch='master',
                  commit_id=None,
                  folder=None):
+        """
 
+        :param origin:
+        :param credentials:
+        :param branch: the branch to checkout
+        :param commit_id: the commit to checkout
+        :param folder:
+        """
         self.origin = origin
         self.remotes = {'origin': origin}
         self.credentials = credentials
-        self.branch = branch
-        self.commit_id = None
-
-        self.target_commit = commit_id
 
         if folder:
             self.folder = os.path.abspath(folder)
         else:
             self.folder = get_local_cache_dir(origin)
 
+        # clone repository
+        _ = self.repo
+        self.checkout(branch, None)
 
-        # download database
+        # update database
         self.pull(remote='origin')
-        if commit_id is not None:
-            self.checkout(self.branch, commit_id)
+        self.checkout(branch, commit_id)
 
     def commit(self, signature, message):
         return git_transaction(self, signature, message)
 
     def reset(self, commit_id=None):
+        """
+        Set the current branch HEAD to ref the given commit
+        :param commit_id: if set, reset to this commit id, otherwise to the head of the branch
+        :return: None
+        """
         if commit_id is None:
-            commit_id = self.commit_id
+            print(str(self.repo.head.target))
+            commit_id = self.repo.head.target
 
-        #TODO : test if reset is enough : need to checkout working copy ?
+        self.repo.state_cleanup()
+
         self.repo.reset(commit_id, pygit2.GIT_RESET_HARD)
         status = self.repo.status()
 
         # delete new files
         for f, k in status.items():
             if k & GIT_STATUS_WT_NEW:
-                os.remove(f)
+                os.remove(os.path.join(self.folder, f))
 
-        self.commit_id = commit_id
+        # self.commit_id = commit_id
 
-    def checkout(self, branch, commit_id, credentials=None):
-        repo = self.get_repo(credentials=credentials)
+    def checkout(self, branch=None, commit_id=None):
+        repo = self.repo
 
-        master_ref = repo.lookup_reference('refs/heads/{}'.format(branch))
+        self.reset()
+        if branch is not None:
+            master_ref = repo.lookup_reference('refs/heads/{}'.format(branch))
+        else:
+            master_ref = repo.head
+
         repo.checkout(master_ref)
 
-        self.repo.reset(commit_id, pygit2.GIT_RESET_HARD)
+        if commit_id is not None:
+            self.reset(commit_id)
 
-        # repo.checkout_tree(repo.get(commit_id), strategy=pygit2.GIT_CHECKOUT_FORCE | pygit2.GIT_CHECKOUT_RECREATE_MISSING)
-        # master_ref.set_target(commit_id)
-        # repo.head.set_target(commit_id)
-
-        self.commit_id = commit_id
-        self.branch = branch
-
-
-    def get_repo(self, credentials=None):
+    @property
+    def repo(self):
         if not os.path.exists(self.folder):
             logger.info("Cloning {} into {}".format(self.remotes['origin'], self.folder))
 
-            callbacks = pygit2.RemoteCallbacks(credentials=credentials if credentials else self.credentials)
+            callbacks = pygit2.RemoteCallbacks(credentials=self.credentials)
 
             def init_remote(repo, name, url):
                 remote = repo.remotes.create(name, url)
@@ -160,14 +174,14 @@ class GitInterface:
             return pygit2.clone_repository(self.remotes['origin'],
                                            self.folder,
                                            remote=init_remote,
-                                           checkout_branch=self.branch,
+                                           # checkout_branch=self.branch,
                                            callbacks=callbacks)
         else:
             return pygit2.Repository(self.folder)
 
     @monitor_decorator('pull')
-    def pull(self, remote='origin', credentials=None):
-        repo = self.get_repo(credentials=credentials)
+    def pull(self, remote='origin'):
+        repo = self.repo
 
         remote_ = repo.remotes[remote]
         try:
@@ -176,26 +190,28 @@ class GitInterface:
             logger.error(repr(e))
             pass
 
-        current_commit = repo.lookup_reference('refs/heads/{}'.format(self.branch)).target
+        current_commit = repo.head.target
 
-        if self.target_commit is None or remote != 'origin':
-            # use most recent of remote
-            commit_target = repo.lookup_reference('refs/remotes/{}/{}'.format(remote, self.branch)).target
-        else:
-            commit_target = self.target_commit
+
+        # pull not the origin remote
+        # if self.target_commit is None or remote != 'origin':
+        # use most recent of remote
+        commit_target = repo.lookup_reference('refs/remotes/{}/{}'.format(remote, repo.head.shorthand)).target
+        # else:
+        #     commit_target = self.target_commit
 
         merge_result, _ = repo.merge_analysis(commit_target)
 
         # Up to date, do nothing
         if merge_result & pygit2.GIT_MERGE_ANALYSIS_UP_TO_DATE:
             logger.info("Merging: repository up-to-date")
-            self.commit_id = commit_target
+            # self.commit_id = commit_target
             return
 
         # We can just fastforward
         elif merge_result & pygit2.GIT_MERGE_ANALYSIS_FASTFORWARD:
             logger.info("Merging: fast-forward")
-            self.checkout(self.branch, commit_target, credentials=credentials)
+            self.checkout(None, commit_target)
 
         elif merge_result & pygit2.GIT_MERGE_ANALYSIS_NORMAL:
             logger.info("Merging: cherry-pick local branch on remote branch")
@@ -211,10 +227,11 @@ class GitInterface:
                 rebased_commits.insert(0, commit)
                 commit = commit.parents[0]
 
-            branch = repo.branches.get(self.branch)
+            branch = repo.branches.get(self.repo.head.shorthand)
 
             # checkout to pulled branch
-            repo.checkout_tree(repo.get(commit_target), strategy=GIT_CHECKOUT_FORCE | GIT_CHECKOUT_RECREATE_MISSING)
+            repo.checkout_tree(repo.get(commit_target),
+                               strategy=GIT_CHECKOUT_FORCE | GIT_CHECKOUT_RECREATE_MISSING)
             repo.head.set_target(commit_target)
 
             last = commit_target
@@ -233,12 +250,13 @@ class GitInterface:
                     repo.state_cleanup()
                 else:
                     conflicts = self.list_conflict()
-                    self.reset()
+                    self.reset(current_commit)
+
                     raise MergeConflict(message="can't cherry-pick locals commits on remote branch",
                                         conflicts=conflicts)
 
-                self.commit_id = last
-            repo.head.set_target(self.commit_id)
+                # self.commit_id = last
+            repo.head.set_target(last)
         else:
             #TODO handle merge conflicts here
             raise ValueError("Incompatible history, can't merge origin into {}#{} in folder {}".format(self.branch, commit_target,self.folder))
@@ -246,7 +264,7 @@ class GitInterface:
 
     def list_conflict(self):
         # ancestor_data = repo.get(ancestor.oid).data.decode('utf8')
-        repo = self.get_repo(credentials=self.credentials)
+        # repo = self.repo(credentials=self.credentials)
         return []
         #
         # for ancestor, ours, theirs in repo.index.conflicts:
@@ -257,28 +275,17 @@ class GitInterface:
         #     theirs_data = repo.get(theirs.oid).data.decode('utf8')
 
 
-
-
     @monitor_decorator('push')
     def push(self, remote='origin', force=False):
         repo = pygit2.Repository(self.folder)
         remote = repo.remotes[remote]
         callbacks = pygit2.RemoteCallbacks(credentials=self.credentials)
-        remote.push(['{}refs/heads/{}'.format('+' if force else '', self.branch)],
+        remote.push(['{}{}'.format('+' if force else '', self.repo.head.name)],
                     callbacks=callbacks)
 
-    @property
-    def repo(self):
-        return pygit2.Repository(self.folder)
-
     def get_version(self):
-        return self.branch, str(self.commit_id)
-
-    def set_version(self, branch, commit_id):
-        self.checkout(branch, commit_id)
-        # self.branch = branch
-        # self.commit_id = commit_id
-        # self.pull()
+        repo = self.repo
+        return repo.head.shorthand, str(repo.head.target)
 
     def add_remote(self, name, url):
         try:
@@ -310,6 +317,7 @@ class GitInterface:
                         added.append(l.content)
 
             res[line] = {
+                'ieml': l.content.split('"')[1],
                 'added': added,
                 'deleted': deleted
             }

@@ -13,7 +13,7 @@ import subprocess
 
 import sys
 
-from pandas.errors import ParserError
+from pandas.errors import ParserError, EmptyDataError
 from tqdm import tqdm
 
 from ieml.commons import monitor_decorator, cache_results_watch_files
@@ -230,15 +230,19 @@ class IEMLDatabase:
     @monitor_decorator("Get descriptors")
     def get_descriptors(self, files_list=None):
         if files_list is not None:
-            p1 = subprocess.Popen('echo -ne "{}"'.format('\0'.join(files_list)).split(),
+            p1 = subprocess.Popen(['echo', '-ne', '\0'.join(files_list)],
                                   stdout=subprocess.PIPE, cwd=self.folder)
         else:
             p1 = subprocess.Popen("find -path *.desc -print0".split(),
                                   stdout=subprocess.PIPE, cwd=self.folder)
 
         p2 = subprocess.Popen("xargs -0 cat".split(), stdin=p1.stdout, stdout=subprocess.PIPE, cwd=self.folder)
-        r = pandas.read_csv(p2.stdout, sep=' ', header=None)
-        r.columns=['ieml', 'language', 'descriptor', 'value']
+        try:
+            r = pandas.read_csv(p2.stdout, sep=' ', header=None)
+            r.columns=['ieml', 'language', 'descriptor', 'value']
+        except EmptyDataError:
+            r = pandas.DataFrame(columns=['ieml', 'language', 'descriptor', 'value'])
+
         return Descriptors(r)
 
     @monitor_decorator("Get structure")
