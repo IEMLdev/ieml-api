@@ -80,7 +80,7 @@ class Singleton(type):
 
 
 class FolderWatcherCache:
-    def __init__(self, files: List[str], cache_folder: str, name: str):
+    def __init__(self, db_path: str, pattern: str, cache_folder: str, name: str):
         """
         Cache that check if `folder` content has changed. Compute a hash of the files in the folder and
         get pruned if the content of this folder change.
@@ -88,7 +88,9 @@ class FolderWatcherCache:
         :param folder: the folder to watch
         :param cache_folder: the folder to put the cache file
         """
-        self.files = sorted(os.path.abspath(f) for f in files)
+        self.db_path = db_path
+        self.pattern = pattern
+        self.files = sorted([os.path.abspath(ff) for ff in glob.glob(os.path.join(self.db_path, self.pattern), recursive=True)])
         self.cache_folder = os.path.abspath(cache_folder)
         self.name = name
 
@@ -132,7 +134,7 @@ class FolderWatcherCache:
         res = b""
         for file in self.files:
             with open(file, 'rb') as fp:
-                res += file.encode('utf8') + b":" + fp.read()
+                res += file[len(self.db_path)+1:].encode('utf8') + b":" + fp.read()
 
         return os.path.join(self.cache_folder, ".{}-cache.{}".format(self.name, hashlib.md5(res).hexdigest()))
 
@@ -168,10 +170,8 @@ def cache_results_watch_files(path, name):
             cache_folder = self.cache_folder
             db_path = self.folder
 
-            files = [ff for ff in glob.glob(os.path.join(db_path, path), recursive=True)]
-
             if use_cache:
-                cache = FolderWatcherCache(files, cache_folder=cache_folder, name=name)
+                cache = FolderWatcherCache(db_path, path, cache_folder=cache_folder, name=name)
                 if not cache.is_pruned():
                     logger.info("read_{}.cache: Reading cache at {}".format(name, cache.cache_file))
                     try:
@@ -190,7 +190,7 @@ def cache_results_watch_files(path, name):
             instance = f(*args, **kwargs)
 
             if use_cache and cache_folder:
-                cache = FolderWatcherCache(files, cache_folder=cache_folder, name=name)
+                cache = FolderWatcherCache(db_path, path, cache_folder=cache_folder, name=name)
 
                 logger.info("read_{}.cache: Updating cache at {}".format(name, cache.cache_file))
                 cache.update(instance)

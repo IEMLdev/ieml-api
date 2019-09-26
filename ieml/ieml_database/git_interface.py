@@ -105,7 +105,7 @@ class GitInterface:
         :param folder:
         """
         self.origin = origin
-        self.remotes = {'origin': origin}
+        # self.remotes = {'origin': origin}
         self.credentials = credentials
 
         if folder:
@@ -163,7 +163,7 @@ class GitInterface:
     @property
     def repo(self):
         if not os.path.exists(self.folder):
-            logger.info("Cloning {} into {}".format(self.remotes['origin'], self.folder))
+            logger.info("Cloning {} into {}".format(self.origin, self.folder))
 
             callbacks = pygit2.RemoteCallbacks(credentials=self.credentials)
 
@@ -171,7 +171,7 @@ class GitInterface:
                 remote = repo.remotes.create(name, url)
                 return remote
 
-            return pygit2.clone_repository(self.remotes['origin'],
+            return pygit2.clone_repository(self.origin,
                                            self.folder,
                                            remote=init_remote,
                                            # checkout_branch=self.branch,
