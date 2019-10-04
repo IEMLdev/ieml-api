@@ -3,8 +3,9 @@ import ply.yacc as yacc
 
 from ieml.constants import PARSER_FOLDER
 from ieml.dictionary.script import script, Script
-from ieml.usl import Word, Phrase, PolyMorpheme
+from ieml.usl import Word, Phrase, PolyMorpheme, check_word
 from ieml.exceptions import CannotParse
+from ieml.usl.word import Lexeme, SyntagmaticFunction
 from .lexer import get_lexer, tokens
 import threading
 
@@ -51,7 +52,7 @@ class IEMLParser():
         """proposition :  morpheme
                         | poly_morpheme
                         | word
-                        | phrase
+
                         """
         p[0] = p[1]
 
@@ -110,43 +111,82 @@ class IEMLParser():
         else:
             p[0] = PolyMorpheme(constant=[], groups=p[1])
 
-    def p_poly_morpheme_sum(self, p):
-        """ poly_morpheme_sum : poly_morpheme_sum LPAREN poly_morpheme RPAREN
-                              | LPAREN poly_morpheme RPAREN"""
+
+    def p_lexeme(self, p):
+        """lexeme : LPAREN poly_morpheme RPAREN LPAREN poly_morpheme RPAREN LPAREN poly_morpheme RPAREN
+                  | LPAREN poly_morpheme RPAREN LPAREN poly_morpheme RPAREN
+                  | LPAREN poly_morpheme RPAREN"""
+
+        if len(p) == 9:
+            p[0] = Lexeme(pm_address=p[2], pm_content=p[5], pm_transformation=p[8])
+        elif len(p) == 6:
+            p[0] = Lexeme(pm_address=p[2], pm_content=p[5], pm_transformation=None)
+        else:
+            p[0] = Lexeme(pm_address=p[2], pm_content=None, pm_transformation=None)
+
+
+    def p_lexeme_list(self, p):
+        """lexeme_list : lexeme_list RCHEVRON EXCLAMATION_MARK lexeme
+                       | lexeme_list RCHEVRON lexeme
+                       | EXCLAMATION_MARK lexeme
+                       | lexeme"""
         if len(p) == 5:
-            p[0] = p[1] + [p[3]]
+            lex_list, address = p[1]
+            p[0] = (lex_list + [p[4]], p[4].address)
+        elif len(p) == 4:
+            lex_list, address = p[1]
+            p[0] = (lex_list + [p[3]], address)
+        elif len(p) == 3:
+            p[0] = ([p[2]], p[2].address)
         else:
-            p[0] = [p[2]]
-
-    def p_poly_morpheme_sum_hierarchy(self, p):
-        """ poly_morpheme_sum_hierarchy : poly_morpheme_sum_hierarchy RCHEVRON poly_morpheme_sum
-                                        | poly_morpheme_sum """
-
-        if len(p) == 4:
-            p[0] = p[1] + [p[3]]
-        else:
-            p[0] = [p[1]]
+            p[0] = ([p[1]], None)
 
     def p_word(self, p):
-        """word : LBRACKET morpheme RCHEVRON poly_morpheme_sum_hierarchy RBRACKET
-                | LBRACKET morpheme RBRACKET """
-        if len(p) == 6:
-            p[0] = Word(klass=p[2], contents=p[4][0], functions=p[4][1:])
-        else:
-            assert p[2].empty
-            p[0] = Word(klass=p[2])
+        """word : LBRACKET morpheme lexeme_list RBRACKET"""
+        lex_list, address = p[3]
+        p[0] = Word(syntagmatic_fun=SyntagmaticFunction.from_positioned_lexemes(lex_list),
+                    address=address)
+        # check_word(p[0])
+        assert p[2] == p[0].grammatical_class
 
 
-    def p_phrase(self, p):
-        """phrase : LPAREN word TIMES word TIMES word RPAREN
-                  | LPAREN word TIMES word RPAREN
-                  | LPAREN word RPAREN"""
-        if len(p) == 8:
-            p[0] = Phrase(substance=p[2], attribute=p[4], mode=p[6])
-        elif len(p) == 6:
-            p[0] = Phrase(substance=p[2], attribute=p[4], mode=Word(klass=script('E:')))
-        elif len(p) == 4:
-            p[0] = Phrase(substance=p[2], attribute=Word(klass=script('E:')), mode=Word(klass=script('E:')))
+    # def p_poly_morpheme_sum(self, p):
+    #     """ poly_morpheme_sum : poly_morpheme_sum LPAREN poly_morpheme RPAREN
+    #                           | LPAREN poly_morpheme RPAREN"""
+    #     if len(p) == 5:
+    #         p[0] = p[1] + [p[3]]
+    #     else:
+    #         p[0] = [p[2]]
+
+    # def p_poly_morpheme_sum_hierarchy(self, p):
+    #     """ poly_morpheme_sum_hierarchy : poly_morpheme_sum_hierarchy RCHEVRON poly_morpheme_sum
+    #                                     | poly_morpheme_sum """
+    #
+    #     if len(p) == 4:
+    #         p[0] = p[1] + [p[3]]
+    #     else:
+    #         p[0] = [p[1]]
+    #
+    # def p_word(self, p):
+    #     """word : LBRACKET morpheme RCHEVRON poly_morpheme_sum_hierarchy RBRACKET
+    #             | LBRACKET morpheme RBRACKET """
+    #     if len(p) == 6:
+    #         p[0] = Word(klass=p[2], contents=p[4][0], functions=p[4][1:])
+    #     else:
+    #         assert p[2].empty
+    #         p[0] = Word(klass=p[2])
+    #
+    #
+    # def p_phrase(self, p):
+    #     """phrase : LPAREN word TIMES word TIMES word RPAREN
+    #               | LPAREN word TIMES word RPAREN
+    #               | LPAREN word RPAREN"""
+    #     if len(p) == 8:
+    #         p[0] = Phrase(substance=p[2], attribute=p[4], mode=p[6])
+    #     elif len(p) == 6:
+    #         p[0] = Phrase(substance=p[2], attribute=p[4], mode=Word(klass=script('E:')))
+    #     elif len(p) == 4:
+    #         p[0] = Phrase(substance=p[2], attribute=Word(klass=script('E:')), mode=Word(klass=script('E:')))
 
     def p_error(self, p):
         if p:

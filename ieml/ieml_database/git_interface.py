@@ -283,6 +283,10 @@ class GitInterface:
         remote.push(['{}{}'.format('+' if force else '', self.repo.head.name)],
                     callbacks=callbacks)
 
+    @property
+    def current_commit(self):
+        return str(self.repo.head.target)
+
     def get_version(self):
         repo = self.repo
         return repo.head.shorthand, str(repo.head.target)

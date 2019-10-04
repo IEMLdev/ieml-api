@@ -19,8 +19,8 @@ tokens = (
    'LBRACKET',
    'RBRACKET',
 
-    'GROUP_MULTIPLICITY'
-
+   'GROUP_MULTIPLICITY',
+   'EXCLAMATION_MARK'
    # 'L_CURLY_BRACKET',
    # 'R_CURLY_BRACKET',
    #
@@ -40,6 +40,9 @@ def get_lexer(module=None):
 
     t_LBRACKET = r'\['
     t_RBRACKET  = r'\]'
+    t_EXCLAMATION_MARK  = r'\!'
+
+    # t_  = r'\]'
     # t_L_CURLY_BRACKET = r'\{'
     # t_R_CURLY_BRACKET = r'\}'
     # t_SLASH = r'\/'

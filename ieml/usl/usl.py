@@ -46,6 +46,10 @@ class USL:
     def _compute_singular_sequences(self):
         raise NotImplementedError
 
+    @property
+    def is_singular(self):
+        return self.cardinal == 1
+
 
 def usl(arg):
     if isinstance(arg, str):
