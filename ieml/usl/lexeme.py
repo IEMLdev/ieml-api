@@ -1,0 +1,64 @@
+import itertools
+from typing import List
+
+from ieml.dictionary.script import script, Script
+from ieml.usl import USL, PolyMorpheme
+from ieml.usl.constants import ADDRESS_SCRIPTS, ADDRESS_ACTANTS_SCRIPTS, ADDRESS_PROCESS_VALENCE_SCRIPTS
+
+
+# def check_lexeme(lexeme):
+
+
+
+def class_from_address(address):
+    if any(s in ADDRESS_PROCESS_VALENCE_SCRIPTS for s in address.constant):
+        return script('E:.b.E:S:.-')
+    elif any(s in ADDRESS_ACTANTS_SCRIPTS for s in address.constant):
+        return script('E:.b.E:T:.-')
+    else:
+        return script('E:.b.E:B:.-')
+
+
+class Lexeme(USL):
+    """A lexeme without the PA of the position on the tree (position independant lexeme)"""
+    def __init__(self, pm_address: PolyMorpheme, pm_content: PolyMorpheme=None, pm_transformation: PolyMorpheme=None):
+        super().__init__()
+        self.pm_address = pm_address
+        self.pm_content = pm_content
+        self.pm_transformation = pm_transformation
+        self.address = PolyMorpheme(constant=[m for m in pm_address.constant if m in ADDRESS_SCRIPTS])
+        self.grammatical_class = class_from_address(self.address)
+        assert self.pm_address
+
+        self._str = ""
+        for pm in [self.pm_address, self.pm_content, self.pm_transformation]:
+            if pm is None:
+                break
+            self._str += "({})".format(str(pm))
+        assert self._str
+
+    def __lt__(self, other):
+        return self.address < other.address or (self.address == other.address and
+               (self.pm_address < other.pm_address or
+               (self.pm_address == other.pm_address and self.pm_content and other.pm_content and self.pm_content < other.pm_content) or
+               (self.pm_address == other.pm_address and self.pm_content == other.pm_content and
+                self.pm_transformation and other.pm_transformation and self.pm_transformation < other.pm_transformation)))
+
+    def _compute_singular_sequences(self):
+        if self.pm_address.is_singular and (self.pm_content is None or self.pm_content.is_singular) and \
+                (self.pm_transformation is None or self.pm_transformation.is_singular):
+            return [self]
+        else:
+            _product = [self.pm_address,
+                        self.pm_content,
+                        self.pm_transformation]
+            _product = [p.singular_sequences for p in _product if p is not None]
+
+            return [Lexeme(*ss)
+                    for ss in itertools.product(*_product)]
+
+    def append_address(self, position: List[Script]):
+        pm_address = PolyMorpheme(constant=list(self.pm_address.constant) + position, groups=self.pm_address.groups)
+        return Lexeme(pm_address=pm_address,
+                      pm_content=self.pm_content,
+                      pm_transformation=self.pm_transformation)

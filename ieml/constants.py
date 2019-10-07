@@ -187,4 +187,4 @@ POLYMORPHEME_MAX_MULTIPLICITY=3
 
 DESCRIPTORS_CLASS = ['translations', 'comments', 'tags']
 
-TYPES = ['morpheme', 'polymorpheme', 'word', 'phrase']
+TYPES = ['morpheme', 'polymorpheme', 'lexeme', 'word', 'phrase']
