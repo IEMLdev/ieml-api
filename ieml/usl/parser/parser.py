@@ -117,9 +117,9 @@ class IEMLParser():
                   | LPAREN poly_morpheme RPAREN LPAREN poly_morpheme RPAREN
                   | LPAREN poly_morpheme RPAREN"""
 
-        if len(p) == 9:
+        if len(p) == 10:
             p[0] = Lexeme(pm_address=p[2], pm_content=p[5], pm_transformation=p[8])
-        elif len(p) == 6:
+        elif len(p) == 7:
             p[0] = Lexeme(pm_address=p[2], pm_content=p[5], pm_transformation=None)
         else:
             p[0] = Lexeme(pm_address=p[2], pm_content=None, pm_transformation=None)

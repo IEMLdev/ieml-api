@@ -30,7 +30,7 @@ def get_iemldb_folder(name):
 GRAMMATICAL_CLASS_NAMES = bidict({
     0: 'AUXILIARY',
     1: 'VERB',
-    2: 'NOUN'
+    2: 'NOUN',
 })
 
 AUXILIARY_CLASS = GRAMMATICAL_CLASS_NAMES.inv['AUXILIARY']

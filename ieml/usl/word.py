@@ -2,12 +2,18 @@ from typing import List
 
 import itertools
 
+import bidict
+
 from ieml.constants import MORPHEMES_GRAMMATICAL_MARKERS
 from ieml.dictionary.script import Script, script
 from ieml.usl import USL
 from ieml.usl.polymorpheme import PolyMorpheme, check_polymorpheme
 
-SCRIPTS_ADDRESS_PROCESS = [script('E:S:.'), script('E:B:.'), script('E:T:.')]  # process
+
+ONE_ACTANT_PROCESS = script('E:S:.')
+TWO_ACTANTS_PROCESS = script('E:B:.')
+THREE_ACTANTS_PROCESS = script('E:T:.')
+
 
 INITIATOR_SCRIPT = script('E:.n.-')
 INTERACTANT_SCRIPT = script('E:.d.-')
@@ -19,18 +25,22 @@ HOW_SCRIPT = script('E:.f.-')
 CAUSE_SCRIPT = script('E:.s.-')
 INTENTION_SCRIPT = script('E:.m.-')
 
+INDEPENDANT_QUALITY = script('E:U:.')
+DEPENDANT_QUALITY = script('E:A:.')
+
+
+SCRIPTS_ADDRESS_PROCESS = [ONE_ACTANT_PROCESS, TWO_ACTANTS_PROCESS, THREE_ACTANTS_PROCESS]  # process
+
 SCRIPTS_ADDRESS_ACTANTS = [INITIATOR_SCRIPT,  #
                            RECIPIENT_SCRIPT,  # actant destinataire (3eme actant)
-                           INTENTION_SCRIPT,  # actant intentionnel ou final
+                           INTERACTANT_SCRIPT,  # actant intentionnel ou final
 
                            CAUSE_SCRIPT,  #  actant causal ou instrumental
-                           INTERACTANT_SCRIPT,  # interactant (2eme actant)
+                           INTENTION_SCRIPT,  # interactant (2eme actant)
                            HOW_SCRIPT,  # actant de manière
                            WHEN_SCRIPT,  # actant temporel
                            WHERE_SCRIPT, ]  # actant spatial
 
-INDEPENDANT_QUALITY = script('E:U:.')
-DEPENDANT_QUALITY = script('E:A:.')
 
 SCRIPTS_ADDRESS_QUALITY = [INDEPENDANT_QUALITY,  # qualité (propriété d'un actant)
                            DEPENDANT_QUALITY]  # actant subordonné (propriété d'un actant)
@@ -41,6 +51,43 @@ SCRIPTS_ADDRESS = [*SCRIPTS_ADDRESS_PROCESS, *SCRIPTS_ADDRESS_ACTANTS, *SCRIPTS_
 TYPES_OF_WORDS = [script('E:.b.E:S:.-'), #mot de process
                   script('E:.b.E:B:.-'), #mot d'actant
                   script('E:.b.E:T:.-')] #mot de qualité
+
+NAMES_TO_ADDRESS = {
+    ONE_ACTANT_PROCESS: 'process',
+    TWO_ACTANTS_PROCESS: 'process',
+    THREE_ACTANTS_PROCESS: 'process',
+
+    INITIATOR_SCRIPT: 'initiator',
+    INTERACTANT_SCRIPT: 'interactant',
+    RECIPIENT_SCRIPT: 'receiver',
+
+    WHEN_SCRIPT: 'when',
+    WHERE_SCRIPT: 'where',
+    HOW_SCRIPT: 'how',
+    INTENTION_SCRIPT: 'intention',
+    CAUSE_SCRIPT: 'cause',
+
+    INDEPENDANT_QUALITY: 'independant',
+    DEPENDANT_QUALITY: 'dependant'
+}
+
+NAMES_ORDERING = {
+    'process': 0,
+
+    'initiator': 0,
+    'interactant': 0,
+    'receiver': 0,
+
+    'when': 0,
+    'where': 0,
+    'how': 0,
+    'intention': 0,
+    'cause': 0,
+
+    'independant': 2,
+    'dependant': 1
+}
+
 
 def check_address(address):
     assert address.is_singular
@@ -94,15 +141,6 @@ class Lexeme(USL):
         self.grammatical_class = class_from_address(self.address)
         assert self.pm_address
 
-        if self.pm_address.is_singular and (self.pm_content is None or self.pm_content.is_singular) and \
-                (self.pm_transformation is None or self.pm_transformation.is_singular):
-            self._singular_sequences = [self]
-        else:
-            self._singular_sequences = self._build_singular_sequences()
-
-
-        self._singular_sequences_set = set(self._singular_sequences)
-
         self._str = ""
         for pm in [self.pm_address, self.pm_content, self.pm_transformation]:
             if pm is None:
@@ -117,14 +155,18 @@ class Lexeme(USL):
                (self.pm_address == other.pm_address and self.pm_content == other.pm_content and
                 self.pm_transformation and other.pm_transformation and self.pm_transformation < other.pm_transformation)))
 
-    def _build_singular_sequences(self):
-        _product = [self.pm_address,
-                    self.pm_content,
-                    self.pm_transformation]
-        _product = [p.singular_sequences for p in _product if p is not None]
+    def _compute_singular_sequences(self):
+        if self.pm_address.is_singular and (self.pm_content is None or self.pm_content.is_singular) and \
+                (self.pm_transformation is None or self.pm_transformation.is_singular):
+            return [self]
+        else:
+            _product = [self.pm_address,
+                        self.pm_content,
+                        self.pm_transformation]
+            _product = [p.singular_sequences for p in _product if p is not None]
 
-        return [Lexeme(*ss)
-                 for ss in itertools.product(*_product)]
+            return [Lexeme(*ss)
+                    for ss in itertools.product(*_product)]
 
     def append_address(self, position: List[Script]):
         pm_address = PolyMorpheme(constant=list(self.pm_address.constant) + position, groups=self.pm_address.groups)
@@ -160,7 +202,9 @@ class ActantProperties:
                 cst = list(l.pm_address.constant)
                 cst.remove(address_script)
                 children.append(Lexeme(pm_address=PolyMorpheme(constant=cst,
-                                                     groups=l.pm_address.groups)))
+                                                     groups=l.pm_address.groups),
+                                       pm_content=l.pm_content,
+                                       pm_transformation=l.pm_transformation),)
 
         if children:
             actant = [l for l in children if len(l.address.constant) == 0]
@@ -168,7 +212,9 @@ class ActantProperties:
                 dependants = [l for l in children if DEPENDANT_QUALITY in l.address.constant]
 
                 independants = [Lexeme(pm_address=PolyMorpheme(constant=list(set(l.pm_address.constant) - {INDEPENDANT_QUALITY}),
-                                                               groups=l.pm_address.groups))
+                                                               groups=l.pm_address.groups),
+                                       pm_content=l.pm_content,
+                                       pm_transformation=l.pm_transformation)
                             for l in children if INDEPENDANT_QUALITY in l.address.constant and l not in dependants]
 
                 return ActantProperties(actant=actant[0],
@@ -216,7 +262,11 @@ class SyntagmaticFunction:
 
         process = [l for l in lexemes if set(SCRIPTS_ADDRESS_PROCESS).intersection(l.address.constant)]
         if process:
-            process = process[0]
+            process = Lexeme(pm_address=PolyMorpheme(constant=list(set(process[0].pm_address.constant)
+                                                                   - set(SCRIPTS_ADDRESS_PROCESS)),
+                                                               groups=process[0].pm_address.groups),
+                                       pm_content=process[0].pm_content,
+                                       pm_transformation=process[0].pm_transformation)
         else:
             process = None
 
@@ -289,3 +339,5 @@ class Word(USL):
 
         self.grammatical_class = class_from_address(self.address)
 
+    def _compute_singular_sequences(self):
+        return [self]
