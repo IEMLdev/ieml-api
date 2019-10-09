@@ -1,51 +1,90 @@
 from typing import List
 
-import itertools
-
-import bidict
-
-from ieml.constants import MORPHEMES_GRAMMATICAL_MARKERS
 from ieml.dictionary.script import Script, script
 from ieml.usl import USL
-from ieml.usl.lexeme import Lexeme, ADDRESS_SCRIPTS, ADDRESS_PROCESS_VALENCE_SCRIPTS, ADDRESS_ACTANTS_SCRIPTS, \
-    SCRIPTS_ADDRESS_QUALITY, INDEPENDANT_QUALITY, DEPENDANT_QUALITY, INITIATOR_SCRIPT, INTERACTANT_SCRIPT, \
-    RECIPIENT_SCRIPT, TIME_SCRIPT, MANNER_SCRIPT, LOCATION_SCRIPT, CAUSE_SCRIPT, INTENTION_SCRIPT, class_from_address
+from ieml.usl.constants import DEPENDANT_QUALITY, INDEPENDANT_QUALITY, ADDRESS_PROCESS_VALENCE_SCRIPTS, \
+    INITIATOR_SCRIPT, INTERACTANT_SCRIPT, RECIPIENT_SCRIPT, TIME_SCRIPT, LOCATION_SCRIPT, MANNER_SCRIPT, CAUSE_SCRIPT, \
+    INTENTION_SCRIPT, check_address_script
+from ieml.usl.lexeme import Lexeme, class_from_address, check_lexeme
 from ieml.usl.polymorpheme import PolyMorpheme, check_polymorpheme
 
 
+def check_actant_properties(ap, role):
+    if not isinstance(ap.actant, Lexeme):
+        raise ValueError("An actant is expected to be a Lexeme, not a {}."
+                         .format(ap.actant.process.__class__.__name__))
 
-def check_address(address):
-    assert address.is_singular
-    assert all(s in ADDRESS_SCRIPTS for s in address.constant)
-    if any(s in ADDRESS_PROCESS_VALENCE_SCRIPTS for s in address.constant):
-        assert len(address.constant) == 1
-    elif any(s in ADDRESS_ACTANTS_SCRIPTS for s in address.constant):
-        assert sum(1 if s in ADDRESS_ACTANTS_SCRIPTS else 0 for s in address.constant) == 1
-        assert all(s in SCRIPTS_ADDRESS_QUALITY for s in address.constant
-                   if not s in ADDRESS_ACTANTS_SCRIPTS)
+    check_lexeme(ap.actant, role=role)
 
-    if any(s in SCRIPTS_ADDRESS_QUALITY for s in address.constant):
-        assert sum(1 if s == script('E:U:.') else 0 for s in address.constant) <= 1
+    for ind in ap.independant:
+        if not isinstance(ind, Lexeme):
+            raise ValueError("A quality is expected to be a Lexeme, not a {}."
+                         .format(ind.__class__.__name__))
+
+        check_lexeme(ind, role=INDEPENDANT_QUALITY)
+
+    if ap.dependant is not None:
+        if not isinstance(ap.dependant, ActantProperties):
+            raise ValueError("An actant of a word is expected to be a ActantProperties, not a {}."
+                             .format(ap.dependant.__class__.__name__))
+
+        check_actant_properties(ap.dependant, role=DEPENDANT_QUALITY)
 
 
-def check_word(c):
-    assert (c.is_empty and len(c.functions) == 0 and c.content.empty and c.klass.empty) or not c.empty, \
-        "Empty character must have the E: grammatical class, an empty content and no functions."
-    assert (c.contents and not all(pm.empty for pm in c.contents)) or (len(c.functions) != 0 and c.content.empty), \
-        "An empty content cannot have a function"
-    assert all(isinstance(t, PolyMorpheme) for t in c.poly_morphemes), "A character must be made of Trait"
-    assert isinstance(c.klass, Script), "A character must indicate its class with a morpheme from [{}]"\
-        .format(', '.join(MORPHEMES_GRAMMATICAL_MARKERS))
+def check_syntagmatic_function(fun):
+    if not isinstance(fun.process, Lexeme):
+        raise ValueError("The process of a SyntagmaticFunction is expected to be a Lexeme, not a {}."
+                         .format(fun.process.__class__.__name__))
 
-    for cc in c.contents:
-        check_polymorpheme(cc)
-    for f in c.functions:
-        for pm in f:
-            check_polymorpheme(pm)
+    check_lexeme(fun.process, role=fun.valence)
+
+    for actant, role in [(fun.initiator, INITIATOR_SCRIPT),
+                   (fun.interactant, INTERACTANT_SCRIPT),
+                   (fun.recipient, RECIPIENT_SCRIPT),
+                   (fun.time, TIME_SCRIPT),
+                   (fun.location, LOCATION_SCRIPT),
+                   (fun.intention, INTENTION_SCRIPT),
+                   (fun.cause, CAUSE_SCRIPT),
+                   (fun.manner, MANNER_SCRIPT)]:
+
+        if actant is not None:
+            if not isinstance(actant, ActantProperties):
+                raise ValueError("An actant of a word is expected to be a ActantProperties, not a {}."
+                                 .format(actant.__class__.__name__))
+
+            check_actant_properties(actant, role)
+
+    for l_a, l in fun.lexemes.items():
+        if not isinstance(l_a, PolyMorpheme):
+            raise ValueError("An address in a SyntagmaticFunction is expected to be a polymorpheme, not a {}."
+                             .format(l_a.__class__.__name__))
+
+        check_polymorpheme(l_a)
+        check_address_script(l_a.constant)
+
+        if not isinstance(l, Lexeme):
+            raise ValueError("An actant is expected to be a Lexeme, not a {}."
+                             .format(l.__class__.__name__))
+        check_lexeme(l)
+
+def check_word(w):
+    if not isinstance(w.address, PolyMorpheme):
+        raise ValueError("An address of a word is expected to be a polymorpheme, not a {}."
+                         .format(w.address.__class__.__name__))
+
+    check_address_script(w.address.constant)
+
+    if not isinstance(w.syntagmatic_fun, SyntagmaticFunction):
+        raise ValueError("The word is expected to be made from a SyntagmaticFunction, not a {}."
+                         .format(w.syntagmatic_fun.__class__.__name__))
+
+    check_syntagmatic_function(w.syntagmatic_fun)
+
+
 
 
 class ActantProperties:
-    def __init__(self, actant: Lexeme, dependant: 'ActantProperties' = None, independant: List[Lexeme] = None):
+    def __init__(self, actant: Lexeme, dependant: 'ActantProperties' = None, independant: List[Lexeme] = ()):
         self.actant = actant
         self.dependant = dependant
         self.independant = independant

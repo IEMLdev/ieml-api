@@ -41,17 +41,6 @@ def check_polymorpheme(ms, is_type: str=None):
     if any(len(m) != 1 for m in all_morphemes.values()):
         raise ValueError("A polymorpheme can't be made from a morpheme paradigm.")
 
-    if is_type is not None:
-        if is_type == 'address' and not all(s in ADDRESS_POLYMORPHEME_SCRIPTS for s in all_morphemes):
-            raise ValueError("Invalid scripts to make an address polymorphemes : [{}]".format(' '.join(sorted(set(all_morphemes) - ADDRESS_POLYMORPHEME_SCRIPTS))))
-
-        if is_type == 'content' and not any(s in ADDRESS_POLYMORPHEME_SCRIPTS or s in TRANSFORMATION_POLYMORPHEME_SCRIPTS for s in all_morphemes):
-            raise ValueError("Invalid scripts to make an address polymorphemes : [{}]"
-                             .format(' '.join(sorted(set(all_morphemes) ^ set(*ADDRESS_POLYMORPHEME_SCRIPTS, *TRANSFORMATION_POLYMORPHEME_SCRIPTS)))))
-
-        if is_type == 'transformation' and not all(s in TRANSFORMATION_POLYMORPHEME_SCRIPTS for s in all_morphemes):
-            raise ValueError("Invalid scripts to make an address polymorphemes : [{}]".format(' '.join(sorted(set(all_morphemes) - TRANSFORMATION_POLYMORPHEME_SCRIPTS))))
-
 
 class PolyMorpheme(USL):
     def __init__(self, constant: List[Script]=(), groups=()):

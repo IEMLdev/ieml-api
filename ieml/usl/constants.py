@@ -3,51 +3,13 @@ from typing import List, Set
 from ieml.constants import AUXILIARY_CLASS
 from ieml.dictionary.script import script, Script
 
-
-
-
-def assert_(cond, message):
-    if not cond:
-        raise ValueError(message)
-
-
-def assert_all_in(l: List[Script], _set: Set[Script], name_l):
-    assert_(all(s in _set for s in l),
-            "Invalid scripts [{}] in {}".format(
-                " ".join(map(str, sorted(set(l) - _set))),
-                name_l))
-
-def assert_only_one_from(l: List[Script], _set: Set[Script], name_l, name_set) -> Script:
-    assert_(sum(1 if s in _set else 0 for s in l) == 1,
-            "One and only one of {} scripts [{}] required in {}".format(
-                            name_set,
-                            ' '.join(map(str, sorted(_set))),
-                            name_l))
-
-    return next(iter(s for s in l if s in _set))
-
-def assert_atmost_one_from(l: List[Script], _set: Set[Script], name_l, name_set):
-    assert_(sum(1 if s in _set else 0 for s in l) <= 1,
-            "Only one of {} scripts [{}] required in {}".format(
-                            name_set,
-                            ' '.join(map(str, sorted(_set))),
-                            name_l))
-
-
-def assert_no_one_from(l: List[Script], _set: Set[Script], name_l, name_set):
-    assert_(sum(1 if s in _set else 0 for s in l) == 0,
-            "The {} scripts [{}] are forbidden in {}".format(
-                            name_set,
-                            ' '.join(map(str, sorted(_set))),
-                            name_l))
-
-
-
+# Process : grammatical role (valence)
 ONE_ACTANT_PROCESS = script('E:S:.')
 TWO_ACTANTS_PROCESS = script('E:B:.')
 THREE_ACTANTS_PROCESS = script('E:T:.')
 ADDRESS_PROCESS_VALENCE_SCRIPTS = [ONE_ACTANT_PROCESS, TWO_ACTANTS_PROCESS, THREE_ACTANTS_PROCESS]  # process
 
+# Process : mandatory address
 ADDRESS_PROCESS_VOICES_SCRIPTS = {
     ONE_ACTANT_PROCESS: {script("E:.-wa.-t.o.-'"), # Actif
                          script("E:.-wo.-t.o.-'"),}, # Passif
@@ -56,10 +18,11 @@ ADDRESS_PROCESS_VOICES_SCRIPTS = {
 }
 assert all(e in ADDRESS_PROCESS_VOICES_SCRIPTS[THREE_ACTANTS_PROCESS]
            for e in ADDRESS_PROCESS_VOICES_SCRIPTS[ONE_ACTANT_PROCESS])
+ADDRESS_PROCESS_VERBAL_MODE_SCRIPTS = script("E:.-'O:O:.-M:.-'t.o.-',").singular_sequences_set
 
+# Process : optional address
 ADDRESS_PROCESS_ASPECT_SCRIPTS = script("E:F:.-t.o.-'").singular_sequences_set
 ADDRESS_PROCESS_TENSE_SCRIPTS = script("E:M:.-O:.-t.o.-'").singular_sequences_set
-ADDRESS_PROCESS_VERBAL_MODE_SCRIPTS = script("E:.-'O:O:.-M:.-'t.o.-',").singular_sequences_set
 
 ADDRESS_PROCESS_POLYMORPHEME_SCRIPTS = {
     *ADDRESS_PROCESS_VALENCE_SCRIPTS, # valence
@@ -69,27 +32,7 @@ ADDRESS_PROCESS_POLYMORPHEME_SCRIPTS = {
     *ADDRESS_PROCESS_VERBAL_MODE_SCRIPTS,  # mode
 }
 
-
-def check_address_process_scripts(l: List[Script]):
-    # check all
-    assert_all_in(l, ADDRESS_PROCESS_POLYMORPHEME_SCRIPTS, "an address of a process")
-
-    #check valence
-    valence = assert_only_one_from(l, set(ADDRESS_PROCESS_VALENCE_SCRIPTS), "an address of a process", "valences")
-
-    #check voice
-    assert_only_one_from(l, ADDRESS_PROCESS_VOICES_SCRIPTS[valence], "an address of a process", "voices")
-
-    #check mode
-    assert_only_one_from(l, ADDRESS_PROCESS_VERBAL_MODE_SCRIPTS, "an address of a process", "verbal modes")
-
-    #check aspect
-    assert_atmost_one_from(l, ADDRESS_PROCESS_ASPECT_SCRIPTS, "an address of a process", "aspects")
-
-    #check tense
-    assert_atmost_one_from(l, ADDRESS_PROCESS_TENSE_SCRIPTS, "an address of a process", "tenses")
-
-
+# Process : optional transformation
 TRANSFORMATION_PROCESS_LOGICAL_CONSTRUCTION_SCRIPTS = script("E:O:O:.").singular_sequences_set
 TRANSFORMATION_PROCESS_LOGICAL_MODE_SCRIPTS = script("E:M:O:.").singular_sequences_set
 TRANSFORMATION_PROCESS_TETRADE_MODE_SCRIPTS = script("E:.b.O:O:.-").singular_sequences_set
@@ -102,54 +45,26 @@ TRANSFORMATION_PROCESS_SCRIPTS = {
     *TRANSFORMATION_PROCESS_HEXADE_MODE_SCRIPTS
 }
 
-
-def check_transformation_process_scripts(l: List[Script]):
-    assert_all_in(l, TRANSFORMATION_PROCESS_SCRIPTS, "a transformation of a process")
-
-    # check logical constructions
-    assert_atmost_one_from(l, TRANSFORMATION_PROCESS_LOGICAL_CONSTRUCTION_SCRIPTS, "a transformation of a process", "logical constructions")
-
-    # check logical modes
-    assert_atmost_one_from(l, TRANSFORMATION_PROCESS_LOGICAL_MODE_SCRIPTS, "a transformation of a process", "logical modes")
-
-    # check tetrade modes
-    assert_atmost_one_from(l, TRANSFORMATION_PROCESS_TETRADE_MODE_SCRIPTS, "a transformation of a process", "tetrade modes")
-
-    # check hexade modes
-    assert_atmost_one_from(l, TRANSFORMATION_PROCESS_HEXADE_MODE_SCRIPTS, "a transformation of a process", "hexade modes")
-
-
-
+# Actant : grammatical roles
 INITIATOR_SCRIPT = script('E:.n.-')
 INTERACTANT_SCRIPT = script('E:.d.-')
 RECIPIENT_SCRIPT = script('E:.k.-')
-
 ADDRESS_ACTANTS_MOTOR_SCRIPTS = [INITIATOR_SCRIPT, INTERACTANT_SCRIPT, RECIPIENT_SCRIPT]
-
 TIME_SCRIPT = script('E:.t.-')
 LOCATION_SCRIPT = script('E:.l.-')
 MANNER_SCRIPT = script('E:.f.-')
 CAUSE_SCRIPT = script('E:.s.-')
 INTENTION_SCRIPT = script('E:.m.-')
-
 ADDRESS_CIRCONSTANTIAL_ACTANTS_SCRIPTS = [TIME_SCRIPT, LOCATION_SCRIPT, MANNER_SCRIPT, CAUSE_SCRIPT, INTENTION_SCRIPT]
-
+ACTANTS_SCRIPTS = [*ADDRESS_ACTANTS_MOTOR_SCRIPTS,
+                   *ADDRESS_CIRCONSTANTIAL_ACTANTS_SCRIPTS]
 INDEPENDANT_QUALITY = script('E:U:.')
 DEPENDANT_QUALITY = script('E:A:.')
+SCRIPTS_ADDRESS_QUALITY = [INDEPENDANT_QUALITY,
+                           DEPENDANT_QUALITY]
+ADDRESS_SCRIPTS = [*ADDRESS_PROCESS_VALENCE_SCRIPTS, *ACTANTS_SCRIPTS, *SCRIPTS_ADDRESS_QUALITY]
 
-
-ADDRESS_ACTANTS_SCRIPTS = [*ADDRESS_ACTANTS_MOTOR_SCRIPTS,
-                            *ADDRESS_CIRCONSTANTIAL_ACTANTS_SCRIPTS]
-
-
-SCRIPTS_ADDRESS_QUALITY = [INDEPENDANT_QUALITY,  # qualité (propriété d'un actant)
-                           DEPENDANT_QUALITY]  # actant subordonné (propriété d'un actant)
-
-
-
-ADDRESS_SCRIPTS = [*ADDRESS_PROCESS_VALENCE_SCRIPTS, *ADDRESS_ACTANTS_SCRIPTS, *SCRIPTS_ADDRESS_QUALITY]
-
-
+# Grammatical classes
 TYPES_OF_WORDS = [script('E:.b.E:S:.-'), #mot de process
                   script('E:.b.E:B:.-'), #mot d'actant
                   script('E:.b.E:T:.-')] #mot de qualité
@@ -190,14 +105,17 @@ NAMES_ORDERING = {
     'dependant': 1
 }
 
+# Actant : mandatory address
 ADDRESS_ACTANTS_DEFINITION_SCRIPTS = script("E:M:.-d.u.-'").singular_sequences_set
+ADDRESS_ACTANTS_GRAMMATICAL_NUMBER_SCRIPTS = script("E:.O:O:.-").singular_sequences_set
+
+# Actant : optional address
 ADDRESS_ACTANTS_CONTINUITY_SCRIPTS = script("E:.-',b.-S:.U:.-'y.-'O:.-',_").singular_sequences_set
 ADDRESS_ACTANTS_GRAMMATICAL_GENDER_SCRIPTS = script("E:.-n.E:U:.+F:.-'").singular_sequences_set
-ADDRESS_ACTANTS_GRAMMATICAL_NUMBER_SCRIPTS = script("E:.O:O:.-").singular_sequences_set
 ADDRESS_ACTANTS_QUANTIFICATION_SCRIPTS = script("E:I:.-t.u.-'").singular_sequences_set
 
 ADDRESS_ACTANT_SCRIPTS = {
-    *ADDRESS_ACTANTS_SCRIPTS
+    *ACTANTS_SCRIPTS,
     *ADDRESS_ACTANTS_DEFINITION_SCRIPTS,  # definition
     *ADDRESS_ACTANTS_CONTINUITY_SCRIPTS,  # continuity
     *ADDRESS_ACTANTS_GRAMMATICAL_GENDER_SCRIPTS,  # genre / gender
@@ -205,14 +123,157 @@ ADDRESS_ACTANT_SCRIPTS = {
     *ADDRESS_ACTANTS_QUANTIFICATION_SCRIPTS,  # quantité / quantity
 }
 
-ADDRESS_QUALITY_GRADIENT_SCRIPTS = script("E:M:M:.").singular_sequences_set
+ADDRESS_QUALITY_GRADIENT_EMM_SCRIPTS = script("E:M:M:.").singular_sequences_set
+ADDRESS_QUALITY_GRADIENT_EFM_SCRIPTS = script("E:F:M:.").singular_sequences_set
+
 GROUPEMENT_SCRIPTS = script("E:S:.j.-'M:O:.-O:.-',").singular_sequences_set
 
-def check_address_actant_scripts(l: List[Script]):
-    assert_all_in(l, ADDRESS_ACTANT_SCRIPTS, "an address of an actant")
+ADDRESS_CIRCONSTANTIAL_TIME_DISTRIBUTION_SCRIPTS = script("E:S:M:.").singular_sequences_set
+ADDRESS_CIRCONSTANTIAL_FREQUENCY_DISTRIBUTION_SCRIPTS = script("E:B:M:.").singular_sequences_set
 
-    role = assert_only_one_from(l, set(ADDRESS_ACTANTS_SCRIPTS), "an address of an actant", "grammatical roles")
-    assert_atmost_one_from(l, {INDEPENDANT_QUALITY}, "an address of an actant", "dependant")
+ADDRESS_CIRCONSTANTIAL_SPACE_DISTRIBUTION_SCRIPTS = script("E:T:M:.").singular_sequences_set
+ADDRESS_CIRCONSTANTIAL_LOCATION_TOWARDS_AXES_SCRIPTS = script("E:.-O:.M:M:.-l.-'").singular_sequences_set
+ADDRESS_CIRCONSTANTIAL_LOCATION_PATH_SCRIPTS = script("E:.-M:.M:M:.-l.-'").singular_sequences_set
+
+ADDRESS_CIRCONSTANTIAL_LOCATION_SCRIPTS = script("E:.-F:.M:M:.-l.-'").singular_sequences_set
+
+assert {*ADDRESS_CIRCONSTANTIAL_LOCATION_TOWARDS_AXES_SCRIPTS,
+        *ADDRESS_CIRCONSTANTIAL_LOCATION_PATH_SCRIPTS} == ADDRESS_CIRCONSTANTIAL_LOCATION_SCRIPTS
+
+ADDRESS_CIRCONSTANTIAL_INTENTION_SCRIPTS = {script("E:T:.p.-"), script("E:.A:.h.-")}
+
+ADDRESS_CIRCONSTANTIAL_MANNER_SCRIPTS = script("E:.O:.M:O:.-").singular_sequences_set
+ADDRESS_CIRCONSTANTIAL_GRADIENT_ADVERB_EOM_SCRIPTS = script("E:O:M:.").singular_sequences_set
+
+ADDRESS_CIRCONSTANTIAL_CAUSE_SCRIPTS = script("E:M:.d.+M:O:.-").singular_sequences_set
+
+
+TRANSFORMATION_MOTOR_ACTANT_SCRIPTS = {
+    *TRANSFORMATION_PROCESS_LOGICAL_CONSTRUCTION_SCRIPTS,
+    *TRANSFORMATION_PROCESS_LOGICAL_MODE_SCRIPTS,
+    *ADDRESS_QUALITY_GRADIENT_EMM_SCRIPTS,
+    *ADDRESS_CIRCONSTANTIAL_MANNER_SCRIPTS,
+    *ADDRESS_CIRCONSTANTIAL_CAUSE_SCRIPTS,
+    *ADDRESS_CIRCONSTANTIAL_LOCATION_SCRIPTS,
+    *GROUPEMENT_SCRIPTS
+}
+
+ADDRESS_QUALITY_SCRIPTS = {
+    *ACTANTS_SCRIPTS,
+    *SCRIPTS_ADDRESS_QUALITY,
+    *TRANSFORMATION_PROCESS_LOGICAL_CONSTRUCTION_SCRIPTS,  # construction
+    *TRANSFORMATION_PROCESS_LOGICAL_MODE_SCRIPTS,  # mode
+    *ADDRESS_ACTANTS_DEFINITION_SCRIPTS,  # definition
+    *ADDRESS_QUALITY_GRADIENT_EFM_SCRIPTS,  # nombre / number
+    *ADDRESS_CIRCONSTANTIAL_MANNER_SCRIPTS,
+    *ADDRESS_CIRCONSTANTIAL_CAUSE_SCRIPTS,
+    *ADDRESS_CIRCONSTANTIAL_LOCATION_SCRIPTS
+}
+
+
+def assert_(cond, message):
+    if not cond:
+        raise ValueError(message)
+
+
+def assert_all_in(l: List[Script], _set: Set[Script], name_l):
+    assert_(all(s in _set for s in l),
+            "Invalid scripts [{}] in {}. Received: [{}]".format(
+                " ".join(map(str, sorted(set(l) - _set))),
+                name_l,
+                ' '.join(map(str, sorted(l)))))
+
+
+def assert_only_one_from(l: List[Script], _set: Set[Script], name_l, name_set) -> Script:
+    assert_(sum(1 if s in _set else 0 for s in l) == 1,
+            "One and only one of the {} scripts [{}] required in {}. Received: [{}]".format(
+                            name_set,
+                            ' '.join(map(str, sorted(_set))),
+                            name_l,
+                            ' '.join(map(str, sorted(l)))))
+
+    return next(iter(s for s in l if s in _set))
+
+
+def assert_atmost_one_from(l: List[Script], _set: Set[Script], name_l, name_set):
+    assert_(sum(1 if s in _set else 0 for s in l) <= 1,
+            "Maximum one of the {} scripts [{}] required in {}. Received: [{}]".format(
+                            name_set,
+                            ' '.join(map(str, sorted(_set))),
+                            name_l,
+                            ' '.join(map(str, sorted(l)))))
+
+
+def assert_no_one_from(l: List[Script], _set: Set[Script], name_l, name_set):
+    assert_(sum(1 if s in _set else 0 for s in l) == 0,
+            "The {} scripts [{}] are forbidden in {}. Received: [{}]".format(
+                            name_set,
+                            ' '.join(map(str, sorted(_set))),
+                            name_l,
+                            ' '.join(map(str, sorted(l)))))
+
+
+def get_role_of_pa(l: List[Script]):
+    if INDEPENDANT_QUALITY in l:
+        return INDEPENDANT_QUALITY
+
+    if DEPENDANT_QUALITY in l:
+        return DEPENDANT_QUALITY
+
+    return assert_only_one_from(l, {*ACTANTS_SCRIPTS, *ADDRESS_PROCESS_VALENCE_SCRIPTS}, "an address", "grammatical roles")
+
+
+def check_address_process_scripts(l: List[Script], valence=None):
+    # check all
+    assert_all_in(l, ADDRESS_PROCESS_POLYMORPHEME_SCRIPTS, "an address of a process")
+
+    #check valence
+    if valence is None:
+        valence = assert_only_one_from(l, set(ADDRESS_PROCESS_VALENCE_SCRIPTS), "an address of a process", "valences")
+
+    #check voice
+    assert_only_one_from(l, ADDRESS_PROCESS_VOICES_SCRIPTS[valence], "an address of a process", "voices")
+
+    #check mode
+    assert_only_one_from(l, ADDRESS_PROCESS_VERBAL_MODE_SCRIPTS, "an address of a process", "verbal modes")
+
+    #check aspect
+    assert_atmost_one_from(l, ADDRESS_PROCESS_ASPECT_SCRIPTS, "an address of a process", "aspects")
+
+    #check tense
+    assert_atmost_one_from(l, ADDRESS_PROCESS_TENSE_SCRIPTS, "an address of a process", "tenses")
+
+
+def check_transformation_process_scripts(l: List[Script]):
+    assert_all_in(l, TRANSFORMATION_PROCESS_SCRIPTS, "a transformation of a process")
+
+    # check logical constructions
+    assert_atmost_one_from(l, TRANSFORMATION_PROCESS_LOGICAL_CONSTRUCTION_SCRIPTS, "a transformation of a process", "logical constructions")
+
+    # check logical modes
+    assert_atmost_one_from(l, TRANSFORMATION_PROCESS_LOGICAL_MODE_SCRIPTS, "a transformation of a process", "logical modes")
+
+    # check tetrade modes
+    assert_atmost_one_from(l, TRANSFORMATION_PROCESS_TETRADE_MODE_SCRIPTS, "a transformation of a process", "tetrade modes")
+
+    # check hexade modes
+    assert_atmost_one_from(l, TRANSFORMATION_PROCESS_HEXADE_MODE_SCRIPTS, "a transformation of a process", "hexade modes")
+
+
+def check_address_script(l: List[Script]):
+    assert_all_in(l, set(ADDRESS_SCRIPTS), "an address")
+
+    assert_only_one_from(l, {*ADDRESS_PROCESS_VALENCE_SCRIPTS, *ACTANTS_SCRIPTS}, "an address", "grammatical roles")
+
+    assert_atmost_one_from(l, {DEPENDANT_QUALITY}, "an address", "dependant quality")
+
+
+def check_address_actant_scripts(l: List[Script], role=None):
+    assert_all_in(l, {DEPENDANT_QUALITY, *ADDRESS_ACTANT_SCRIPTS}, "an address of an actant")
+
+    if role is None:
+        role = assert_only_one_from(l, set(ACTANTS_SCRIPTS), "an address of an actant", "grammatical roles")
+        # assert_atmost_one_from(l, {INDEPENDANT_QUALITY}, "an address of an actant", "dependant")
 
     assert_only_one_from(l, ADDRESS_ACTANTS_DEFINITION_SCRIPTS, "an address of an actant", "definitions")
 
@@ -244,65 +305,43 @@ def check_transformation_actant_scripts(l: List[Script]):
     assert_no_one_from(l, ADDRESS_ACTANTS_GRAMMATICAL_NUMBER_SCRIPTS, "a transformation of an actant", "grammatical numbers")
     assert_no_one_from(l, ADDRESS_ACTANTS_QUANTIFICATION_SCRIPTS, "a transformation of an actant", "quantifications")
 
-    assert_no_one_from(l, ADDRESS_QUALITY_GRADIENT_SCRIPTS, "a transformation of an actant", "gradients")
+    assert_no_one_from(l, ADDRESS_QUALITY_GRADIENT_EMM_SCRIPTS, "a transformation of an actant", "gradients")
 
     assert_no_one_from(l, set(ADDRESS_SCRIPTS), "a transformation of an actant", "grammatical roles")
 
 
 
-def check_address_motor_actant_scripts(l: List[Script]):
-    assert_only_one_from(l, set(ADDRESS_ACTANTS_MOTOR_SCRIPTS), "an address of a motor actant", "motor grammaticals roles")
-    check_address_actant_scripts(l)
+def check_address_motor_actant_scripts(l: List[Script], role=None):
+    if role is None:
+        assert_only_one_from(l, set(ADDRESS_ACTANTS_MOTOR_SCRIPTS), "an address of a motor actant", "motor grammaticals roles")
 
+    check_address_actant_scripts(l, role=role)
 
-TRANSFORMATION_MOTOR_ACTANT_SCRIPTS = {
-    *TRANSFORMATION_PROCESS_LOGICAL_CONSTRUCTION_SCRIPTS,
-    *TRANSFORMATION_PROCESS_LOGICAL_MODE_SCRIPTS,
-    *ADDRESS_QUALITY_GRADIENT_SCRIPTS,
-    *ADDRESS_MANNER_SCRIPTS,
-    *ADDRESS_CAUSE_SCRIPTS,
-    *ADDRESS_LOCATION_SCRIPTS,
-    *GROUPEMENT_SCRIPTS
-}
 
 def check_transformation_motor_actant_scripts(l: List[Script]):
     assert_all_in(l, TRANSFORMATION_MOTOR_ACTANT_SCRIPTS, "a transformation of a motor actant")
 
-    assert_only_one_from(l, TRANSFORMATION_PROCESS_LOGICAL_CONSTRUCTION_SCRIPTS, "a transformation of a motor actant",
+    assert_atmost_one_from(l, TRANSFORMATION_PROCESS_LOGICAL_CONSTRUCTION_SCRIPTS, "a transformation of a motor actant",
                          "logical constructions")
-    assert_only_one_from(l, TRANSFORMATION_PROCESS_LOGICAL_MODE_SCRIPTS, "a transformation of a motor actant",
+    assert_atmost_one_from(l, TRANSFORMATION_PROCESS_LOGICAL_MODE_SCRIPTS, "a transformation of a motor actant",
                          "logical modes")
-    assert_only_one_from(l, ADDRESS_QUALITY_GRADIENT_SCRIPTS, "a transformation of a motor actant",
+    assert_atmost_one_from(l, ADDRESS_QUALITY_GRADIENT_EMM_SCRIPTS, "a transformation of a motor actant",
                          "gradients")
-    assert_only_one_from(l, ADDRESS_MANNER_SCRIPTS, "a transformation of a motor actant",
+    assert_atmost_one_from(l, ADDRESS_CIRCONSTANTIAL_MANNER_SCRIPTS, "a transformation of a motor actant",
                          "manners")
-    assert_only_one_from(l, ADDRESS_CAUSE_SCRIPTS, "a transformation of a motor actant",
+    assert_atmost_one_from(l, ADDRESS_CIRCONSTANTIAL_CAUSE_SCRIPTS, "a transformation of a motor actant",
                          "causes")
-    assert_only_one_from(l, ADDRESS_LOCATION_SCRIPTS, "a transformation of a motor actant",
+    assert_atmost_one_from(l, ADDRESS_CIRCONSTANTIAL_LOCATION_SCRIPTS, "a transformation of a motor actant",
                          "spacial relationships")
-    assert_only_one_from(l, GROUPEMENT_SCRIPTS, "a transformation of a motor actant",
+    assert_atmost_one_from(l, GROUPEMENT_SCRIPTS, "a transformation of a motor actant",
                          "groupements")
 
 
-ADDRESS_CIRCONSTANTIAL_TIME_DISTRIBUTION_SCRIPTS = script("E:S:M:.").singular_sequences_set
-ADDRESS_CIRCONSTANTIAL_FREQUENCY_DISTRIBUTION_SCRIPTS = script("E:B:M:.").singular_sequences_set
-
-ADDRESS_CIRCONSTANTIAL_SPACE_DISTRIBUTION_SCRIPTS = script("E:T:M:.").singular_sequences_set
-ADDRESS_CIRCONSTANTIAL_LOCATION_TOWARDS_AXES_SCRIPTS = script("E:.-O:.M:M:.-l.-'").singular_sequences_set
-ADDRESS_CIRCONSTANTIAL_LOCATION_PATH_SCRIPTS = script("E:.-M:.M:M:.-l.-'").singular_sequences_set
-
-ADDRESS_CIRCONSTANTIAL_INTENTION_SCRIPTS = {script("E:T:.p.-"), script("E:.A:.h.-")}
-
-ADDRESS_CIRCONSTANTIAL_MANNER_SCRIPTS = script("E:.O:.M:O:.-").singular_sequences_set
-ADDRESS_CIRCONSTANTIAL_GRADIENT_ADVERB_SCRIPTS = script("E:O:M:.").singular_sequences_set
-
-ADDRESS_CIRCONSTANTIAL_CAUSE_SCRIPTS = script("E:M:.d.+M:O:.-").singular_sequences_set
-
-
-def check_address_circonstancial_actant_scripts(l: List[Script]):
-    role = assert_only_one_from(l, set(ADDRESS_CIRCONSTANTIAL_ACTANTS_SCRIPTS), "an address of a circonstantial actant",
-                                "grammatical roles")
-    assert_atmost_one_from(l, {INDEPENDANT_QUALITY}, "an address of an actant", "dependant")
+def check_address_circonstancial_actant_scripts(l: List[Script], role=None):
+    if role is None:
+        role = assert_only_one_from(l, set(ADDRESS_CIRCONSTANTIAL_ACTANTS_SCRIPTS), "an address of a circonstantial actant",
+                                    "grammatical roles")
+        assert_atmost_one_from(l, {INDEPENDANT_QUALITY}, "an address of an actant", "dependant")
 
     assert_only_one_from(l, ADDRESS_ACTANTS_DEFINITION_SCRIPTS, "an address of an actant", "definitions")
 
@@ -352,7 +391,7 @@ def check_address_circonstancial_actant_scripts(l: List[Script]):
         assert_only_one_from(l, set(ADDRESS_CIRCONSTANTIAL_MANNER_SCRIPTS),
                                     "an address of a manner actant",
                                     "manner")
-        assert_only_one_from(l, set(ADDRESS_CIRCONSTANTIAL_GRADIENT_ADVERB_SCRIPTS),
+        assert_only_one_from(l, set(ADDRESS_CIRCONSTANTIAL_GRADIENT_ADVERB_EOM_SCRIPTS),
                                     "an address of a manner actant",
                                     "gradient adverbs")
         assert_only_one_from(l, set(GROUPEMENT_SCRIPTS),
@@ -360,17 +399,19 @@ def check_address_circonstancial_actant_scripts(l: List[Script]):
                                     "groupements")
         assert_all_in(l, {*ADDRESS_ACTANT_SCRIPTS,
                           *ADDRESS_CIRCONSTANTIAL_MANNER_SCRIPTS,
-                          *ADDRESS_CIRCONSTANTIAL_GRADIENT_ADVERB_SCRIPTS,
+                          *ADDRESS_CIRCONSTANTIAL_GRADIENT_ADVERB_EOM_SCRIPTS,
                           *GROUPEMENT_SCRIPTS},
                       "an address of a manner actant")
 
     elif role == CAUSE_SCRIPT:
         assert_only_one_from(l, set(ADDRESS_CIRCONSTANTIAL_CAUSE_SCRIPTS),
                                     "an address of a cause actant",
-                                    "cause")
+                                    "causes")
         assert_all_in(l, {*ADDRESS_ACTANT_SCRIPTS,
                           *ADDRESS_CIRCONSTANTIAL_CAUSE_SCRIPTS},
                       "an address of a cause actant")
+
+    return role
 
 
 def check_transformation_circonstancial_actant_scripts(l: List[Script], role: Script):
@@ -400,7 +441,7 @@ def check_transformation_circonstancial_actant_scripts(l: List[Script], role: Sc
         assert_no_one_from(l, set(ADDRESS_CIRCONSTANTIAL_MANNER_SCRIPTS),
                                     "an address of a manner actant",
                                     "manner")
-        assert_no_one_from(l, set(ADDRESS_CIRCONSTANTIAL_GRADIENT_ADVERB_SCRIPTS),
+        assert_no_one_from(l, set(ADDRESS_CIRCONSTANTIAL_GRADIENT_ADVERB_EOM_SCRIPTS),
                                     "an address of a manner actant",
                                     "gradient adverbs")
         assert_no_one_from(l, set(GROUPEMENT_SCRIPTS),
@@ -410,50 +451,54 @@ def check_transformation_circonstancial_actant_scripts(l: List[Script], role: Sc
     elif role == CAUSE_SCRIPT:
         assert_no_one_from(l, set(ADDRESS_CIRCONSTANTIAL_CAUSE_SCRIPTS),
                                     "an address of a cause actant",
-                                    "cause")
+                                    "causes")
 
 
-def check_address_quality(l: List[Script]):
-    assert_all_in(l, ADDRESS_ACTANT_SCRIPTS, "an address of an actant")
+def check_address_quality(l: List[Script], role=None):
+    assert_all_in(l, ADDRESS_QUALITY_SCRIPTS, "an address of a quality")
 
-    role = assert_only_one_from(l, set(ADDRESS_ACTANTS_SCRIPTS), "an address of an actant", "grammatical roles")
-    assert_atmost_one_from(l, {INDEPENDANT_QUALITY}, "an address of an actant", "dependant")
+    if role is None:
+        assert_only_one_from(l, set(ACTANTS_SCRIPTS), "an address of an actant", "grammatical roles")
+        assert_only_one_from(l, {INDEPENDANT_QUALITY}, "an address of an actant", "dependant")
 
-    assert_only_one_from(l, ADDRESS_ACTANTS_DEFINITION_SCRIPTS, "an address of an actant", "definitions")
+    assert_atmost_one_from(l, TRANSFORMATION_PROCESS_LOGICAL_CONSTRUCTION_SCRIPTS, "an address of an actant",
+                           "logical constructions")
+    assert_atmost_one_from(l, TRANSFORMATION_PROCESS_LOGICAL_MODE_SCRIPTS, "an address of an actant", "logical modes")
+    assert_atmost_one_from(l, ADDRESS_ACTANTS_DEFINITION_SCRIPTS, "an address of an actant", "definitions")
 
-    assert_only_one_from(l, ADDRESS_ACTANTS_GRAMMATICAL_NUMBER_SCRIPTS, "an address of an actant", "grammatical numbers")
+    assert_atmost_one_from(l, ADDRESS_QUALITY_GRADIENT_EFM_SCRIPTS, "an address of an actant", "gradients")
 
-    assert_atmost_one_from(l, ADDRESS_ACTANTS_CONTINUITY_SCRIPTS, "an address of an actant", "continuities")
+    assert_atmost_one_from(l, ADDRESS_CIRCONSTANTIAL_MANNER_SCRIPTS, "an address of an actant", "manners")
 
-    assert_atmost_one_from(l, ADDRESS_ACTANTS_GRAMMATICAL_GENDER_SCRIPTS, "an address of an actant", "grammatical genders")
+    assert_atmost_one_from(l, ADDRESS_CIRCONSTANTIAL_CAUSE_SCRIPTS, "an address of an actant", "causals")
 
-    assert_atmost_one_from(l, ADDRESS_ACTANTS_QUANTIFICATION_SCRIPTS, "an address of an actant", "quantifications")
+    assert_atmost_one_from(l, ADDRESS_CIRCONSTANTIAL_LOCATION_SCRIPTS, "an address of an actant", "locations")
 
 
 def check_transformation_quality(l: List[Script]):
     assert_(len(l) == 0, "A quality can't have a transformation polymorpheme.")
 
 
-CONTENT_TIME_POLYMORPHEME_SCRIPTS = {
-    *script("t.o.-M:O:.-'").singular_sequences, # Qualité et relations temporelles
-    *script("t.o.-n.o.-M:O:.-'").singular_sequences, # Unitées de temps du calendrier
-    *script("t.i.-d.i.-t.+M:O:.-'").singular_sequences, # Unités de temps du chronomètre
-}
+def check_lexeme_scripts(l_pa: List[Script], l_pc: List[Script], l_pt: List[Script], role=None):
+    if role is None:
+        _role = get_role_of_pa(l_pa)
+    else:
+        _role = role
 
-
-ADDRESS_POLYMORPHEME_SCRIPTS = {
-    *ADDRESS_PROCESS_POLYMORPHEME_SCRIPTS,
-
-    *ADDRESS_ACTANT_SCRIPTS,
-
-    *ADDRESS_TIME_POLYMORPHEME_SCRIPTS,
-
-
-    *script("E:.-F:.M:M:.-l.-'").singular_sequences,  # distribution spacialle
-    *script("").singular_sequences,  #
-
-}
-
-
-
-TRANSFORMATION_POLYMORPHEME_SCRIPTS = []
+    if _role in ADDRESS_PROCESS_VALENCE_SCRIPTS:
+        check_address_process_scripts(l_pa, valence=role)
+        check_transformation_process_scripts(l_pt)
+    elif _role in ADDRESS_ACTANTS_MOTOR_SCRIPTS:
+        check_address_motor_actant_scripts(l_pa, role=role)
+        check_transformation_motor_actant_scripts(l_pt)
+    elif _role in ADDRESS_CIRCONSTANTIAL_ACTANTS_SCRIPTS:
+        circ_role = check_address_circonstancial_actant_scripts(l_pa, role=role)
+        check_transformation_circonstancial_actant_scripts(l_pt, role=circ_role)
+    elif _role == DEPENDANT_QUALITY:
+        check_address_actant_scripts(l_pa, role=role)
+        check_transformation_actant_scripts(l_pt)
+    elif _role == INDEPENDANT_QUALITY:
+        check_address_quality(l_pa, role=role)
+        check_transformation_quality(l_pt)
+    else:
+        raise ValueError("Invalid role: {}".format(str(_role)))
