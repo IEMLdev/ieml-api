@@ -206,6 +206,8 @@ class IEMLDatabase:
     def list(self, type=None, paradigm=None, parse=False, ):
         p = self.folder
         if type:
+            if not isinstance(type, str):
+                type = type.__name__.lower()
             p = os.path.join(p, type)
             if paradigm is not None:
                 p = os.path.join(p, 'paradigm' if paradigm else 'singular')
