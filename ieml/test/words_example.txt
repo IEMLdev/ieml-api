@@ -1,5 +1,5 @@
 [E:.b.E:S:.- ! (E:S:.)(b.-S:.A:.-’T:.-’T:.-’,)] # p.135 rougir, rougeoyer
-[E:.b.E:B:.- ! (E:B:.-d.u.-' E:.wo.-) (b.-S:.A:.-’T:.-’T:.-’,)] # p.135 le rouge
+[E:.b.E:B:.- ! () (b.-S:.A:.-’T:.-’T:.-’,)] # p.135 rouge (qualité)
 [E:.b.E:B:.- (E:.l.- E:.-T:.f.-l.-’) (b.-S:.A:.-’T:.-’T:.-’,)] # dans le rouge
 [E:.b.E:B:.- (E:.f.-) (b.-S:.A:.-’T:.-’T:.-’,)] # de manière rouge
 [E:.b.E:B:.- (E:.s.-) (b.-S:.A:.-’T:.-’T:.-’,)] # à cause du rouge
@@ -13,7 +13,7 @@
 [E:.b.E:S:.- (E:S:.) (b.-T:.A:.-’)] # s’assombrir, devenir obscur
 [E:.b.E:S:.- (E:T:.) (b.-T:.A:.-’)] # assombrir, rendre obscur
 [E:.b.E:S:.- (E:T:.) (t.e.-f.u.-’)] # jouer de la musique
-[E:.b.E:S:.- (E:S:.) (l.-T:.U:.-’,n.-T:.A:.-’,t.o.-f.o.-’,_)] # pleuvoir, qui se construit
+[E:.b.E:S:.- (E:S:.) (l.-T:.U:.-’,n.-T:.A:.-’,t.o.-f.o.-’,_)] # pleuvoir
 [E:.b.E:S:.- (E:T:. E:.-wo.-t.o.-’) (s.a.-d.a.-’)] # être conseillé, recevoir un conseil
 [E:.b.E:S:.- (E:T:. E:.-wa.-t.o.-’) (s.a.-d.a.-’)] # conseiller, donner un conseil
 [E:.b.E:S:.- (E:T:. E:.-wa.-t.o.-’) (t.)] # retenir, garder en mémoire

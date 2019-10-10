@@ -1,13 +1,21 @@
+from enum import Enum
+from itertools import chain
 from typing import List, Set
 
 from ieml.constants import AUXILIARY_CLASS
 from ieml.dictionary.script import script, Script
+
+SYNTAGMATIC_FUNCTION_PROCESS_TYPE_SCRIPT = script('E:.b.E:S:.-')
+SYNTAGMATIC_FUNCTION_ACTANT_TYPE_SCRIPT = script('E:.b.E:B:.-')
+SYNTAGMATIC_FUNCTION_QUALITY_TYPE_SCRIPT = script('E:.b.E:T:.-')
 
 # Process : grammatical role (valence)
 ONE_ACTANT_PROCESS = script('E:S:.')
 TWO_ACTANTS_PROCESS = script('E:B:.')
 THREE_ACTANTS_PROCESS = script('E:T:.')
 ADDRESS_PROCESS_VALENCE_SCRIPTS = [ONE_ACTANT_PROCESS, TWO_ACTANTS_PROCESS, THREE_ACTANTS_PROCESS]  # process
+
+
 
 # Process : mandatory address
 ADDRESS_PROCESS_VOICES_SCRIPTS = {
@@ -45,11 +53,16 @@ TRANSFORMATION_PROCESS_SCRIPTS = {
     *TRANSFORMATION_PROCESS_HEXADE_MODE_SCRIPTS
 }
 
+SYNTAGMATIC_FUNCTION_SCRIPT = script('E:.b.-')
+
+
+
 # Actant : grammatical roles
 INITIATOR_SCRIPT = script('E:.n.-')
 INTERACTANT_SCRIPT = script('E:.d.-')
 RECIPIENT_SCRIPT = script('E:.k.-')
 ADDRESS_ACTANTS_MOTOR_SCRIPTS = [INITIATOR_SCRIPT, INTERACTANT_SCRIPT, RECIPIENT_SCRIPT]
+
 TIME_SCRIPT = script('E:.t.-')
 LOCATION_SCRIPT = script('E:.l.-')
 MANNER_SCRIPT = script('E:.f.-')
@@ -58,6 +71,33 @@ INTENTION_SCRIPT = script('E:.m.-')
 ADDRESS_CIRCONSTANTIAL_ACTANTS_SCRIPTS = [TIME_SCRIPT, LOCATION_SCRIPT, MANNER_SCRIPT, CAUSE_SCRIPT, INTENTION_SCRIPT]
 ACTANTS_SCRIPTS = [*ADDRESS_ACTANTS_MOTOR_SCRIPTS,
                    *ADDRESS_CIRCONSTANTIAL_ACTANTS_SCRIPTS]
+
+
+# class ScriptsEnum(Enum):
+#     @staticmethod
+#     def from_paradigm(cls):
+#         return cls( [(i.name, i.value) for i in chain(MotorActants, CirconstantialActants)])
+#
+
+
+class MotorActants(Enum):
+    INITIATOR = script('E:.n.-')
+    INTERACTANT = script('E:.d.-')
+    RECIPIENT = script('E:.k.-')
+
+class CirconstantialActants(Enum):
+    TIME = script('E:.t.-')
+    LOCATION = script('E:.l.-')
+    MANNER = script('E:.f.-')
+    CAUSE = script('E:.s.-')
+    INTENTION = script('E:.m.-')
+
+
+Actants = Enum('Actants', [(i.name, i.value) for i in chain(MotorActants, CirconstantialActants)])
+
+
+
+
 INDEPENDANT_QUALITY = script('E:U:.')
 DEPENDANT_QUALITY = script('E:A:.')
 SCRIPTS_ADDRESS_QUALITY = [INDEPENDANT_QUALITY,

@@ -5,10 +5,11 @@ from ieml.constants import PARSER_FOLDER
 from ieml.dictionary.script import script, Script
 from ieml.usl import Word, Phrase, PolyMorpheme, check_word
 from ieml.exceptions import CannotParse
-from ieml.usl.word import Lexeme, SyntagmaticFunction
+from ieml.usl.constants import ADDRESS_SCRIPTS
+from ieml.usl.word import Lexeme
+from ieml.usl.syntagmatic_function import SyntagmaticFunction
 from .lexer import get_lexer, tokens
 import threading
-
 
 class IEMLParserSingleton(type):
     _instance = None
@@ -117,13 +118,21 @@ class IEMLParser():
                   | LPAREN poly_morpheme RPAREN LPAREN poly_morpheme RPAREN
                   | LPAREN poly_morpheme RPAREN"""
 
-        if len(p) == 10:
-            p[0] = Lexeme(pm_address=p[2], pm_content=p[5], pm_transformation=p[8])
-        elif len(p) == 7:
-            p[0] = Lexeme(pm_address=p[2], pm_content=p[5], pm_transformation=PolyMorpheme(constant=[]))
-        else:
-            p[0] = Lexeme(pm_address=p[2], pm_content=PolyMorpheme(constant=[]), pm_transformation=PolyMorpheme(constant=[]))
+        pm_address = p[2]
 
+        if not pm_address.is_singular:
+            raise ValueError("Only singular polymorpheme address are supported.")
+
+        pm_address2 = PolyMorpheme(constant=[e for e in pm_address.constant if e not in ADDRESS_SCRIPTS])
+        role = [e for e in pm_address.constant if e in ADDRESS_SCRIPTS]
+
+        if len(p) == 10:
+            p[0] = role, Lexeme(pm_address=pm_address2, pm_content=p[5], pm_transformation=p[8])
+        elif len(p) == 7:
+            p[0] = role, Lexeme(pm_address=pm_address2, pm_content=p[5], pm_transformation=PolyMorpheme(constant=[]))
+        else:
+            p[0] = role, Lexeme(pm_address=pm_address2, pm_content=PolyMorpheme(constant=[]),
+                                pm_transformation=PolyMorpheme(constant=[]))
 
     def p_lexeme_list(self, p):
         """lexeme_list : lexeme_list RCHEVRON EXCLAMATION_MARK lexeme
@@ -131,21 +140,23 @@ class IEMLParser():
                        | EXCLAMATION_MARK lexeme
                        | lexeme"""
         if len(p) == 5:
-            lex_list, address = p[1]
-            p[0] = (lex_list + [p[4]], p[4].address)
+            lex_list, _ = p[1]
+            role, _ = p[4]
+            p[0] = (lex_list + [p[4]], role)
         elif len(p) == 4:
             lex_list, address = p[1]
             p[0] = (lex_list + [p[3]], address)
         elif len(p) == 3:
-            p[0] = ([p[2]], p[2].address)
+            role, _ = p[2]
+            p[0] = ([p[2]], role)
         else:
             p[0] = ([p[1]], None)
 
     def p_word(self, p):
         """word : LBRACKET morpheme lexeme_list RBRACKET"""
-        lex_list, address = p[3]
-        p[0] = Word(syntagmatic_fun=SyntagmaticFunction.from_positioned_lexemes(lex_list),
-                    address=address)
+        lex_list, role = p[3]
+        p[0] = Word(syntagmatic_fun=SyntagmaticFunction.from_list(lex_list, type=p[2]),
+                    role=PolyMorpheme(constant=role))
         # check_word(p[0])
         assert p[2] == p[0].grammatical_class
 

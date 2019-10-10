@@ -19,7 +19,7 @@ def process_line(l):
     try:
         u = usl(ieml)
     except Exception as e:
-        print(e.args[0])
+        # print(e.args[0])
         raise
 
     return str(u), trans_fr
