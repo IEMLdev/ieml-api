@@ -1,115 +1,112 @@
-[E:.b.E:S:.- ! (E:S:.)(b.-S:.A:.-’T:.-’T:.-’,)] # p.135 rougir, rougeoyer
-[E:.b.E:B:.- ! () (b.-S:.A:.-’T:.-’T:.-’,)] # p.135 rouge (qualité)
-[E:.b.E:B:.- (E:.l.- E:.-T:.f.-l.-’) (b.-S:.A:.-’T:.-’T:.-’,)] # dans le rouge
-[E:.b.E:B:.- (E:.f.-) (b.-S:.A:.-’T:.-’T:.-’,)] # de manière rouge
-[E:.b.E:B:.- (E:.s.-) (b.-S:.A:.-’T:.-’T:.-’,)] # à cause du rouge
-[E:.b.E:T:.- (b.-S:.A:.-’T:.-’T:.-’,)] # telle surface ou lumière rouge
-[E:.b.E:S:.- (E:S:.) (E:.S:.h.-)] # varier
-[E:.b.E:S:.- (E:T:.) (E:.S:.h.-) (E:.b.i.-)] # faire varier
-[E:.b.E:S:.- (E:S:.) (s.we.-)] # p136 se soucier de l’environnement
-[E:.b.E:S:.- (E:S:.) (s.c.-)] # porter un projet politique
-[E:.b.E:S:.- (E:S:.) (b.-S:.A:.-’)] # se colorer
-[E:.b.E:S:.- (E:T:.) (b.-S:.A:.-’)] # colorer, colorier
-[E:.b.E:S:.- (E:S:.) (b.-T:.A:.-’)] # s’assombrir, devenir obscur
-[E:.b.E:S:.- (E:T:.) (b.-T:.A:.-’)] # assombrir, rendre obscur
-[E:.b.E:S:.- (E:T:.) (t.e.-f.u.-’)] # jouer de la musique
-[E:.b.E:S:.- (E:S:.) (l.-T:.U:.-’,n.-T:.A:.-’,t.o.-f.o.-’,_)] # pleuvoir
-[E:.b.E:S:.- (E:T:. E:.-wo.-t.o.-’) (s.a.-d.a.-’)] # être conseillé, recevoir un conseil
-[E:.b.E:S:.- (E:T:. E:.-wa.-t.o.-’) (s.a.-d.a.-’)] # conseiller, donner un conseil
-[E:.b.E:S:.- (E:T:. E:.-wa.-t.o.-’) (t.)] # retenir, garder en mémoire
-[E:.b.E:S:.- (E:T:. E:.-wo.-t.o.-’) (t.)] # être conservé en mémoire
-[E:.b.E:S:.- (E:T:. E:.-wa.-t.o.-’) (l.i.-n.i.-’)] # couper, découper au moyen d’un outil
-[E:.b.E:B:.- (wa.)] # action
-[E:.b.E:B:.- (a.)] # engagement
-[E:.b.E:B:.- (E:S:T:.)] # éternité
-[E:.b.E:B:.- (E:.A:.j.-)] # comparaison, analogie
-[E:.b.E:B:.- (E:.f.) (t.e.-f.u.-’)] # p137 musicalement
-[E:.b.E:B:.- (E:.f.) (t.o.-k.o.-’)] # traditionnellement
-[E:.b.E:B:.- (E:.f.) (k.o.-t.o.-’)] # historiquement
-[E:.b.E:B:.- (E:.f.) (wu.wu.t.-)] # de manière mûre, avec maturité
-[E:.b.E:T:.- (S:.B:.n.-)] # neuronal
-[E:.b.E:S:.- (! E:T:. E:.-’we.-S:.-’t.o.-’,) (a.T:.-) > (E:.f. E:T:.-t.u.-’)] # p140 se goinfrer », « man-
-ger trop
-[E:.b.E:S:.- (! E:T:. E:.-’wu.-S:.-’t.o.-’,) (wu.f.B:.-) > (E:.d.)(f.-S:.A:.-’)] # avoir la dent su-
-crée », « aimer le sucre
-[E:.b.E:B:.- (E:B:.) (e.i.-) > (! E:.n.)] # donateur
-[E:.b.E:B:.- (E:B:.) (e.i.-) > (! E:.k.)] # donataire
-[E:.b.E:B:.- (E:B:.) (i.k.-) > (! E:.n.- E:.-n.S:.-’)] # p141 voleur
-[E:.b.E:B:.- (E:B:.) (i.k.-) > (! E:.n.- E:.-n.S:.-’) (t.a.-b.a.-f.o.-’)] # Editeur ayant commis un vol
-[E:.b.E:B:.- (E:B:.) (i.k.-) > (! E:.k.- E:.-n.S:.-’)] # Personne victime d’un vol
-[E:.b.E:B:.- (E:B:.) (i.k.-) > (! E:.k.- E:.-n.S:.-’) (b.a.-b.a.-f.o.-’)] # Auteur victime d’un vol
-[E:.b.E:B:.- (E:B:.) (i.k.-) > (! E:.d.-)] # Objet ou bien volé
-[E:.b.E:B:.- (E:B:.) (i.k.-) > (! E:.d.- E:.-n.E:U:.-’) (t.e.-n.u.-’)] # Texte littéraire volé
-[E:.b.E:B:.- (E:B:.) (i.k.-) > (E:.n.- E:.-n.S:.-’) (t.a.-b.a.-f.o.-’) > (! E:.d.- E:.-n.E:U:.-’) (t.e.-n.u.-’)> (E:.k.- E:.-n.S:.-’) (b.a.-b.a.-f.o.-’)] # Texte littéraire volé par un éditeur à un auteur.
-[E:.b.E:T:.- (E:T:.)(A:.e.-) > (E:.d. E:.wo.- E:B:.-d.u.-’ E:S:.j.-’j.-U:.-’,) (f.o.-f.o.-’E:.-U:.t.-l.-’,E:.-U:.n.-l.-’E:.-A:.n.-l.-’,_) (E:.-B:.b.-l.-’) > (! E:A:. E:.wo.- E:S:.-d.u.-’) (b.-S:.A:.-’) > (E:S:.-k.u.-’) (f.o.-f.o.-’E:.-U:.t.-l.-’,E:.-U:.n.-l.-’E:.-A:.n.-l.-’,_) (E:.-B:.f.-l.-’) > (! E:A:. E:.wo.- E:S:.-d.u.-’) (b.-S:.A:.-’) > (E:U:.) (m.u.-m.u.-d.u.-’)] # vairon, avoir l’oeil droit d’une couleur et l’oeil gauche d’une autre
-[E:.b.E:B:.- (! E:.-n.S:.-’) (b.a.- b.o.-n.o.-s.u.-’ f.a.-b.a.-f.o.-’ ) > (E:U:.)(j.-’U:.-’k.o.-t.o.-’, t.o.-k.o.-s.u.-’) > (E:A:.) (n.-S:.U:.-’B:.-’B:.-’,B:.-’,B:.-’,_ n.-S:.U:.-’B:.-’B:.-’,T:.-’,S:.-’,_)] # 143griot / griotte ou de djeli.
-[E:.b.E:T:.- (b.-S:.A:.-’S:.-’S:.-’,) > (! E:A:.) (k.a.-k.a.-’ #prusse)] # bleu de Prusse
-[E:.b.E:T:.- (E:A:T:.) (t.o.-p.-’)] # très ancien
-[E:.b.E:S:.- (E:T:.) (i.S:.-)] # p145 soulever (deux actants moteurs)
-[E:.b.E:S:.- (E:S:.) (i.S:.-)] # se lever (un seul actant moteur)
-[E:.b.E:S:.- (E:T:.) (a.T:.-)] # manger (deux actants moteurs)
-[E:.b.E:S:.- (E:B:.) (a.T:.-) (E:.b.i.-)] # faire manger, nourrir (trois actants moteurs).
-[E:.b.E:S:.- (X) > (! E:.l.-)] # [lieu prototypique de X]
-[E:.b.E:S:.- (X) > (! E:.s.- E:A:.x.-)] # [moyen prototypique de X]
-[E:.b.E:S:.- (X) > (! E:.s.- E:T:.c.-)] # [résultat prototypique de X]
-[E:.b.E:S:.- (X) > (! E:.s.- E:T:.x.-)] # [instr. prototypique de X]
-[E:.b.E:S:.- (E:.l.-) (X)] # [lieu prototypique de X]
-[E:.b.E:S:.- (E:.s.- E:A:.x.-) (X)] # [moyen prototypique de X]
-[E:.b.E:S:.- (E:.s.- E:T:.c.-) (X)] # [résultat prototypique de X]
-[E:.b.E:S:.- (E:.s.- E:T:.x.-) (X)] # [instrument prototypique de X]
-[E:.b.E:B:.- (E:T:.) (a.T:.-) > (! E:.l.-)] # salle à manger, réfectoire
-[E:.b.E:B:.- (E:S:.) (u.S:.-) > (! E:s:. E:.T:.x.- E:.wa.-)] # ailes (noter la désignation d’un actant prototypique)
-[E:.b.E:B:.- (E:.s.- E:.A:.x-) (s.e.-s.u.-’) ] # peinture (matériau)
-[E:.b.E:B:.- (E:.s.- E:.T:.x.-) (s.e.-s.u.-’)] # pinceau
-[E:.b.E:S:.- (! E:T:.) (a.B:.-) > (E:.f.- E:A:S:.)] # p147 boire peu
-[E:.b.E:B:.- (! E:.wo.- E:S:.-d.u.-’) (k.i.-l.i.-’) > (E:U:.) (p.E:A:T:.-)] # une grande maison
-[E:.b.E:T:.- (E:A:T:.-) (p.E:A:T:.-)] # très grand, énorme
-[E:.b.E:B:.- (!) (m.-T:.U:.-’) > (E:U:. E:B:.-d.u.-’) (p.E:A:T:.-)] # p148 le comble de la joie (actant)
-[E:.b.E:T:.- (E:B:.-d.u.-’ E:A:T:.) (m.-T:.U:.-’)] # au comble de la joie (qualité)
-[E:.b.E:B:.- (!) (m.-B:.A:.-’) > (E:U:. E:B:.-d.u.-’) (p.E:A:T:.-)] # paroxysme de la colère (actant)
-[E:.b.E:B:.- (!) (l.-y.-’E:U:.t.-l.-’E:U:.t.-l.-’,) > (E:U:.) (p.E:A:S:.-)] # butte (actant)
-[E:.b.E:B:.- (!) (f.i.-b.i.-’) > (E:U:.) (p.E:U:S:.-)] # poison (actant)
-[E:.b.E:T:.- (E:U:S:.-) (f.i.-b.i.-’)] # empoisonné (qualité)
-[E:.b.E:S:.- (u.A:.-) > (E:.l.- E:.-A:.s.-l.-’)] # p149 avancer
-[E:.b.E:S:.- (u.A:.-) > (E:.l.- E:.-A:.d.-l.-’)] # reculer
-[E:.b.E:S:.- (u.A:.-) > (E:.l.- E:.-U:.s.-l.-’)] # monter
-[E:.b.E:S:.- (u.A:.-) > (E:.l.- E:.-U:.d.-l.-’)] # descendre
-[E:.b.E:B:.- (E:.f.- E:U:.c.-) (m.a.-f.a.-’)] # p150 gêne (mot d’actant)
-[E:.b.E:B:.- (E:.f.- E:U:.c.- E:.-n.E:U:.-’) (l.o.-m.o.-’)] # tyrannie (mot d’actant genre immatériel)
-[E:.b.E:B:.- (E:.f.- E:U:.c.- E:.-n.S:.-’) (l.o.-m.o.-’)] # tyran (mot d’actant genre humain)
-[E:.b.E:B:.- (E:.f.- E:U:.c.- E:.-n.E:U:.-’) (f.a.-m.a.-’)] # misogynie (mot d’actant, genre immatériel)
-[E:.b.E:B:.- (E:.f.- E:U:.c.- E:.-n.S:.-’) (f.a.-m.a.-’)] # misogyne (mot d’actant, genre humain)
-[E:.b.E:T:.- (E:.U:.c.-) (f.a.-m.a.-’)] # misogyne (mot de qualité)
-[E:.b.E:B:.- (E:.f.- E:.-n.E:U:.-’ E:A:.c.-) (f.a.-m.a.-’)] # féminisme (mot d’actant, genre immatériel)
-[E:.b.E:B:.- (E:.f.- E:.-n.S:.-’ E:A:.c.-) (f.a.-m.a.-’)] # féministe (mot d’actant, genre humain)
-[E:.b.E:T:.- (E:A:.c.-) (f.a.-m.a.-’)] # féministe (mot de qualité)
-[E:.b.E:S:.- (! U:S:.) (we.) > (E:.f.- E:.U:.j.-)] # disparaître
-[E:.b.E:B:.- (E:.f.- E:.U:.j.-) (l.o.-m.o.-’)] # esclavage, servitude
-[E:.b.E:T:.- (E:.U:.j.-) (n.i.-d.i.-t.u.-’)] # lent
-[E:.b.E:S:.- (a.T:.-) (E:U:A:.)] # p152 jeûner
-[E:.b.E:B:.- (f.u.-wu.f.S:.-’) (E:U:A:.)] # cécité
-[E:.b.E:B:.- (f.u.-wu.f.U:.-’) (E:U:A:.)] # surdité
-[E:.b.E:B:.- (s.e.-k.u.-wa.e.-’) (E:U:A:.)] # analphabétisme, illetrisme
-[E:.b.E:B:.- (E:.s.- E:T:.d.-) (s.-S:.U:.-’ s.-S:.A:.-’)] # température
-[E:.b.E:B:.- (E:.l.- E:.-A:.t.-l.-’) (k.i.-l.i.-’)] # p153 devant une maison
-[E:.b.E:B:.- (E:.l.- E:.-A:.b.-l.-’) (k.i.-l.i.-’)] # façade d’une maison
-[E:.b.E:B:.- (E:.l.- E:.-A:.f.-l.-’) (k.i.-l.i.-’)] # derrière une maison
-[E:.b.E:B:.- (E:.l.- E:.-A:.l.-l.-’) (k.i.-l.i.-’)] # arrière ou dos d’une maison
-[E:.b.E:B:.- (E:.l.- E:.-U:.b.-l.-’) (k.i.-l.i.-’)] # au-dessus d’une maison
-[E:.b.E:B:.- (E:.l.- E:.-U:.t.-l.-’) (k.i.-l.i.-’)] # toit d’une maison
-[E:.b.E:B:.- (E:.l.- E:.-U:.f.-l.-’) (k.i.-l.i.-’)] # sous une maison
-[E:.b.E:B:.- (E:.l.- E:.-U:.l.-l.-’) (k.i.-l.i.-’)] # fondations d’une maison
-[E:.b.E:S:.- (E:.-’wu.-T:.t.o.-’,) (m.a.-f.a.-’)] # au secours!
-[E:.b.E:B:.- (E:.s.- E:S:.x.- E:.wo.- E:S:.-d.u.-’) (l.-T:.U:.-’,n.-T:.A:.-’,t.o.-f.o.-’,_)] # p155 goutte de pluie
-[E:.b.E:B:.- (E:.s.- E:S:.p.- E:S:.-d.u.-’ E:.we.-) (B:.B:.n.-k.-u.S:.-’ f.-S:.A:.-’)] # essaim d’abeilles
-[E:.b.E:S:.- (e.U:.-) (E:S:.-t.o.-’)] # commencer à tirer
-[E:.b.E:S:.- (e.U:.-) (E:B:.-t.o.-’)] # continuer à tirer
-[E:.b.E:S:.- (e.U:.-) (E:T:.-t.o.-’)] # arrêter/finir de tirer
-[E:.b.E:S:.- (E:S:.-t.o.-’) (n.u.-s.u.-’) (E:.b.we.-)] # prendre forme
-[E:.b.E:S:.- (! E:B:.-t.o.-’) (A:.a.-) > (E:.d.-) (l.j.-)] # garder de l’infuence
-[E:.b.E:S:.- (! E:T:.-t.o.-’) (A:.a.-) > (E:.d.-) (l.j.-)] # perdre de l’infuence
-[E:.b.E:B:.- (E:B:.) (e.) > (! E:.n.-) > (E:.d.-) (m.-S:.U:.-’)] # actant « peureux »
-[E:.b.E:T:.- (E:T:.) (e.) (E:.b.wa.-) > (E:.n.-) > (! E:U:.) > (E:.d.-) (m.-S:.U:.-’)] # qualité « effrayant »
+[E:.b.E:S:.- ! E:S:. ()(b.-S:.A:.-'T:.-'T:.-',)] # p.135 rougir, rougeoyer
+[E:.b.E:B:.- ! E:A:. ()(b.-S:.A:.-'T:.-'T:.-',)] # p.135 le rouge
+[E:.b.E:B:.- ! E:.l.- (E:.-T:.f.-l.-’)(b.-S:.A:.-’T:.-’T:.-’,)] # dans le rouge
+[E:.b.E:B:.- ! E:.f.- ()(b.-S:.A:.-’T:.-’T:.-’,)] # de manière rouge
+[E:.b.E:B:.- ! E:.s.- ()(b.-S:.A:.-’T:.-’T:.-’,)] # à cause du rouge
+[E:.b.E:T:.- ! E:U:. ()(b.-S:.A:.-’T:.-’T:.-’,)] # telle surface ou lumière rouge
+[E:.b.E:S:.- ! E:S:. ()(E:.S:.h.-)] # varier
+[E:.b.E:S:.- ! E:T:. ()(E:.S:.h.-)(E:.b.i.-)] # faire varier
+[E:.b.E:S:.- ! E:S:.() (s.we.-)] # p136 se soucier de l’environnement
+[E:.b.E:S:.- ! E:S:.() (s.c.-)] # porter un projet politique
+[E:.b.E:S:.- ! E:S:. () (b.-S:.A:.-’)] # se colorer
+[E:.b.E:S:.- ! E:T:. () (b.-S:.A:.-’)] # colorer, colorier
+[E:.b.E:S:.- ! E:S:. () (b.-T:.A:.-’)] # s’assombrir, devenir obscur
+[E:.b.E:S:.- ! E:T:. () (b.-T:.A:.-’)] # assombrir, rendre obscur
+[E:.b.E:S:.- ! E:T:. () (t.e.-f.u.-’)] # jouer de la musique
+[E:.b.E:S:.- ! E:S:. () (l.-T:.U:.-’,n.-T:.A:.-’,t.o.-f.o.-’,_)] # pleuvoir
+[E:.b.E:S:.- ! E:T:. (E:.-wo.-t.o.-’) (s.a.-d.a.-’)] # être conseillé, recevoir un conseil
+[E:.b.E:S:.- ! E:T:. (E:.-wa.-t.o.-’) (s.a.-d.a.-’)] # conseiller, donner un conseil
+[E:.b.E:S:.- ! E:T:. (E:.-wa.-t.o.-’) (t.)] # retenir, garder en mémoire
+[E:.b.E:S:.- ! E:T:. (E:.-wo.-t.o.-’) (t.)] # être conservé en mémoire
+[E:.b.E:S:.- ! E:T:. (E:.-wa.-t.o.-’) (l.i.-n.i.-’)] # couper, découper au moyen d’un outil
+[E:.b.E:B:.- ! E:A:. ()(wa.)] # action
+[E:.b.E:B:.- ! E:A:. ()(a.)] # engagement
+[E:.b.E:B:.- ! E:A:. ()(E:S:T:.)] # éternité
+[E:.b.E:B:.- ! E:A:. ()(E:.A:.j.-)] # comparaison, analogie
+[E:.b.E:B:.- ! E:.f.- ()(t.e.-f.u.-’)] # p137 musicalement
+[E:.b.E:B:.- ! E:.f.- ()(t.o.-k.o.-’)] # traditionnellement
+[E:.b.E:B:.- ! E:.f.- ()(k.o.-t.o.-’)] # historiquement
+[E:.b.E:B:.- ! E:.f.- ()(wu.wu.t.-)] # de manière mûre, avec maturité
+[E:.b.E:T:.- ! E:U:. ()(S:.B:.n.-)] # neuronal
+[E:.b.E:S:.- ! E:T:. ( E:.-’we.-S:.-’t.o.-’,) (a.T:.-) > E:.f.- (E:T:.-t.u.-’)] # p140 se goinfrer », « manger trop
+[E:.b.E:S:.- ! E:T:. (E:.-’wu.-S:.-’t.o.-’,) (wu.f.B:.-) > E:.d.- ()(f.-S:.A:.-’)] # avoir la dent sucrée », « aimer le sucre
+[E:.b.E:B:.- E:B:. () (e.i.-) > ! E:.n.- ()] # donateur
+[E:.b.E:B:.- E:B:. () (e.i.-) > ! E:.k.- ()] # donataire
+[E:.b.E:B:.- E:B:. () (i.k.-) > ! E:.n.- (E:.-n.S:.-’)] # p141 voleur
+[E:.b.E:B:.- E:B:. () (i.k.-) > ! E:.n.- (E:.-n.S:.-’) (t.a.-b.a.-f.o.-’)] # Editeur ayant commis un vol
+[E:.b.E:B:.- E:B:. () (i.k.-) > ! E:.k.- (E:.-n.S:.-’)] # Personne victime d’un vol
+[E:.b.E:B:.- E:B:. () (i.k.-) > ! E:.k.- (E:.-n.S:.-’) (b.a.-b.a.-f.o.-’)] # Auteur victime d’un vol
+[E:.b.E:B:.- E:B:. () (i.k.-) > ! E:.d.- ()] # Objet ou bien volé
+[E:.b.E:B:.- E:B:. () (i.k.-) > ! E:.d.- (E:.-n.E:U:.-’) (t.e.-n.u.-’)] # Texte littéraire volé
+[E:.b.E:B:.- E:B:. () (i.k.-) > E:.n.- (E:.-n.S:.-’) (t.a.-b.a.-f.o.-’) > ! E:.d.- (E:.-n.E:U:.-’) (t.e.-n.u.-’) > E:.k.- (E:.-n.S:.-’) (b.a.-b.a.-f.o.-’)] # Texte littéraire volé par un éditeur à un auteur.
+[E:.b.E:B:.- ! E:A:. (E:.-n.S:.-’) (b.a.- b.o.-n.o.-s.u.-’ f.a.-b.a.-f.o.-’ ) > ! E:A:. E:U:. ()(j.-’U:.-’k.o.-t.o.-’, t.o.-k.o.-s.u.-’) > E:A:. E:A:. () (n.-S:.U:.-’B:.-’B:.-’,B:.-’,B:.-’,_ n.-S:.U:.-’B:.-’B:.-’,T:.-’,S:.-’,_)] # 143griot / griotte ou de djeli.
+[E:.b.E:B:.- ! E:A:. ()(b.-S:.A:.-’S:.-’S:.-’,) >  E:A:. E:A:. ()(k.a.-k.a.-’ #prusse#)] # bleu de Prusse
+[E:.b.E:T:.- ! E:U:. (E:A:T:.) (t.o.-p.-’)] # très ancien
+[E:.b.E:S:.- ! E:T:. () (i.S:.-)] # p145 soulever (deux actants moteurs)
+[E:.b.E:S:.- ! E:S:. () (i.S:.-)] # se lever (un seul actant moteur)
+[E:.b.E:S:.- ! E:T:. () (a.T:.-)] # manger (deux actants moteurs)
+[E:.b.E:S:.- ! E:B:. () (a.T:.-) (E:.b.i.-)] # faire manger, nourrir (trois actants moteurs).
+[E:.b.E:B:.- E:S:. ()(X) > ! E:.l.- ()] # [lieu prototypique de X]
+[E:.b.E:B:.- E:S:. ()(X) > ! E:.s.- (E:A:.x.-)] # [moyen prototypique de X]
+[E:.b.E:B:.- E:S:. ()(X) > ! E:.s.- (E:T:.c.-)] # [résultat prototypique de X]
+[E:.b.E:B:.- E:S:. ()(X) > ! E:.s.- (E:T:.x.-)] # [instr. prototypique de X]
+[E:.b.E:B:.- ! E:.l.- ()(X)] # [lieu prototypique de X]
+[E:.b.E:B:.- ! E:.s.- (E:A:.x.-) (X)] # [moyen prototypique de X]
+[E:.b.E:B:.- ! E:.s.- (E:T:.c.-) (X)] # [résultat prototypique de X]
+[E:.b.E:B:.- ! E:.s.- (E:T:.x.-) (X)] # [instrument prototypique de X]
+[E:.b.E:B:.- E:T:. ()(a.T:.-) > ! E:.l.- ()] # salle à manger, réfectoire
+[E:.b.E:B:.- E:S:. ()(u.S:.-) > ! E:.s.- (E:.T:.x.- E:.wa.-)] # ailes (noter la désignation d’un actant prototypique)
+[E:.b.E:B:.- ! E:.s.- (E:.A:.x.-) (s.e.-s.u.-’) ] # peinture (matériau)
+[E:.b.E:B:.- ! E:.s.- (E:.T:.x.-) (s.e.-s.u.-’)] # pinceau
+[E:.b.E:S:.- ! E:T:. () (a.B:.-) > E:.f.- (E:A:S:.)] # p147 boire peu
+[E:.b.E:B:.- ! E:A:. (E:.wo.- E:S:.-d.u.-’) (k.i.-l.i.-’) > E:A:. E:U:. ()(p.E:A:T:.-)] # une grande maison
+[E:.b.E:T:.- ! E:U:. (E:A:T:.-) (p.E:A:T:.-)] # très grand, énorme
+[E:.b.E:B:.- ! E:A:. () (m.-T:.U:.-’) > E:A:. E:U:. (E:B:.-d.u.-’) (p.E:A:T:.-)] # p148 le comble de la joie (actant)
+[E:.b.E:T:.- ! E:U:. (E:B:.-d.u.-’ E:A:T:.) (m.-T:.U:.-’)] # au comble de la joie (qualité)
+[E:.b.E:B:.- ! E:A:. ()(m.-B:.A:.-’) > E:A:. E:A:. (E:B:.-d.u.-’) (p.E:A:T:.-)] # paroxysme de la colère (actant)
+[E:.b.E:B:.- ! E:A:. ()(l.-y.-’E:U:.t.-l.-’E:U:.t.-l.-’,) > E:A:. E:U:. () (p.E:A:S:.-)] # butte (actant)
+[E:.b.E:B:.- ! E:A:. () (f.i.-b.i.-’) >  E:A:. E:U:. ()(p.E:U:S:.-)] # poison (actant)
+[E:.b.E:T:.- ! E:U:. (E:U:S:.-)(f.i.-b.i.-’)] # empoisonné (qualité)
+[E:.b.E:S:.- ! E:S:. (u.A:.-) > E:.l.- (E:.-A:.s.-l.-’)] # p149 avancer
+[E:.b.E:S:.- ! E:S:. (u.A:.-) > E:.l.- (E:.-A:.d.-l.-’)] # reculer
+[E:.b.E:S:.- ! E:S:. (u.A:.-) > E:.l.- (E:.-U:.s.-l.-’)] # monter
+[E:.b.E:S:.- ! E:S:. (u.A:.-) > E:.l.- (E:.-U:.d.-l.-’)] # descendre
+[E:.b.E:B:.- ! E:.f.- (E:U:.c.-) (m.a.-f.a.-’)] # p150 gêne (mot d’actant)
+[E:.b.E:B:.- ! E:.f.- (E:U:.c.- E:.-n.E:U:.-’) (l.o.-m.o.-’)] # tyrannie (mot d’actant genre immatériel)
+[E:.b.E:B:.- ! E:.f.- (E:U:.c.- E:.-n.S:.-’) (l.o.-m.o.-’)] # tyran (mot d’actant genre humain)
+[E:.b.E:B:.- ! E:.f.- (E:U:.c.- E:.-n.E:U:.-’) (f.a.-m.a.-’)] # misogynie (mot d’actant, genre immatériel)
+[E:.b.E:B:.- ! E:.f.- (E:U:.c.- E:.-n.S:.-’) (f.a.-m.a.-’)] # misogyne (mot d’actant, genre humain)
+[E:.b.E:T:.- ! E:U:. (E:.U:.c.-) (f.a.-m.a.-’)] # misogyne (mot de qualité)
+[E:.b.E:B:.- ! E:.f.- (E:.-n.E:U:.-’ E:A:.c.-) (f.a.-m.a.-’)] # féminisme (mot d’actant, genre immatériel)
+[E:.b.E:B:.- ! E:.f.- (E:.-n.S:.-’ E:A:.c.-) (f.a.-m.a.-’)] # féministe (mot d’actant, genre humain)
+[E:.b.E:T:.- ! E:U:. (E:A:.c.-) (f.a.-m.a.-’)] # féministe (mot de qualité)
+[E:.b.E:S:.- ! E:S:. () (we.) > E:.f.- (E:.U:.j.-)] # disparaître
+[E:.b.E:B:.- ! E:.f.- (E:.U:.j.-) (l.o.-m.o.-’)] # esclavage, servitude
+[E:.b.E:T:.- ! E:U:. (E:.U:.j.-) (n.i.-d.i.-t.u.-’)] # lent
+[E:.b.E:S:.- ! E:S:. (a.T:.-) (E:U:A:.)] # p152 jeûner
+[E:.b.E:B:.- ! E:A:. (f.u.-wu.f.S:.-’) (E:U:A:.)] # cécité
+[E:.b.E:B:.- ! E:A:. (f.u.-wu.f.U:.-’) (E:U:A:.)] # surdité
+[E:.b.E:B:.- ! E:A:. (s.e.-k.u.-wa.e.-’) (E:U:A:.)] # analphabétisme, illetrisme
+[E:.b.E:B:.- ! E:.s.-  (E:T:.d.-) (s.-S:.U:.-’ s.-S:.A:.-’)] # température
+[E:.b.E:B:.- ! E:.l.-  (E:.-A:.t.-l.-’) (k.i.-l.i.-’)] # p153 devant une maison
+[E:.b.E:B:.- ! E:.l.-  (E:.-A:.b.-l.-’) (k.i.-l.i.-’)] # façade d’une maison
+[E:.b.E:B:.- ! E:.l.-  (E:.-A:.f.-l.-’) (k.i.-l.i.-’)] # derrière une maison
+[E:.b.E:B:.- ! E:.l.-  (E:.-A:.l.-l.-’) (k.i.-l.i.-’)] # arrière ou dos d’une maison
+[E:.b.E:B:.- ! E:.l.-  (E:.-U:.b.-l.-’) (k.i.-l.i.-’)] # au-dessus d’une maison
+[E:.b.E:B:.- ! E:.l.-  (E:.-U:.t.-l.-’) (k.i.-l.i.-’)] # toit d’une maison
+[E:.b.E:B:.- ! E:.l.-  (E:.-U:.f.-l.-’) (k.i.-l.i.-’)] # sous une maison
+[E:.b.E:B:.- ! E:.l.-  (E:.-U:.l.-l.-’) (k.i.-l.i.-’)] # fondations d’une maison
+[E:.b.E:S:.- ! E:S:. (E:.-’wu.-T:.t.o.-’,) (m.a.-f.a.-’)] # au secours!
+[E:.b.E:B:.- ! E:.s.- (E:S:.x.- E:.wo.- E:S:.-d.u.-’) (l.-T:.U:.-’,n.-T:.A:.-’,t.o.-f.o.-’,_)] # p155 goutte de pluie
+[E:.b.E:B:.- ! E:.s.- (E:S:.p.- E:S:.-d.u.-’ E:.we.-) (B:.B:.n.-k.-u.S:.-’ f.-S:.A:.-’)] # essaim d’abeilles
+[E:.b.E:S:.- !  E:S:. (e.U:.-) (E:S:.-t.o.-’)] # commencer à tirer
+[E:.b.E:S:.- ! E:S:. (e.U:.-) (E:B:.-t.o.-’)] # continuer à tirer
+[E:.b.E:S:.- ! E:S:. (e.U:.-) (E:T:.-t.o.-’)] # arrêter/finir de tirer
+[E:.b.E:S:.- ! E:S:. (E:S:.-t.o.-’) (n.u.-s.u.-’) (E:.b.we.-)] # prendre forme
+[E:.b.E:S:.- ! E:S:. (E:B:.-t.o.-’) (A:.a.-) > E:.d.- () (l.j.-)] # garder de l’infuence
+[E:.b.E:S:.- ! E:S:. (E:T:.-t.o.-’) (A:.a.-) > E:.d.- () (l.j.-)] # perdre de l’infuence
+[E:.b.E:B:.- E:B:. () (e.) > ! E:.n.- () > E:.d.- () (m.-S:.U:.-’)] # actant « peureux »
+[E:.b.E:T:.- E:T:. () (e.) (E:.b.wa.-) > E:.n.- () > ! E:.n.- E:U:. () > E:.d.- () (m.-S:.U:.-’)] # qualité « effrayant »
 [E:.b.E:S:.- (E:B:.)(we.)(E:.b.wa.-)] # faire apparaître, manifester
 [E:.b.E:S:.- (! E:B:.)(e.c.-) > (E:.d.-) (t.i.-s.i.-’)] # p157 préparer un véhicule (mise au point, plein de carburant...)
 [E:.b.E:S:.- (! E:B:.) (we.) (E:.b.wa.-) > (E:d.-) (m.-T:.U:.-’) > (E:U:.)(p.E:A:T:.-)] # laisser éclater (sa) joie
@@ -180,3 +177,4 @@ crée », « aimer le sucre
 [(E:T:.) (wa.f.U:.-) > (! E:.n.-) (b.i.-n.i.-’) > (E:.d.- E:U:.) (s.u.-) >(E:.s.- E:B:.x.- E:S:.-k.u.-’) (b.i.-n.i.-’l.i.-n.i.-’n.o.-n.o.-’,)(E:S:.-k.u.-’ E:B:.p.-) (b.i.-n.i.-’b.i.-l.i.-’f.o.-f.o.-’,)(E:S:.-k.u.-’ E:T:.x.-) (b.i.-n.i.-’a.S:.-’n.o.-n.o.-’,)] # Shofar
 [(E:T:.) (wa.f.U:.-) > (! E:.n.-) (b.i.-n.i.-’) > (E:.d.- E:U:.) (s.u.-) >(E:.s.- E:B:.x.- E:S:.-k.u.-’) (b.i.-n.i.-’l.i.-n.i.-’n.o.-n.o.-’,)(E:S:.-k.u.-’ E:B:.p.-) (b.i.-n.i.-’b.i.-l.i.-’n.-B:.A:.-’,)(E:S:.-k.u.-’ E:T:.x.-) (b.i.-n.i.-’a.S:.-’n.o.-n.o.-’,)] # Trompette
 [(E:T:.) (wa.f.U:.-) > (! E:.n.-) (b.i.-n.i.-’) > (E:.d.- E:U:.) (s.u.-) >(E:.s.- E:B:.x.- E:S:.-k.u.-’) (b.i.-n.i.-’l.i.-’f.o.-f.o.-’,)(E:S:.-k.u.-’ E:B:.p.-) (b.i.-n.i.-’l.i.-t.i.-’n.-B:.U:.-’,)(E:S:.-k.u.-’ E:T:.x.-) (b.i.-n.i.-’e.A:.-’f.o.-f.o.-’,)] # Violon
+[E:.b.E:T:.- E:T:.- ()(A:.e.-) > E:.d.- (E:.wo.- E:B:.-d.u.-’ E:S:.j.-’j.-U:.-’,) (f.o.-f.o.-’E:.-U:.t.-l.-’,E:.-U:.n.-l.-’E:.-A:.n.-l.-’,_) (E:.-B:.b.-l.-’) > ! E:A:. (E:.wo.- E:S:.-d.u.-’) (b.-S:.A:.-’) > (E:S:.-k.u.-’) (f.o.-f.o.-’E:.-U:.t.-l.-’,E:.-U:.n.-l.-’E:.-A:.n.-l.-’,_) (E:.-B:.f.-l.-’) > (! E:A:. E:.wo.- E:S:.-d.u.-’) (b.-S:.A:.-’) > (E:U:.) (m.u.-m.u.-d.u.-’)] # vairon, avoir l’oeil droit d’une couleur et l’oeil gauche d’une autre

@@ -1,7 +1,7 @@
 from tqdm import tqdm
 
-FILE = '/home/louis/code/ieml/ieml-project/ieml/ieml/test/words_example.txt'
-OUTFILE = '/home/louis/code/ieml/ieml-project/ieml/ieml/test/words_example_corrected.txt'
+FILE = '../ieml/test/words_example.txt'
+OUTFILE = '../ieml/test/words_example_corrected.txt'
 with open(FILE) as fp:
     lines = fp.readlines()
 
@@ -14,6 +14,8 @@ spliter = re.compile(r'^(\[.*\])\s*#\s*(.*)$')
 def process_line(l):
     match = spliter.match(l)
     ieml, trans_fr = match.groups()
+    ieml = ieml.replace('X', 'wa.')
+
     print(ieml, trans_fr)
 
     try:
