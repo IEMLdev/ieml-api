@@ -520,25 +520,27 @@ def check_transformation_quality(l: List[Script]):
 
 
 def check_lexeme_scripts(l_pa: List[Script], l_pc: List[Script], l_pt: List[Script], role=None):
-    if role is None:
-        _role = get_role_of_pa(l_pa)
-    else:
-        _role = role
+    # if role is None:
+    #     _role = get_role_of_pa(l_pa)
+    # else:
+    if len(role) != 1:
+        raise ValueError("Invalid role : {}".format(' '.join(map(str, role))))
+    _role = role[0]
 
     if _role in ADDRESS_PROCESS_VALENCE_SCRIPTS:
-        check_address_process_scripts(l_pa, valence=role)
+        check_address_process_scripts(l_pa, valence=_role)
         check_transformation_process_scripts(l_pt)
     elif _role in ADDRESS_ACTANTS_MOTOR_SCRIPTS:
-        check_address_motor_actant_scripts(l_pa, role=role)
+        check_address_motor_actant_scripts(l_pa, role=_role)
         check_transformation_motor_actant_scripts(l_pt)
     elif _role in ADDRESS_CIRCONSTANTIAL_ACTANTS_SCRIPTS:
-        circ_role = check_address_circonstancial_actant_scripts(l_pa, role=role)
+        circ_role = check_address_circonstancial_actant_scripts(l_pa, role=_role)
         check_transformation_circonstancial_actant_scripts(l_pt, role=circ_role)
     elif _role == DEPENDANT_QUALITY:
-        check_address_actant_scripts(l_pa, role=role)
+        check_address_actant_scripts(l_pa, role=_role)
         check_transformation_actant_scripts(l_pt)
     elif _role == INDEPENDANT_QUALITY:
-        check_address_quality(l_pa, role=role)
+        check_address_quality(l_pa, role=_role)
         check_transformation_quality(l_pt)
     else:
         raise ValueError("Invalid role: {}".format(str(_role)))

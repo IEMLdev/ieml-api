@@ -5,12 +5,12 @@ from ieml.usl.polymorpheme import PolyMorpheme
 from ieml.usl.syntagmatic_function import SyntagmaticFunction
 
 
-def check_word(w):
-    if not isinstance(w.address, PolyMorpheme):
+def check_word(w: 'Word'):
+    if not isinstance(w.role, PolyMorpheme):
         raise ValueError("An address of a word is expected to be a polymorpheme, not a {}."
-                         .format(w.address.__class__.__name__))
+                         .format(w.role.__class__.__name__))
 
-    check_address_script(w.address.constant)
+    check_address_script(w.role.constant)
 
     if not isinstance(w.syntagmatic_fun, SyntagmaticFunction):
         raise ValueError("The word is expected to be made from a SyntagmaticFunction, not a {}."

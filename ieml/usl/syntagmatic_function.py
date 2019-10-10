@@ -8,6 +8,7 @@ from ieml.usl.constants import SYNTAGMATIC_FUNCTION_SCRIPT, INDEPENDANT_QUALITY,
     INTERACTANT_SCRIPT, RECIPIENT_SCRIPT, TIME_SCRIPT, LOCATION_SCRIPT, MANNER_SCRIPT, CAUSE_SCRIPT, INTENTION_SCRIPT, \
     check_address_script, SYNTAGMATIC_FUNCTION_PROCESS_TYPE_SCRIPT, SYNTAGMATIC_FUNCTION_ACTANT_TYPE_SCRIPT, \
     SYNTAGMATIC_FUNCTION_QUALITY_TYPE_SCRIPT
+from ieml.usl.lexeme import class_from_address
 
 X = Any
 
@@ -31,10 +32,10 @@ class SyntagmaticFunction:
     def render(self, role: PolyMorpheme=None):
         res = '['
         if role is not None:
-            res += str(self.get(role).grammatical_class) + ' '
+            res += str(class_from_address(role)) + ' '
 
-        res += " > ".join([('!' if role is not None and address == role else '')
-                                + str(address) + str(self.actors[address]) for address in sorted(self.actors)])
+        res += " > ".join([('! ' if role is not None and address == role else '')
+                                + str(address) + ' ' + str(self.actors[address].actor) for address in sorted(self.actors)])
         return res + ']'
 
     @staticmethod
@@ -113,11 +114,14 @@ class DependantQualitySyntagmaticFunction(SyntagmaticFunction):
         self.dependant = dependant
         self.independant = independant
 
-        super().__init__(actor, {
-            self.role: self,
-            **{self.role + address.constant: f for address, f in self.dependant.actors.items()},
-            **{self.role + f.role for f in self.independant}
-        })
+        res = {self.role: self,
+            **{self.role + f.role: f for f in self.independant}}
+
+        if dependant is not None:
+            res = {**res,
+                   **{self.role + address.constant: f for address, f in self.dependant.actors.items()}}
+
+        super().__init__(actor, res)
 
     @property
     def role(self):
@@ -131,14 +135,15 @@ class DependantQualitySyntagmaticFunction(SyntagmaticFunction):
         independant = []
 
         for address, x in l:
-            _role = next(iter(a for a in address if a in ACTANTS_SCRIPTS))
-            if _role:
+            try:
+                _role = next(iter(a for a in address if a in ACTANTS_SCRIPTS))
                 if role is not None and _role != role:
                     raise ValueError("Invalid actant syntagmatic function definition, different actants roles in definition.")
                 role = _role
-            else:
-                _role = next(iter(a for a in address if a == DEPENDANT_QUALITY))
-                if _role is None:
+            except StopIteration:
+                try:
+                    _role = next(iter(a for a in address if a == DEPENDANT_QUALITY))
+                except StopIteration:
                     raise ValueError("Invalid actant syntagmatic function definition, not a dependant script.")
                 role = _role
 
@@ -147,10 +152,15 @@ class DependantQualitySyntagmaticFunction(SyntagmaticFunction):
             elif len(address) == 2 and any(a == INDEPENDANT_QUALITY for a in address):
                 independant.append(IndependantQualitySyntagmaticFunction(actor=x))
             else:
-                _dependant.append([[a for a in address if a != role], x])
+                _address = list(address)
+                _address.remove(role)
+                _dependant.append([_address, x])
 
-        dependant = DependantQualitySyntagmaticFunction._from_list(_dependant)
-        return cls(actor=actor, role=role, dependant=dependant, independant=independant)
+        dependant = None
+        if _dependant:
+            dependant = DependantQualitySyntagmaticFunction._from_list(_dependant)
+
+        return cls(actor=actor, role=[role], dependant=dependant, independant=independant)
 
     def check(self, X, check_X):
         super().check(X, check_X)
@@ -186,6 +196,7 @@ class ActantSyntagmaticFunction(DependantQualitySyntagmaticFunction):
 class ProcessSyntagmaticFunction(SyntagmaticFunction):
     def __init__(self,
                  actor: X,
+                 valence: Script,
                  actants: List[ActantSyntagmaticFunction]):
         self.actants = actants
 
@@ -200,30 +211,27 @@ class ProcessSyntagmaticFunction(SyntagmaticFunction):
         self.cause = None
         self.intention = None
 
-        valence = 0
         for a in self.actants:
-            if a.role in ADDRESS_ACTANTS_MOTOR_SCRIPTS:
-                valence += 1
-
-            if a.role == [INITIATOR_SCRIPT]:
+            if a.role[0] == INITIATOR_SCRIPT:
                 self.initiator = a
-            elif a.role == [INTERACTANT_SCRIPT]:
+            elif a.role[0] == INTERACTANT_SCRIPT:
                 self.interactant = a
-            elif a.role == [RECIPIENT_SCRIPT]:
+            elif a.role[0] == RECIPIENT_SCRIPT:
                 self.recipient = a
-            elif a.role == [TIME_SCRIPT]:
+            elif a.role[0] == TIME_SCRIPT:
                 self.time = a
-            elif a.role == [LOCATION_SCRIPT]:
+            elif a.role[0] == LOCATION_SCRIPT:
                 self.location = a
-            elif a.role == [MANNER_SCRIPT]:
+            elif a.role[0] == MANNER_SCRIPT:
                 self.manner = a
-            elif a.role == [INTENTION_SCRIPT]:
+            elif a.role[0] == INTENTION_SCRIPT:
                 self.intention = a
-            elif a.role == [CAUSE_SCRIPT]:
+            elif a.role[0] == CAUSE_SCRIPT:
                 self.cause = a
             else:
                 raise ValueError("Invalid role : {}".format(' '.join(map(str, a.role))))
-        self.valence = ADDRESS_PROCESS_VALENCE_SCRIPTS[valence]
+
+        self.valence = valence
 
         super().__init__(actor, {
             self.role: self,
@@ -238,19 +246,21 @@ class ProcessSyntagmaticFunction(SyntagmaticFunction):
     def _from_list(l: List[Tuple[List[Script], X]]):
         actor = None
         _actants = defaultdict(list)
+        valence = None
 
         for address, x in l:
             if any(a in ADDRESS_PROCESS_VALENCE_SCRIPTS for a in address):
                 if len(address) != 1 or actor is not None:
                     raise ValueError("Invalid process syntagmatic function, too many process roles")
                 actor = x
+                valence = address[0]
 
             elif any(a in ACTANTS_SCRIPTS for a in address):
-                actant_count = sum(
-                    1 if any(a in ACTANTS_SCRIPTS for a in address) else 0 for address, x in l)
+                actant_count = sum(1 if a in ACTANTS_SCRIPTS else 0 for a in address)
 
                 if actant_count == 1:
-                    _actants[address] = [address, x]
+                    role = next(iter(a for a in address if a in ACTANTS_SCRIPTS))
+                    _actants[role].append([address, x])
                 elif actant_count > 1:
                     raise ValueError("Invalid syntagmatic function, too many actant roles")
             else:
@@ -258,7 +268,7 @@ class ProcessSyntagmaticFunction(SyntagmaticFunction):
 
         actants = [ActantSyntagmaticFunction._from_list(l_actant) for l_actant in _actants.values()]
 
-        return ProcessSyntagmaticFunction(actor=actor, actants=actants)
+        return ProcessSyntagmaticFunction(actor=actor, actants=actants, valence=valence)
 
 
     def check(self, X: Type, check_X):

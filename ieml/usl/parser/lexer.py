@@ -8,19 +8,21 @@ TERM_REGEX = r'[EUASBTOMFIacbedgfihkjmlonpsutwyx][EUASBTOMFIacbedgfihkjmlonpsutw
 tokens = (
    'MORPHEME',
 
-   'PLUS',
-   'TIMES',
+   # 'PLUS',
+   # 'TIMES',
 
    'LPAREN',
    'RPAREN',
-   'LCHEVRON',
+   # 'LCHEVRON',
    'RCHEVRON',
 
    'LBRACKET',
    'RBRACKET',
 
    'GROUP_MULTIPLICITY',
-   'EXCLAMATION_MARK'
+   'EXCLAMATION_MARK',
+   # 'HASH',
+   'LITERAL'
    # 'L_CURLY_BRACKET',
    # 'R_CURLY_BRACKET',
    #
@@ -31,22 +33,24 @@ tokens = (
 
 def get_lexer(module=None):
     t_MORPHEME = TERM_REGEX
-    t_PLUS   = r'\+'
-    t_TIMES   = r'\*'
+    # t_PLUS   = r'\+'
+    # t_TIMES   = r'\*'
     t_LPAREN  = r'\('
     t_RPAREN  = r'\)'
-    t_LCHEVRON = r'\<'
+    # t_LCHEVRON = r'\<'
     t_RCHEVRON = r'\>'
 
     t_LBRACKET = r'\['
     t_RBRACKET  = r'\]'
     t_EXCLAMATION_MARK  = r'\!'
 
+    # t_HASH = r'\#'
+
     # t_  = r'\]'
     # t_L_CURLY_BRACKET = r'\{'
     # t_R_CURLY_BRACKET = r'\}'
     # t_SLASH = r'\/'
-    # t_LITERAL = r'\<(\\\>|[^\>])+\>'
+    t_LITERAL = r'\#(\\\#|[^\#])+\#'
 
     t_GROUP_MULTIPLICITY = r'm\d+'
 
