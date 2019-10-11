@@ -350,7 +350,6 @@ def check_transformation_actant_scripts(l: List[Script]):
     assert_no_one_from(l, set(ADDRESS_SCRIPTS), "a transformation of an actant", "grammatical roles")
 
 
-
 def check_address_motor_actant_scripts(l: List[Script], role=None):
     if role is None:
         assert_only_one_from(l, set(ADDRESS_ACTANTS_MOTOR_SCRIPTS), "an address of a motor actant", "motor grammaticals roles")
@@ -419,7 +418,7 @@ def check_address_circonstancial_actant_scripts(l: List[Script], role=None):
                       "an address of a space actant")
 
     elif role == INTENTION_SCRIPT:
-        assert_only_one_from(l, set(ADDRESS_CIRCONSTANTIAL_INTENTION_SCRIPTS),
+        assert_atmost_one_from(l, set(ADDRESS_CIRCONSTANTIAL_INTENTION_SCRIPTS),
                                     "an address of a intention actant",
                                     "type of motivation")
 
@@ -428,13 +427,13 @@ def check_address_circonstancial_actant_scripts(l: List[Script], role=None):
                       "an address of a intention actant")
 
     elif role == MANNER_SCRIPT:
-        assert_only_one_from(l, set(ADDRESS_CIRCONSTANTIAL_MANNER_SCRIPTS),
+        assert_atmost_one_from(l, set(ADDRESS_CIRCONSTANTIAL_MANNER_SCRIPTS),
                                     "an address of a manner actant",
                                     "manner")
-        assert_only_one_from(l, set(ADDRESS_CIRCONSTANTIAL_GRADIENT_ADVERB_EOM_SCRIPTS),
+        assert_atmost_one_from(l, set(ADDRESS_CIRCONSTANTIAL_GRADIENT_ADVERB_EOM_SCRIPTS),
                                     "an address of a manner actant",
                                     "gradient adverbs")
-        assert_only_one_from(l, set(GROUPEMENT_SCRIPTS),
+        assert_atmost_one_from(l, set(GROUPEMENT_SCRIPTS),
                                     "an address of a manner actant",
                                     "groupements")
         assert_all_in(l, {*ADDRESS_ACTANT_SCRIPTS,
@@ -444,7 +443,7 @@ def check_address_circonstancial_actant_scripts(l: List[Script], role=None):
                       "an address of a manner actant")
 
     elif role == CAUSE_SCRIPT:
-        assert_only_one_from(l, set(ADDRESS_CIRCONSTANTIAL_CAUSE_SCRIPTS),
+        assert_atmost_one_from(l, set(ADDRESS_CIRCONSTANTIAL_CAUSE_SCRIPTS),
                                     "an address of a cause actant",
                                     "causes")
         assert_all_in(l, {*ADDRESS_ACTANT_SCRIPTS,
