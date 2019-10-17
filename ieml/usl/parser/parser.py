@@ -7,7 +7,7 @@ from ieml.usl import Word, Phrase, PolyMorpheme, check_word
 from ieml.exceptions import CannotParse
 from ieml.usl.constants import ADDRESS_SCRIPTS
 from ieml.usl.word import Lexeme
-from ieml.usl.syntagmatic_function import SyntagmaticFunction
+from ieml.usl.syntagmatic_function import SyntagmaticFunction, SyntagmaticRole
 from .lexer import get_lexer, tokens
 import threading
 
@@ -168,8 +168,10 @@ class IEMLParser():
     def p_word(self, p):
         """word : LBRACKET morpheme lexeme_list RBRACKET"""
         lex_list, role = p[3]
+        if not role:
+            raise ValueError("No role specified in the syntagmatic function to build a word.")
         p[0] = Word(syntagmatic_fun=SyntagmaticFunction.from_list(lex_list, type=p[2]),
-                    role=PolyMorpheme(constant=role))
+                    role=SyntagmaticRole(constant=role))
         # check_word(p[0])
         assert p[2] == p[0].grammatical_class
 

@@ -1,12 +1,11 @@
 from ieml.usl import USL
 from ieml.usl.constants import check_address_script
 from ieml.usl.lexeme import Lexeme, class_from_address, check_lexeme
-from ieml.usl.polymorpheme import PolyMorpheme
-from ieml.usl.syntagmatic_function import SyntagmaticFunction
+from ieml.usl.syntagmatic_function import SyntagmaticFunction, SyntagmaticRole
 
 
 def check_word(w: 'Word'):
-    if not isinstance(w.role, PolyMorpheme):
+    if not isinstance(w.role, SyntagmaticRole):
         raise ValueError("An address of a word is expected to be a polymorpheme, not a {}."
                          .format(w.role.__class__.__name__))
 
@@ -20,7 +19,7 @@ def check_word(w: 'Word'):
 
 
 class Word(USL):
-    def __init__(self, syntagmatic_fun: SyntagmaticFunction, role: PolyMorpheme):
+    def __init__(self, syntagmatic_fun: SyntagmaticFunction, role: SyntagmaticRole):
         super().__init__()
         self.syntagmatic_fun = syntagmatic_fun
         self.role = role

@@ -5,7 +5,7 @@ from ieml.dictionary.script import Script
 from ieml.usl import USL, PolyMorpheme, check_polymorpheme
 from ieml.usl.constants import ADDRESS_SCRIPTS, ACTANTS_SCRIPTS, ADDRESS_PROCESS_VALENCE_SCRIPTS, \
     check_lexeme_scripts, SYNTAGMATIC_FUNCTION_ACTANT_TYPE_SCRIPT, SYNTAGMATIC_FUNCTION_QUALITY_TYPE_SCRIPT, \
-    SYNTAGMATIC_FUNCTION_PROCESS_TYPE_SCRIPT, DEPENDANT_QUALITY
+    SYNTAGMATIC_FUNCTION_PROCESS_TYPE_SCRIPT, DEPENDANT_QUALITY, INDEPENDANT_QUALITY
 
 
 def check_lexeme(lexeme, role=None):
@@ -25,11 +25,12 @@ def check_lexeme(lexeme, role=None):
 def class_from_address(address):
     if any(s in ADDRESS_PROCESS_VALENCE_SCRIPTS for s in address.constant):
         return SYNTAGMATIC_FUNCTION_PROCESS_TYPE_SCRIPT
+    elif any(s == INDEPENDANT_QUALITY for s in address.constant):
+        return SYNTAGMATIC_FUNCTION_QUALITY_TYPE_SCRIPT
     elif any(s in ACTANTS_SCRIPTS + [DEPENDANT_QUALITY] for s in address.constant):
         return SYNTAGMATIC_FUNCTION_ACTANT_TYPE_SCRIPT
     else:
-        return SYNTAGMATIC_FUNCTION_QUALITY_TYPE_SCRIPT
-
+        raise ValueError("Invalid role, no grammatical class associated.")
 
 class Lexeme(USL):
     """A lexeme without the PA of the position on the tree (position independant lexeme)"""
@@ -47,6 +48,8 @@ class Lexeme(USL):
             if not pm.constant:
                 break
             self._str += "({})".format(str(pm))
+        if not self._str:
+            self._str = "()"
 
     def __lt__(self, other):
         return self.address < other.address or (self.address == other.address and

@@ -1,4 +1,5 @@
 from collections import defaultdict
+from itertools import chain
 from typing import List, Any, Dict, Type, Tuple
 
 from ieml.dictionary.script import Script
@@ -7,35 +8,59 @@ from ieml.usl.constants import SYNTAGMATIC_FUNCTION_SCRIPT, INDEPENDANT_QUALITY,
     ADDRESS_PROCESS_VALENCE_SCRIPTS, ADDRESS_SCRIPTS, ADDRESS_ACTANTS_MOTOR_SCRIPTS, INITIATOR_SCRIPT, \
     INTERACTANT_SCRIPT, RECIPIENT_SCRIPT, TIME_SCRIPT, LOCATION_SCRIPT, MANNER_SCRIPT, CAUSE_SCRIPT, INTENTION_SCRIPT, \
     check_address_script, SYNTAGMATIC_FUNCTION_PROCESS_TYPE_SCRIPT, SYNTAGMATIC_FUNCTION_ACTANT_TYPE_SCRIPT, \
-    SYNTAGMATIC_FUNCTION_QUALITY_TYPE_SCRIPT
+    SYNTAGMATIC_FUNCTION_QUALITY_TYPE_SCRIPT, ADDRESS_SCRIPTS_ORDER
 from ieml.usl.lexeme import class_from_address
 
 X = Any
 
 
+class SyntagmaticRole(PolyMorpheme):
+    def __init__(self, constant: List[Script]=(), groups=()):
+        super().__init__(constant, groups)
+
+        if any(e not in ADDRESS_SCRIPTS_ORDER for e in constant):
+            raise ValueError("Invalid script in a syntagmatic role.")
+
+        self.constant = tuple(sorted(constant, key=lambda e: ADDRESS_SCRIPTS_ORDER[e]))
+
+        if len(groups):
+            raise ValueError("Paradigms are not supported in syntagmatic roles.")
+
+        # self.groups = tuple(sorted((tuple(sorted(g[0], key=lambda e: ADDRESS_SCRIPTS_ORDER[e])), g[1])
+        #                            for g in groups))
+
+        self._str = ' '.join(chain(map(str, self.constant)))
+                               # ["m{}({})".format(mult, ' '.join(map(str, group))) for group, mult
+                               #      in self.groups]))
+
+    def __lt__(self, other):
+        return [ADDRESS_SCRIPTS_ORDER[e] for e in self.constant] < [ADDRESS_SCRIPTS_ORDER[e] for e in other.constant]
+
+
 class SyntagmaticFunction:
     def __init__(self, actor: X, _actors: Dict[List[Script], 'SyntagmaticFunction']):
         self.actor = actor
-        self.actors = {PolyMorpheme(constant=role): f for role, f in _actors.items()}
+        self.actors = {SyntagmaticRole(constant=role): f for role, f in _actors.items()}
 
     @property
     def role(self):
         return (SYNTAGMATIC_FUNCTION_SCRIPT,)
 
-    def get(self, role: PolyMorpheme) -> X:
+    def get(self, role: SyntagmaticRole) -> X:
         assert role.is_singular
         return self.actors[role].actor
 
-    def get_paradigm(self, role: PolyMorpheme) -> List[X]:
+    def get_paradigm(self, role: SyntagmaticRole) -> List[X]:
         return [self.actors[r] for r in role.singular_sequences if r in self.actors]
 
-    def render(self, role: PolyMorpheme=None):
+    def render(self, role: SyntagmaticRole=None):
         res = '['
         if role is not None:
             res += str(class_from_address(role)) + ' '
 
         res += " > ".join([('! ' if role is not None and address == role else '')
-                                + str(address) + ' ' + str(self.actors[address].actor) for address in sorted(self.actors)])
+                                + str(address) + ' ' + str(self.actors[address].actor)
+                           for address in sorted(self.actors)])
         return res + ']'
 
     @staticmethod
@@ -89,7 +114,7 @@ class SyntagmaticFunction:
         check_X(self.actor, role=self.role)
 
         for address, x in self.actors.items():
-            if not isinstance(address, PolyMorpheme):
+            if not isinstance(address, SyntagmaticRole):
                 raise ValueError("An address in a SyntagmaticFunction is expected to be a polymorpheme, not a {}."
                                  .format(address.__class__.__name__))
 

@@ -67,7 +67,7 @@ def _check_multi_descriptors(descriptor):
 
 
 class DBTransactions:
-    def __init__(self, gitdb, signature, cache_folder, use_cache=True):
+    def __init__(self, gitdb, signature, cache_folder=None, use_cache=True):
         self.gitdb = gitdb
         self.signature = signature
         self.cache_folder = cache_folder
@@ -283,56 +283,56 @@ class DBTransactions:
                     if is_root:
                         db.add_descriptor(script_old, l, k, '(translation migrated to {}) '.format(str(script_new)) + v)
 
-    def create_lexical_paradigm(self,
-                                lexeme,
-                                domain,
-                                author_name: str,
-                                author_mail: str,
-                                push_username=None,
-                                push_password=None):
+    # def create_lexical_paradigm(self,
+    #                             lexeme,
+    #                             domain,
+    #                             author_name: str,
+    #                             author_mail: str,
+    #                             push_username=None,
+    #                             push_password=None):
+    #
+    #     assert isinstance(lexeme, USL) and len(lexeme) != 1
+    #
+    #     lex = self.lexicon_structure('all')
+    #     lex.add_paradigm(paradigm=lexeme, domain=domain)
+    #
+    #     lex.write_to_folder(self.folder)
+    #
+    #     self.save_changes(author_name, author_mail,
+    #                       "[lexicon] Create paradigm {}"
+    #                       .format(str(lexeme)),
+    #
+    #                       to_add=[self.structure_lexicon_folder + '/' + domain],
+    #                       push_username=push_username,
+    #                       push_password=push_password)
 
-        assert isinstance(lexeme, USL) and len(lexeme) != 1
-
-        lex = self.lexicon_structure('all')
-        lex.add_paradigm(paradigm=lexeme, domain=domain)
-
-        lex.write_to_folder(self.folder)
-
-        self.save_changes(author_name, author_mail,
-                          "[lexicon] Create paradigm {}"
-                          .format(str(lexeme)),
-
-                          to_add=[self.structure_lexicon_folder + '/' + domain],
-                          push_username=push_username,
-                          push_password=push_password)
-
-    def set_descriptors2(self,
-                        ieml,
-                        descriptor,
-                        value):
-
-        db = IEMLDatabase(folder=self.gitdb.folder, use_cache=self.use_cache, cache_folder=self.cache_folder)
-
-        ieml = _check_ieml(ieml)
-        value = _check_descriptors(value)
-
-        desc = db.get_descriptors()
-        old_trans = {l: desc.get_values(ieml=ieml, language=l, descriptor=descriptor) for l in LANGUAGES}
-
-        if all(set(value[l]) == set(old_trans[l]) for l in LANGUAGES):
-            return
-
-        to_add = {l: [e for e in value[l] if e not in old_trans[l]] for l in LANGUAGES}
-        to_remove = {l: [e for e in old_trans[l] if e not in value[l]] for l in LANGUAGES}
-
-        with self.gitdb.commit(self.signature, '[descriptors] Update {} for {} to {}'.format(descriptor,
-                                                                                             str(ieml),
-                                                                                             json.dumps(value))):
-            for l in LANGUAGES:
-                for e in to_remove[l]:
-                    db.remove_descriptor(ieml, l, descriptor, e)
-                for e in to_add[l]:
-                    db.add_descriptor(ieml, l, descriptor, e)
+    # def set_descriptors2(self,
+    #                     ieml,
+    #                     descriptor,
+    #                     value):
+    #
+    #     db = IEMLDatabase(folder=self.gitdb.folder, use_cache=self.use_cache, cache_folder=self.cache_folder)
+    #
+    #     ieml = _check_ieml(ieml)
+    #     value = _check_descriptors(value)
+    #
+    #     desc = db.get_descriptors()
+    #     old_trans = {l: desc.get_values(ieml=ieml, language=l, descriptor=descriptor) for l in LANGUAGES}
+    #
+    #     if all(set(value[l]) == set(old_trans[l]) for l in LANGUAGES):
+    #         return
+    #
+    #     to_add = {l: [e for e in value[l] if e not in old_trans[l]] for l in LANGUAGES}
+    #     to_remove = {l: [e for e in old_trans[l] if e not in value[l]] for l in LANGUAGES}
+    #
+    #     with self.gitdb.commit(self.signature, '[descriptors] Update {} for {} to {}'.format(descriptor,
+    #                                                                                          str(ieml),
+    #                                                                                          json.dumps(value))):
+    #         for l in LANGUAGES:
+    #             for e in to_remove[l]:
+    #                 db.remove_descriptor(ieml, l, descriptor, e)
+    #             for e in to_add[l]:
+    #                 db.add_descriptor(ieml, l, descriptor, e)
 
     def set_descriptors(self,
                         ieml,
@@ -347,7 +347,7 @@ class DBTransactions:
         desc = db.get_descriptors()
         old_trans = {l: desc.get_values(ieml=ieml, language=l, descriptor=descriptor) for l in LANGUAGES}
 
-        if all(list(value[l]) == list(old_trans[l]) for l in LANGUAGES):
+        if all(sorted(value[l]) == sorted(old_trans[l]) for l in LANGUAGES):
             return
 
         # to_add = {l: [e for e in value[l] if e not in old_trans[l]] for l in LANGUAGES}

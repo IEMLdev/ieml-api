@@ -1,5 +1,5 @@
 from enum import Enum
-from itertools import chain
+from itertools import chain, count
 from typing import List, Set
 
 from ieml.constants import AUXILIARY_CLASS
@@ -100,9 +100,10 @@ Actants = Enum('Actants', [(i.name, i.value) for i in chain(MotorActants, Circon
 
 INDEPENDANT_QUALITY = script('E:U:.')
 DEPENDANT_QUALITY = script('E:A:.')
-SCRIPTS_ADDRESS_QUALITY = [INDEPENDANT_QUALITY,
-                           DEPENDANT_QUALITY]
+SCRIPTS_ADDRESS_QUALITY = [DEPENDANT_QUALITY, INDEPENDANT_QUALITY]
 ADDRESS_SCRIPTS = [*ADDRESS_PROCESS_VALENCE_SCRIPTS, *ACTANTS_SCRIPTS, *SCRIPTS_ADDRESS_QUALITY]
+
+ADDRESS_SCRIPTS_ORDER = dict(zip(ADDRESS_SCRIPTS, count()))
 
 # Grammatical classes
 TYPES_OF_WORDS = [script('E:.b.E:S:.-'), #mot de process
@@ -126,6 +127,21 @@ NAMES_TO_ADDRESS = {
 
     INDEPENDANT_QUALITY: 'independant',
     DEPENDANT_QUALITY: 'dependant'
+}
+
+ROLE_NAMES_TO_SCRIPT= {
+    'initiator': INITIATOR_SCRIPT,
+    'interactant': INTERACTANT_SCRIPT,
+    'receiver' : RECIPIENT_SCRIPT,
+
+    'time': TIME_SCRIPT,
+    'location': LOCATION_SCRIPT,
+    'manner': MANNER_SCRIPT,
+    'intention': INTENTION_SCRIPT,
+    'cause': CAUSE_SCRIPT,
+
+    'independant': INDEPENDANT_QUALITY,
+    'dependant': DEPENDANT_QUALITY
 }
 
 NAMES_ORDERING = {
@@ -303,9 +319,10 @@ def check_transformation_process_scripts(l: List[Script]):
 def check_address_script(l: List[Script]):
     assert_all_in(l, set(ADDRESS_SCRIPTS), "an address")
 
-    assert_only_one_from(l, {*ADDRESS_PROCESS_VALENCE_SCRIPTS, *ACTANTS_SCRIPTS}, "an address", "grammatical roles")
+    if any(e in {*ADDRESS_PROCESS_VALENCE_SCRIPTS, *ACTANTS_SCRIPTS} for e in l):
+        assert_only_one_from(l, {*ADDRESS_PROCESS_VALENCE_SCRIPTS, *ACTANTS_SCRIPTS}, "an address", "grammatical roles")
 
-    assert_atmost_one_from(l, {DEPENDANT_QUALITY}, "an address", "dependant quality")
+    assert_atmost_one_from(l, {INDEPENDANT_QUALITY}, "an address", "independant quality")
 
 
 def check_address_actant_scripts(l: List[Script], role=None):
@@ -463,33 +480,33 @@ def check_transformation_circonstancial_actant_scripts(l: List[Script], role: Sc
                            "frequency distributions")
 
     elif role == LOCATION_SCRIPT:
-        assert_no_one_from(l, ADDRESS_CIRCONSTANTIAL_SPACE_DISTRIBUTION_SCRIPTS, "an address of a location actant",
+        assert_no_one_from(l, ADDRESS_CIRCONSTANTIAL_SPACE_DISTRIBUTION_SCRIPTS, "a transformation of a location actant",
                                "space distributions")
-        assert_no_one_from(l, ADDRESS_CIRCONSTANTIAL_LOCATION_TOWARDS_AXES_SCRIPTS, "an address of a location actant",
+        assert_no_one_from(l, ADDRESS_CIRCONSTANTIAL_LOCATION_TOWARDS_AXES_SCRIPTS, "a transformation of a location actant",
                                "axial orientation")
         assert_no_one_from(l, ADDRESS_CIRCONSTANTIAL_LOCATION_PATH_SCRIPTS,
-                               "an address of a location actant",
+                               "a transformation of a location actant",
                                "path orientation")
 
     elif role == INTENTION_SCRIPT:
         assert_no_one_from(l, set(ADDRESS_CIRCONSTANTIAL_INTENTION_SCRIPTS),
-                             "an address of a intention actant",
+                             "a transformation of a intention actant",
                              "type of motivation")
 
     elif role == MANNER_SCRIPT:
         assert_no_one_from(l, set(ADDRESS_CIRCONSTANTIAL_MANNER_SCRIPTS),
-                                    "an address of a manner actant",
+                                    "a transformation of a manner actant",
                                     "manner")
         assert_no_one_from(l, set(ADDRESS_CIRCONSTANTIAL_GRADIENT_ADVERB_EOM_SCRIPTS),
-                                    "an address of a manner actant",
+                                    "a transformation of a manner actant",
                                     "gradient adverbs")
         assert_no_one_from(l, set(GROUPEMENT_SCRIPTS),
-                                    "an address of a manner actant",
+                                    "a transformation of a manner actant",
                                     "groupements")
 
     elif role == CAUSE_SCRIPT:
         assert_no_one_from(l, set(ADDRESS_CIRCONSTANTIAL_CAUSE_SCRIPTS),
-                                    "an address of a cause actant",
+                                    "a transformation of a cause actant",
                                     "causes")
 
 

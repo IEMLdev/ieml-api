@@ -42,7 +42,7 @@ class git_transaction:
         self.commit_id = self.db.repo.head.target
 
         # ignore files at the root
-        if self.db.repo.status() != {}:
+        if self.db.status() != {}:
             raise ValueError("Try to start a transaction on a not clean working dir state, "
                              "please use db.reset() first.")
 
@@ -51,7 +51,7 @@ class git_transaction:
 
         if type is None:
             try:
-                status = self.db.repo.status()
+                status = self.db.status()
                 if not status:
                     return
 
@@ -124,6 +124,14 @@ class GitInterface:
     def commit(self, signature, message):
         return git_transaction(self, signature, message)
 
+    def status(self):
+        """ignore path starting with '.'"""
+        res = {}
+        for f, k in self.repo.status().items():
+            if not f.startswith('.'):
+                res[f] = k
+        return res
+
     def reset(self, commit_id=None):
         """
         Set the current branch HEAD to ref the given commit
@@ -137,14 +145,12 @@ class GitInterface:
         self.repo.state_cleanup()
 
         self.repo.reset(commit_id, pygit2.GIT_RESET_HARD)
-        status = self.repo.status()
 
         # delete new files
-        for f, k in status.items():
+        for f, k in self.status().items():
             if k & GIT_STATUS_WT_NEW:
                 os.remove(os.path.join(self.folder, f))
 
-        # self.commit_id = commit_id
 
     def checkout(self, branch=None, commit_id=None):
         repo = self.repo

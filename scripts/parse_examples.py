@@ -1,7 +1,9 @@
 from tqdm import tqdm
 
-FILE = '../ieml/test/words_example.txt'
-OUTFILE = '../ieml/test/words_example_corrected.txt'
+from ieml.usl import check_word
+
+FILE = '../ieml/test/words_example_corrected_translated2.txt'
+OUTFILE = '../ieml/test/words_example_corrected_translated3.txt'
 with open(FILE) as fp:
     lines = fp.readlines()
 
@@ -24,12 +26,15 @@ def process_line(l):
         # print(e.args[0])
         raise
 
+    check_word(u)
     return str(u), trans_fr
 
 
 with open(OUTFILE, 'w') as fp:
     for l in tqdm(lines):
-        fp.write("{} # {}".format(*process_line(l)))
+        if l.startswith('//'):
+            continue
+        fp.write("{} # {}\n".format(*process_line(l)))
 
 
 
