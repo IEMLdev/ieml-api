@@ -2,6 +2,8 @@ from ieml.dictionary.script import Script
 
 
 class USL:
+    syntactic_level = 0
+    
     def __init__(self):
         self._singular_sequences = None
         self._singular_sequences_set = None
@@ -11,6 +13,13 @@ class USL:
 
     def __str__(self):
         return self._str
+    
+    def __lt__(self, other):
+        return self.syntactic_level < other.syntactic_level or \
+               (self.syntactic_level == other.syntactic_level and self.do_lt(other))
+
+    def do_lt(self, other):
+        raise NotImplementedError()
 
     def __eq__(self, other):
         return str(self) == str(other)

@@ -33,3 +33,7 @@ class Word(USL):
 
     def _compute_singular_sequences(self):
         return [self]
+
+    def do_lt(self, other):
+        return self.syntagmatic_fun < other.syntagmatic_fun or \
+               (self.syntagmatic_fun == other.syntagmatic_fun and self.role < other.role)

@@ -34,6 +34,9 @@ def class_from_address(address):
 
 class Lexeme(USL):
     """A lexeme without the PA of the position on the tree (position independant lexeme)"""
+
+    syntactic_level = 2
+
     def __init__(self, pm_address: PolyMorpheme, pm_content: PolyMorpheme, pm_transformation: PolyMorpheme):
         super().__init__()
         self.pm_address = pm_address
@@ -51,7 +54,7 @@ class Lexeme(USL):
         if not self._str:
             self._str = "()"
 
-    def __lt__(self, other):
+    def do_lt(self, other):
         return self.address < other.address or (self.address == other.address and
                (self.pm_address < other.pm_address or
                (self.pm_address == other.pm_address and self.pm_content and other.pm_content and self.pm_content < other.pm_content) or

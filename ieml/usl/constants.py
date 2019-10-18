@@ -151,9 +151,9 @@ NAMES_ORDERING = {
     'interactant': 0,
     'receiver': 0,
 
-    'when': 0,
-    'where': 0,
-    'how': 0,
+    'time': 0,
+    'location': 0,
+    'manner': 0,
     'intention': 0,
     'cause': 0,
 

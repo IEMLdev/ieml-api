@@ -33,7 +33,7 @@ class SyntagmaticRole(PolyMorpheme):
                                # ["m{}({})".format(mult, ' '.join(map(str, group))) for group, mult
                                #      in self.groups]))
 
-    def __lt__(self, other):
+    def do_lt(self, other):
         return [ADDRESS_SCRIPTS_ORDER[e] for e in self.constant] < [ADDRESS_SCRIPTS_ORDER[e] for e in other.constant]
 
 
@@ -41,6 +41,16 @@ class SyntagmaticFunction:
     def __init__(self, actor: X, _actors: Dict[List[Script], 'SyntagmaticFunction']):
         self.actor = actor
         self.actors = {SyntagmaticRole(constant=role): f for role, f in _actors.items()}
+
+    def __eq__(self, other):
+        s_actors = sorted([(p, a.actor) for p, a in self.actors.items()], key=lambda e: e[0])
+        o_actors = sorted([(p, a.actor) for p, a in other.actors.items()], key=lambda e: e[0])
+        return s_actors == o_actors
+
+    def __lt__(self, other):
+        s_actors = sorted([(p, a.actor) for p, a in self.actors.items()], key=lambda e: e[0])
+        o_actors = sorted([(p, a.actor) for p, a in other.actors.items()], key=lambda e: e[0])
+        return s_actors < o_actors
 
     @property
     def role(self):

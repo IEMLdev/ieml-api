@@ -187,6 +187,11 @@ class GitInterface:
 
     @monitor_decorator('pull')
     def pull(self, remote='origin'):
+        """
+
+        :param remote: the remote to pull from
+        :return: the old commit id
+        """
         repo = self.repo
 
         remote_ = repo.remotes[remote]
@@ -212,12 +217,13 @@ class GitInterface:
         if merge_result & pygit2.GIT_MERGE_ANALYSIS_UP_TO_DATE:
             logger.info("Merging: repository up-to-date")
             # self.commit_id = commit_target
-            return
+            return str(current_commit)
 
         # We can just fastforward
         elif merge_result & pygit2.GIT_MERGE_ANALYSIS_FASTFORWARD:
             logger.info("Merging: fast-forward")
             self.checkout(None, commit_target)
+            return str(current_commit)
 
         elif merge_result & pygit2.GIT_MERGE_ANALYSIS_NORMAL:
             logger.info("Merging: cherry-pick local branch on remote branch")
@@ -267,6 +273,7 @@ class GitInterface:
             #TODO handle merge conflicts here
             raise ValueError("Incompatible history, can't merge origin into {}#{} in folder {}".format(self.branch, commit_target,self.folder))
 
+        return str(current_commit)
 
     def list_conflict(self):
         # ancestor_data = repo.get(ancestor.oid).data.decode('utf8')

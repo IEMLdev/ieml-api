@@ -43,6 +43,8 @@ def check_polymorpheme(ms, is_type: str=None):
 
 
 class PolyMorpheme(USL):
+    syntactic_level = 1
+
     def __init__(self, constant: List[Script]=(), groups=()):
         super().__init__()
 
@@ -60,7 +62,7 @@ class PolyMorpheme(USL):
     def empty(self):
         return not self.constant and not self.groups
 
-    def __lt__(self, other):
+    def do_lt(self, other):
         return self.constant < other.constant or \
                (self.constant == other.constant and self.groups < other.groups)
 
