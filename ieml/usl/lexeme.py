@@ -79,3 +79,7 @@ class Lexeme(USL):
         return Lexeme(pm_address=pm_address,
                       pm_content=self.pm_content,
                       pm_transformation=self.pm_transformation)
+
+    @property
+    def morphemes(self):
+        return sorted(set(self.pm_address.morphemes + self.pm_content.morphemes + self.pm_transformation.morphemes))

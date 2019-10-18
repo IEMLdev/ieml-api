@@ -68,7 +68,7 @@ class PolyMorpheme(USL):
 
     @property
     def morphemes(self):
-        return list(self.constant) + [m for g in self.groups for m in g[0]]
+        return sorted(set(list(self.constant) + [m for g in self.groups for m in g[0]]))
 
     def _compute_singular_sequences(self):
         if not self.groups:

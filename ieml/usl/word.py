@@ -1,3 +1,5 @@
+from itertools import chain
+
 from ieml.usl import USL
 from ieml.usl.constants import check_address_script
 from ieml.usl.lexeme import Lexeme, class_from_address, check_lexeme
@@ -37,3 +39,8 @@ class Word(USL):
     def do_lt(self, other):
         return self.syntagmatic_fun < other.syntagmatic_fun or \
                (self.syntagmatic_fun == other.syntagmatic_fun and self.role < other.role)
+
+    @property
+    def morphemes(self):
+        return sorted(set(chain.from_iterable(e.actor.morphemes
+                                              for e in self.syntagmatic_fun.actors.values())))

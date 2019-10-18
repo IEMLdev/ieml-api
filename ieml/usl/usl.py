@@ -59,6 +59,10 @@ class USL:
     def is_singular(self):
         return self.cardinal == 1
 
+    @property
+    def morphemes(self):
+        raise NotImplementedError()
+
 
 def usl(arg):
     if isinstance(arg, str):
