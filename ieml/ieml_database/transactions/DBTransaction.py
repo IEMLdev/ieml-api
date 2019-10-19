@@ -155,7 +155,9 @@ class DBTransactions:
                           "{}:{}".format(l, ', '.join(descriptors.get_values(root, l, 'translations'))) for l in LANGUAGES))
 
         with self.gitdb.commit(self.signature, message):
-            db.remove_structure(script, 'is_root')
+            db.remove_descriptor(script)
+            db.remove_structure(script)
+
             db.add_structure(script, 'is_root', False)
 
             for l in LANGUAGES:

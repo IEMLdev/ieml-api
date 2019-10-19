@@ -258,7 +258,7 @@ class IEMLDatabase:
         return Structure(r)
 
     @monitor_decorator("Get dictionary")
-    @cache_results_watch_files("morpheme/*/*.ieml", 'dictionary')
+    @cache_results_watch_files("morpheme/paradigm/*", 'dictionary')
     def get_dictionary(self):
         return Dictionary(self.list('morpheme', paradigm=True), self.get_structure())
 
