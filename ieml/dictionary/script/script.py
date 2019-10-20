@@ -206,6 +206,10 @@ class Script(TreeStructure):
 
         return self._singular_sequences_set
 
+    @property
+    def is_singular(self):
+        return self.cardinal == 1
+
     def _compute_cells(self):
         pass
 
