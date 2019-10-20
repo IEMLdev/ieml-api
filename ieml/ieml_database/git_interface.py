@@ -115,10 +115,10 @@ class GitInterface:
 
         # clone repository
         _ = self.repo
-        self.checkout(branch, None)
+        # self.checkout(branch, None)
 
         # update database
-        self.pull(remote='origin')
+        # self.pull(remote='origin')
         self.checkout(branch, commit_id)
 
     def commit(self, signature, message):
