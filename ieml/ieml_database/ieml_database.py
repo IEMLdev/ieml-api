@@ -174,6 +174,10 @@ class IEMLDatabase:
         else:
             self.cache_folder = None
 
+    def __str__(self):
+        return "<{} ({} cache={})>".format(self.__module__, self.folder, self.cache_folder)
+
+
     def filename_of(self, ieml):
         l = str(ieml)
         if len(l) > self.MAX_IEML_NAME_SIZE:
