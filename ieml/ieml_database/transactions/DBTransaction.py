@@ -87,9 +87,10 @@ class DBTransactions:
         if db.get_descriptors().get_values_partial(root):
             raise ValueError("Script {} already exists in dictionary".format(root))
 
+        dictionary = db.get_dictionary()
         for ss in root.singular_sequences:
             try:
-                r = db.get_dictionary().tables.root(ss)
+                r = dictionary.tables.root(ss)
                 raise ValueError("Root paradigms {} intersection with script {} ".format(str(r), str(root)))
             except KeyError:
                 pass
