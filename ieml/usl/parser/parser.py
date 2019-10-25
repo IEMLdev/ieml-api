@@ -52,6 +52,7 @@ class IEMLParser():
     def p_ieml_proposition(self, p):
         """proposition :  morpheme
                         | poly_morpheme
+                        | lexeme
                         | word
 
                         """
