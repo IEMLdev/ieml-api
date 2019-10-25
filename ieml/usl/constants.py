@@ -117,7 +117,7 @@ NAMES_TO_ADDRESS = {
 
     INITIATOR_SCRIPT: 'initiator',
     INTERACTANT_SCRIPT: 'interactant',
-    RECIPIENT_SCRIPT: 'receiver',
+    RECIPIENT_SCRIPT: 'recipient',
 
     TIME_SCRIPT: 'time',
     LOCATION_SCRIPT: 'location',
@@ -132,7 +132,7 @@ NAMES_TO_ADDRESS = {
 ROLE_NAMES_TO_SCRIPT= {
     'initiator': INITIATOR_SCRIPT,
     'interactant': INTERACTANT_SCRIPT,
-    'receiver' : RECIPIENT_SCRIPT,
+    'recipient' : RECIPIENT_SCRIPT,
 
     'time': TIME_SCRIPT,
     'location': LOCATION_SCRIPT,
@@ -149,7 +149,7 @@ NAMES_ORDERING = {
 
     'initiator': 0,
     'interactant': 0,
-    'receiver': 0,
+    'recipient': 0,
 
     'time': 0,
     'location': 0,
