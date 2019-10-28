@@ -46,11 +46,13 @@ class Lexeme(USL):
         self.address = PolyMorpheme(constant=[m for m in pm_address.constant if m in ADDRESS_SCRIPTS])
         self.grammatical_class = self.pm_content.grammatical_class
 
-        self._str = ""
-        for pm in [self.pm_address, self.pm_content, self.pm_transformation]:
-            if not pm.constant:
-                break
-            self._str += "({})".format(str(pm))
+        self._str = []
+        for pm in [self.pm_transformation, self.pm_content, self.pm_address]:
+            if not self._str and pm.empty:
+                continue
+            self._str.append("({})".format(str(pm)))
+
+        self._str = ''.join(reversed(self._str))
         if not self._str:
             self._str = "()"
 
