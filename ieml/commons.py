@@ -9,6 +9,8 @@ from typing import List
 import hashlib
 from time import time
 
+from ieml import logger
+
 
 class cached_property:
     def __init__(self, factory):
@@ -153,7 +155,7 @@ def monitor_decorator(name):
             before = time()
             args_str = ", ".join(chain(map(lambda e: str(e)[:10000], args), map(lambda e: "{}={}".format(e[0], str(e[1])[:10000]), kwargs.items())))
             res = f(*args, **kwargs)
-            print("({:.2f}) {}# ({})".format(time() - before, name, args_str))
+            logger.info("({:.2f}) {}# ({})".format(time() - before, name, args_str))
             return res
 
         functools.wraps(wrapper)
@@ -161,8 +163,6 @@ def monitor_decorator(name):
 
     return decorator
 
-logger = logging.getLogger("cache_watch_files")
-logger.setLevel(logging.INFO)
 
 def cache_results_watch_files(path, name):
     def decorator(f):

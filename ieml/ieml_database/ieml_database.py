@@ -230,7 +230,7 @@ class IEMLDatabase:
                 try:
                     _res.append(parser.parse(s))
                 except CannotParse as e:
-                    print(e, file=sys.stderr)
+                    logger.error(repr(e))
             return _res
 
         return res

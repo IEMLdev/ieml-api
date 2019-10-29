@@ -139,7 +139,7 @@ class GitInterface:
         :return: None
         """
         if commit_id is None:
-            print(str(self.repo.head.target))
+            logger.info(str(self.repo.head.target))
             commit_id = self.repo.head.target
 
         self.repo.state_cleanup()

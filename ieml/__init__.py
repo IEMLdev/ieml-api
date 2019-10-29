@@ -7,7 +7,7 @@ from .ieml_database.ieml_database import IEMLDatabase
 
 import logging
 
-logger = logging.getLogger()
+logger = logging.getLogger('ieml')
 logger.setLevel(logging.INFO)
 
 

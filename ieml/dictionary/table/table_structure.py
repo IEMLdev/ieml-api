@@ -2,6 +2,7 @@ import sys
 from collections import defaultdict
 from itertools import chain
 
+from ieml.commons import logger
 from ieml.dictionary.table.table import *
 from ieml.dictionary.script import Script
 
@@ -64,13 +65,13 @@ class TableStructure:
                     candidates |= {(t, regular)}
 
             if len(candidates) == 0:
-                print("TableStructure._define_root: No parent candidate for the table produced by script %s "
+                logger.info("TableStructure._define_root: No parent candidate for the table produced by script %s "
                       "ignoring this script." % (str(s)),
                       file=sys.stderr)
                 continue
 
             if len(candidates) > 1:
-                print("TableStructure._define_root: Multiple parent candidate for the table produced by script %s: {%s} "
+                logger.info("TableStructure._define_root: Multiple parent candidate for the table produced by script %s: {%s} "
                       "choosing the smaller one." % (str(s), ', '.join([str(c[0]) for c in candidates])),
                       file=sys.stderr)
 
@@ -98,7 +99,7 @@ class TableStructure:
             if s.cardinal == 1:
                 continue
             if s.singular_sequences[0] not in root_ss:
-                print(s.singular_sequences[0], "not found")
+                logger.error(s.singular_sequences[0] + " not found")
                 continue
             roots[root_ss[s.singular_sequences[0]]].append(s)
 
