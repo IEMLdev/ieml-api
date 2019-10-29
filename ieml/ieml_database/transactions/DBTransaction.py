@@ -1,7 +1,4 @@
 import json
-from itertools import product
-
-import pygit2
 import tqdm
 
 from ieml.ieml_database import IEMLDatabase
