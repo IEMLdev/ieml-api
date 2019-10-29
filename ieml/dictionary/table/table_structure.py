@@ -4,7 +4,6 @@ from itertools import chain
 
 from ieml.commons import logger
 from ieml.dictionary.table.table import *
-from ieml.dictionary.script import Script
 
 class TableStructure:
     # define a forest of root paradigm
@@ -66,14 +65,12 @@ class TableStructure:
 
             if len(candidates) == 0:
                 logger.info("TableStructure._define_root: No parent candidate for the table produced by script %s "
-                      "ignoring this script." % (str(s)),
-                      file=sys.stderr)
+                      "ignoring this script." % (str(s)))
                 continue
 
             if len(candidates) > 1:
                 logger.info("TableStructure._define_root: Multiple parent candidate for the table produced by script %s: {%s} "
-                      "choosing the smaller one." % (str(s), ', '.join([str(c[0]) for c in candidates])),
-                      file=sys.stderr)
+                      "choosing the smaller one." % (str(s), ', '.join([str(c[0]) for c in candidates])))
 
             parent, regular = min(candidates, key=lambda t: t[0].script)
 

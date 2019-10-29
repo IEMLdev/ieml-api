@@ -17,6 +17,7 @@ class TestGitInterface(unittest.TestCase):
         # repo = pygit2.init_repository(REPO_TEST_PATH)
         self.git = GitInterface(folder=REPO_TEST_PATH)
 
+
     # def tearDown(self):
     #     shutil.rmtree(REPO_TEST_PATH)
 
