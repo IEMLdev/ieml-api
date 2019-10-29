@@ -4,7 +4,7 @@ from itertools import product
 import pygit2
 import tqdm
 
-from ieml import IEMLDatabase
+from ieml.ieml_database import IEMLDatabase
 from ieml.constants import LANGUAGES, INHIBITABLE_RELATIONS, DESCRIPTORS_CLASS
 from ieml.dictionary.script import Script, factorize
 from ieml.usl import USL

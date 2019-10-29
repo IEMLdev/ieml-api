@@ -106,10 +106,8 @@ if __name__ == '__main__':
     #                      credentials=pygit2.Username('git'),
     #                      folder=folder)
 
-    db = IEMLDatabase(git_address='ssh://git@github.com/ogrergo/ieml-language.git',
-                      db_folder=folder,
-                      credentials=pygit2.Keypair('git', '/home/louis/.ssh/id_rsa.pub', '/home/louis/.ssh/id_rsa', ''),)
-    #
+    db = IEMLDatabase(folder=folder)
+
     # d = Descriptors(db2.get_pandas())
     # # print(d.get_values('wa.', 'fr', 'translations'))
     # # db2.remove_key('wa.', 'fr', 'translations', 'agir')

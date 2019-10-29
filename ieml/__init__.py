@@ -3,12 +3,12 @@
 # from os.path import join, dirname
 # import configparser
 # import sys
-from .ieml_database.ieml_database import IEMLDatabase
+#from .ieml_database.ieml_database import IEMLDatabase
 
 import logging
 
 logger = logging.getLogger('ieml')
-logger.setLevel(logging.INFO)
+# logger.setLevel(logging.INFO)
 
 
 from ieml.constants import LIBRARY_VERSION

@@ -7,11 +7,10 @@ from _pygit2 import GIT_CHECKOUT_FORCE, GIT_CHECKOUT_RECREATE_MISSING, GIT_STATU
 import pygit2
 from appdirs import user_cache_dir
 
+from ieml import logger
 from ieml.commons import monitor_decorator
 from ieml.constants import IEMLDB_DEFAULT_GIT_ADDRESS, LIBRARY_VERSION
 
-logger = logging.getLogger('GitInterface')
-logger.setLevel(logging.INFO)
 
 def get_local_cache_dir(origin):
     return os.path.join(user_cache_dir(appname='ieml', appauthor=False, version=LIBRARY_VERSION),

@@ -22,11 +22,9 @@ from ieml.constants import LANGUAGES, INHIBITABLE_RELATIONS, STRUCTURE_KEYS, DES
 from ieml.dictionary.dictionary import Dictionary
 from ieml.dictionary.script import NullScript, MultiplicativeScript, AdditiveScript, Script
 from ieml.exceptions import CannotParse
+from ieml.ieml_database.git_interface import logger
 from ieml.usl.parser import IEMLParser
 from ieml.usl import PolyMorpheme, Word, get_index
-
-logger = logging.getLogger('IEMLDatabase')
-logger.setLevel(logging.INFO)
 
 
 def _normalize_key(ieml, key, value, parse_ieml=False, partial=False, structure=False):
