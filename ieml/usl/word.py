@@ -1,8 +1,8 @@
 from itertools import chain
 
 from ieml.usl import USL
-from ieml.usl.constants import check_address_script
-from ieml.usl.lexeme import Lexeme, class_from_address, check_lexeme
+from ieml.usl.constants import check_address_script, class_from_address
+from ieml.usl.lexeme import Lexeme, check_lexeme
 from ieml.usl.syntagmatic_function import SyntagmaticFunction, SyntagmaticRole
 
 

@@ -9,7 +9,7 @@ from ieml.dictionary.script import Script
 from ieml.usl import USL
 
 
-def check_polymorpheme(ms, is_type: str=None):
+def check_polymorpheme(ms):
     if not all(isinstance(s, Script) for s in ms.constant):
         raise ValueError("A polymorpheme constant must be made of morphemes")
 

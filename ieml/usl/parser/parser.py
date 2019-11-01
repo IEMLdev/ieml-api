@@ -124,21 +124,20 @@ class IEMLParser():
                   | LPAREN RPAREN"""
 
         if len(p) == 10:
-            p[0] = Lexeme(pm_address=p[2], pm_content=p[5], pm_transformation=p[8])
+            p[0] = Lexeme(pm_flexion=PolyMorpheme(constant=p[2].constant + p[8].constant,
+                                                  groups=p[2].groups + p[8].groups), pm_content=p[5])
         elif len(p) == 9:
-            p[0] = Lexeme(pm_address=PolyMorpheme(constant=[]), pm_content=p[4], pm_transformation=p[7])
+            p[0] = Lexeme(pm_flexion=p[7], pm_content=p[4])
         elif len(p) == 8:
-            p[0] = Lexeme(pm_address=PolyMorpheme(constant=[]), pm_content=PolyMorpheme(constant=[]), pm_transformation=p[6])
+            p[0] = Lexeme(pm_flexion=p[6], pm_content=PolyMorpheme(constant=[]))
         elif len(p) == 7:
-            p[0] = Lexeme(pm_address=p[2], pm_content=p[5], pm_transformation=PolyMorpheme(constant=[]))
+            p[0] = Lexeme(pm_flexion=p[2], pm_content=p[5])
         elif len(p) == 6:
-            p[0] = Lexeme(pm_address=PolyMorpheme(constant=[]), pm_content=p[4], pm_transformation=PolyMorpheme(constant=[]))
+            p[0] = Lexeme(pm_flexion=PolyMorpheme(constant=[]), pm_content=p[4])
         elif len(p) == 4:
-            p[0] = Lexeme(pm_address=p[2], pm_content=PolyMorpheme(constant=[]),
-                                pm_transformation=PolyMorpheme(constant=[]))
+            p[0] = Lexeme(pm_flexion=p[2], pm_content=PolyMorpheme(constant=[]))
         else:
-            p[0] = Lexeme(pm_address=PolyMorpheme(constant=[]), pm_content=PolyMorpheme(constant=[]),
-                                pm_transformation=PolyMorpheme(constant=[]))
+            p[0] = Lexeme(pm_flexion=PolyMorpheme(constant=[]), pm_content=PolyMorpheme(constant=[]))
 
     def p_positioned_lexeme(self, p):
         """positioned_lexeme : morpheme_sum lexeme
