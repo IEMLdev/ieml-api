@@ -126,6 +126,7 @@ NAMES_TO_ADDRESS = {
 }
 
 ROLE_NAMES_TO_SCRIPT= {
+    'process': THREE_ACTANTS_PROCESS,
     'initiator': INITIATOR_SCRIPT,
     'interactant': INTERACTANT_SCRIPT,
     'recipient' : RECIPIENT_SCRIPT,
