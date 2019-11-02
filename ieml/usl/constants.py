@@ -283,10 +283,10 @@ def check_flexion_process_scripts(l: List[Script], valence=None):
     assert_all_in(l, ADDRESS_PROCESS_POLYMORPHEME_SCRIPTS, "an address of a process")
 
     #check voice
-    assert_only_one_from(l, ADDRESS_PROCESS_VOICES_SCRIPTS[valence], "an address of a process", "voices")
+    assert_atmost_one_from(l, ADDRESS_PROCESS_VOICES_SCRIPTS[valence], "an address of a process", "voices")
 
     #check mode
-    assert_only_one_from(l, ADDRESS_PROCESS_VERBAL_MODE_SCRIPTS, "an address of a process", "verbal modes")
+    assert_atmost_one_from(l, ADDRESS_PROCESS_VERBAL_MODE_SCRIPTS, "an address of a process", "verbal modes")
 
     #check aspect
     assert_atmost_one_from(l, ADDRESS_PROCESS_ASPECT_SCRIPTS, "an address of a process", "aspects")
