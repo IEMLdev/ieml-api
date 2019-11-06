@@ -33,7 +33,9 @@ class SyntagmaticRole(PolyMorpheme):
                                #      in self.groups]))
 
     def do_lt(self, other):
-        return [ADDRESS_SCRIPTS_ORDER[e] for e in self.constant] < [ADDRESS_SCRIPTS_ORDER[e] for e in other.constant]
+        return len(self.constant) < len(other.constant) or \
+               (len(self.constant) == len(other.constant) and
+                [ADDRESS_SCRIPTS_ORDER[e] for e in self.constant] < [ADDRESS_SCRIPTS_ORDER[e] for e in other.constant])
 
 
 class SyntagmaticFunction:

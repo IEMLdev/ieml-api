@@ -63,7 +63,8 @@ class PolyMorpheme(USL):
         return not self.constant and not self.groups
 
     def do_lt(self, other):
-        return self.constant < other.constant or \
+        return len(self.constant) < len(other.constant) or \
+               (len(self.constant) == len(other.constant) and self.constant < other.constant) or \
                (self.constant == other.constant and self.groups < other.groups)
 
     @property
