@@ -234,7 +234,7 @@ def assert_(cond, message):
 
 
 def assert_all_in(l: List[Script], _set: Set[Script], name_l):
-    assert_(all(s in _set for s in l),
+    assert_(all(s in _set or s.empty for s in l),
             "Invalid scripts [{}] in {}. Received: [{}]".format(
                 " ".join(map(str, sorted(set(l) - _set))),
                 name_l,

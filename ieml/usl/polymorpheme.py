@@ -6,6 +6,7 @@ from typing import List
 from ieml.commons import LastUpdatedOrderedDict
 from ieml.constants import MORPHEME_SERIE_SIZE_LIMIT_CONTENT, AUXILIARY_CLASS, POLYMORPHEME_MAX_MULTIPLICITY
 from ieml.dictionary.script import Script
+from ieml.dictionary.script.script import NULL_SCRIPTS
 from ieml.usl import USL
 
 
@@ -48,19 +49,22 @@ class PolyMorpheme(USL):
     def __init__(self, constant: List[Script]=(), groups=()):
         super().__init__()
 
-        self.constant = tuple(sorted(constant))
-        
+        self.constant = tuple(sorted(filter(lambda m: not m.empty, constant)))
+
         self.groups = tuple(sorted((tuple(sorted(g[0])), g[1]) for g in groups))
 
         self._str = ' '.join(chain(map(str, self.constant),
                                ["m{}({})".format(mult, ' '.join(map(str, group))) for group, mult
                                     in self.groups]))
 
+        if not self.constant:
+            self.constant = (NULL_SCRIPTS[0],)
+
         self.grammatical_class = max((s.grammatical_class for s in self.constant),
                                      default=AUXILIARY_CLASS)
     @property
     def empty(self):
-        return not self.constant and not self.groups
+        return not self.groups and len(self.constant) == 1 and self.constant[0].empty
 
     def do_lt(self, other):
         return len(self.constant) < len(other.constant) or \

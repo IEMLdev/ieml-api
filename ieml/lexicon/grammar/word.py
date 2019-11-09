@@ -106,7 +106,7 @@ class Word(Usl):
 
     @property
     def layer(self):
-        return sum(not s.is_empty for s in self.semes)
+        return sum(not s.empty for s in self.semes)
 
     def _get_cardinal(self):
         return reduce(mul, [w.cardinal for char in [self.substance, self.attribute, self.mode] for w in char], 1)

@@ -33,7 +33,7 @@ class Script(TreeStructure):
         self.is_paradigm = None
 
         # If the script is the empty script
-        self.is_empty = None
+        self.empty = None
 
         # The number of singular sequence (1 for singular sequences)
         self.cardinal = None
