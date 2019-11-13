@@ -4,12 +4,11 @@ from functools import partial
 
 import pygit2
 
-from ieml import IEMLDatabase
+from ieml.ieml_database import IEMLDatabase, GitInterface
 from ieml.dictionary import Dictionary
 from ieml.dictionary.script import script, AdditiveScript, m
 from ieml.dictionary.script.tools import promote
 from ieml.ieml_database.transactions.DBTransaction import DBTransactions
-from scripts.migrate_versions.migrate_v03Tov04 import GitInterface
 
 
 def migrate_merge(s0, s1):
@@ -59,16 +58,15 @@ def migrate_EOETI(scri):
     return m(script('S:.'), a, _m)
 
 
-if __name__ == '__main__':
-
-    assert migrate_EOETI(script("E:.O:.E:T:.+I:.-")) == script("S:.O:.E:T:.+I:.-")
     # assert migrate_EMOto(script("E:M:O:.t.o.-")) == script("E:M:.-O:.-t.o.-'")
     #
     # assert migrate_EOOMt0(script("E:.-'O:O:.-M:.t.o.-',")) == script("E:.-'O:O:.-M:.-'t.o.-',")
 
 
 
-if __name__ == '__main__':
+def migrate(function, _s_old, _s_new):
+    assert function(_s_old) == _s_new
+
 
     folder = '/tmp/migrate_script_iemldb'
     if os.path.isdir(folder):
@@ -78,8 +76,9 @@ if __name__ == '__main__':
 
     credentials = pygit2.Keypair('ogrergo', '~/.ssh/id_rsa.pub', '~/.ssh/id_rsa', None)
     gitdb = GitInterface(origin=git_address,
-                 credentials=credentials,
-                 folder=folder)
+                         credentials=credentials,
+                         folder=folder)
+
     signature = pygit2.Signature("Louis van Beurden", "louis.vanbeurden@gmail.com")
 
     db = IEMLDatabase(folder=folder, use_cache=False)
@@ -89,13 +88,13 @@ if __name__ == '__main__':
     struct = db.get_structure()
 
     for s in db.get_dictionary().scripts:
-        s2 = migrate_EOETI(s)
+        s2 = function(s)
         if s2 != s:
             to_migrate[s] = s2
 
     print(to_migrate)
 
-    with gitdb.commit(signature, "[Translate script] Translate paradigm from 'E:.O:.E:T:.+I:.-' to 'O:.E:T:.+I:.-'"):
+    with gitdb.commit(signature, "[Translate script] Translate paradigm from '{}' to '{}".format(str(_s_old), str(_s_new))):
         for s_old, s_new in to_migrate.items():
             db.remove_structure(s_old)
             for (_, key), values in struct.get_values_partial(s_old).items():
@@ -107,7 +106,171 @@ if __name__ == '__main__':
                 for v in values:
                     db.add_descriptor(s_new, lang, d, v)
 
+def add_empty_science_humaine():
+    """
+    M:M:.-O:M:.+M:O:.-E:.-+s.y.-‘
+        —>
+    M:M:.-O:M:.+M:O:.-E:.-+s.y.-‘ + M:O:.-we.-s.y.-' + M:M:.-we.-s.y.-'
+        """
+    src = script("M:M:.-O:M:.+M:O:.-E:.-+s.y.-'")
+    tgt = script("M:M:.-O:M:.+M:O:.-E:.-+s.y.-'+M:O:.-we.-s.y.-'+M:M:.-we.-s.y.-'")
 
+    to_update = {}
+    to_remove = []
+
+    to_update[src] = tgt
+    to_add = [script("M:O:.-we.-s.y.-'"), script("M:M:.-we.-s.y.-'")]
+    return to_update, to_add, to_remove
+
+
+def add_row_evolution_culturel():
+    """
+    M:O:.-'F:.-'k.o.-t.o.-', => M:O:.-+S:.-'F:.-'k.o.-t.o.-',
+    :return:
+    """
+    src = script("M:O:.-'F:.-'k.o.-t.o.-',")
+    s, a, _m = src
+    tgt = m(s + script("S:.-'"), a, _m)
+
+    to_update = {}
+    to_remove = []
+
+    to_update[src] = tgt
+
+    # for ss_s in s.singular_sequences:
+    #     to_update[m(ss_s, a, _m)] = m(ss_s, a, _m)
+
+    for ss_a in a.singular_sequences:
+        to_update[m(s, ss_a, _m)] = m(script("S:.-'"), ss_a, _m)
+        # to_update[m(s, ss_a, _m)] = m(s + script("S:.-'"), ss_a, _m)
+
+    # to_add.append()
+    #
+    # to_remove.append()
+    #
+    # res.append(tgt)
+
+    # for r in tgt.singular_sequences:
+    return to_update, to_remove
+
+def translate_temps(s):
+    """
+    t.o. - n.o. - 'M:O:.-',
+    """
+    root = script("t.o.-n.o.-M: O:.-'")
+    if not s.singular_sequences_set.issubset(root.singular_sequences):
+        return s
+
+    _s, _a, _m = s
+    return m(m(_s, _a), m(_m))
+
+
+
+
+
+def add_row_(_s):
+    """M:M:.-O:M:.+M:O:.-E:.-+s.y.-'
+       S:E:.+M:M:.-E:.+O:M:.+M:O:.-E:.-+s.y.-'"""
+
+
+
+    s, a, _m = _s.children
+
+    # return m(m(script("S:E:.") + s.children[0]), m(script("E:.") + a.children[0]), _m)
+
+
+    res = []
+    for ss_m in _m.singular_sequences:
+        for ss_s in s.children[0].singular_sequences:
+            res.append([
+                m(m(ss_s), m(script("E:.")), ss_m),
+                m(m(ss_s), m(a.children[0]), ss_m)
+            ])
+
+
+        for ss_a in a.children[0].singular_sequences:
+            res.append([
+                m(m(script("S:E:.")), m(ss_a), ss_m),
+                m(m(s.children[0]), m(ss_a), ss_m)
+            ])
+
+    res.append([
+        m(m(script("S:E:.")), m(script("E:.")), _m),
+        m(m(s.children[0]), m(a.children[0]), _m)
+    ])
+    return res
+
+
+
+# TODO :
+# M:M:.-O:M:.+M:O:.-E:.-+s.y.-‘ =>
+
+
+
+if __name__ == '__main__':
+
+    # assert migrate_EOETI(script("E:.O:.E:T:.+I:.-")) == script("S:.O:.E:T:.+I:.-")
+
+    #
+    # folder = '/tmp/migrate_script_iemldb'
+    # if os.path.isdir(folder):
+    #     shutil.rmtree(folder)
+    # # os.mkdir(folder)
+    # git_address = "https://github.com/IEMLdev/ieml-language.git"
+    #
+    # credentials = pygit2.Keypair('ogrergo', '~/.ssh/id_rsa.pub', '~/.ssh/id_rsa', None)
+    # gitdb = GitInterface(origin=git_address,
+    #                      credentials=credentials,
+    #                      folder=folder)
+    #
+    # signature = pygit2.Signature("Louis van Beurden", "louis.vanbeurden@gmail.com")
+    #
+    # db = IEMLDatabase(folder=folder, use_cache=False)
+    #
+    # # to_migrate = {}
+    # desc = db.get_descriptors()
+    # struct = db.get_structure()
+    #
+    # # for s in db.get_dictionary().scripts:
+    # #     s2 = function(s)
+    # #     if s2 != s:
+    # #         to_migrate[s] = s2
+    # #
+    # # print(to_migrate)
+    #
+    # src = script("M:M:.-O:M:.+M:O:.-E:.-+s.y.-'")
+    # tgt = script("M:M:.-O:M:.+M:O:.-E:.-+s.y.-'+M:O:.-we.-s.y.-'+M:M:.-we.-s.y.-'")
+    # #
+    # # root_to_migrate = script("M:M:.-O:M:.+M:O:.-E:.-+s.y.-'")
+    # # new_root = script("S:E:.+M:M:.-E:.+O:M:.+M:O:.-E:.-+s.y.-'")
+    #
+    # to_update, to_add, to_remove = add_empty_science_humaine()
+    #
+    # with gitdb.commit(signature, "[Translate script] Translate paradigm from \"{}\" to \"{}\"".format(str(src), str(tgt))):
+    #     for r in to_remove:
+    #         db.remove_structure(r)
+    #         db.remove_descriptor(r)
+    #
+    #     for a in to_add:
+    #         db.add_descriptor(a, 'fr', 'translations', 'à traduire')
+    #         db.add_descriptor(a, 'en', 'translations', 'to translate')
+    #
+    #     for old, new in to_update.items():
+    #         db.remove_structure(old)
+    #         db.remove_descriptor(old)
+    #
+    #         for (_, key), values in struct.get_values_partial(old).items():
+    #             for v in values:
+    #                 db.add_structure(new, key, v)
+    #
+    #         for (_, lang, d), values in desc.get_values_partial(old).items():
+    #             for v in values:
+    #                 db.add_descriptor(new, lang, d, v)
+    #
+    #
+    #
+    migrate(translate_temps, script("t.o.-n.o.-M:O:.-'"), script("t.o.-n.o.-'M:O:.-',"))
+    # dictionary = db.get_dictionary()
 
 #     db = IEMLDatabase(=git_address,
 #                          credentials=credentials,
