@@ -236,8 +236,10 @@ class IEMLDatabase:
     @monitor_decorator("Get descriptors")
     def get_descriptors(self, files_list=None):
         if files_list is not None:
-            p1 = subprocess.Popen(['echo', '-ne', '\0'.join(files_list)],
+            p1 = subprocess.Popen(['echo', '-ne', r'\0'.join(files_list)],
                                   stdout=subprocess.PIPE, cwd=self.folder)
+            # p1 = subprocess.Popen(['sed', '-e', r's/\n/\x0/g'], stdin=p0.stdout,
+            #                       stdout=subprocess.PIPE, cwd=self.folder)
         else:
             p1 = subprocess.Popen("find -path *.desc -print0".split(),
                                   stdout=subprocess.PIPE, cwd=self.folder)
