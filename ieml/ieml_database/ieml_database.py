@@ -35,8 +35,8 @@ def _normalize_key(ieml, key, value, parse_ieml=False, partial=False, structure=
         ieml = str(ieml)
         if parse_ieml:
             parsed = IEMLParser().parse(str(ieml))
-            if ieml != str(parsed):
-                raise ValueError("IEML is not normalized: {}".format(ieml))
+            # if ieml != str(parsed):
+            #     raise ValueError("IEML is not normalized: {}".format(ieml))
 
             # if len(parsed) == 1 and structure:
             #     raise ValueError("Only paradigms can have a structure: {}".format(ieml))
@@ -183,9 +183,9 @@ class IEMLDatabase:
                                sha224(l.encode('utf8')).hexdigest()[:self.HASH_SIZE])
         return l
 
-    def path_of(self, ieml, descriptor=True, mkdir=False):
-        if isinstance(ieml, str):
-            ieml = IEMLParser().parse(ieml)
+    def path_of(self, _ieml, descriptor=True, mkdir=False):
+        if isinstance(_ieml, str):
+            ieml = IEMLParser().parse(_ieml)
 
         if descriptor:
             ext = '.desc'
@@ -194,7 +194,7 @@ class IEMLDatabase:
 
         class_folder, prefix_sixe = self.CLASS_TO_FOLDER[ieml.__class__]
 
-        filename = self.filename_of(ieml)
+        filename = self.filename_of(_ieml)
         prefix = filename[:prefix_sixe]
 
         p = os.path.join(self.folder, class_folder,

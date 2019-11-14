@@ -248,8 +248,11 @@ class GitInterface:
             last = commit_target
             for commit in rebased_commits:
                 repo.head.set_target(last)
+                try:
+                    repo.cherrypick(commit.id)
+                except GitError as e:
+                    raise e
 
-                repo.cherrypick(commit.id)
                 if repo.index.conflicts is None:
                     tree_id = repo.index.write_tree()
 
