@@ -11,13 +11,27 @@ def check_word(w: 'Word'):
         raise ValueError("An address of a word is expected to be a polymorpheme, not a {}."
                          .format(w.role.__class__.__name__))
 
-    check_address_script(w.role.constant)
+    check_address_script(w.role.constant, sfun_type=w.syntagmatic_fun.__class__)
 
     if not isinstance(w.syntagmatic_fun, SyntagmaticFunction):
         raise ValueError("The word is expected to be made from a SyntagmaticFunction, not a {}."
                          .format(w.syntagmatic_fun.__class__.__name__))
 
-    w.syntagmatic_fun.check(Lexeme, check_lexeme)
+    w.syntagmatic_fun.check(Lexeme, check_lexeme, sfun_type=w.syntagmatic_fun.__class__)
+
+
+def simplify_word(w: 'Word') -> 'Word':
+    """remove empty leaves"""
+
+    res = []
+    for r, sfun in w.syntagmatic_fun.actors.items():
+        if all(l.actor.empty for l in sfun.actors.values()) and \
+                (len(w.role.constant) < len(r.constant) or any(rw != rn for rw, rn in zip(w.role.constant, r.constant))):
+            continue
+
+        res.append([r.constant, sfun.actor])
+
+    return Word(SyntagmaticFunction.from_list(res, w.grammatical_class), role=w.role)
 
 
 class Word(USL):
@@ -36,6 +50,10 @@ class Word(USL):
     def _compute_singular_sequences(self):
         return [self]
 
+    @property
+    def empty(self):
+        return self.syntagmatic_fun.empty
+
     def do_lt(self, other):
         return self.syntagmatic_fun < other.syntagmatic_fun or \
                (self.syntagmatic_fun == other.syntagmatic_fun and self.role < other.role)
@@ -44,3 +62,6 @@ class Word(USL):
     def morphemes(self):
         return sorted(set(chain.from_iterable(e.actor.morphemes
                                               for e in self.syntagmatic_fun.actors.values())))
+
+    def check(self):
+        check_word(self)

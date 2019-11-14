@@ -11,8 +11,8 @@ SYNTAGMATIC_FUNCTION_QUALITY_TYPE_SCRIPT = script('E:.b.E:T:.-')
 
 # Process : grammatical role (valence)
 ONE_ACTANT_PROCESS = script('E:S:.')
-TWO_ACTANTS_PROCESS = script('E:B:.')
-THREE_ACTANTS_PROCESS = script('E:T:.')
+TWO_ACTANTS_PROCESS = script('E:T:.')
+THREE_ACTANTS_PROCESS = script('E:B:.')
 ADDRESS_PROCESS_VALENCE_SCRIPTS = [ONE_ACTANT_PROCESS, TWO_ACTANTS_PROCESS, THREE_ACTANTS_PROCESS]  # process
 
 
@@ -64,7 +64,7 @@ LOCATION_SCRIPT = script('E:.l.-')
 MANNER_SCRIPT = script('E:.f.-')
 CAUSE_SCRIPT = script('E:.s.-')
 INTENTION_SCRIPT = script('E:.m.-')
-ADDRESS_CIRCONSTANTIAL_ACTANTS_SCRIPTS = [TIME_SCRIPT, LOCATION_SCRIPT, MANNER_SCRIPT, CAUSE_SCRIPT, INTENTION_SCRIPT]
+ADDRESS_CIRCONSTANTIAL_ACTANTS_SCRIPTS = [TIME_SCRIPT, LOCATION_SCRIPT, INTENTION_SCRIPT, MANNER_SCRIPT, CAUSE_SCRIPT]
 ACTANTS_SCRIPTS = [*ADDRESS_ACTANTS_MOTOR_SCRIPTS,
                    *ADDRESS_CIRCONSTANTIAL_ACTANTS_SCRIPTS]
 
@@ -310,7 +310,7 @@ def check_flexion_process_scripts(l: List[Script], valence=None):
     assert_atmost_one_from(l, TRANSFORMATION_PROCESS_HEXADE_MODE_SCRIPTS, "a transformation of a process", "hexade modes")
 
 
-def check_address_script(l: List[Script]):
+def check_address_script(l: List[Script], sfun_type):
     assert_all_in(l, set(ADDRESS_SCRIPTS), "an address")
 
     if any(e in {*ADDRESS_PROCESS_VALENCE_SCRIPTS, *ACTANTS_SCRIPTS} for e in l):
@@ -318,6 +318,13 @@ def check_address_script(l: List[Script]):
 
     assert_atmost_one_from(l, {INDEPENDANT_QUALITY}, "an address", "independant quality")
 
+    from ieml.usl.syntagmatic_function import ActantSyntagmaticFunction, IndependantQualitySyntagmaticFunction
+    if sfun_type == ActantSyntagmaticFunction:
+        assert_no_one_from(l, {*ADDRESS_PROCESS_VALENCE_SCRIPTS, *ADDRESS_ACTANTS_MOTOR_SCRIPTS, *ADDRESS_CIRCONSTANTIAL_ACTANTS_SCRIPTS},
+                           "an address of an ActantSyntagmaticFunction", "grammatical roles")
+    elif sfun_type == IndependantQualitySyntagmaticFunction:
+        assert_no_one_from(l, {*ADDRESS_PROCESS_VALENCE_SCRIPTS, *ADDRESS_ACTANTS_MOTOR_SCRIPTS, *ADDRESS_CIRCONSTANTIAL_ACTANTS_SCRIPTS, DEPENDANT_QUALITY},
+                           "an address of an IndependantQualitySyntagmaticFunction", "grammatical roles")
 
 def check_flexion_actant_scripts(l: List[Script], role=None):
     assert_atmost_one_from(l, ADDRESS_ACTANTS_DEFINITION_SCRIPTS, "a flexion of an actant", "definitions")

@@ -66,6 +66,9 @@ class PolyMorpheme(USL):
     def empty(self):
         return not self.groups and len(self.constant) == 1 and self.constant[0].empty
 
+    def check(self):
+        check_polymorpheme(self)
+
     def do_lt(self, other):
         return len(self.constant) < len(other.constant) or \
                (len(self.constant) == len(other.constant) and self.constant < other.constant) or \

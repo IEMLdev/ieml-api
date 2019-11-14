@@ -21,9 +21,9 @@ class SyntagmaticRole(PolyMorpheme):
             raise ValueError("Invalid script in a syntagmatic role.")
 
         self.constant = tuple(sorted(constant, key=lambda e: ADDRESS_SCRIPTS_ORDER[e]))
-
         if len(groups):
             raise ValueError("Paradigms are not supported in syntagmatic roles.")
+
 
         # self.groups = tuple(sorted((tuple(sorted(g[0], key=lambda e: ADDRESS_SCRIPTS_ORDER[e])), g[1])
         #                            for g in groups))
@@ -31,6 +31,7 @@ class SyntagmaticRole(PolyMorpheme):
         self._str = ' '.join(chain(map(str, self.constant)))
                                # ["m{}({})".format(mult, ' '.join(map(str, group))) for group, mult
                                #      in self.groups]))
+
 
     def do_lt(self, other):
         return len(self.constant) < len(other.constant) or \
@@ -56,6 +57,10 @@ class SyntagmaticFunction:
     @property
     def role(self):
         return (SYNTAGMATIC_FUNCTION_SCRIPT,)
+
+    @property
+    def empty(self):
+        return self.actor.empty and len(self.actors) == 0
 
     def get(self, role: SyntagmaticRole) -> X:
         assert role.is_singular
@@ -91,14 +96,14 @@ class SyntagmaticFunction:
         elif act_count > 1:
             raise ValueError("Invalid syntagmatic function, too many actant roles without a process")
 
-        dep_count = sum(1 if address == [DEPENDANT_QUALITY] else 0 for address, x in l)
+        dep_count = sum(1 if list(address) == [DEPENDANT_QUALITY] else 0 for address, x in l)
         if dep_count == 1:
             return DependantQualitySyntagmaticFunction._from_list(l)
         elif dep_count > 1:
             raise ValueError(
                 "Invalid syntagmatic function, too many dependant actant roles without a process nor an actant")
 
-        indep_count = sum(1 if address == [INDEPENDANT_QUALITY] else 0 for address, x in l)
+        indep_count = sum(1 if list(address) == [INDEPENDANT_QUALITY] else 0 for address, x in l)
         if indep_count == 1:
             assert len(l) == 1
             address, x = l[0]
@@ -117,7 +122,7 @@ class SyntagmaticFunction:
                              "actant nor a dependant actant")
             return IndependantQualitySyntagmaticFunction(l[0][1])
 
-    def check(self, X: Type, check_X):
+    def check(self, X: Type, check_X, sfun_type):
         if not isinstance(self.actor, X):
             raise ValueError("The process of a SyntagmaticFunction is expected to be a {}, not a {}."
                              .format(X.__name__, self.actor.__class__.__name__))
@@ -129,7 +134,7 @@ class SyntagmaticFunction:
                 raise ValueError("An address in a SyntagmaticFunction is expected to be a polymorpheme, not a {}."
                                  .format(address.__class__.__name__))
 
-            check_address_script(address.constant)
+            check_address_script(address.constant, sfun_type=sfun_type)
 
 
 class IndependantQualitySyntagmaticFunction(SyntagmaticFunction):
@@ -198,22 +203,22 @@ class DependantQualitySyntagmaticFunction(SyntagmaticFunction):
 
         return cls(actor=actor, role=[role], dependant=dependant, independant=independant)
 
-    def check(self, X, check_X):
-        super().check(X, check_X)
+    def check(self, X, check_X, sfun_type):
+        super().check(X, check_X, sfun_type)
 
         for ind in self.independant:
             if not isinstance(ind, IndependantQualitySyntagmaticFunction):
                 raise ValueError("A quality is expected to be a IndependantQualitySyntagmaticFunction, not a {}."
                              .format(ind.__class__.__name__))
 
-            ind.check(X, check_X)
+            ind.check(X, check_X, sfun_type)
 
         if self.dependant is not None:
             if not isinstance(self.dependant, DependantQualitySyntagmaticFunction):
                 raise ValueError("An actant is expected to be a DependantQualitySyntagmaticFunction, not a {}."
                                  .format(self.dependant.__class__.__name__))
 
-            self.dependant.check(X, check_X)
+            self.dependant.check(X, check_X, sfun_type)
 
 class ActantSyntagmaticFunction(DependantQualitySyntagmaticFunction):
     def __init__(self,
@@ -307,8 +312,8 @@ class ProcessSyntagmaticFunction(SyntagmaticFunction):
         return ProcessSyntagmaticFunction(actor=actor, actants=actants, valence=valence)
 
 
-    def check(self, X: Type, check_X):
-        super().check(X, check_X)
+    def check(self, X: Type, check_X, sfun_type):
+        super().check(X, check_X, sfun_type)
 
         for actant, role in [(self.initiator, INITIATOR_SCRIPT),
                        (self.interactant, INTERACTANT_SCRIPT),
@@ -324,4 +329,4 @@ class ProcessSyntagmaticFunction(SyntagmaticFunction):
                     raise ValueError("An actant of a word is expected to be a ActantSyntagmaticFunction, not a {}."
                                      .format(actant.__class__.__name__))
 
-                actant.check(X, check_X)
+                actant.check(X, check_X, sfun_type)

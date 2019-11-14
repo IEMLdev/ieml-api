@@ -45,6 +45,13 @@ class Lexeme(USL):
         if not self._str:
             self._str = "()"
 
+    def check(self):
+        pass
+
+    @property
+    def empty(self):
+        return self.pm_content.empty and self.pm_flexion.empty
+
     def do_lt(self, other):
         return self.pm_flexion < other.pm_flexion or \
                (self.pm_flexion == other.pm_flexion and self.pm_content < other.pm_content)
