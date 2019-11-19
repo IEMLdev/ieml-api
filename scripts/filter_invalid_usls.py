@@ -53,9 +53,11 @@ if __name__ == '__main__':
         else:
             if isinstance(_s, Word):
                 _s = simplify_word(_s)
+                # usl(str(_s))
 
             if str(_s) != s:
-                print("Not normalized \n\t({}){} != \n\t({}){}".format(str(_s) in all_db, str(_s), str(s) in all_db, str(s)))
+                print("Not normalized \n\t({}){}{} != \n\t({}){}{}".format(str(_s) in all_db, '[NO !]' if '!' not in str(_s) else '',
+                                                                           str(_s), str(s) in all_db, '[NO !]' if '!' not in str(s) else '', str(s)))
                 to_pass = False
 
             try:

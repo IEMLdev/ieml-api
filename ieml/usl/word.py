@@ -1,9 +1,12 @@
 from itertools import chain
+from typing import Type
 
+from ieml.dictionary.script import Script
 from ieml.usl import USL
 from ieml.usl.constants import check_address_script, class_from_address
 from ieml.usl.lexeme import Lexeme, check_lexeme
-from ieml.usl.syntagmatic_function import SyntagmaticFunction, SyntagmaticRole
+from ieml.usl.syntagmatic_function import SyntagmaticFunction, SyntagmaticRole, DependantQualitySyntagmaticFunction, \
+    IndependantQualitySyntagmaticFunction
 
 
 def check_word(w: 'Word'):
@@ -24,18 +27,22 @@ def simplify_word(w: 'Word') -> 'Word':
     """remove empty leaves"""
 
     res = []
+    word_role = w.role.constant if w.syntagmatic_fun.__class__ not in [DependantQualitySyntagmaticFunction, IndependantQualitySyntagmaticFunction] else \
+        w.role.constant[1:]
+
     for r, sfun in w.syntagmatic_fun.actors.items():
         if all(l.actor.empty for l in sfun.actors.values()) and \
-                (len(w.role.constant) < len(r.constant) or any(rw != rn for rw, rn in zip(w.role.constant, r.constant))):
+                (len(word_role) < len(r.constant) or any(rw != rn for rw, rn in zip(word_role, r.constant))):
             continue
 
         res.append([r.constant, sfun.actor])
 
-    return Word(SyntagmaticFunction.from_list(res, w.grammatical_class), role=w.role)
+    sfun = w.syntagmatic_fun._from_list(res)
 
+    return Word(sfun, role=w.role, context_type=w.syntagmatic_fun.__class__)
 
 class Word(USL):
-    def __init__(self, syntagmatic_fun: SyntagmaticFunction, role: SyntagmaticRole):
+    def __init__(self, syntagmatic_fun: SyntagmaticFunction, role: SyntagmaticRole, context_type: Type[SyntagmaticFunction]):
         super().__init__()
         self.syntagmatic_fun = syntagmatic_fun
         self.role = role
@@ -43,7 +50,7 @@ class Word(USL):
         self._singular_sequences = None
         self._singular_sequences_set = None
 
-        self._str = self.syntagmatic_fun.render(self.role)
+        self._str = self.syntagmatic_fun.render_with_context(self.role, context=context_type)
 
         self.grammatical_class = class_from_address(self.role)
 

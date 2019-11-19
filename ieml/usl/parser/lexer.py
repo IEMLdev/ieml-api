@@ -3,10 +3,11 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-TERM_REGEX = r'[EUASBTOMFIacbedgfihkjmlonpsutwyx][EUASBTOMFIacbedgfihkjmlonpsutwyx\.\-\;\:\,\'\’\_\+]+'
+TERM_REGEX = r'(?!E:\.b\.E:.:\.-)[EUASBTOMFIacbedgfihkjmlonpsutwyx][EUASBTOMFIacbedgfihkjmlonpsutwyx\.\-\;\:\,\'\’\_\+]+'
 
 tokens = (
    'MORPHEME',
+   'OLD_MORPHEME_GRAMMATICAL_CLASS',
 
    # 'PLUS',
    # 'TIMES',
@@ -32,6 +33,8 @@ tokens = (
 
 
 def get_lexer(module=None):
+    t_OLD_MORPHEME_GRAMMATICAL_CLASS = r'E:\.b\.E:[SBT]:\.-'
+
     t_MORPHEME = TERM_REGEX
     # t_PLUS   = r'\+'
     # t_TIMES   = r'\*'
@@ -43,13 +46,8 @@ def get_lexer(module=None):
     t_LBRACKET = r'\['
     t_RBRACKET  = r'\]'
     t_EXCLAMATION_MARK  = r'\!'
+    #
 
-    # t_HASH = r'\#'
-
-    # t_  = r'\]'
-    # t_L_CURLY_BRACKET = r'\{'
-    # t_R_CURLY_BRACKET = r'\}'
-    # t_SLASH = r'\/'
     t_LITERAL = r'\#(\\\#|[^\#])+\#'
 
     t_GROUP_MULTIPLICITY = r'm\d+'

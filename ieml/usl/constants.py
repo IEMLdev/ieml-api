@@ -68,6 +68,96 @@ ADDRESS_CIRCONSTANTIAL_ACTANTS_SCRIPTS = [TIME_SCRIPT, LOCATION_SCRIPT, INTENTIO
 ACTANTS_SCRIPTS = [*ADDRESS_ACTANTS_MOTOR_SCRIPTS,
                    *ADDRESS_CIRCONSTANTIAL_ACTANTS_SCRIPTS]
 
+JUNCTION_INDEX = list(map(script, [
+    "j.-U:.-'d.o.-l.o.-',",
+    "j.-A:.-'d.o.-l.o.-',",
+    "g.-U:.-'d.o.-l.o.-',",
+    "g.-A:.-'d.o.-l.o.-',",
+    "h.-U:.-'d.o.-l.o.-',",
+    "h.-A:.-'d.o.-l.o.-',",
+    "c.-U:.-'d.o.-l.o.-',",
+    "c.-A:.-'d.o.-l.o.-',",
+    "p.-U:.-'d.o.-l.o.-',",
+    "p.-A:.-'d.o.-l.o.-',",
+    "x.-U:.-'d.o.-l.o.-',",
+    "x.-A:.-'d.o.-l.o.-',"
+]))
+
+JUNCTION_AND = script("E:S:.-k.u.-'")
+JUNCTION_XOR = script("E:T:.-k.u.-'")
+JUNCTION_OR = script("E:B:.-k.u.-'")
+
+JUNCTION_SYMMETRICAL = [JUNCTION_AND, JUNCTION_XOR, JUNCTION_OR]
+
+JUNCTION_COMPARISON_ANCHOR = script("E:.U:.g.-k.u.-'")
+
+JUNCTION_COMPARISON_LINK = script("E:.A:.j.-k.u.-'") # like
+JUNCTION_COMPARISON_RELATIVE_LINK = script("E:O:M:.-U:.-k.u.-'").singular_sequences_set
+JUNCTION_COMPARISON_ABSOLUTE_LINK = script("E:O:M:.-A:.-k.u.-'").singular_sequences_set
+
+JUNCTION_COMPARISON = [JUNCTION_COMPARISON_ANCHOR, JUNCTION_COMPARISON_LINK,
+                       *JUNCTION_COMPARISON_RELATIVE_LINK, *JUNCTION_COMPARISON_ABSOLUTE_LINK]
+
+JUNCTION_CAUSAL_ANCHOR = script("E:T:.h.-k.u.-'")
+JUNCTION_CAUSAL_CAUSE_TO_EFFECT_LINK = script("E:T:.c.-k.u.-'")
+JUNCTION_CAUSAL_EFFECT_TO_CAUSE_LINK = script("E:B:.x.-k.u.-'")
+JUNCTION_CAUSAL_A_FORTIORI_LINK = script("E:B:.x.-k.u.-'")
+
+JUNCTION_CAUSAL = [JUNCTION_CAUSAL_ANCHOR, JUNCTION_CAUSAL_CAUSE_TO_EFFECT_LINK,
+                   JUNCTION_CAUSAL_EFFECT_TO_CAUSE_LINK, JUNCTION_CAUSAL_A_FORTIORI_LINK]
+
+JUNCTION_ANTINOMIC_ANCHOR = script("E:.A:.g.-k.u.-'")
+
+JUNCTION_ANTINOMIC_BUT_LINK = script("E:U:.j.-k.u.-'")
+JUNCTION_ANTINOMIC_EXCEPT_LINK = script("E:.U:.j.-wo.-k.u.-'")
+JUNCTION_ANTINOMIC_ALTOUGH_LINK = script("E:.U:.j.-wa.-k.u.-'")
+JUNCTION_ANTINOMIC_ON_THE_OTHER_HAND_LINK = script("E:.U:.j.-wu.-k.u.-'")
+JUNCTION_ANTINOMIC_CONTRARIWISE_LINK = script("E:.U:.j.-we.-k.u.-'")
+
+JUNCTION_ANTINOMIC = [JUNCTION_ANTINOMIC_ANCHOR, JUNCTION_ANTINOMIC_BUT_LINK, JUNCTION_ANTINOMIC_EXCEPT_LINK,
+                      JUNCTION_ANTINOMIC_ALTOUGH_LINK, JUNCTION_ANTINOMIC_ON_THE_OTHER_HAND_LINK,
+                      JUNCTION_ANTINOMIC_CONTRARIWISE_LINK]
+
+JUNCTION_EXPLICATION_ANCHOR = script("E:U:B:.-U:.-k.u.-'")
+JUNCTION_EXPLICATION_BEST_LINK = script("E:U:T:.-U:.-k.u.-'")
+
+JUNCTION_EXPLICATION = [JUNCTION_EXPLICATION_ANCHOR, JUNCTION_EXPLICATION_BEST_LINK]
+
+JUNCTION_SCRIPTS = [*JUNCTION_SYMMETRICAL,
+             *JUNCTION_COMPARISON,
+             *JUNCTION_CAUSAL,
+             *JUNCTION_ANTINOMIC,
+             *JUNCTION_EXPLICATION]
+
+JUNCTION_LINK_TO_ANCHOR = {
+    JUNCTION_AND: JUNCTION_AND,
+    JUNCTION_XOR: JUNCTION_XOR,
+    JUNCTION_OR: JUNCTION_OR,
+
+    JUNCTION_COMPARISON_LINK: JUNCTION_COMPARISON_ANCHOR,
+    **{l: JUNCTION_COMPARISON_ANCHOR for l in JUNCTION_COMPARISON_RELATIVE_LINK},
+    **{l: JUNCTION_COMPARISON_ANCHOR for l in JUNCTION_COMPARISON_ABSOLUTE_LINK},
+
+    JUNCTION_CAUSAL_CAUSE_TO_EFFECT_LINK: JUNCTION_CAUSAL_ANCHOR,
+    JUNCTION_CAUSAL_EFFECT_TO_CAUSE_LINK: JUNCTION_CAUSAL_ANCHOR,
+    JUNCTION_CAUSAL_A_FORTIORI_LINK: JUNCTION_CAUSAL_ANCHOR,
+
+    JUNCTION_ANTINOMIC_BUT_LINK: JUNCTION_ANTINOMIC_ANCHOR,
+    JUNCTION_ANTINOMIC_EXCEPT_LINK: JUNCTION_ANTINOMIC_ANCHOR,
+    JUNCTION_ANTINOMIC_ALTOUGH_LINK: JUNCTION_ANTINOMIC_ANCHOR,
+    JUNCTION_ANTINOMIC_ON_THE_OTHER_HAND_LINK: JUNCTION_ANTINOMIC_ANCHOR,
+    JUNCTION_ANTINOMIC_CONTRARIWISE_LINK: JUNCTION_ANTINOMIC_ANCHOR,
+
+    JUNCTION_EXPLICATION_BEST_LINK: JUNCTION_EXPLICATION_ANCHOR,
+}
+
+
+def junction_at_idx(link, i):
+    if i == 0:
+        return JUNCTION_LINK_TO_ANCHOR[link]
+    else:
+        return link
+
 
 # class ScriptsEnum(Enum):
 #     @staticmethod
@@ -281,12 +371,12 @@ def class_from_address(address):
 
 
 
-def check_flexion_process_scripts(l: List[Script], valence=None):
+def check_flexion_process_scripts(l: List[Script], sfun=None):
     # check all
     assert_all_in(l, ADDRESS_PROCESS_POLYMORPHEME_SCRIPTS, "an address of a process")
 
     #check voice
-    assert_atmost_one_from(l, ADDRESS_PROCESS_VOICES_SCRIPTS[valence], "an address of a process", "voices")
+    assert_atmost_one_from(l, ADDRESS_PROCESS_VOICES_SCRIPTS[sfun.valence], "an address of a process", "voices")
 
     #check mode
     assert_atmost_one_from(l, ADDRESS_PROCESS_VERBAL_MODE_SCRIPTS, "an address of a process", "verbal modes")
@@ -318,15 +408,15 @@ def check_address_script(l: List[Script], sfun_type):
 
     assert_atmost_one_from(l, {INDEPENDANT_QUALITY}, "an address", "independant quality")
 
-    from ieml.usl.syntagmatic_function import ActantSyntagmaticFunction, IndependantQualitySyntagmaticFunction
-    if sfun_type == ActantSyntagmaticFunction:
+    from ieml.usl.syntagmatic_function import DependantQualitySyntagmaticFunction, IndependantQualitySyntagmaticFunction
+    if sfun_type == DependantQualitySyntagmaticFunction:
         assert_no_one_from(l, {*ADDRESS_PROCESS_VALENCE_SCRIPTS, *ADDRESS_ACTANTS_MOTOR_SCRIPTS, *ADDRESS_CIRCONSTANTIAL_ACTANTS_SCRIPTS},
                            "an address of an ActantSyntagmaticFunction", "grammatical roles")
     elif sfun_type == IndependantQualitySyntagmaticFunction:
         assert_no_one_from(l, {*ADDRESS_PROCESS_VALENCE_SCRIPTS, *ADDRESS_ACTANTS_MOTOR_SCRIPTS, *ADDRESS_CIRCONSTANTIAL_ACTANTS_SCRIPTS, DEPENDANT_QUALITY},
                            "an address of an IndependantQualitySyntagmaticFunction", "grammatical roles")
 
-def check_flexion_actant_scripts(l: List[Script], role=None):
+def check_flexion_actant_scripts(l: List[Script], sfun=None):
     assert_atmost_one_from(l, ADDRESS_ACTANTS_DEFINITION_SCRIPTS, "a flexion of an actant", "definitions")
 
     assert_atmost_one_from(l, ADDRESS_ACTANTS_GRAMMATICAL_NUMBER_SCRIPTS, "a flexion of an actant", "grammatical numbers")
@@ -359,10 +449,10 @@ def check_flexion_actant_scripts(l: List[Script], role=None):
                            "logical constructions")
     assert_atmost_one_from(l, TRANSFORMATION_PROCESS_LOGICAL_MODE_SCRIPTS, "a flexion of a quality", "logical modes")
 
-    return role
+    return sfun
 
 
-def check_flexion_quality(l: List[Script], role=None):
+def check_flexion_quality(l: List[Script], sfun=None):
     assert_all_in(l, ADDRESS_QUALITY_SCRIPTS, "an address of a quality")
 
     # if role is None:
@@ -384,16 +474,18 @@ def check_flexion_quality(l: List[Script], role=None):
     assert_atmost_one_from(l, ADDRESS_ENNEADE_ADVERBS_SCRIPTS, "a flexion of a quality", "enneade adverbs")
 
 
-def check_lexeme_scripts(l_pf: List[Script], l_pc: List[Script], role=None):
-    if len(role) != 1:
-        raise ValueError("Invalid role : {}".format(' '.join(map(str, role))))
-    _role = role[0]
+def check_lexeme_scripts(l_pf: List[Script], l_pc: List[Script], sfun=None):
+    # if len(role) != 1:
+    #     raise ValueError("Invalid role : {}".format(' '.join(map(str, role))))
+    # _role = role[0]
+    from ieml.usl.syntagmatic_function import ProcessSyntagmaticFunction, DependantQualitySyntagmaticFunction, \
+        IndependantQualitySyntagmaticFunction
 
-    if _role in ADDRESS_PROCESS_VALENCE_SCRIPTS:
-        check_flexion_process_scripts(l_pf, valence=_role)
-    elif _role in ACTANTS_SCRIPTS + [DEPENDANT_QUALITY]:
-        check_flexion_actant_scripts(l_pf, role=_role)
-    elif _role == INDEPENDANT_QUALITY:
-        check_flexion_quality(l_pf, role=_role)
+    if sfun.__class__ == ProcessSyntagmaticFunction:
+        check_flexion_process_scripts(l_pf, sfun=sfun)
+    elif sfun.__class__ == DependantQualitySyntagmaticFunction:
+        check_flexion_actant_scripts(l_pf, sfun=sfun)
+    elif sfun.__class__ == IndependantQualitySyntagmaticFunction:
+        check_flexion_quality(l_pf, sfun=sfun)
     else:
-        raise ValueError("Invalid role: {}".format(str(_role)))
+        raise ValueError("Invalid sfun context: {}".format(str(sfun)))

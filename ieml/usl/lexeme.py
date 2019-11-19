@@ -8,7 +8,7 @@ from ieml.usl.constants import ADDRESS_SCRIPTS, ACTANTS_SCRIPTS, ADDRESS_PROCESS
     SYNTAGMATIC_FUNCTION_PROCESS_TYPE_SCRIPT, DEPENDANT_QUALITY, INDEPENDANT_QUALITY
 
 
-def check_lexeme(lexeme, role=None):
+def check_lexeme(lexeme, sfun=None):
     for pm in [lexeme.pm_flexion, lexeme.pm_content]:
         if not isinstance(pm, PolyMorpheme):
             raise ValueError("Invalid arguments to create a Lexeme, expects a Polymorpheme, not a {}."
@@ -18,7 +18,7 @@ def check_lexeme(lexeme, role=None):
 
     check_lexeme_scripts(lexeme.pm_flexion.constant,
                          lexeme.pm_content.constant,
-                         role=role)
+                         sfun=sfun)
 
 
 

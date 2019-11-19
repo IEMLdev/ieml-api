@@ -166,14 +166,27 @@ class IEMLParser():
             p[0] = ([p[1]], None)
 
     def p_word(self, p):
-        """word : LBRACKET morpheme lexeme_list RBRACKET"""
-        lex_list, role = p[3]
+        """word : LBRACKET OLD_MORPHEME_GRAMMATICAL_CLASS lexeme_list RBRACKET
+                | LBRACKET lexeme_list RBRACKET"""
+
+        if len(p) == 5:
+            lex_list, role = p[3]
+        else:
+            lex_list, role = p[2]
+
         if not role:
             raise ValueError("No role specified in the syntagmatic function to build a word.")
-        p[0] = Word(syntagmatic_fun=SyntagmaticFunction.from_list(lex_list, type=p[2]),
-                    role=SyntagmaticRole(constant=role))
+
+        # try:
+        ctx_type, sfun = SyntagmaticFunction.from_list(lex_list)
+        # except IndexError as e:
+        #     raise ValueError("Invalid lexeme parsed to create a word " + repr(e))
+
+        p[0] = Word(syntagmatic_fun=sfun,
+                    role=SyntagmaticRole(constant=role),
+                    context_type=ctx_type)
         # check_word(p[0])
-        assert p[2] == p[0].grammatical_class
+        # assert p[2] == p[0].grammatical_class
 
     def p_error(self, p):
         if p:

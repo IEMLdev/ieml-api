@@ -62,8 +62,6 @@ def migrate_EOETI(scri):
     #
     # assert migrate_EOOMt0(script("E:.-'O:O:.-M:.t.o.-',")) == script("E:.-'O:O:.-M:.-'t.o.-',")
 
-
-
 def migrate(function, _s_old, _s_new):
     assert function(_s_old) == _s_new
 
@@ -202,12 +200,33 @@ def add_row_(_s):
 
 
 
+def migrate_tidi(s):
+    """
+    t.i.-d.i.-t.+M:O:.-'
+
+    t.i.-d.i.-'t.+M:O:.-',
+
+    :param s:
+    :return:
+    """
+    root = script("t.i.-d.i.-t.+M:O:.-'")
+
+    if not s.singular_sequences_set.issubset(root.singular_sequences_set):
+        return s
+
+    _s, a, _m = s
+
+    return m(m(_s, a), m(_m))
+
+
 # TODO :
 # M:M:.-O:M:.+M:O:.-E:.-+s.y.-‘ =>
 
 
 
 if __name__ == '__main__':
+    migrate(migrate_tidi, script("t.i.-d.i.-t.+M:O:.-'"), script("t.i.-d.i.-'t.+M:O:.-',"))
+
 
     # assert migrate_EOETI(script("E:.O:.E:T:.+I:.-")) == script("S:.O:.E:T:.+I:.-")
 
@@ -269,7 +288,7 @@ if __name__ == '__main__':
     #
     #
     #
-    migrate(translate_temps, script("t.o.-n.o.-M:O:.-'"), script("t.o.-n.o.-'M:O:.-',"))
+    # migrate(translate_temps, script("t.o.-n.o.-M:O:.-'"), script("t.o.-n.o.-'M:O:.-',"))
     # dictionary = db.get_dictionary()
 
 #     db = IEMLDatabase(=git_address,
