@@ -11,6 +11,9 @@ class USL:
 
         self.grammatical_class = None
 
+    def __bool__(self):
+        return not self.empty
+
     @property
     def empty(self):
         raise NotImplementedError()

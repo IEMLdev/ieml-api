@@ -93,7 +93,7 @@ class SyntagmaticFunction:
                                 + ((str(prefix[0]) + ' ') if prefix else '')
                                 + str(address) + ' '
                                 + str(self.actors[address].actor)
-                           for address in sorted(self.actors) if self.actors[address].actor])
+                           for address in sorted(self.actors) if self.actors[address].actor is not None])
         return res + ']'
 
     @staticmethod
