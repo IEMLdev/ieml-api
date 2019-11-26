@@ -1,3 +1,4 @@
+from collections import defaultdict
 from enum import Enum
 from itertools import chain, count
 from typing import List, Set
@@ -125,8 +126,8 @@ JUNCTION_CAUSAL = [JUNCTION_CAUSAL_ANCHOR, JUNCTION_CAUSAL_CAUSE_TO_EFFECT_LINK,
 
 JUNCTION_ANTINOMIC_ANCHOR = script("E:.A:.g.-k.u.-'")
 
-JUNCTION_ANTINOMIC_BUT_LINK = script("E:U:.j.-k.u.-'")
-JUNCTION_ANTINOMIC_EXCEPT_LINK = script("E:.U:.j.-wo.-k.u.-'")
+JUNCTION_ANTINOMIC_BUT_LINK =     script("E:.U:.j.-k.u.-'")
+JUNCTION_ANTINOMIC_EXCEPT_LINK =  script("E:.U:.j.-wo.-k.u.-'")
 JUNCTION_ANTINOMIC_ALTOUGH_LINK = script("E:.U:.j.-wa.-k.u.-'")
 JUNCTION_ANTINOMIC_ON_THE_OTHER_HAND_LINK = script("E:.U:.j.-wu.-k.u.-'")
 JUNCTION_ANTINOMIC_CONTRARIWISE_LINK = script("E:.U:.j.-we.-k.u.-'")
@@ -169,9 +170,17 @@ JUNCTION_LINK_TO_ANCHOR = {
     # JUNCTION_EXPLICATION_BEST_LINK: JUNCTION_EXPLICATION_ANCHOR,
 }
 
+JUNCTION_ANCHOR_TO_LINKS = defaultdict(list)
+for k, v in JUNCTION_LINK_TO_ANCHOR.items():
+    JUNCTION_ANCHOR_TO_LINKS[v].append(k)
+
+# __tmp_link = list(JUNCTION_LINK_TO_ANCHOR.values())
+# for v in __tmp_link:
+#     JUNCTION_LINK_TO_ANCHOR[v] = v
+
 
 def junction_at_idx(link, i):
-    if i == 0:
+    if i != 0:
         return JUNCTION_LINK_TO_ANCHOR[link]
     else:
         return link
@@ -205,7 +214,7 @@ def junction_at_idx(link, i):
 INDEPENDANT_QUALITY = script('E:U:.')
 DEPENDANT_QUALITY = script('E:A:.')
 SCRIPTS_ADDRESS_QUALITY = [DEPENDANT_QUALITY, INDEPENDANT_QUALITY]
-ADDRESS_SCRIPTS = [*ADDRESS_PROCESS_VALENCE_SCRIPTS, *ACTANTS_SCRIPTS, *SCRIPTS_ADDRESS_QUALITY]
+ADDRESS_SCRIPTS = [*ADDRESS_PROCESS_VALENCE_SCRIPTS, *ACTANTS_SCRIPTS, *SCRIPTS_ADDRESS_QUALITY, *JUNCTION_SCRIPTS, *JUNCTION_INDEX]
 
 ADDRESS_SCRIPTS_ORDER = dict(zip(ADDRESS_SCRIPTS, count()))
 
@@ -259,12 +268,12 @@ NAMES_TO_ADDRESS = {
     JUNCTION_ANTINOMIC_ON_THE_OTHER_HAND_LINK: "on the other hand",
     JUNCTION_ANTINOMIC_CONTRARIWISE_LINK: "contrariwise",
 
-    JUNCTION_CAUSAL_ANCHOR: "cause",
+    JUNCTION_CAUSAL_ANCHOR: "causal anchor",
     JUNCTION_CAUSAL_CAUSE_TO_EFFECT_LINK: "cause to effect",
     JUNCTION_CAUSAL_EFFECT_TO_CAUSE_LINK: "effect to cause",
     JUNCTION_CAUSAL_A_FORTIORI_LINK: "a fortiori",
 
-    **{j: "#{}".format(i+1) for i, j in enumerate(JUNCTION_INDEX)}
+    **{j: "*{}".format(i+1) for i, j in enumerate(JUNCTION_INDEX)}
 
     # JUNCTION_EXPLICATION_ANCHOR: "",
     # JUNCTION_EXPLICATION_BEST_LINK: "",
@@ -290,7 +299,42 @@ ROLE_NAMES_TO_SCRIPT= {
     'cause': CAUSE_SCRIPT,
 
     'independant': INDEPENDANT_QUALITY,
-    'dependant': DEPENDANT_QUALITY
+    'dependant': DEPENDANT_QUALITY,
+
+    'and': JUNCTION_AND,
+    'or (inclusive)': JUNCTION_OR,
+    'or (exclusive)': JUNCTION_XOR,
+
+    'comparison reference': JUNCTION_COMPARISON_ANCHOR,
+
+    'as good as': JUNCTION_COMPARISON_RELATIVE_AS_GOOD_AS,
+    'as much as': JUNCTION_COMPARISON_RELATIVE_AS_MUCH_AS,
+    'better than': JUNCTION_COMPARISON_RELATIVE_BETTER_THAN,
+    'less than': JUNCTION_COMPARISON_RELATIVE_LESS_THAN,
+    'worse than': JUNCTION_COMPARISON_RELATIVE_WORSE_THAN,
+    'more than': JUNCTION_COMPARISON_RELATIVE_MORE_THAN,
+
+    "the best of": JUNCTION_COMPARISON_ABSOLUTE_THE_BEST_OF,
+    "average quality of": JUNCTION_COMPARISON_ABSOLUTE_AVERGAGE_QUALITY_OF,
+    "normal quantity of": JUNCTION_COMPARISON_ABSOLUTE_NORMAL_QUANTITY_OF,
+    "the least of": JUNCTION_COMPARISON_ABSOLUTE_THE_LEAST_OF,
+    "the most of": JUNCTION_COMPARISON_ABSOLUTE_THE_MOST_OF,
+    "the worst of": JUNCTION_COMPARISON_ABSOLUTE_THE_WORST_OF,
+
+    "certainly...": JUNCTION_ANTINOMIC_ANCHOR,
+    "but": JUNCTION_ANTINOMIC_BUT_LINK,
+    "except": JUNCTION_ANTINOMIC_EXCEPT_LINK,
+    "altough": JUNCTION_ANTINOMIC_ALTOUGH_LINK,
+    "on the other hand": JUNCTION_ANTINOMIC_ON_THE_OTHER_HAND_LINK,
+    "contrariwise": JUNCTION_ANTINOMIC_CONTRARIWISE_LINK,
+
+    "causal anchor": JUNCTION_CAUSAL_ANCHOR,
+    "cause to effect": JUNCTION_CAUSAL_CAUSE_TO_EFFECT_LINK,
+    "effect to cause": JUNCTION_CAUSAL_EFFECT_TO_CAUSE_LINK,
+    "a fortiori": JUNCTION_CAUSAL_A_FORTIORI_LINK,
+
+    **{"*{}".format(i + 1): j for i, j in enumerate(JUNCTION_INDEX)}
+
 }
 
 NAMES_ORDERING = {
