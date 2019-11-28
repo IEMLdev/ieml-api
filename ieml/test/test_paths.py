@@ -1,11 +1,11 @@
 from unittest.case import TestCase
 
-from ieml.grammar import Text, Word, Theory, Fact, Topic, topic, fact, text
+from ieml.lexicon import Text, Word, Theory, Fact, Topic, topic, fact, text
 from ieml.tools import RandomPoolIEMLObjectGenerator, ieml
 from ieml.exceptions import PathError, IEMLObjectResolutionError
-from ieml.grammar.paths import MultiplicativePath, Coordinate, AdditivePath, ContextPath, path, resolve, enumerate_paths,\
+from ieml.lexicon.paths import MultiplicativePath, Coordinate, AdditivePath, ContextPath, path, resolve, enumerate_paths,\
     resolve_ieml_object
-from ieml.grammar.tools import random_usl, usl
+from ieml.lexicon.tools import random_usl, usl
 
 
 class TestPaths(TestCase):
@@ -86,18 +86,18 @@ class TestPaths(TestCase):
         s = r.fact()
         p = path("s+a+m + (s+a+m):(r+f)")
         elems = resolve(s, p)
-        self.assertSetEqual(elems, s.topics.union(s.words))
+        self.assertSetEqual(elems, s.words.union(s.semes))
 
         p = path("t + t:(s+a+m+r+f+(s+a+m):(s+a+m+r+f+(s+a+m):(r+f)))")
         usl = random_usl(rank_type=Text)
         elems = resolve(usl, p)
-        self.assertSetEqual(usl.facts.union(usl.topics).union(usl.words).union(usl.theories), elems)
+        self.assertSetEqual(usl.facts.union(usl.words).union(usl.semes).union(usl.theories), elems)
 
     def test_enumerate_paths(self):
         r = RandomPoolIEMLObjectGenerator(level=Text)
         t = r.text()
         e = list(enumerate_paths(t, level=Word))
-        self.assertSetEqual({t[1] for t in e}, t.words)
+        self.assertSetEqual({t[1] for t in e}, t.semes)
 
     def test_rules(self):
         rules0 = [(path('r0'), ieml('wa.'))]

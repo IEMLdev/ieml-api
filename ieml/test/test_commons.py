@@ -1,8 +1,8 @@
 from unittest.case import TestCase
 
 from ieml.dictionary.version import create_dictionary_version
-from ieml.grammar import Text, Word, Usl
-from ieml.grammar.tools import random_usl
+from ieml.lexicon import Text, Word, Usl
+from ieml.lexicon.tools import random_usl
 from ieml.tools import RandomPoolIEMLObjectGenerator, ieml
 
 

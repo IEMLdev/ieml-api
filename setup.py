@@ -6,8 +6,8 @@ def readme():
 
 
 setup(name='ieml',
-      version='1.0.3',
-      description='Python implementation of the artificial natural language IEML',
+      version="1.0.4",
+      description='Python implementation of the language IEML',
       long_description=readme(),
       classifiers=[
             'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
@@ -27,7 +27,11 @@ setup(name='ieml',
             'ply',
             'scipy',
             'cached-property',
-            'tqdm'
+            'tqdm',
+            'appdirs',
+            'pygit2',
+            'pandas',
+            'pyyaml'
       ],
       test_suite='nose2.collector.collector',
       tests_require=['nose2'],

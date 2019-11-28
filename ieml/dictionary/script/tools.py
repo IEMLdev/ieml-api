@@ -1,15 +1,10 @@
 import itertools as it
+from typing import Union, List
+
 import numpy as np
 from bidict import bidict
 
-from .script import MultiplicativeScript, Script, AdditiveScript, remarkable_multiplication_lookup_table
-
-
-def old_canonical(script_ast):
-    result = ''
-    for byte in script_ast.canonical:
-        result += chr(byte + ord('a') - 1)
-    return [result]
+from ieml.dictionary.script import MultiplicativeScript, Script, AdditiveScript
 
 
 def factor(sequences):
@@ -22,7 +17,7 @@ def factor(sequences):
         return list(sequences)
 
     # holds the attributes/substances/modes as individual sets in primitives[0]/primitives[1]/primitives[2] respectively
-    primitives = (set(seme) for seme in zip(*sequences))
+    primitives = (sorted(set(seme)) for seme in zip(*sequences))
 
     # same but now there is a bijection between the coordinate system and the primitives semes
     primitives = [bidict({i: s for i, s in enumerate(p_set)}) for p_set in primitives]
@@ -54,6 +49,8 @@ def factor(sequences):
         relations[seq] = cubes
         _computed.add(seq)
 
+    relations = {r: sorted(v) for r,v in relations.items()}
+
     def _neighbours(t1, t2):
         x1, y1, z1 = t1
         x2, y2, z2 = t2
@@ -71,13 +68,13 @@ def factor(sequences):
         candidate.sort(key=lambda e: len(relations[e]), reverse=True)
 
         for r in candidate:
-            _facto = set(it.chain.from_iterable(_neighbours(t, r) for t in factorisation))
+            _facto = sorted(set(it.chain.from_iterable(_neighbours(t, r) for t in factorisation)))
             _candidate = set(candidate)
             for i in _facto:
                 _candidate &= set(relations[i])
 
             if _candidate:
-                yield from _factors(list(_candidate), _facto)
+                yield from _factors(sorted(_candidate), _facto)
             else:
                 yield _facto
 
@@ -89,7 +86,7 @@ def factor(sequences):
     e = _candidate.pop()
     factorisations = next(iter(_factors(list(relations[e]), [e])))
 
-    remaining = set(sequences) - set(scripts[f] for f in factorisations)
+    remaining = sorted(set(sequences) - set(scripts[f] for f in factorisations))
     factorisations = tuple(factor({primitives[i][seme] for seme in semes}) for i, semes in enumerate(zip(*factorisations)))
 
     if remaining:
@@ -100,7 +97,7 @@ def factor(sequences):
 
 def pack_factorisation(facto_list):
     """
-    :param facto_list: list of parser or tuple of factorisation
+    :param facto_list: list of script or tuple of factorisation
     :return:
     """
     _sum = []
@@ -117,18 +114,39 @@ def pack_factorisation(facto_list):
         return AdditiveScript(children=_sum)
 
 
-def factorize(script):
+def promote(script: Script, layer: int):
+    """
+    Promote script to layer by multiplying it with null scripts (E:)
+    :param script:
+    :param layer:
+    :return:
+    """
+    old_layer = script.layer
+
+    for l in range(old_layer, layer):
+        script = MultiplicativeScript(children=[script])
+
+    return script
+
+
+def factorize(script: Union[Script, List[Script]],
+              promote: bool = True) -> Script:
+    """
+
+    :param script: The Script or list of Script to factorize
+    :param promote: If script is a list, promote all Script to the layer max(sc.layer for sc in scripts)
+    :return: the factorized script
+    """
     if isinstance(script, Script):
         seqs = script.singular_sequences
     elif isinstance(script, list) or hasattr(script, '__iter__'):
         seqs = list(it.chain.from_iterable(s.singular_sequences for s in script))
+
+        if promote:
+            layer = max(s.layer for s in seqs)
+            seqs = [globals()['promote'](seq, layer) for seq in seqs]
     else:
         raise ValueError
 
     result = pack_factorisation(factor(seqs))
     return result
-
-
-def inverse_relation(relation_name):
-    from ..relations import INVERSE_RELATIONS
-    return INVERSE_RELATIONS[relation_name]

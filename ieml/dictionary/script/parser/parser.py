@@ -4,15 +4,12 @@ from functools import lru_cache
 import os
 import ply.yacc as yacc
 
-from ieml.exceptions import InvalidScript
-from ....exceptions import CannotParse
-from ..script import AdditiveScript, MultiplicativeScript, NullScript
-from ....constants import REMARKABLE_ADDITION
-from ....commons import Singleton
+from ieml.exceptions import InvalidScript, CannotParse
+from ieml.dictionary.script import AdditiveScript, MultiplicativeScript, NullScript
+from ieml.constants import REMARKABLE_ADDITION, PARSER_FOLDER
+from ieml.commons import Singleton
+from ieml.dictionary.script.parser.lexer import get_script_lexer, tokens
 
-from .lexer import get_script_lexer, tokens
-
-from .... import parser_folder
 import threading
 
 
@@ -27,7 +24,8 @@ class ScriptParser(metaclass=Singleton):
 
         self.lexer = get_script_lexer()
         self.parser = yacc.yacc(module=self, errorlog=logging, start='term',
-                                debug=False, optimize=True, picklefile=os.path.join(parser_folder, "script_parser.pickle"))
+                                debug=False, optimize=True,
+                                picklefile=os.path.join(PARSER_FOLDER, "morpheme_parser.pickle"))
         # rename the parsing method (can't name it directly parse with lru_cache due to ply checking)
         self.parse = self.t_parse
 

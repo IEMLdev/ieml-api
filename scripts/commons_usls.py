@@ -1,5 +1,5 @@
 from ieml.dictionary import term
-from ieml.grammar import topic, fact, usl
+from ieml.lexicon import topic, fact, usl
 
 root = topic([term("i.i.-"),  # fabriquer
              term("a.i.-")],  # vendre

@@ -1,10 +1,10 @@
 import unittest
 
-from ieml.distance.sort import square_order_matrix
-from ieml.grammar import Fact, Text
+from ieml.usl.distance.sort import square_order_matrix
+from ieml.lexicon import Fact, Text
 import numpy as np
 
-from ieml.grammar.tools import RandomUslGenerator
+from ieml.lexicon.tools import RandomUslGenerator
 
 
 class TestUslOrder(unittest.TestCase):

@@ -5,19 +5,18 @@ from itertools import chain
 
 from urllib.request import urlopen
 
+from ieml.dictionary.script import Script
 from ieml.exceptions import CannotParse
-from ieml.grammar.text import Text, text
-from ieml.grammar.usl import Usl
-from ieml.grammar.fact import Fact, fact
-from ieml.grammar.parser import IEMLParser
-from ieml.grammar.theory import Theory, theory
-from ieml.grammar.topic import Topic, topic
-from ieml.grammar.word import Word
+from ieml.lexicon.grammar.text import Text, text
+from ieml.lexicon.grammar.usl import Usl
+from ieml.lexicon.grammar.fact import Fact, fact
+from ieml.usl.parser import IEMLParser
+from ieml.lexicon.grammar.theory import Theory, theory
+from ieml.lexicon.grammar.topic import Word, topic
+from ieml.lexicon.grammar.word import Word
 
-from ieml.dictionary.version import get_default_dictionary_version
 from .exceptions import InvalidIEMLObjectArgument
 from .exceptions import CantGenerateElement
-from .dictionary import Term, Dictionary
 
 
 def _loop_result(max_try):
@@ -38,10 +37,11 @@ def _loop_result(max_try):
 
 
 class RandomPoolIEMLObjectGenerator:
-    def __init__(self, level=Theory, pool_size=20, dictionary_version=None):
+    def __init__(self, dictionary, level=Theory, pool_size=20):
         self.level = level
         self.pool_size = pool_size
-        self.dictionary_version = dictionary_version
+        self.dictionary = dictionary
+        self.scripts = list(self.dictionary.scripts)
 
         if level > Text:
             raise ValueError('Cannot generate object higher than a Text.')
@@ -50,7 +50,7 @@ class RandomPoolIEMLObjectGenerator:
 
         self.type_to_method = {
             Word: self.word,
-            Topic: self.topic,
+            Word: self.topic,
             Fact: self.fact,
             Theory: self.theory,
             Text: self.text
@@ -61,7 +61,7 @@ class RandomPoolIEMLObjectGenerator:
         Slow method, retrieve all the terms from the database.
         :return:
         """
-        if self.level >= Topic:
+        if self.level >= Word:
             # words
             self.topics_pool = set(self.topic() for i in range(self.pool_size))
 
@@ -79,16 +79,16 @@ class RandomPoolIEMLObjectGenerator:
 
     @_loop_result(10)
     def word(self):
-        return Word(random.sample(Dictionary(self.dictionary_version).index, 1)[0])
+        return Word(random.sample(self.scripts, 1)[0])
 
     @_loop_result(10)
     def uniterm_topic(self):
-        return topic([random.sample(Dictionary(self.dictionary_version).index, 1)])
+        return topic([random.sample(self.scripts, 1)])
 
     @_loop_result(10)
     def topic(self):
-        return topic([Word(t) for t in random.sample(Dictionary(self.dictionary_version).index, 3)],
-                     [Word(t) for t in random.sample(Dictionary(self.dictionary_version).index, 2)])
+        return topic([Word(t) for t in random.sample(self.scripts, 3)],
+                     [Word(t) for t in random.sample(self.scripts, 2)])
 
     def _build_graph_object(self, primitive, mode, max_nodes=6):
         nodes = {primitive()}
@@ -149,23 +149,17 @@ def list_bucket(url):
     return [v['{http://s3.amazonaws.com/doc/2006-03-01/}Key'] for v in all_versions]
 
 
-def ieml(arg, dictionary_version=None):
-    if not dictionary_version:
-        dictionary_version = get_default_dictionary_version()
-
+def ieml(arg, dictionary):
     if isinstance(arg, Usl):
-        if arg.dictionary_version != dictionary_version:
-            arg.set_dictionary_version(dictionary_version)
-
         return arg
 
     if isinstance(arg, str):
         try:
-            return IEMLParser(Dictionary(dictionary_version)).parse(arg)
+            return IEMLParser(dictionary).parse(arg)
         except CannotParse as e:
             raise InvalidIEMLObjectArgument(Usl, str(e))
 
-    if isinstance(arg, Term):
+    if isinstance(arg, Script):
         arg = Word(arg)
         if arg.dictionary_version != dictionary_version:
             arg.set_dictionary_version(dictionary_version)

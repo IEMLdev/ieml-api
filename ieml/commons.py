@@ -1,3 +1,15 @@
+import functools
+import glob
+import logging
+import os
+import pickle
+from collections import OrderedDict
+from itertools import chain
+from typing import List
+import hashlib
+from time import time
+
+from ieml import logger
 
 
 class cached_property:
@@ -9,6 +21,13 @@ class cached_property:
         attr = self._factory(instance)
         setattr(instance, self._attr_name, attr)
         return attr
+
+class LastUpdatedOrderedDict(OrderedDict):
+    'Store items in the order the keys were last added'
+    def __setitem__(self, key, value, **kwargs):
+        if key in self:
+            del self[key]
+        OrderedDict.__setitem__(self, key, value, **kwargs)
 
 
 class TreeStructure:
@@ -61,3 +80,127 @@ class Singleton(type):
             cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
 
         return cls._instances[cls]
+
+
+class FolderWatcherCache:
+    def __init__(self, db_path: str, pattern: str, cache_folder: str, name: str):
+        """
+        Cache that check if `folder` content has changed. Compute a hash of the files in the folder and
+        get pruned if the content of this folder change.
+
+        :param folder: the folder to watch
+        :param cache_folder: the folder to put the cache file
+        """
+        self.db_path = db_path
+        self.pattern = pattern
+        self.files = sorted([os.path.abspath(ff) for ff in glob.glob(os.path.join(self.db_path, self.pattern), recursive=True)])
+        self.cache_folder = os.path.abspath(cache_folder)
+        self.name = name
+
+    def update(self, obj) -> None:
+        """
+        Update the cache content, remove old cache files from the cache directory.
+
+        :param obj: the object to pickle in the cache
+        :return: None
+        """
+        for c in self._cache_candidates():
+            os.remove(c)
+
+        with open(self.cache_file, 'wb') as fp:
+            pickle.dump(obj, fp, protocol=4)
+
+    def get(self) -> object:
+        """
+        Unpickle and return the object stored in the cache file.
+        :return: the stored object
+        """
+        with open(self.cache_file, 'rb') as fp:
+            return pickle.load(fp)
+
+    def is_pruned(self) -> bool:
+        """
+        Return True if the watched folder content has changed.
+        :return: if the folder content changed
+        """
+        names = [p for p in self._cache_candidates()]
+        if len(names) != 1:
+            return True
+
+        return self.cache_file != names[0]
+
+    @property
+    def cache_file(self) -> str:
+        """
+        :return: The cache file absolute path
+        """
+        res = b""
+        for file in self.files:
+            with open(file, 'rb') as fp:
+                res += file[len(self.db_path)+1:].encode('utf8') + b":" + fp.read()
+
+        return os.path.join(self.cache_folder, ".{}-cache.{}".format(self.name, hashlib.md5(res).hexdigest()))
+
+    def _cache_candidates(self) -> List[str]:
+        """
+        Return all the cache files from the cache folder (the pruned and the current one)
+        :return: All the cache files from the cache folder
+        """
+        return [os.path.join(self.cache_folder, n) for n in os.listdir(self.cache_folder)
+                if n.startswith('.{}-cache.'.format(self.name))]
+
+def monitor_decorator(name):
+    def decorator(f):
+        def wrapper(*args, **kwargs):
+            before = time()
+            args_str = ", ".join(chain(map(lambda e: str(e)[:10000], args), map(lambda e: "{}={}".format(e[0], str(e[1])[:10000]), kwargs.items())))
+            res = f(*args, **kwargs)
+            logger.info("({:.2f}) {}# ({})".format(time() - before, name, args_str))
+            return res
+
+        functools.wraps(wrapper)
+        return wrapper
+
+    return decorator
+
+
+def cache_results_watch_files(path, name):
+    def decorator(f):
+        def wrapper(*args, **kwargs):
+            use_cache = args[0].use_cache
+            self = args[0]
+            cache_folder = self.cache_folder
+            db_path = self.folder
+
+            if use_cache:
+                cache = FolderWatcherCache(db_path, path, cache_folder=cache_folder, name=name)
+                if not cache.is_pruned():
+                    logger.info("read_{}.cache: Reading cache at {}".format(name, cache.cache_file))
+                    try:
+                        instance = cache.get()
+                    except Exception as e:
+                        # cache.prune()
+                        # raise e
+                        instance = None
+                else:
+                    logger.info("read_{}.cache: Pruned cache at {}".format(name, cache_folder))
+                    instance = None
+
+                if instance:
+                    return instance
+
+            instance = f(*args, **kwargs)
+
+            if use_cache and cache_folder:
+                cache = FolderWatcherCache(db_path, path, cache_folder=cache_folder, name=name)
+
+                logger.info("read_{}.cache: Updating cache at {}".format(name, cache.cache_file))
+                cache.update(instance)
+
+            return instance
+
+        functools.wraps(wrapper)
+
+        return wrapper
+
+    return decorator

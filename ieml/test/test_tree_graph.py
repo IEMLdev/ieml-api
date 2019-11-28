@@ -1,6 +1,6 @@
 import random
 from unittest.case import TestCase
-from ieml.grammar.tree_graph import TreeGraph
+from ieml.lexicon.tree_graph import TreeGraph
 
 
 class TestTreeGraph(TestCase):

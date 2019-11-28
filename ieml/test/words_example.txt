@@ -1,0 +1,180 @@
+[E:.b.E:T:.- E:T:. (E:.-wa.-t.o.-' E:.-'we.-S:.-'t.o.-',) (e.) (E:.b.wa.-) > E:.n.- (E:.wo.- E:S:.-d.u.-’) > ! E:.n.- E:U:. () > E:.d.- (E:.wo.- E:S:.-d.u.-’) (m.-S:.U:.-’)] # fr: effrayant | en: scary
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:.-'we.-S:.-'t.o.-',)(b.-S:.A:.-'T:.-'T:.-',)] # fr: rougir, rougeoyer | en: to redden
+[E:.b.E:B:.- ! E:A:. (E:S:.-d.u.-' E:.wo.-)(b.-S:.A:.-'T:.-'T:.-',)] # fr: un rouge (couleur) | en: a red (color)
+[E:.b.E:B:.- ! E:.l.- (E:B:.-d.u.-' E:.wo.- E:.-T:.f.-l.-’)(b.-S:.A:.-’T:.-’T:.-’,)] # fr: dans le rouge | en: in the red
+[E:.b.E:B:.- ! E:.f.- (E:S:.-d.u.-' E:.wo.-)(b.-S:.A:.-’T:.-’T:.-’,)] # fr: de manière rouge | en: in a red manner
+[E:.b.E:B:.- ! E:.s.- (E:S:.-d.u.-' E:.wo.-)(b.-S:.A:.-’T:.-’T:.-’,)] # fr: à cause du rouge | en: because of the red
+[E:.b.E:T:.- ! E:U:. ()(b.-S:.A:.-’T:.-’T:.-’,)] # fr: rouge (adjective) | en: red
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:.-'we.-S:.-'t.o.-',)(E:.S:.h.-)] # fr: varier | en: to vary
+[E:.b.E:S:.- ! E:T:. (E:.-wa.-t.o.-' E:.-'we.-S:.-'t.o.-',)(E:.S:.h.-)(E:.b.i.-)] # fr: faire varier | en: to do vary
+[E:.b.E:S:.- ! E:S:.(E:.-wa.-t.o.-' E:.-'we.-S:.-'t.o.-',) (s.we.-)] # fr: se soucier de l’environnement | en: to care for the environment
+[E:.b.E:S:.- ! E:S:.(E:.-wa.-t.o.-' E:.-'we.-S:.-'t.o.-',) (s.c.-)] # fr: porter un projet politique | en: to cary a political project
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:.-'we.-S:.-'t.o.-',) (b.-S:.A:.-’)] # fr: se colorer | en: to color oneself
+[E:.b.E:S:.- ! E:T:. (E:.-wa.-t.o.-' E:.-'we.-S:.-'t.o.-',) (b.-S:.A:.-’)] # fr: colorer, colorier | en: to color
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:.-'we.-S:.-'t.o.-',) (b.-T:.A:.-’)] # fr: s’assombrir, devenir obscur | en: to get darker
+[E:.b.E:S:.- ! E:T:. (E:.-wa.-t.o.-' E:.-'we.-S:.-'t.o.-',) (b.-T:.A:.-’)] # fr: assombrir, rendre obscur | en: to darken
+[E:.b.E:S:.- ! E:T:. (E:.-wa.-t.o.-' E:.-'we.-S:.-'t.o.-',) (t.e.-f.u.-’)] # fr: jouer de la musique | en: to play music
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:.-'we.-S:.-'t.o.-',) (l.-T:.U:.-’,n.-T:.A:.-’,t.o.-f.o.-’,_)] # fr: pleuvoir | en: to rain
+[E:.b.E:S:.- ! E:T:. (E:.-wo.-t.o.-' E:.-'we.-S:.-'t.o.-',) (s.a.-d.a.-’)] # fr: être conseillé, recevoir un conseil | en: to be advised
+[E:.b.E:S:.- ! E:T:. (E:.-wa.-t.o.-' E:.-'we.-S:.-'t.o.-',) (s.a.-d.a.-’)] # fr: conseiller, donner un conseil | en: to advise
+[E:.b.E:S:.- ! E:T:. (E:.-wa.-t.o.-' E:.-'we.-S:.-'t.o.-',) (t.)] # fr: retenir, garder en mémoire | en: to remember
+[E:.b.E:S:.- ! E:T:. (E:.-wo.-t.o.-' E:.-'we.-S:.-'t.o.-',) (t.)] # fr: être conservé en mémoire | en: to be remembered
+[E:.b.E:S:.- ! E:T:. (E:.-wa.-t.o.-' E:.-'we.-S:.-'t.o.-',) (l.i.-n.i.-’)] # fr: couper, découper au moyen d’un outil | en: to cut with a tool
+[E:.b.E:B:.- ! E:A:. (E:S:.-d.u.-' E:.wo.-)(wa.)] # fr: une action | en: an action
+[E:.b.E:B:.- ! E:A:. (E:S:.-d.u.-' E:.wo.-)(a.)] # fr: un engagement | en: a commitment
+[E:.b.E:B:.- ! E:A:. (E:S:.-d.u.-' E:.wo.-)(E:S:T:.)] # fr: une éternité | en: an eternity
+[E:.b.E:B:.- ! E:A:. (E:S:.-d.u.-' E:.wo.-)(E:.A:.j.-)] # fr: une comparaison, une analogie | en: a comparison
+[E:.b.E:B:.- ! E:.f.- (E:S:.-d.u.-' E:.wo.-)(t.e.-f.u.-’)] # fr: musicalement | en: musically
+[E:.b.E:B:.- ! E:.f.- (E:S:.-d.u.-' E:.wo.-)(t.o.-k.o.-’)] # fr: traditionnellement | en: traditionally
+[E:.b.E:B:.- ! E:.f.- (E:S:.-d.u.-' E:.wo.-)(k.o.-t.o.-’)] # fr: historiquement | en: historically
+[E:.b.E:B:.- ! E:.f.- (E:S:.-d.u.-' E:.wo.-)(wu.wu.t.-)] # fr: de manière mûre, avec maturité | en: in a mature manner
+[E:.b.E:T:.- ! E:U:. ()(S:.B:.n.-)] # fr: neuronal | en: neural
+[E:.b.E:S:.- ! E:T:. (E:.-wa.-t.o.-' E:.-’we.-S:.-’t.o.-’,) (a.T:.-) > E:.f.- (E:S:.-d.u.-' E:.wo.-)(E:T:.-t.u.-’)] # fr: se goinfrer, manger trop | en: to cram
+[E:.b.E:S:.- ! E:T:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,) (wu.f.B:.-) > E:.d.- (E:S:.-d.u.-' E:.wo.-)(f.-S:.A:.-’)] # fr: avoir la dent sucrée, aimer le sucre | en: to have a sweet tooth
+[E:.b.E:B:.- E:B:. (E:.-wa.-t.o.-' E:.-’we.-S:.-’t.o.-’,) (e.i.-) > ! E:.n.- (E:S:.-d.u.-' E:.wo.-)] # fr: un donateur | en: a donor
+[E:.b.E:B:.- E:B:. (E:.-wa.-t.o.-' E:.-’we.-S:.-’t.o.-’,) (e.i.-) > ! E:.k.- (E:S:.-d.u.-' E:.wo.-)] # fr: un donataire | en: a donee
+[E:.b.E:B:.- E:B:. (E:.-wa.-t.o.-' E:.-’we.-S:.-’t.o.-’,) (i.k.-) > ! E:.n.- (E:S:.-d.u.-' E:.wo.- E:.-n.S:.-’)] # fr: un voleur | en: a thief
+[E:.b.E:B:.- E:B:. (E:.-wa.-t.o.-' E:.-’we.-S:.-’t.o.-’,) (i.k.-) > ! E:.n.- (E:S:.-d.u.-' E:.wo.- E:.-n.S:.-’) (t.a.-b.a.-f.o.-’)] # fr: un éditeur ayant commis un vol | en: a publisher who has committed a theft
+[E:.b.E:B:.- E:B:. (E:.-wa.-t.o.-' E:.-’we.-S:.-’t.o.-’,) (i.k.-) > ! E:.k.- (E:S:.-d.u.-' E:.wo.- E:.-n.S:.-’)] # fr: une personne victime d’un vol | en: a person who is a victim of theft
+[E:.b.E:B:.- E:B:. (E:.-wa.-t.o.-' E:.-’we.-S:.-’t.o.-’,) (i.k.-) > ! E:.k.- (E:S:.-d.u.-' E:.wo.- E:.-n.S:.-’) (b.a.-b.a.-f.o.-’)] # fr: un auteur victime d’un vol | en: an author who is a victim of theft
+[E:.b.E:B:.- E:B:. (E:.-wa.-t.o.-' E:.-’we.-S:.-’t.o.-’,) (i.k.-) > ! E:.d.- (E:S:.-d.u.-' E:.wo.-)] # fr: un bien volé | en: a stolen property
+[E:.b.E:B:.- E:B:. (E:.-wa.-t.o.-' E:.-’we.-S:.-’t.o.-’,) (i.k.-) > ! E:.d.- (E:S:.-d.u.-' E:.wo.- E:.-n.E:U:.-’) (t.e.-n.u.-’)] # fr: un texte littéraire volé | en: a stolen literary text
+[E:.b.E:B:.- E:B:. (E:.-wa.-t.o.-' E:.-’we.-S:.-’t.o.-’,) (i.k.-) > E:.n.- (E:S:.-d.u.-' E:.wo.- E:.-n.S:.-’) (t.a.-b.a.-f.o.-’) > ! E:.d.- (E:S:.-d.u.-' E:.wo.- E:.-n.E:U:.-’) (t.e.-n.u.-’) > E:.k.- (E:S:.-d.u.-' E:.wo.- E:.-n.S:.-’) (b.a.-b.a.-f.o.-’)] # fr: un texte littéraire volé par un éditeur à un auteur | en: a literary text stolen by a publisher from an author
+[E:.b.E:T:.- E:A:. (E:S:.-d.u.-' E:.wo.- E:.-n.S:.-’) (b.a.- b.o.-n.o.-s.u.-’ f.a.-b.a.-f.o.-’ ) > ! E:A:. E:U:. ()(j.-’U:.-’k.o.-t.o.-’, t.o.-k.o.-s.u.-’) > E:A:. E:A:. (E:S:.-d.u.-' E:.wo.-) (n.-S:.U:.-’B:.-’B:.-’,B:.-’,B:.-’,_ n.-S:.U:.-’B:.-’B:.-’,T:.-’,S:.-’,_)] # fr: griot, griotte, djeli | en: djeli
+[E:.b.E:B:.- ! E:A:. (E:S:.-d.u.-' E:.wo.-)(b.-S:.A:.-’S:.-’S:.-’,) >  E:A:. E:A:. (E:S:.-d.u.-' E:.wo.-)(k.a.-k.a.-’ #prusse#)] # fr: bleu de Prusse | en: Prussian blue
+[E:.b.E:T:.- ! E:U:. (E:A:T:.) (t.o.-p.-’)] # fr: très ancien | en: very old
+[E:.b.E:S:.- ! E:T:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,) (i.S:.-)] # fr: soulever | en: to lift
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,) (i.S:.-)] # fr: se lever | en: to rise up
+[E:.b.E:S:.- ! E:T:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,) (a.T:.-)] # fr: manger | en: to eat
+[E:.b.E:S:.- ! E:B:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,) (a.T:.-) (E:.b.i.-)] # fr: faire manger, nourrir | en: to feed
+//[E:.b.E:B:.- E:S:. ()(X) > ! E:.l.- ()] # [lieu prototypique de X]
+//[E:.b.E:B:.- E:S:. ()(X) > ! E:.s.- (E:A:.x.-)] # [moyen prototypique de X]
+//[E:.b.E:B:.- E:S:. ()(X) > ! E:.s.- (E:T:.c.-)] # [résultat prototypique de X]
+//[E:.b.E:B:.- E:S:. ()(X) > ! E:.s.- (E:T:.x.-)] # [instr. prototypique de X]
+//[E:.b.E:B:.- ! E:.l.- ()(X)] # [lieu prototypique de X]
+//[E:.b.E:B:.- ! E:.s.- (E:A:.x.-) (X)] # [moyen prototypique de X]
+//[E:.b.E:B:.- ! E:.s.- (E:T:.c.-) (X)] # [résultat prototypique de X]
+//[E:.b.E:B:.- ! E:.s.- (E:T:.x.-) (X)] # [instrument prototypique de X]
+[E:.b.E:B:.- E:T:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,)(a.T:.-) > ! E:.l.- (E:S:.-d.u.-' E:.wo.-)] # salle à manger, réfectoire
+[E:.b.E:B:.- E:S:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,)(u.S:.-) > ! E:.s.- (E:S:.-d.u.-' E:.wa.-)(E:.T:.x.-)] # ailes (noter la désignation d’un actant prototypique)
+[E:.b.E:B:.- ! E:.s.- (E:S:.-d.u.-' E:.wo.-)(E:.A:.x.- s.e.-s.u.-’) ] # peinture (matériau)
+[E:.b.E:B:.- ! E:.s.- (E:S:.-d.u.-' E:.wo.-)(E:.T:.x.- s.e.-s.u.-’)] # pinceau
+[E:.b.E:S:.- ! E:T:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,) (a.B:.-) > E:.f.- (E:S:.-d.u.-' E:.wo.- E:A:S:.)] # p147 boire peu
+[E:.b.E:B:.- ! E:A:. (E:.wo.- E:S:.-d.u.-’) (k.i.-l.i.-’) > E:A:. E:U:. ()(p.E:A:T:.-)] # une grande maison
+[E:.b.E:T:.- ! E:U:. (E:A:T:.) (p.E:A:T:.-)] # très grand, énorme
+[E:.b.E:B:.- ! E:A:. (E:.wo.- E:S:.-d.u.-’) (m.-T:.U:.-’) > E:A:. E:U:. (E:B:.-d.u.-’) (p.E:A:T:.-)] # p148 le comble de la joie (actant)
+[E:.b.E:T:.- ! E:U:. (E:B:.-d.u.-’ E:A:T:.) (m.-T:.U:.-’)] # au comble de la joie (qualité)
+[E:.b.E:B:.- ! E:A:. (E:.wo.- E:S:.-d.u.-’)(m.-B:.A:.-’) > E:A:. E:A:. (E:.wo.- E:B:.-d.u.-’) (p.E:A:T:.-)] # paroxysme de la colère (actant)
+[E:.b.E:B:.- ! E:A:. (E:.wo.- E:S:.-d.u.-’)(l.-y.-’E:U:.t.-l.-’E:U:.t.-l.-’,) > E:A:. E:U:. () (p.E:A:S:.-)] # butte (actant)
+[E:.b.E:B:.- ! E:A:. (E:.wo.- E:S:.-d.u.-’) (f.i.-b.i.-’) >  E:A:. E:U:. ()(p.E:U:S:.-)] # poison (actant)
+[E:.b.E:T:.- ! E:U:. (E:U:S:.)(f.i.-b.i.-’)] # empoisonné (qualité)
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,)(u.A:.-) > E:.l.- (E:.wo.- E:S:.-d.u.-’ E:.-A:.s.-l.-’)] # p149 avancer
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,)(u.A:.-) > E:.l.- (E:.wo.- E:S:.-d.u.-’ E:.-A:.d.-l.-’)] # reculer
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,)(u.A:.-) > E:.l.- (E:.wo.- E:S:.-d.u.-’ E:.-U:.s.-l.-’)] # monter
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,)(u.A:.-) > E:.l.- (E:.wo.- E:S:.-d.u.-’ E:.-U:.d.-l.-’)] # descendre
+[E:.b.E:B:.- ! E:.f.- (E:.wo.- E:S:.-d.u.-’ E:.U:.c.-) (m.a.-f.a.-’)] # p150 gêne (mot d’actant)
+[E:.b.E:B:.- ! E:.f.- (E:.wo.- E:S:.-d.u.-’ E:.U:.c.- E:.-n.E:U:.-’) (l.o.-m.o.-’)] # tyrannie (mot d’actant genre immatériel)
+[E:.b.E:B:.- ! E:.f.- (E:.wo.- E:S:.-d.u.-’ E:.U:.c.- E:.-n.S:.-’) (l.o.-m.o.-’)] # tyran (mot d’actant genre humain)
+[E:.b.E:B:.- ! E:.f.- (E:.wo.- E:S:.-d.u.-’ E:.U:.c.- E:.-n.E:U:.-’) (f.a.-m.a.-’)] # misogynie (mot d’actant, genre immatériel)
+[E:.b.E:B:.- ! E:.f.- (E:.wo.- E:S:.-d.u.-’ E:.U:.c.- E:.-n.S:.-’) (f.a.-m.a.-’)] # misogyne (mot d’actant, genre humain)
+[E:.b.E:T:.- ! E:U:. (E:.U:.c.-) (f.a.-m.a.-’)] # misogyne (mot de qualité)
+[E:.b.E:B:.- ! E:.f.- (E:.wo.- E:S:.-d.u.-’ E:.-n.E:U:.-’ E:.A:.c.-) (f.a.-m.a.-’)] # féminisme (mot d’actant, genre immatériel)
+[E:.b.E:B:.- ! E:.f.- (E:S:.-d.u.-’ E:.wo.- E:.-n.S:.-’ E:.A:.c.-) (f.a.-m.a.-’)] # féministe (mot d’actant, genre humain)
+[E:.b.E:T:.- ! E:U:. (E:.A:.c.-) (f.a.-m.a.-’)] # féministe (mot de qualité)
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,) (we.) > E:.f.- (E:S:.-d.u.-’ E:.wo.- E:.U:.j.-)] # disparaître
+[E:.b.E:B:.- ! E:.f.- (E:S:.-d.u.-’ E:.wo.- E:.U:.j.-) (l.o.-m.o.-’)] # esclavage, servitude
+[E:.b.E:T:.- ! E:U:. (E:.U:.j.-) (n.i.-d.i.-t.u.-’)] # lent
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,)(a.T:.-) (E:U:A:.)] # p152 jeûner
+[E:.b.E:B:.- ! E:A:. (E:S:.-d.u.-’ E:.wo.- )(f.u.-wu.f.S:.-’) (E:U:A:.)] # cécité
+[E:.b.E:B:.- ! E:A:. (E:S:.-d.u.-’ E:.wo.- )(f.u.-wu.f.U:.-’) (E:U:A:.)] # surdité
+[E:.b.E:B:.- ! E:A:. (E:S:.-d.u.-’ E:.wo.- )(s.e.-k.u.-wa.e.-’) (E:U:A:.)] # analphabétisme, illetrisme
+[E:.b.E:B:.- ! E:.s.-  (E:.wo.- E:S:.-d.u.-’ E:T:.d.-) (s.-S:.U:.-’ s.-S:.A:.-’)] # température
+[E:.b.E:B:.- ! E:.l.-  (E:.wo.- E:S:.-d.u.-’ E:.-A:.t.-l.-’) (k.i.-l.i.-’)] # p153 devant une maison
+[E:.b.E:B:.- ! E:.l.-  (E:.wo.- E:S:.-d.u.-’ E:.-A:.b.-l.-’) (k.i.-l.i.-’)] # façade d’une maison
+[E:.b.E:B:.- ! E:.l.-  (E:.wo.- E:S:.-d.u.-’ E:.-A:.f.-l.-’) (k.i.-l.i.-’)] # derrière une maison
+[E:.b.E:B:.- ! E:.l.-  (E:.wo.- E:S:.-d.u.-’ E:.-A:.l.-l.-’) (k.i.-l.i.-’)] # arrière ou dos d’une maison
+[E:.b.E:B:.- ! E:.l.-  (E:.wo.- E:S:.-d.u.-’ E:.-U:.b.-l.-’) (k.i.-l.i.-’)] # au-dessus d’une maison
+[E:.b.E:B:.- ! E:.l.-  (E:.wo.- E:S:.-d.u.-’ E:.-U:.t.-l.-’) (k.i.-l.i.-’)] # toit d’une maison
+[E:.b.E:B:.- ! E:.l.-  (E:.wo.- E:S:.-d.u.-’ E:.-U:.f.-l.-’) (k.i.-l.i.-’)] # sous une maison
+[E:.b.E:B:.- ! E:.l.-  (E:.wo.- E:S:.-d.u.-’ E:.-U:.l.-l.-’) (k.i.-l.i.-’)] # fondations d’une maison
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,) (m.a.-f.a.-’)] # au secours!
+[E:.b.E:B:.- ! E:.s.- (E:S:.x.- E:.wo.- E:S:.-d.u.-’) (l.-T:.U:.-’,n.-T:.A:.-’,t.o.-f.o.-’,_)] # p155 goutte de pluie
+[E:.b.E:B:.- ! E:.s.- (E:S:.p.- E:S:.-d.u.-’ E:.we.-) (B:.B:.n.-k.-u.S:.-’ f.-S:.A:.-’)] # essaim d’abeilles
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’, E:S:.-t.o.-’) (e.U:.-)] # commencer à tirer
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’, E:B:.-t.o.-’) (e.U:.-)] # continuer à tirer
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’, E:T:.-t.o.-’) (e.U:.-)] # arrêter/finir de tirer
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:S:.-t.o.-’ E:.-’wu.-S:.-’t.o.-’,) (n.u.-s.u.-’) (E:.b.we.-)] # prendre forme
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:B:.-t.o.-’ E:.-’wu.-S:.-’t.o.-’,) (A:.a.-) > E:.d.- (E:S:.-d.u.-’ E:.wo.- ) (l.j.-)] # garder de l’infuence
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:T:.-t.o.-’ E:.-’wu.-S:.-’t.o.-’,) (A:.a.-) > E:.d.- (E:S:.-d.u.-’ E:.wo.- ) (l.j.-)] # perdre de l’infuence
+[E:.b.E:B:.- E:B:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,) (e.) > ! E:.n.- (E:.wo.- E:S:.-d.u.-’) > E:.d.- (E:.wo.- E:S:.-d.u.-’) (m.-S:.U:.-’)] # actant « peureux »
+[E:.b.E:S:.- ! E:B:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,)(we.)(E:.b.wa.-)] # faire apparaître, manifester
+[E:.b.E:S:.- ! E:B:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,)(e.c.-) > E:.d.- (E:.wo.- E:S:.-d.u.-’) (t.i.-s.i.-’)] # p157 préparer un véhicule (mise au point, plein de carburant...)
+[E:.b.E:S:.- ! E:B:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,) (we.) (E:.b.wa.-) > E:.d.- (E:.wo.- E:S:.-d.u.-’) (m.-T:.U:.-’) > E:.d.- E:U:. ()(p.E:A:T:.-)] # laisser éclater (sa) joie
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,) (wo.) > E:.l.- (E:.wo.- E:S:.-d.u.-’ E:.-B:.k.-l.-’) > E:.l.- E:A:. (E:.wo.- E:S:.-d.u.-’) (m.-T:.A:.-’m.-S:.U:.-’E:A:T:.-’,)] # être au bord du désespoir
+[E:.b.E:B:.- ! E:A:. (E:.wo.- E:S:.-d.u.-’) (k.a.-) > E:A:. E:A:. (E:.wo.- E:S:.-d.u.-’) (t.i.-s.i.-’u.B:.-U:.-’wa.-’,)] # capitaine de bateau
+[E:.b.E:B:.- ! E:A:. (E:.wo.- E:S:.-d.u.-’) (k.x.-) > E:A:. E:A:. ( E:.wo.- E:S:.-d.u.-’ ) (t.i.-s.i.-’u.B:.-U:.-’wa.-’,)] # équipage de bateau
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,) (wa.) > E:.n.- (E:.wo.- E:S:.-d.u.-’) (n.i.-s.i.-’) > E:.f.- (E:.wo.- E:S:.-d.u.-’ E:T:.-t.u.-’)] # s’emballer (pour un moteur)
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,) (wa.) > E:.n.- (E:.wo.- E:S:.-d.u.-’) (n.i.-s.i.-’) > E:.f.- (E:.wo.- E:S:.-d.u.-’ E:U:S:.)] # avoir des ratés (pour un moteur)
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,) (wo.) > E:.n.- (E:.wo.- E:S:.-d.u.-’) (f.i.-k.i.-’) > E:.f.- (E:.wo.- E:S:.-d.u.-’ E:U:S:.)] # se gâter (pour de la nourriture)
+[E:.b.E:S:.- ! E:T:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,) (i.) > E:.n.- (E:.wo.- E:S:.-d.u.-’) (t.i.-s.i.-’u.T:.-U:.-’we.-’,B:.-’,_B:.-’,_;) > E:.f.- (E:.wo.- E:S:.-d.u.-’ E:U:S:.)] # faucher, happer (pour une voiture)
+//[E:.b.E:B:.- (E:.A:.j.-k.u.-’) (t.B:.U:.-) (E:.U:.g.-k.u.-’) (wu.wa.t.-)] # p159 printemps comme métaphore de la jeunesse.
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,) (m.-T:.A:.-’m.-S:.U:.-’E:A:T:.-’,) (E:.b.wa.-)] # p160 pousser, réduire au désespoir
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,) (f.o.-d.o.-’) (E:.b.wa.-)] # attirer l’attention
+[E:.b.E:S:.- ! E:S:. (E:.-’wu.-S:.-’t.o.-’, E:.-wa.-t.o.-' E:T:.-t.o.-’) (m.-B:.A:.-’) (E:.b.wa.-)] # étouffer (sa/la) colère
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,) (s.) (E:.b.wa.- E:S:U:.)] # permettre la réflexion]
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,)(wa.wo.t.-) > E:.s.-  (E:.wo.- E:S:.-d.u.-’ E:T:.c.-) (s.c.we.-)] # p161 Etre éveillé
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,) (wa.we.t.-) (E:.b.o.-) > E:.s.- (E:.wo.- E:S:.-d.u.-’ E:T:.c.-) (m.u.-)] # dodeliner de la tête, « cogner des clous »
+[E:.b.E:S:.- ! E:B:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,) (u.a.-) > E:.s.- (E:.wo.- E:S:.-d.u.-’ E:T:.c.-) (p.we.-)] # être obligé par sa promesse
+[E:.b.E:S:.- ! E:S:. (E:.-’wu.-B:.-’t.o.-’, E:.-wa.-t.o.-') (a.u.-)] # « Devoir tenir sa promesse »
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’, m2(E:U:.-t.o.-' E:A:.-t.o.-' E:S:.-t.o.-' E:B:.-t.o.-' E:T:.-t.o.-')) (u.A:.-) > E:.l.- (E:.wo.- E:S:.-d.u.-’ m1(E:.-U:.d.-l.-’ E:.-U:.s.-l.-’)) (m2(l.-y.-’E:U:.n.-l.-’E:U:.s.-l.-’, f.e.-l.i.-’ s.-a.-’ n.-T:.A:.-’ n.-T:.U:.-’)) > E:.f.- (E:.wo.- E:S:.-d.u.-’ m1(n.i.-d.i.-t.u.-’ l.o.-m.o.-s.u.-’ i.c.-)) (m1(E:.U:.j.-)) > E:.s.- (E:.wo.- E:S:.-d.u.-’ m1(E:T:.x.- )) (m1(n.i.-f.i.-’ b.i.-n.i.-’l.i.-f.i.-’n.-B:.U:.-’, b.i.-n.i.-’l.i.-’n.-B:.A:.-’, t.i.-s.i.-’u.S:.-U:.-’wa.-’, t.i.-s.i.-’u.B:.-A:.-’wa.-’, n.i.-d.i.-’ B:.B:.n.-k.-u.T:.-’))] # p168
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,) (u.A:.-) > E:.l.- (E:.wo.- E:S:.-d.u.-’ E:.-U:.s.-l.-’) (l.-y.-’E:U:.n.-l.-’E:U:.s.-l.-’,) > E:.f.- (E:.wo.- E:S:.-d.u.-’ ) (i.c.-) > E:.s.- ( E:T:.x.- E:.wo.- E:S:.-d.u.-’ ) (n.i.-f.i.-’)] # p169 Grimper, escalader
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,) (u.A:.-) > E:.l.- (E:.wo.- E:S:.-d.u.-’ E:.-U:.s.-l.-’) (l.-y.-’E:U:.n.-l.-’E:U:.s.-l.-’,) > E:.f.- (E:.wo.- E:S:.-d.u.-’ ) (i.c.-) > E:.s.- ( E:T:.x.- E:.wo.- E:S:.-d.u.-’ ) (B:.B:.n.-k.-u.T:.-’)] # Monter (sur une montagne) à dos d’animal
+[E:.b.E:S:.- ! E:S:. (E:S:.-t.o.-’ E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,) (u.A:.-) > E:.l.- (E:.wo.- E:S:.-d.u.-’ E:.-U:.s.-l.-’) (n.-T:.U:.-’) > E:.f.- (E:.wo.- E:S:.-d.u.-’ E:.U:.j.-) (l.o.-m.o.-s.u.-’) > E:.s.- (E:T:.x.- E:.wo.- E:S:.-d.u.-’ ) (t.i.-s.i.-’u.S:.-U:.-’wa.-’,)] # Décoller, s’envoler (en avion)
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,) (u.A:.-) > E:.l.- (E:.wo.- E:S:.-d.u.-’ E:.-U:.s.-l.-’) (n.-T:.U:.-’) > E:.f.- (E:.wo.- E:S:.-d.u.-’ )(l.o.-m.o.-s.u.-’)] # S’élever (pour un ballon en hélium ou un objet plus léger que l’air)
+[E:.b.E:S:.- ! E:S:. ( E:T:.-t.o.-’ E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,) (u.A:.-) > E:.l.- (E:.wo.- E:S:.-d.u.-’ E:.-U:.d.-l.-’) (n.-T:.U:.-’) > E:.f.- (E:.U:.j.- E:.wo.- E:S:.-d.u.-’ ) (l.o.-m.o.-s.u.-’) > E:.s.- (E:T:.x.- E:.wo.- E:S:.-d.u.-’ ) (t.i.-s.i.-’u.S:.-U:.-’wa.-’,)] # Atterrir (en avion)
+[E:.b.E:S:.- ! E:S:. ( E:S:.-t.o.-’ E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,) (u.A:.-) > E:.l.- (E:.wo.- E:S:.-d.u.-’ E:.-U:.d.-l.-’) (n.-T:.A:.-’) > E:.f.- (E:.wo.- E:S:.-d.u.-’ E:.U:.j.-) (l.o.-m.o.-s.u.-’) > E:.s.- (E:T:.x.- E:.wo.- E:S:.-d.u.-’ ) (n.i.-f.i.-’)] # Plonger (sans utiliser de sous-marin)
+[E:.b.E:S:.- ! E:S:. ( E:S:.-t.o.-’ E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,) (u.A:.-) > E:.l.- (E:.-U:.d.-l.-’ E:.wo.- E:S:.-d.u.-’) (n.-T:.A:.-’) > E:.f.- (E:.wo.- E:S:.-d.u.-’ )(l.o.-m.o.-s.u.-’) > E:.s.- (E:T:.x.- E:.wo.- E:S:.-d.u.-’ ) (n.i.-f.i.-’)] # Couler
+[E:.b.E:S:.- ! E:S:. ( E:S:.-t.o.-’ E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,) (u.A:.-) > E:.l.- (E:.-U:.d.-l.-’ E:.wo.- E:S:.-d.u.-’) (n.-T:.U:.-’) > E:.f.- (E:.wo.- E:S:.-d.u.-’ )(n.i.-d.i.-t.u.-’) > E:.s.- (E:T:.x.- E:.wo.- E:S:.-d.u.-’ ) (n.i.-f.i.-’)] # Tomber, chuter (sans utiliser de véhicule)
+[E:.b.E:S:.- ! E:S:. ( E:S:.-t.o.-’ E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,) (u.A:.-) > E:.l.- (E:.-U:.d.-l.-’ E:.wo.- E:S:.-d.u.-’) (n.-T:.U:.-’) > E:.f.- (E:.wo.- E:S:.-d.u.-’ )(l.o.-m.o.-s.u.-’) > E:.s.- (E:T:.x.- E:.wo.- E:S:.-d.u.-’ ) (n.i.-f.i.-’)] # Débouler, dévaler (sans utiliser de véhicule)
+[E:.b.E:S:.- ! E:S:. ( E:S:.-t.o.-’ E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,) (u.A:.-) > E:.l.- (E:.-U:.d.-l.-’ E:.wo.- E:S:.-d.u.-’) (l.-y.-’E:U:.n.-l.-’E:U:.s.-l.-’,) > E:.f.- (E:.wo.- E:S:.-d.u.-’) (l.o.-m.o.-s.u.-’) > E:.s.- (E:T:.x.- E:.wo.- E:S:.-d.u.-’ ) (b.i.-n.i.-’l.i.-f.i.-’n.-B:.U:.-’,)] # Descendre à ski
+[E:.b.E:B:.- E:S:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,)(u.A:.-) > ! E:.n.- (E:.wo.- E:S:.-d.u.-’) (l.-T:.U:.-’,n.-T:.A:.-’,t.o.-f.o.-’,_) > E:U:. E:.n.- () (m1(T:.E:A:S:.- T:.E:A:T:.-)) > E:.t.- (E:.wo.- E:S:.-d.u.-’) (m1(S:.E:A:S:.- S:.E:A:T:.- p.E:S:B:.-)) > E:.l.- (E:.-U:.d.-l.-’ E:.wo.- E:S:.-d.u.-’) (n.-T:.U:.-’) > E:.f.- (E:.wo.- E:S:.-d.u.-’) (n.i.-d.i.-t.u.-’) > E:.s.- (E:.wo.- E:S:.-d.u.-’) (m1(E:T:.h.-) m2(s.S:U:.- d.-S:.U:.-’))] # 171
+[E:.b.E:B:.- E:S:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,)(u.A:.-) > ! E:.n.- (E:.wo.- E:S:.-d.u.-’) (l.-T:.U:.-’,n.-T:.A:.-’,t.o.-f.o.-’,_) > E:U:. E:.n.- () (T:.E:A:S:.-) > E:.l.- (E:.wo.- E:S:.-d.u.-’ E:.-U:.d.-l.-’) (n.-T:.U:.-’) > E:.f.- (E:.wo.- E:S:.-d.u.-’)(n.i.-d.i.-t.u.-’)] # Bruine (drizzle)
+[E:.b.E:B:.- E:S:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,)(u.A:.-) > ! E:.n.- (E:.wo.- E:S:.-d.u.-’) (l.-T:.U:.-’,n.-T:.A:.-’,t.o.-f.o.-’,_) > E:U:. E:.n.- () (T:.E:A:T:.-) > E:.l.- (E:.wo.- E:S:.-d.u.-’ E:.-U:.d.-l.-’) (n.-T:.U:.-’) > E:.f.- (E:.wo.- E:S:.-d.u.-’)(n.i.-d.i.-t.u.-’) ] # Forte pluie (heavy rain)
+[E:.b.E:B:.- E:S:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,)(u.A:.-) > ! E:.n.- (E:.wo.- E:S:.-d.u.-’) (l.-T:.U:.-’,n.-T:.A:.-’,t.o.-f.o.-’,_) > E:.t.- (E:.wo.- E:S:.-d.u.-’) (S:.E:A:S:.-) > E:.l.-  (E:.-U:.d.-l.-’ E:.wo.- E:S:.-d.u.-’) (n.-T:.U:.-’) > E:.f.- (E:.wo.- E:S:.-d.u.-’) (n.i.-d.i.-t.u.-’)] # Averse (downpour )
+[E:.b.E:B:.- E:S:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,)(u.A:.-) > ! E:.n.- (E:.wo.- E:S:.-d.u.-’) (l.-T:.U:.-’,n.-T:.A:.-’,t.o.-f.o.-’,_) > E:.t.- (E:.wo.- E:S:.-d.u.-’) (S:.E:A:T:.-) > E:.l.-  (E:.-U:.d.-l.-’ E:.wo.- E:S:.-d.u.-’) (n.-T:.U:.-’) > E:.f.- (E:.wo.- E:S:.-d.u.-’) (n.i.-d.i.-t.u.-’)] # Pluie persistante
+[E:.b.E:B:.- E:S:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,)(u.A:.-) > ! E:.n.- (E:.wo.- E:S:.-d.u.-’) (l.-T:.U:.-’,n.-T:.A:.-’,t.o.-f.o.-’,_) > E:.t.- (E:.wo.- E:S:.-d.u.-’) (p.E:S:B:.-) > E:.l.-  (E:.-U:.d.-l.-’ E:.wo.- E:S:.-d.u.-’) (n.-T:.U:.-’) > E:.f.- (E:.wo.- E:S:.-d.u.-’) (n.i.-d.i.-t.u.-’)] # Pluie intermittente
+[E:.b.E:B:.- E:S:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,)(u.A:.-) > ! E:.n.- (E:.wo.- E:S:.-d.u.-’) (l.-T:.U:.-’,n.-T:.A:.-’,t.o.-f.o.-’,_) > E:U:. E:.n.- () (T:.E:A:S:.-) > E:.t.- (E:.wo.- E:S:.-d.u.-’) (S:.E:A:S:.- ) > E:.l.- (E:.-U:.d.-l.-’ E:.wo.- E:S:.-d.u.-’)(n.-T:.U:.-’) > E:.f.- (E:.wo.- E:S:.-d.u.-’) (n.i.-d.i.-t.u.-’)] # Courte bruine
+[E:.b.E:B:.- E:S:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,)(u.A:.-) > ! E:.n.- (E:.wo.- E:S:.-d.u.-’) (l.-T:.U:.-’,n.-T:.A:.-’,t.o.-f.o.-’,_) > E:U:. E:.n.- () (T:.E:A:S:.-) > E:.t.- (E:.wo.- E:S:.-d.u.-’) (S:.E:A:T:.- ) > E:.l.- (E:.-U:.d.-l.-’ E:.wo.- E:S:.-d.u.-’)(n.-T:.U:.-’) > E:.f.- (E:.wo.- E:S:.-d.u.-’) (n.i.-d.i.-t.u.-’)] # Bruine continue
+[E:.b.E:B:.- E:S:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,)(u.A:.-) > ! E:.n.- (E:.wo.- E:S:.-d.u.-’) (l.-T:.U:.-’,n.-T:.A:.-’,t.o.-f.o.-’,_) > E:U:. E:.n.- () (T:.E:A:S:.-) > E:.t.- (E:.wo.- E:S:.-d.u.-’) (p.E:S:B:.-) > E:.l.- (E:.-U:.d.-l.-’ E:.wo.- E:S:.-d.u.-’) (n.-T:.U:.-’) > E:.f.- (E:.wo.- E:S:.-d.u.-’) (n.i.-d.i.-t.u.-’)] # Bruine intermittente
+[E:.b.E:B:.- E:S:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,)(u.A:.-) > ! E:.n.- (E:.wo.- E:S:.-d.u.-’) (l.-T:.U:.-’,n.-T:.A:.-’,t.o.-f.o.-’,_) > E:U:. E:.n.- () (T:.E:A:T:.-) > E:.t.- (E:.wo.- E:S:.-d.u.-’) (S:.E:A:S:.-) > E:.l.- (E:.-U:.d.-l.-’ E:.wo.- E:S:.-d.u.-’)(n.-T:.U:.-’) > E:.f.- (E:.wo.- E:S:.-d.u.-’) (n.i.-d.i.-t.u.-’)] # Brève averse violente
+[E:.b.E:B:.- E:S:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,)(u.A:.-) > ! E:.n.- (E:.wo.- E:S:.-d.u.-’) (l.-T:.U:.-’,n.-T:.A:.-’,t.o.-f.o.-’,_) > E:U:. E:.n.- () (T:.E:A:T:.-) > E:.t.- (E:.wo.- E:S:.-d.u.-’) (S:.E:A:T:.-) > E:.l.- (E:.-U:.d.-l.-’ E:.wo.- E:S:.-d.u.-’)(n.-T:.U:.-’) > E:.f.- (E:.wo.- E:S:.-d.u.-’) (n.i.-d.i.-t.u.-’)] # Forte pluie persistante
+[E:.b.E:B:.- E:S:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,)(u.A:.-) > ! E:.n.- (E:.wo.- E:S:.-d.u.-’) (l.-T:.U:.-’,n.-T:.A:.-’,t.o.-f.o.-’,_) > E:U:. E:.n.- () (T:.E:A:T:.-) > E:.t.- (E:.wo.- E:S:.-d.u.-’) (p.E:S:B:.-) > E:.l.-  (E:.-U:.d.-l.-’ E:.wo.- E:S:.-d.u.-’)(n.-T:.U:.-’) > E:.f.- (E:.wo.- E:S:.-d.u.-’) (n.i.-d.i.-t.u.-’)] # Forte pluie intermittente
+[E:.b.E:B:.- E:S:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,)(u.A:.-) > ! E:.n.- (E:.wo.- E:S:.-d.u.-’) (l.-T:.U:.-’,n.-T:.A:.-’,t.o.-f.o.-’,_) > E:.l.- (E:.-U:.d.-l.-’ E:.wo.- E:S:.-d.u.-') (n.-T:.U:.-’) > E:.f.- (E:.wo.- E:S:.-d.u.-’) (n.i.-d.i.-t.u.-’) > E:.s.- (E:T:.h.- E:S:.-d.u.-' E:.wo.-)(s.S:U:.- d.-S:.U:.-’)] # Pluie verglaçante
+[E:.b.E:B:.- E:S:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,)(u.A:.-) > ! E:.n.- (E:.wo.- E:S:.-d.u.-’) (l.-T:.U:.-’,n.-T:.A:.-’,t.o.-f.o.-’,_) > E:U:. E:.n.- () (T:.E:A:S:.-) > E:.l.- (E:.-U:.d.-l.-’ E:.wo.- E:S:.-d.u.-') (n.-T:.U:.-’) > E:.f.- (E:.wo.- E:S:.-d.u.-’)(n.i.-d.i.-t.u.-’) > E:.s.- (E:.wo.- E:S:.-d.u.-’ E:T:.h.-) (s.S:U:.- d.-S:.U:.-’)] # Bruine verglaçante
+//[E:.b.E:T:.- E:S:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’, m1(E:M:.-t.o.-’)) (wo.) > E:.n.- (E:.wo.- E:S:.-d.u.-’) (t.o.-n.o.-j.-’) > (E:.n.- E:A:.) (m1(b.T:O:.-)) > (! E:.n.- E:A:. E:U:. E:.t.-) (m1(l.-T:.O:.-’ s.-B:.O:.-’))] # ??
+//[E:.b.E:B:.- E:S:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,) (wo.) > ! E:.n.- (E:.wo.- E:S:.-d.u.-’) (t.o.-n.o.-j.-’) > E:.n.- E:A:. (E:.wo.- E:S:.-d.u.-’) (b.T:A:.-)] # nuit
+//[E:.b.E:B:.- E:S:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,) (wo.) > ! E:.n.- (E:.wo.- E:S:.-d.u.-’) (t.o.-n.o.-j.-’) > E:.n.- E:A:. (E:.wo.- E:S:.-d.u.-’) (b.T:U:.-)] # p174 Jour
+[E:.b.E:T:.- E:S:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’, E:S:.-t.o.-’) (wo.) > E:.n.- () (t.o.-n.o.-j.-’) > E:.n.- E:A:. ()(b.T:A:.-) > ! E:.n.- E:A:. E:U:. E:.t.- () (s.-B:.U:.-’)] # Soir
+[E:.b.E:T:.- E:S:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’, E:B:.-t.o.-’) (wo.) > E:.n.- () (t.o.-n.o.-j.-’) > E:.n.- E:A:. ()(b.T:A:.-) > ! E:.n.- E:A:. E:U:. E:.t.- () (s.-B:.U:.-’)] # Avant minuit
+[E:.b.E:T:.- E:S:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’, E:B:.-t.o.-’) (wo.) > E:.n.- () (t.o.-n.o.-j.-’) > E:.n.- E:A:. ()(b.T:A:.-) > ! E:.n.- E:A:. E:U:. E:.t.- () (l.-T:.A:.-’)] # Minuit
+[E:.b.E:T:.- E:S:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’, E:B:.-t.o.-’) (wo.) > E:.n.- () (t.o.-n.o.-j.-’) > E:.n.- E:A:. ()(b.T:A:.-) > (! E:.n.- E:A:. E:U:. E:.t.-) (s.-B:.A:.-’)] # Après minuit
+[E:.b.E:T:.- E:S:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’, E:T:.-t.o.-’) (wo.) > E:.n.- () (t.o.-n.o.-j.-’) > E:.n.- E:U:. ()(b.T:A:.-) > (! E:.n.- E:A:. E:U:. E:.t.-) (s.-B:.A:.-’)] # Aube
+[E:.b.E:T:.- E:S:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’, E:S:.-t.o.-’) (wo.) > E:.n.- () (t.o.-n.o.-j.-’) > E:.n.- E:A:. ()(b.T:U:.-) > (! E:.n.- E:A:. E:U:. E:.t.-) (s.-B:.U:.-’)] # Aurore
+[E:.b.E:T:.- E:S:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’, E:B:.-t.o.-’) (wo.) > E:.n.- () (t.o.-n.o.-j.-’) > E:.n.- E:A:. ()(b.T:U:.-) > (! E:.n.- E:A:. E:U:. E:.t.-) (s.-B:.U:.-’)] # Matin
+[E:.b.E:T:.- E:S:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’, E:B:.-t.o.-’) (wo.) > E:.n.- () (t.o.-n.o.-j.-’) > E:.n.- E:A:. ()(b.T:U:.-) > (! E:.n.- E:A:. E:U:. E:.t.-) (l.-T:.U:.-’)] # Midi
+[E:.b.E:T:.- E:S:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’, E:B:.-t.o.-’) (wo.) > E:.n.- () (t.o.-n.o.-j.-’) > E:.n.- E:A:. ()(b.T:U:.-) > (! E:.n.- E:A:. E:U:. E:.t.-) (s.-B:.A:.-’)] # Après-midi
+[E:.b.E:T:.- E:S:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’, E:T:.-t.o.-’) (wo.) > E:.n.- () (t.o.-n.o.-j.-’) > E:.n.- E:A:. ()(b.T:U:.-) > (! E:.n.- E:A:. E:U:. E:.t.-) (s.-B:.A:.-’)] # Crépuscule
+[E:.b.E:B:.- E:T:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,) (wa.f.U:.-) > ! E:.n.- () (b.i.-n.i.-’) > E:.d.- E:U:. () (s.u.-) > (m1(E:.s.- E:B:.x.- E:S:.-k.u.-’)) (m2(b.i.-n.i.-’t.i.-’+m.i.-f.i.-’+l.i.-E:.-+n.+f.i.-’n.o.-n.o.-’+f.o.-f.o.-’+n.-B:.A:.-+S:+B:.U:.-’,))(m1(E:S:.-k.u.-’ E:B:.p.-)) (m2(b.i.-n.i.-’b.i.-l.i.-’+l.o.-n.o.-’+l.i.-t.i.-’n.o.-n.o.-’+f.o.-f.o.-’+n.-B:.A:.-+S:+B:.U:.-’,))(m1(E:S:.-k.u.-’ E:T:.x.-)) (m2(b.i.-n.i.-’wu.f.A:.-+a.S:.-+i.U:.-+e.O:.-’n.o.-n.o.-’+f.o.-f.o.-’+n.-B:.A:.-+S:+B:.U:.-’,))] # p177
+[E:.b.E:B:.- E:T:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,) (wa.f.U:.-) > ! E:.n.- () (b.i.-n.i.-’) > E:.d.- E:U:. () (s.u.-) >(E:.s.- E:B:.x.- E:S:.-k.u.-’) (b.i.-n.i.-’l.i.-n.i.-’n.-B:.A:.-’,)(E:S:.-k.u.-’ E:B:.p.-) (b.i.-n.i.-’b.i.-l.i.-’n.-B:.A:.-’,)(E:S:.-k.u.-’ E:T:.x.-) (b.i.-n.i.-’wu.f.A:.-’f.o.-f.o.-’, b.i.-n.i.-’a.S:.-’f.o.-f.o.-’,)] # Accordéon (clavier d’ivoire, soufflet de cuir, anche de métal)
+[E:.b.E:B:.- E:T:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,) (wa.f.U:.-) > ! E:.n.- () (b.i.-n.i.-’) > E:.d.- E:U:. () (s.u.-) > (E:.s.- E:B:.x.- E:S:.-k.u.-’) (b.i.-n.i.-’l.i.-f.i.-’n.-B:.U:.-’,)(E:S:.-k.u.-’ E:B:.p.-) (b.i.-n.i.-’l.i.-t.i.-’n.-B:.U:.-’,)(E:S:.-k.u.-’ E:T:.x.-) (b.i.-n.i.-’i.U:.-’n.-B:.U:.-’,)] # Balafon
+[E:.b.E:B:.- E:T:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,) (wa.f.U:.-) > ! E:.n.- () (b.i.-n.i.-’) > E:.d.- E:U:. () (s.u.-) > (E:.s.- E:B:.x.- E:S:.-k.u.-’) (b.i.-n.i.-’l.i.-’n.-B:.A:.-’,)(E:S:.-k.u.-’ E:B:.p.-) (b.i.-n.i.-’l.i.-t.i.-’n.-B:.U:.-’,)(E:S:.-k.u.-’ E:T:.x.-) (b.i.-n.i.-’wu.f.A:.-’n.-B:.U:.-’, b.i.-n.i.-’e.U:.-’n.-B:.U:.-’,)] # Clavecin (cordes pincées)
+[E:.b.E:B:.- E:T:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,) (wa.f.U:.-) > ! E:.n.- () (b.i.-n.i.-’) > E:.d.- E:U:. () (s.u.-) > (E:.s.- E:B:.x.- E:S:.-k.u.-’) (b.i.-n.i.-’l.i.-n.i.-’n.-B:.U:.-’,)(E:S:.-k.u.-’ E:B:.p.-) (b.i.-n.i.-’b.i.-l.i.-’n.-B:.U:.-’,)(E:S:.-k.u.-’ E:T:.x.-) (b.i.-n.i.-’a.S:.-’f.o.-f.o.-’, b.i.-n.i.-’a.S:.-’n.o.-n.o.-’,)] # Cornemuse
+[E:.b.E:B:.- E:T:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,) (wa.f.U:.-) > ! E:.n.- () (b.i.-n.i.-’) > E:.d.- E:U:. () (s.u.-) > (E:.s.- E:B:.x.- E:S:.-k.u.-’) (b.i.-n.i.-’m.i.-f.i.-’f.o.-f.o.-’,)(E:S:.-k.u.-’ E:B:.p.-) (b.i.-n.i.-’l.i.-t.i.-’n.-S:.U:.-’,)(E:S:.-k.u.-’ E:T:.x.-) (b.i.-n.i.-’i.U:.-’n.o.-n.o.-’,)] # Darbouka
+[E:.b.E:B:.- E:T:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,) (wa.f.U:.-) > ! E:.n.- () (b.i.-n.i.-’) > E:.d.- E:U:. () (s.u.-) >(E:.s.- E:B:.x.- E:S:.-k.u.-’) (b.i.-n.i.-’l.i.-n.i.-’n.o.-n.o.-’,)(E:S:.-k.u.-’ E:B:.p.-) (b.i.-n.i.-’b.i.-l.i.-’n.-B:.U:.-’,)(E:S:.-k.u.-’ E:T:.x.-) (b.i.-n.i.-’a.S:.-’n.o.-n.o.-’,)] # p178 Didgeridoo
+[E:.b.E:B:.- E:T:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,) (wa.f.U:.-) > ! E:.n.- () (b.i.-n.i.-’) > E:.d.- E:U:. () (s.u.-) >(E:.s.- E:B:.x.- E:S:.-k.u.-’) (b.i.-n.i.-’l.i.-f.i.-’n.-B:.A:.-’,)(E:S:.-k.u.-’ E:B:.p.-) (b.i.-n.i.-’l.i.-t.i.-’n.-B:.U:.-’,(E:S:.-k.u.-’ E:T:.x.-) (b.i.-n.i.-’i.U:.-’n.-B:.U:.-’,)] #Gangsa
+[E:.b.E:B:.- E:T:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,) (wa.f.U:.-) > ! E:.n.- () (b.i.-n.i.-’) > E:.d.- E:U:. () (s.u.-) >(E:.s.- E:B:.x.- E:S:.-k.u.-’) (b.i.-n.i.-’l.i.-f.i.-’n.-B:.A:.-’,)(E:S:.-k.u.-’ E:B:.p.-) (b.i.-n.i.-’l.i.-t.i.-’n.-B:.U:.-’,)(E:S:.-k.u.-’ E:T:.x.-) (b.i.-n.i.-’i.U:.-’n.-B:.U:.-’,)] # Guitare
+[E:.b.E:B:.- E:T:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,) (wa.f.U:.-) > ! E:.n.- () (b.i.-n.i.-’) > E:.d.- E:U:. () (s.u.-) >(E:.s.- E:B:.x.- E:S:.-k.u.-’) (b.i.-n.i.-’l.i.-’n.-B:.A:.-’,)(E:S:.-k.u.-’ E:B:.p.-) (b.i.-n.i.-’l.i.-t.i.-’n.-B:.U:.-’,)(E:S:.-k.u.-’ E:T:.x.-) (b.i.-n.i.-’i.U:.-’n.-B:.U:.-’, b.i.-n.i.-’wu.f.A:.-’n.-B:.U:.-’,)] # Piano (cordes frappées)
+[E:.b.E:B:.- E:T:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,) (wa.f.U:.-) > ! E:.n.- () (b.i.-n.i.-’) > E:.d.- E:U:. () (s.u.-) >(E:.s.- E:B:.x.- E:S:.-k.u.-’) (b.i.-n.i.-’l.i.-n.i.-’n.o.-n.o.-’,)(E:S:.-k.u.-’ E:B:.p.-) (b.i.-n.i.-’b.i.-l.i.-’f.o.-f.o.-’,)(E:S:.-k.u.-’ E:T:.x.-) (b.i.-n.i.-’a.S:.-’n.o.-n.o.-’,)] # Shofar
+[E:.b.E:B:.- E:T:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,) (wa.f.U:.-) > ! E:.n.- () (b.i.-n.i.-’) > E:.d.- E:U:. () (s.u.-) >(E:.s.- E:B:.x.- E:S:.-k.u.-’) (b.i.-n.i.-’l.i.-n.i.-’n.o.-n.o.-’,)(E:S:.-k.u.-’ E:B:.p.-) (b.i.-n.i.-’b.i.-l.i.-’n.-B:.A:.-’,)(E:S:.-k.u.-’ E:T:.x.-) (b.i.-n.i.-’a.S:.-’n.o.-n.o.-’,)] # Trompette
+[E:.b.E:B:.- E:T:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,)(wa.f.U:.-) > ! E:.n.- () (b.i.-n.i.-’) > E:.d.- E:U:. () (s.u.-) >(E:.s.- E:B:.x.- E:S:.-k.u.-’) (b.i.-n.i.-’l.i.-’f.o.-f.o.-’,)(E:S:.-k.u.-’ E:B:.p.-) (b.i.-n.i.-’l.i.-t.i.-’n.-B:.U:.-’,)(E:S:.-k.u.-’ E:T:.x.-) (b.i.-n.i.-’e.A:.-’f.o.-f.o.-’,)] # Violon
+[E:.b.E:T:.- E:T:. (E:.-wa.-t.o.-' E:.-’wu.-S:.-’t.o.-’,)(A:.e.-) > E:.d.- (E:.wo.- E:B:.-d.u.-’ E:S:.j.-’j.-U:.-’,) (f.o.-f.o.-’E:.-U:.t.-l.-’,E:.-U:.n.-l.-’E:.-A:.n.-l.-’,_) (E:.-B:.b.-l.-’) > ! E:A:. (E:.wo.- E:S:.-d.u.-’) (b.-S:.A:.-’) > (E:S:.-k.u.-’) (f.o.-f.o.-’E:.-U:.t.-l.-’,E:.-U:.n.-l.-’E:.-A:.n.-l.-’,_) (E:.-B:.f.-l.-’) > (! E:A:. E:.wo.- E:S:.-d.u.-’) (b.-S:.A:.-’) > (E:U:.) (m.u.-m.u.-d.u.-’)] # vairon, avoir l’oeil droit d’une couleur et l’oeil gauche d’une autre
