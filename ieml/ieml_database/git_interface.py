@@ -334,13 +334,13 @@ class GitInterface:
                         deleted.append(l.content)
                     elif l.old_lineno == -1:
                         added.append(l.content)
-
-            res[line] = {
-                'ieml': l.content.split('"')[1],
-                'added': added,
-                'deleted': deleted,
-                'is_new': patch.delta.old_file.mode == 0,
-                'is_removed': patch.delta.new_file.mode == 0,
-            }
+            if l:
+                res[line] = {
+                    'ieml': l.content.split('"')[1],
+                    'added': added,
+                    'deleted': deleted,
+                    'is_new': patch.delta.old_file.mode == 0,
+                    'is_removed': patch.delta.new_file.mode == 0,
+                }
 
         return res
