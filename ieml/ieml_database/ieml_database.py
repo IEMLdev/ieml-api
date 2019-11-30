@@ -28,7 +28,7 @@ from ieml.usl import PolyMorpheme, Word, get_index
 
 
 def _normalize_key(ieml, key, value, parse_ieml=False, partial=False, structure=False):
-    if not (partial or (ieml and key and (structure or value))):
+    if not (partial or (ieml is not None and key and (structure or value))):
         raise ValueError("IEML and Key can't be null")
 
     if ieml:
@@ -94,7 +94,7 @@ class Descriptors:
         ieml, language, descriptor = _normalize_key(ieml, language, descriptor,
                                                     parse_ieml=False, partial=False)
         try:
-            return self.df.loc(axis=0)[(ieml, language, descriptor)].to_dict('list')['value']
+            return self.df.loc(axis=0)[(str(ieml), language, descriptor)].to_dict('list')['value']
         except KeyError:
             return []
 

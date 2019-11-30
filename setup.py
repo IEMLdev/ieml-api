@@ -31,7 +31,8 @@ setup(name='ieml',
             'appdirs',
             'pygit2',
             'pandas',
-            'pyyaml'
+            'pyyaml',
+            'pylatex'
       ],
       test_suite='nose2.collector.collector',
       tests_require=['nose2'],
