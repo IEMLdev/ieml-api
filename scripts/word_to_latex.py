@@ -189,6 +189,8 @@ lexeme & role & flexion & content \\\\
     return res
 
 def compile_latex(latex_str):
+    old_cwd = os.getcwd()
+
     with tempfile.TemporaryDirectory() as tempdir:
         path = os.path.join(tempdir, 'output')
         doc = Document(path, data=[dumps_list([latex_str], escape=False)], geometry_options='landscape')
@@ -196,6 +198,8 @@ def compile_latex(latex_str):
         doc.packages.append(Package('xcolor', ['dvipsnames','table']))
         doc.generate_pdf(clean_tex=False)
         doc.generate_tex()
+
+        os.chdir(old_cwd) # because pylatex change it but doesnt restore it
 
         with open(path + '.pdf', 'rb') as fp:
             return fp.read()
