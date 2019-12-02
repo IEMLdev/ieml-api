@@ -23,6 +23,7 @@ from ieml.dictionary.dictionary import Dictionary
 from ieml.dictionary.script import NullScript, MultiplicativeScript, AdditiveScript, Script
 from ieml.exceptions import CannotParse
 from ieml.ieml_database.git_interface import logger
+from ieml.usl.lexeme import Lexeme
 from ieml.usl.parser import IEMLParser
 from ieml.usl import PolyMorpheme, Word, get_index
 
@@ -94,7 +95,11 @@ class Descriptors:
         ieml, language, descriptor = _normalize_key(ieml, language, descriptor,
                                                     parse_ieml=False, partial=False)
         try:
-            return self.df.loc(axis=0)[(str(ieml), language, descriptor)].to_dict('list')['value']
+            res = self.df.loc(axis=0)[(str(ieml), language, descriptor)]
+            if isinstance(res, pandas.Series):
+                return res.to_list()
+            else:
+                return res.to_dict('list')['value']
         except KeyError:
             return []
 
@@ -151,6 +156,7 @@ class IEMLDatabase:
         AdditiveScript: ('morpheme', 0),
         MultiplicativeScript: ('morpheme', 0),
         PolyMorpheme: ('polymorpheme', 5),
+        Lexeme: ('lexeme', 8),
         Word: ('word', 10)
     }
 
@@ -186,6 +192,8 @@ class IEMLDatabase:
     def path_of(self, _ieml, descriptor=True, mkdir=False):
         if isinstance(_ieml, str):
             ieml = IEMLParser().parse(_ieml)
+        else:
+            ieml = _ieml
 
         if descriptor:
             ext = '.desc'
@@ -194,7 +202,7 @@ class IEMLDatabase:
 
         class_folder, prefix_sixe = self.CLASS_TO_FOLDER[ieml.__class__]
 
-        filename = self.filename_of(_ieml)
+        filename = self.filename_of(ieml)
         prefix = filename[:prefix_sixe]
 
         p = os.path.join(self.folder, class_folder,
