@@ -193,22 +193,22 @@ lexeme & role & flexion & content \\\\
 def compile_latex(latex_str):
     old_cwd = os.getcwd()
 
-    tempdir = tempfile.TemporaryDirectory()
-    path = os.path.join(tempdir.name, 'output')
+    with tempfile.TemporaryDirectory() as tempdir:
+        path = os.path.join(tempdir, 'output')
 
-    logger.error(path)
-    doc = Document(path, data=[dumps_list([latex_str], escape=False)], geometry_options='landscape')
+        logger.error(path)
+        doc = Document(path, data=[dumps_list([latex_str], escape=False)], geometry_options='landscape')
 
-    doc.packages.append(Package('xcolor', ['dvipsnames','table']))
-    try:
-        doc.generate_pdf(clean_tex=False, silent=False)
-        doc.generate_tex()
-    except subprocess.CalledProcessError as e:
-        os.chdir(old_cwd)  # because pylatex change it but doesnt restore it
-        raise e
+        doc.packages.append(Package('xcolor', ['dvipsnames','table']))
+        try:
+            doc.generate_pdf(clean_tex=False, silent=False)
+            doc.generate_tex()
+        except subprocess.CalledProcessError as e:
+            os.chdir(old_cwd)  # because pylatex change it but doesnt restore it
+            raise e
 
-    with open(path + '.pdf', 'rb') as fp:
-        return fp.read()
+        with open(path + '.pdf', 'rb') as fp:
+            return fp.read()
 
 
 def rendex_latex_word(w: Word, descriptors: Descriptors, language: LANGUAGES):
