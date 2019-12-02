@@ -200,9 +200,9 @@ def compile_latex(latex_str):
         try:
             doc.generate_pdf(clean_tex=False)
             doc.generate_tex()
-        except subprocess.CalledProcessError:
+        except subprocess.CalledProcessError as e:
             os.chdir(old_cwd)  # because pylatex change it but doesnt restore it
-            return b''
+            raise e
 
         with open(path + '.pdf', 'rb') as fp:
             return fp.read()
