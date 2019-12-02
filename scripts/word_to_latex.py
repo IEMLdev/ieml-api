@@ -1,3 +1,4 @@
+import subprocess
 import tempfile
 from itertools import zip_longest
 import os
@@ -196,10 +197,12 @@ def compile_latex(latex_str):
         doc = Document(path, data=[dumps_list([latex_str], escape=False)], geometry_options='landscape')
 
         doc.packages.append(Package('xcolor', ['dvipsnames','table']))
-        doc.generate_pdf(clean_tex=False)
-        doc.generate_tex()
-
-        os.chdir(old_cwd) # because pylatex change it but doesnt restore it
+        try:
+            doc.generate_pdf(clean_tex=False)
+            doc.generate_tex()
+        except subprocess.CalledProcessError:
+            os.chdir(old_cwd)  # because pylatex change it but doesnt restore it
+            return b''
 
         with open(path + '.pdf', 'rb') as fp:
             return fp.read()
