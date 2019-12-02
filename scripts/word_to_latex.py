@@ -5,6 +5,7 @@ import os
 from pylatex import Document, Package
 from pylatex.utils import dumps_list
 
+from ieml import logger
 from ieml.constants import LANGUAGES
 from ieml.dictionary.script import Script
 from ieml.ieml_database import IEMLDatabase, GitInterface
@@ -193,7 +194,9 @@ def compile_latex(latex_str):
     old_cwd = os.getcwd()
 
     tempdir = tempfile.TemporaryDirectory()
-    path = os.path.join(tempdir, 'output')
+    path = os.path.join(tempdir.name, 'output')
+
+    logger.error(path)
     doc = Document(path, data=[dumps_list([latex_str], escape=False)], geometry_options='landscape')
 
     doc.packages.append(Package('xcolor', ['dvipsnames','table']))
