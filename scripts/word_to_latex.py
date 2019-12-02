@@ -2,7 +2,7 @@ import subprocess
 import tempfile
 from itertools import zip_longest
 import os
-from pylatex import Document, Package
+from pylatex import Document, Package, escape_latex
 from pylatex.utils import dumps_list
 
 from ieml import logger
@@ -144,9 +144,9 @@ def _serialize_role(_role: List[Script], _lexeme: Lexeme, descriptors: Descripto
 
         res += LINE_TEMPLATE.format(**{
             'lexeme': '',
-            'role': ' '.join(map(str, r)) if r is not None else '',
-            'flexion': str(fl) if fl and not fl.empty else '',
-            'content': str(ctt) if ctt and not ctt.empty else '',
+            'role': escape_latex(' '.join(map(str, r)) if r is not None else ''),
+            'flexion': escape_latex(str(fl) if fl and not fl.empty else ''),
+            'content': escape_latex(str(ctt) if ctt and not ctt.empty else ''),
             'color': color
         })
 
@@ -184,7 +184,7 @@ lexeme & role & flexion & content \\\\
 \\end{{figure}}
 """.format(caption="\\textbf{{{trans}}} \\small{{{ieml}}}".format(**{
         'trans':', '.join(descriptors.get_values(w, language, 'translations')),
-        'ieml': str(w)
+        'ieml': escape_latex(str(w))
     }))
 
     # print(res)
@@ -201,7 +201,7 @@ def compile_latex(latex_str):
 
     doc.packages.append(Package('xcolor', ['dvipsnames','table']))
     try:
-        doc.generate_pdf(clean_tex=False)
+        doc.generate_pdf(clean_tex=False, silent=False)
         doc.generate_tex()
     except subprocess.CalledProcessError as e:
         os.chdir(old_cwd)  # because pylatex change it but doesnt restore it
