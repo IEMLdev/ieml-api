@@ -2,7 +2,7 @@ import logging, os
 import ply.yacc as yacc
 
 from ieml.constants import PARSER_FOLDER
-from ieml.dictionary.script import script, Script
+from ieml.dictionary.script import script, Script, NullScript
 from ieml.usl import Word, Phrase, PolyMorpheme, check_word
 from ieml.exceptions import CannotParse
 from ieml.usl.constants import ADDRESS_SCRIPTS
@@ -37,6 +37,9 @@ class IEMLParser():
 
     def parse(self, s, factorize_script=False):
         """Parses the input string, and returns a reference to the created AST's root"""
+        if s == '':
+            return NullScript(0)
+
         with self.lock:
             self.factorize_script = factorize_script
             try:
