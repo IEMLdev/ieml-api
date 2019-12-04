@@ -44,6 +44,9 @@ class USL:
     def __contains__(self, item):
         return item.singular_sequences_set.issubset(self.singular_sequences_set)
 
+    def iter_structure(self):
+        raise NotImplementedError()
+
     @property
     def cardinal(self):
         return len(self.singular_sequences)

@@ -48,6 +48,12 @@ class Lexeme(USL):
     def check(self):
         pass
 
+    def iter_structure(self):
+        yield self.pm_flexion
+        yield from self.pm_flexion.iter_structure()
+        yield self.pm_content
+        yield from self.pm_content.iter_structure()
+
     @property
     def empty(self):
         return self.pm_content.empty and self.pm_flexion.empty

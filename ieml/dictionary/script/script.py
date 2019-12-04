@@ -210,6 +210,9 @@ class Script(TreeStructure):
     def is_singular(self):
         return self.cardinal == 1
 
+    def iter_structure(self):
+        return []
+
     def _compute_cells(self):
         pass
 

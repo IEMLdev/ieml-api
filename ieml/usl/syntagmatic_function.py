@@ -81,6 +81,9 @@ class SyntagmaticFunction:
     def get_paradigm(self, role: SyntagmaticRole) -> List[X]:
         return [self.actors[r] for r in role.constant if r in self.actors]
 
+    def iter_structure(self):
+        yield from map(lambda sfun: sfun.actor, self.actors.values())
+
     def role_is_junction(self, role: SyntagmaticRole=None):
         try:
             return isinstance(self.actors[role], JunctionSyntagmaticFunction)

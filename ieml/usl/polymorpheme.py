@@ -74,6 +74,9 @@ class PolyMorpheme(USL):
                (len(self.constant) == len(other.constant) and self.constant < other.constant) or \
                (self.constant == other.constant and self.groups < other.groups)
 
+    def iter_structure(self):
+        yield from self.morphemes
+
     @property
     def morphemes(self):
         return sorted(set(list(self.constant) + [m for g in self.groups for m in g[0]]))

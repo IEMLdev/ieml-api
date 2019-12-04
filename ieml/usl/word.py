@@ -57,6 +57,9 @@ class Word(USL):
     def _compute_singular_sequences(self):
         return [self]
 
+    def iter_structure(self):
+        yield from self.syntagmatic_fun.iter_structure()
+
     @property
     def empty(self):
         return self.syntagmatic_fun.empty

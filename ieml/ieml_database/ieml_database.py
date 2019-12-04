@@ -2,6 +2,7 @@ import logging
 import operator
 from collections import defaultdict
 from shlex import quote
+from sys import stdout
 
 import pandas
 from functools import reduce
@@ -237,6 +238,7 @@ class IEMLDatabase:
                     _res.append(parser.parse(s))
                 except CannotParse as e:
                     logger.error(repr(e))
+                    print(repr(e), file=stdout)
             return _res
 
         return res
