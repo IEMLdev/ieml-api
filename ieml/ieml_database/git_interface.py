@@ -327,7 +327,7 @@ class GitInterface:
             deleted = []
 
             line = patch.delta.new_file.path
-
+            l = None
             for h in patch.hunks:
                 for l in h.lines:
                     if l.new_lineno == -1:
