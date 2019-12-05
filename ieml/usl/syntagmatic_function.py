@@ -28,8 +28,11 @@ class SyntagmaticRole:
         return self._str
 
     def __lt__(self, other):
-        return self.__class__ == other.__class__ and \
-        (len(self.constant) < len(other.constant) or self.constant < other.constant)
+        return self.__class__ == other.__class__ and (
+                (all(s in ADDRESS_SCRIPTS for s in chain(self.constant, other.constant)) and \
+                 [ADDRESS_SCRIPTS.index(s) for s in self.constant] < [ADDRESS_SCRIPTS.index(s) for s in other.constant]) or \
+                (len(self.constant) < len(other.constant) or self.constant < other.constant)
+        )
 
     def __eq__(self, other):
         return str(self) == str(other)
