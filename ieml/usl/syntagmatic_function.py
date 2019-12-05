@@ -82,7 +82,9 @@ class SyntagmaticFunction:
         return [self.actors[r] for r in role.constant if r in self.actors]
 
     def iter_structure(self):
-        yield from map(lambda sfun: sfun.actor, self.actors.values())
+        for sfun in self.actors.values():
+            yield sfun.actor
+            yield from sfun.actor.iter_structure()
 
     def role_is_junction(self, role: SyntagmaticRole=None):
         try:

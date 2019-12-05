@@ -14,7 +14,7 @@ from ieml.usl import Word
 from ieml.usl.constants import *
 from ieml.usl.lexeme import Lexeme
 from ieml.usl.syntagmatic_function import SyntagmaticRole, ProcessSyntagmaticFunction, \
-    DependantQualitySyntagmaticFunction, IndependantQualitySyntagmaticFunction
+    DependantQualitySyntagmaticFunction, IndependantQualitySyntagmaticFunction, JunctionSyntagmaticFunction
 from ieml.usl.usl import usl
 
 
@@ -79,7 +79,7 @@ def _render_role(role: List[Script], language: LANGUAGES):
     if len(role) == 1:
         return NAMES_TO_ADDRESS[role[0]]
     else:
-        return _render_role(role[1:], language) + ' of ' + NAMES_TO_ADDRESS[role[0]]
+        return _render_role(role[1:], language) + ' ' + NAMES_TO_ADDRESS[role[0]]
 
 
 COLORS = {
@@ -173,6 +173,8 @@ lexeme & role & flexion & content \\\\
 
 
     for role, lex in sorted(w.syntagmatic_fun.actors.items(), key=lambda e: e[0]):
+        if isinstance(lex, JunctionSyntagmaticFunction):
+            continue
         color = color_from_role(prefix + role.constant, prefix + role.constant == w.role.constant)
         res += _serialize_role(prefix + role.constant, lex.actor, descriptors, language, color)
         res += '\\hline\n'
