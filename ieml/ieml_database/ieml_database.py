@@ -175,7 +175,8 @@ class IEMLDatabase:
             if cache_folder is None:
                 self.cache_folder = self.folder
             elif not os.path.isdir(self.cache_folder):
-                raise ValueError("Folder '{}' does not exists.".format(self.cache_folder))
+                os.makedirs(self.cache_folder)
+                # raise ValueError("Folder '{}' does not exists.".format(self.cache_folder))
         else:
             self.cache_folder = None
 
