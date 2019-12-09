@@ -17,7 +17,7 @@ if __name__ == '__main__':
     if os.path.isdir(folder):
         shutil.rmtree(folder)
     # os.mkdir(folder)
-    git_address = "https://github.com/IEMLdev/ieml-language.git"
+    git_address = "https://github.com/ogrergo/ieml-language.git"
 
     credentials = pygit2.Keypair('ogrergo', '~/.ssh/id_rsa.pub', '~/.ssh/id_rsa', None)
     gitdb = GitInterface(origin=git_address,
@@ -41,6 +41,7 @@ if __name__ == '__main__':
     parser = IEMLParser(dictionary=db.get_dictionary())
 
     all_db = db.list()
+    assert "[E:.b.E:B:.- E:S:. ()(a.T:.-) > ! E:.l.- ()(d.i.-l.i.-')]" in all_db
     for s in all_db:
         to_pass = True
 
@@ -60,6 +61,9 @@ if __name__ == '__main__':
                                                                            str(_s), str(s) in all_db, '[NO !]' if '!' not in str(s) else '', str(s)))
                 to_pass = False
 
+                # if str(_s) not in all_db and str(s) in all_db:
+                to_migrate[s] = _s
+
             try:
                 if not isinstance(_s, Script):
                     _s.check()
@@ -68,16 +72,18 @@ if __name__ == '__main__':
                 print("\t", str(s))
                 to_pass = False
 
-        while not to_pass:
-            c = input('\t[r]emove/[u]pdate/[p]ass')
-            if c == 'u':
-                to_migrate[s] = _s
-                to_pass = True
-            elif c == 'r':
-                to_remove.append(s)
-                to_pass = True
-            elif c == 'p':
-                to_pass = True
+
+
+        # while not to_pass:
+        #     c = input('\t[r]emove/[u]pdate/[p]ass')
+        #     if c == 'u':
+        #         to_migrate[s] = _s
+        #         to_pass = True
+        #     elif c == 'r':
+        #         to_remove.append(s)
+        #         to_pass = True
+        #     elif c == 'p':
+        #         to_pass = True
 
     with gitdb.commit(signature, "[Filter database]"):
         for old, new in to_migrate.items():
@@ -92,6 +98,6 @@ if __name__ == '__main__':
                     db.add_descriptor(new, lang, d, v)
 
         for old in to_remove:
-            db.remove_structure(old)
-            db.remove_descriptor(old)
+            db.remove_structure(old, normalize=False)
+            db.remove_descriptor(old, normalize=False)
 

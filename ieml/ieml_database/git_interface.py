@@ -266,10 +266,10 @@ class GitInterface:
                     conflicts = self.list_conflict()
                     self.reset(current_commit)
 
+                    print(conflicts)
                     raise MergeConflict(message="can't cherry-pick locals commits on remote branch",
                                         conflicts=conflicts)
 
-                # self.commit_id = last
             repo.head.set_target(last)
         else:
             #TODO handle merge conflicts here

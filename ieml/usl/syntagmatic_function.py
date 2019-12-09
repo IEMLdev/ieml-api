@@ -30,8 +30,9 @@ class SyntagmaticRole:
     def __lt__(self, other):
         return self.__class__ == other.__class__ and (
                 (all(s in ADDRESS_SCRIPTS for s in chain(self.constant, other.constant)) and \
-                 [ADDRESS_SCRIPTS.index(s) for s in self.constant] < [ADDRESS_SCRIPTS.index(s) for s in other.constant]) or \
-                (len(self.constant) < len(other.constant) or self.constant < other.constant)
+                 [ADDRESS_SCRIPTS_ORDER[s] for s in self.constant] < [ADDRESS_SCRIPTS_ORDER[s] for s in other.constant]) or \
+                (any(s not in ADDRESS_SCRIPTS for s in chain(self.constant, other.constant)) and (\
+                 len(self.constant) < len(other.constant) or self.constant < other.constant))
         )
 
     def __eq__(self, other):

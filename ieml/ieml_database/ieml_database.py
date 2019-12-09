@@ -17,6 +17,7 @@ import sys
 from pandas.errors import ParserError, EmptyDataError
 from tqdm import tqdm
 
+from ieml import error
 from ieml.commons import monitor_decorator, cache_results_watch_files
 from ieml.constants import LANGUAGES, INHIBITABLE_RELATIONS, STRUCTURE_KEYS, DESCRIPTORS_CLASS, GRAMMATICAL_CLASS_NAMES, \
     TYPES
@@ -191,7 +192,7 @@ class IEMLDatabase:
                                sha224(l.encode('utf8')).hexdigest()[:self.HASH_SIZE])
         return l
 
-    def path_of(self, _ieml, descriptor=True, mkdir=False):
+    def path_of(self, _ieml, descriptor=True, mkdir=False, normalize=True):
         if isinstance(_ieml, str):
             ieml = IEMLParser().parse(_ieml)
         else:
@@ -204,7 +205,12 @@ class IEMLDatabase:
 
         class_folder, prefix_sixe = self.CLASS_TO_FOLDER[ieml.__class__]
 
-        filename = self.filename_of(ieml)
+
+        if normalize:
+            filename = self.filename_of(ieml)
+        else:
+            filename = self.filename_of(_ieml)
+
         prefix = filename[:prefix_sixe]
 
         p = os.path.join(self.folder, class_folder,
@@ -238,8 +244,7 @@ class IEMLDatabase:
                 try:
                     _res.append(parser.parse(s))
                 except CannotParse as e:
-                    logger.error(repr(e))
-                    print(repr(e), file=stdout)
+                    error("Cannot parse {} : {}".format(s, repr(e)))
             return _res
 
         return res
@@ -329,15 +334,16 @@ class IEMLDatabase:
                 self.escape_value(value)))
 
     @monitor_decorator('remove_key')
-    def remove_descriptor(self, ieml, language=None, descriptor=None, value=None):
+    def remove_descriptor(self, ieml, language=None, descriptor=None, value=None, normalize=True):
         ieml, language, descriptor = _normalize_key(ieml, language, descriptor,
                                                          parse_ieml=True, partial=True)
 
-        if not os.path.isfile(self.path_of(ieml, mkdir=True)):
+        path = self.path_of(ieml, mkdir=True, normalize=normalize)
+        if not os.path.isfile(path):
             return
 
         if descriptor is None and language is None and value is None:
-            os.remove(self.path_of(ieml, mkdir=True))
+            os.remove(path)
             return
 
         if descriptor is None or language is None:
@@ -352,12 +358,12 @@ class IEMLDatabase:
         if value:
             value = _normalize_value(value)
 
-
-        with open(self.path_of(ieml, mkdir=True), "r", encoding='utf8') as f:
+        with open(path, "r", encoding='utf8') as f:
             lines = [l for l in f.readlines()
                      if not l.startswith('"{}" {} {} '.format(str(ieml), language, descriptor) + \
                                         ('"{}"'.format(self.escape_value(value)) if value is not None else ''))]
-        with open(self.path_of(ieml), "w", encoding='utf8') as f:
+
+        with open(path, "w", encoding='utf8') as f:
             f.writelines(lines)
 
     def add_structure(self, ieml, key, value):
@@ -366,22 +372,24 @@ class IEMLDatabase:
         with open(self.path_of(ieml, descriptor=False, mkdir=True), 'a', encoding='utf8') as fp:
             fp.write('"{}" {} "{}"\n'.format(str(ieml), key, value))
 
-    def remove_structure(self, ieml, key=None, value=None):
+    def remove_structure(self, ieml, key=None, value=None, normalize=True):
         ieml, key, value = _normalize_key(ieml, key, value, parse_ieml=True, partial=True, structure=True)
 
-        if not os.path.isfile(self.path_of(ieml, descriptor=False, mkdir=True)):
+        path = self.path_of(ieml, descriptor=False, mkdir=True, normalize=normalize)
+
+        if not os.path.isfile(path):
             return
 
         if key is None:
-            os.remove(self.path_of(ieml, descriptor=False, mkdir=True))
+            os.remove(path)
             return
 
-        with open(self.path_of(ieml, descriptor=False, mkdir=True), "r", encoding='utf8') as f:
+        with open(path, "r", encoding='utf8') as f:
             lines = [l for l in f.readlines()
                      if not l.startswith('"{}" {} '.format(str(ieml), key) + \
                                         ('"{}"'.format(value) if value else ''))]
 
-        with open(self.path_of(ieml, descriptor=False), "w", encoding='utf8') as f:
+        with open(path, "w", encoding='utf8') as f:
             f.writelines(lines)
 
     def escape_value(self, v):
