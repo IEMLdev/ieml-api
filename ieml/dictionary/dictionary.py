@@ -11,7 +11,7 @@ from ieml.dictionary.table.table_structure import TableStructure
 
 class Dictionary:
     def __init__(self, paradigms, structure):
-        scripts = {s: script(s, factorize=False) for s in tqdm(paradigms)}
+        scripts = {s: script(s, factorize=False) for s in tqdm(paradigms, "Loading dictionary")}
 
         root_paradigms = []
         inhibitions = defaultdict(list)

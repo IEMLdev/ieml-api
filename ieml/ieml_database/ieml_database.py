@@ -284,7 +284,8 @@ class IEMLDatabase:
         dictionary = self.get_dictionary()
         parser = IEMLParser(dictionary=dictionary)
 
-        for (ieml, lang, desc), (v,) in tqdm(self.get_descriptors().df.iterrows()):
+        for (ieml, lang, desc), (v,) in tqdm(self.get_descriptors().df.iterrows(),
+                                             "List all descriptors at {}".format(self.folder)):
             if ieml not in res:
                 try:
                     pieml = parser.parse(ieml)

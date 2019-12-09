@@ -347,7 +347,7 @@ class DBTransactions:
 
         with self.gitdb.commit(self.signature, '[IEML migration] Update all ieml in db: {}'.format(message)):
 
-            for old_ieml in tqdm.tqdm(db.list(parse=True)):
+            for old_ieml in tqdm.tqdm(db.list(parse=True), "Migrate all usls"):
                 new_ieml = f(old_ieml)
 
                 value = desc.get_values_partial(old_ieml)
