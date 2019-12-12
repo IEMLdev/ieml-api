@@ -14,12 +14,12 @@ from ieml.usl.word import simplify_word
 if __name__ == '__main__':
 
     folder = '/tmp/migrate_script_iemldb'
-    if os.path.isdir(folder):
-        shutil.rmtree(folder)
+    # if os.path.isdir(folder):
+    #     shutil.rmtree(folder)
     # os.mkdir(folder)
-    git_address = "https://github.com/ogrergo/ieml-language.git"
+    git_address = "https://github.com/plevyieml/ieml-language.git"
 
-    credentials = pygit2.Keypair('ogrergo', '~/.ssh/id_rsa.pub', '~/.ssh/id_rsa', None)
+    credentials = pygit2.Keypair('git', '~/.ssh/id_rsa.pub', '~/.ssh/id_rsa', None)
     gitdb = GitInterface(origin=git_address,
                          credentials=credentials,
                          folder=folder)
@@ -41,7 +41,7 @@ if __name__ == '__main__':
     parser = IEMLParser(dictionary=db.get_dictionary())
 
     all_db = db.list()
-    assert "[E:.b.E:B:.- E:S:. ()(a.T:.-) > ! E:.l.- ()(d.i.-l.i.-')]" in all_db
+    # assert "[E:.b.E:B:.- E:S:. ()(a.T:.-) > ! E:.l.- ()(d.i.-l.i.-')]" in all_db
     for s in all_db:
         to_pass = True
 
@@ -53,7 +53,10 @@ if __name__ == '__main__':
             to_pass = False
         else:
             if isinstance(_s, Word):
-                _s = simplify_word(_s)
+                try:
+                    _s = simplify_word(_s)
+                except Exception:
+                    pass
                 # usl(str(_s))
 
             if str(_s) != s:

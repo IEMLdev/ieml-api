@@ -31,7 +31,7 @@ def simplify_word(w: 'Word') -> 'Word':
         w.role.constant[1:]
 
     for r, sfun in w.syntagmatic_fun.actors.items():
-        if all(l.actor.empty for l in sfun.actors.values()) and \
+        if all(l.actor.empty for l in sfun.actors.values() if l.actor is not None) and \
                 (len(word_role) < len(r.constant) or any(rw != rn for rw, rn in zip(word_role, r.constant))):
             continue
 
