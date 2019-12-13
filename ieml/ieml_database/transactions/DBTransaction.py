@@ -299,6 +299,7 @@ class DBTransactions:
         old_trans = {l: desc.get_values(ieml=ieml, language=l, descriptor=descriptor) for l in LANGUAGES}
 
         if all(sorted(value[l]) == sorted(old_trans[l]) for l in LANGUAGES):
+            error("No update needed, db already contains {}:{} for {}".format(descriptor, json.dumps(value), str(ieml)))
             return
 
         # test if after modification there is still at least a descriptor
