@@ -42,6 +42,8 @@ def simplify_word(w: 'Word') -> 'Word':
     return Word(sfun, role=w.role, context_type=w.syntagmatic_fun.__class__)
 
 class Word(USL):
+    syntactic_level = 3
+
     def __init__(self, syntagmatic_fun: SyntagmaticFunction, role: SyntagmaticRole, context_type: Type[SyntagmaticFunction]):
         super().__init__()
         self.syntagmatic_fun = syntagmatic_fun

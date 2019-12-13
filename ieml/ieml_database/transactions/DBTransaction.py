@@ -1,6 +1,7 @@
 import json
 import tqdm
 
+from ieml import error
 from ieml.ieml_database import IEMLDatabase
 from ieml.constants import LANGUAGES, INHIBITABLE_RELATIONS, DESCRIPTORS_CLASS
 from ieml.dictionary.script import Script, factorize
@@ -300,6 +301,13 @@ class DBTransactions:
         if all(sorted(value[l]) == sorted(old_trans[l]) for l in LANGUAGES):
             return
 
+        # test if after modification there is still at least a descriptor
+        if all(not (desc.get_values(ieml=ieml, language=l, descriptor=d) if d != descriptor else value[l])
+               for l in LANGUAGES for d in DESCRIPTORS_CLASS):
+            error('[descriptors] Remove {}'.format(str(ieml)))
+            with self.gitdb.commit(self.signature, '[descriptors] Remove {}'.format(str(ieml))):
+                db.remove_descriptor(ieml)
+            return
         # to_add = {l: [e for e in value[l] if e not in old_trans[l]] for l in LANGUAGES}
         # to_remove = {l: [e for e in old_trans[l] if e not in value[l]] for l in LANGUAGES}
 
