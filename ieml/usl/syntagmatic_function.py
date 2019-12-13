@@ -88,7 +88,8 @@ class SyntagmaticFunction:
     def iter_structure(self):
         for sfun in self.actors.values():
             yield sfun.actor
-            yield from sfun.actor.iter_structure()
+            if sfun.actor is not None:
+                yield from sfun.actor.iter_structure()
 
     def role_is_junction(self, role: SyntagmaticRole=None):
         try:
@@ -181,6 +182,10 @@ class SyntagmaticFunction:
                                  .format(address.__class__.__name__))
 
             check_address_script(address.constant, sfun_type=sfun_type)
+
+    @property
+    def singular_sequences(self):
+        return
 
 
 class JunctionSyntagmaticFunction(SyntagmaticFunction):
