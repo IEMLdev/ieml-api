@@ -7,7 +7,7 @@ from _pygit2 import GIT_CHECKOUT_FORCE, GIT_CHECKOUT_RECREATE_MISSING, GIT_STATU
 import pygit2
 from appdirs import user_cache_dir
 
-from ieml import logger
+from ieml import logger, error
 from ieml.commons import monitor_decorator
 from ieml.constants import IEMLDB_DEFAULT_GIT_ADDRESS, LIBRARY_VERSION
 
@@ -39,6 +39,7 @@ class git_transaction:
 
     def __enter__(self):
         self.commit_id = self.db.repo.head.target
+
 
         # ignore files at the root
         if self.db.status() != {}:
@@ -78,8 +79,9 @@ class git_transaction:
                                                  [self.commit_id])
 
                 self.db.commit_id = oid
+                error("committing db : {}".format(str(oid)))
             except Exception as e:
-                logger.error("Error commiting, reset to {}".format(self.commit_id))
+                error("Error commiting, reset to {}".format(self.commit_id))
                 self.db.reset(self.commit_id)
                 # TODO : ensure that the reset is perfect
                 # even when creating a new file in the folder ? untracked
