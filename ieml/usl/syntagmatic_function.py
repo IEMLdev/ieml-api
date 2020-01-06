@@ -1,5 +1,5 @@
 from collections import defaultdict
-from itertools import chain
+from itertools import chain, product
 from typing import List, Any, Dict, Type, Tuple, Union
 
 from ieml.dictionary.script import Script
@@ -68,6 +68,7 @@ class SyntagmaticFunction:
     #     return (SYNTAGMATIC_FUNCTION_SCRIPT,)
 
     def role_in(self, tgt: 'SyntagmaticFunction'):
+        """ return the role of the tgt syntagmatic function occupy in self."""
         for role, node in self.actors.items():
             if node == tgt:
                 return role
@@ -79,10 +80,12 @@ class SyntagmaticFunction:
         return self.actor.empty and len(self.actors) == 0
 
     def get(self, role: SyntagmaticRole) -> X:
+        # UNUSED ?
         # assert role.is_singular
         return self.actors[role].actor
 
     def get_paradigm(self, role: SyntagmaticRole) -> List[X]:
+        # UNUSED ?
         return [self.actors[r] for r in role.constant if r in self.actors]
 
     def iter_structure(self):
@@ -97,16 +100,22 @@ class SyntagmaticFunction:
         except KeyError:
             return False
 
+    @staticmethod
+    def get_context_role_prefix(context):
+        if context in [ProcessSyntagmaticFunction, JunctionSyntagmaticFunction]:
+            return tuple()
+        elif context == DependantQualitySyntagmaticFunction:
+            return (DEPENDANT_QUALITY,)
+        elif context == IndependantQualitySyntagmaticFunction:
+            return (INDEPENDANT_QUALITY,)
+        else:
+            return None
+
     def render_with_context(self, role: SyntagmaticRole=None, context=None):
         prefix = tuple()
         if context is not None:
-            if context == ProcessSyntagmaticFunction:
-                pass
-            elif context == DependantQualitySyntagmaticFunction:
-                prefix = (DEPENDANT_QUALITY,)
-            elif context == IndependantQualitySyntagmaticFunction:
-                prefix = (INDEPENDANT_QUALITY,)
-            else:
+            prefix = self.get_context_role_prefix(context)
+            if prefix is None:
                 raise ValueError("Invalid context to render a syntagmatic function \"{}\", expected [{}]".format(
                     str(context),
                     ','
@@ -137,6 +146,15 @@ class SyntagmaticFunction:
         _ignore_prefix = lambda e : SyntagmaticRole(constant=e.constant[len(ignore_prefix):])
 
         return sorted(SyntagmaticRole(r) for r in _expand_junction(_ignore_prefix(role).constant))
+
+    def as_list(self, context_type) -> List[Tuple[List[Script], X]]:
+        prefix = self.get_context_role_prefix(context_type)
+        if prefix is None:
+            raise ValueError("Invalid syntagmatic function \"{}\" type".format(str(context_type)))
+        prefix = list(prefix)
+
+        return [(prefix + list(role.constant), sfun.actor) for role, sfun in self.actors.items()
+                    if not isinstance(sfun, JunctionSyntagmaticFunction)]
 
     @staticmethod
     def from_list(l: List[Tuple[List[Script], X]]) -> Tuple[Type['SyntagmaticFunction'], 'SyntagmaticFunction']:
@@ -183,9 +201,16 @@ class SyntagmaticFunction:
 
             check_address_script(address.constant, sfun_type=sfun_type)
 
-    @property
-    def singular_sequences(self):
-        return
+    def singular_sequences(self, context_type):
+        sfun_l = self.as_list(context_type)
+
+        res = []
+        roles, x_l = zip(*sfun_l)
+        for x_l_ss in product(*[x.singular_sequences for x in x_l]):
+            ctx, sfun = self.from_list(list(zip(roles, x_l_ss)))
+            res.append(sfun)
+
+        return res
 
 
 class JunctionSyntagmaticFunction(SyntagmaticFunction):

@@ -53,11 +53,16 @@ class Word(USL):
         self._singular_sequences_set = None
 
         self._str = self.syntagmatic_fun.render_with_context(self.role, context=context_type)
+        self.context_type = context_type
 
         self.grammatical_class = class_from_address(self.role)
 
     def _compute_singular_sequences(self):
-        return [self]
+        sfun_ss = self.syntagmatic_fun.singular_sequences(context_type=self.context_type)
+        if len(sfun_ss) == 1:
+            return [self]
+
+        return [Word(sfun, self.role, self.context_type) for sfun in sfun_ss]
 
     def iter_structure(self):
         yield from self.syntagmatic_fun.iter_structure()
