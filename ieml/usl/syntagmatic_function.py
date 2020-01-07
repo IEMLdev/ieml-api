@@ -160,6 +160,8 @@ class SyntagmaticFunction:
     def from_list(l: List[Tuple[List[Script], X]]) -> Tuple[Type['SyntagmaticFunction'], 'SyntagmaticFunction']:
 
         # assert all(all(s in ADDRESS_SCRIPTS for s in address) for address, _ in l), "invalid address"
+        if not l:
+            raise ValueError("Empty syntagmatic function")
 
         roles = [address[0] for address, _ in l]
         children_l = [(address[1:], x) for address, x in l]
