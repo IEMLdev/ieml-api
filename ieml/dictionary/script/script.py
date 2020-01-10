@@ -219,6 +219,8 @@ class Script(TreeStructure):
     def _compute_singular_sequences(self):
         pass
 
+    def check(self):
+        pass
 
 class AdditiveScript(Script):
     """ Represent an addition of same layer scripts."""
