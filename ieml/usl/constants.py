@@ -388,6 +388,10 @@ ADDRESS_CIRCONSTANTIAL_CAUSE_SCRIPTS = script("E:M:.d.+M:O:.-").singular_sequenc
 
 ADDRESS_ENNEADE_ADVERBS_SCRIPTS=script("E:.+E:U:S:+T:.-M:M:.o.-'").singular_sequences_set
 
+#TODO
+ADDRESS_TIME_FRAME_SCRIPTS = script("E:.O:O:.O:.-t.o.-'").singular_sequences_set
+
+
 ADDRESS_ACTANT_SCRIPTS = {
     *ADDRESS_ACTANTS_DEFINITION_SCRIPTS,  # definition
     *ADDRESS_ACTANTS_CONTINUITY_SCRIPTS,  # continuity
@@ -403,7 +407,8 @@ ADDRESS_ACTANT_SCRIPTS = {
 
     *ADDRESS_CIRCONSTANTIAL_LOCATION_SCRIPTS,
     *GROUPEMENT_SCRIPTS,
-    *ADDRESS_ENNEADE_ADVERBS_SCRIPTS
+    *ADDRESS_ENNEADE_ADVERBS_SCRIPTS,
+    *ADDRESS_TIME_FRAME_SCRIPTS
 }
 
 
@@ -417,7 +422,8 @@ ADDRESS_QUALITY_SCRIPTS = {
 
     *ADDRESS_CIRCONSTANTIAL_CAUSE_SCRIPTS,
     *ADDRESS_CIRCONSTANTIAL_LOCATION_SCRIPTS,
-    *ADDRESS_ENNEADE_ADVERBS_SCRIPTS
+    *ADDRESS_ENNEADE_ADVERBS_SCRIPTS,
+    *ADDRESS_TIME_FRAME_SCRIPTS
 }
 
 
@@ -476,31 +482,31 @@ def class_from_address(address):
 
 def check_flexion_process_scripts(l: List[Script], sfun=None):
     # check all
-    assert_all_in(l, ADDRESS_PROCESS_POLYMORPHEME_SCRIPTS, "an address of a process")
+    assert_all_in(l, ADDRESS_PROCESS_POLYMORPHEME_SCRIPTS, "a flexion of a process")
 
     #check voice
-    assert_atmost_one_from(l, ADDRESS_PROCESS_VOICES_SCRIPTS[sfun.valence], "an address of a process", "voices")
+    assert_atmost_one_from(l, ADDRESS_PROCESS_VOICES_SCRIPTS[sfun.valence], "a flexion of a process", "voices")
 
     #check mode
-    assert_atmost_one_from(l, ADDRESS_PROCESS_VERBAL_MODE_SCRIPTS, "an address of a process", "verbal modes")
+    assert_atmost_one_from(l, ADDRESS_PROCESS_VERBAL_MODE_SCRIPTS, "a flexion of a process", "verbal modes")
 
     #check aspect
-    assert_atmost_one_from(l, ADDRESS_PROCESS_ASPECT_SCRIPTS, "an address of a process", "aspects")
+    assert_atmost_one_from(l, ADDRESS_PROCESS_ASPECT_SCRIPTS, "a flexion of a process", "aspects")
 
     #check tense
-    assert_atmost_one_from(l, ADDRESS_PROCESS_TENSE_SCRIPTS, "an address of a process", "tenses")
+    assert_atmost_one_from(l, ADDRESS_PROCESS_TENSE_SCRIPTS, "a flexion of a process", "tenses")
 
     # check logical constructions
-    assert_atmost_one_from(l, TRANSFORMATION_PROCESS_LOGICAL_CONSTRUCTION_SCRIPTS, "a transformation of a process", "logical constructions")
+    assert_atmost_one_from(l, TRANSFORMATION_PROCESS_LOGICAL_CONSTRUCTION_SCRIPTS, "a flexion of a process", "logical constructions")
 
     # check logical modes
-    assert_atmost_one_from(l, TRANSFORMATION_PROCESS_LOGICAL_MODE_SCRIPTS, "a transformation of a process", "logical modes")
+    assert_atmost_one_from(l, TRANSFORMATION_PROCESS_LOGICAL_MODE_SCRIPTS, "a flexion of a process", "logical modes")
 
     # check tetrade modes
-    assert_atmost_one_from(l, TRANSFORMATION_PROCESS_TETRADE_MODE_SCRIPTS, "a transformation of a process", "tetrade modes")
+    assert_atmost_one_from(l, TRANSFORMATION_PROCESS_TETRADE_MODE_SCRIPTS, "a flexion of a process", "tetrade modes")
 
     # check hexade modes
-    assert_atmost_one_from(l, TRANSFORMATION_PROCESS_HEXADE_MODE_SCRIPTS, "a transformation of a process", "hexade modes")
+    assert_atmost_one_from(l, TRANSFORMATION_PROCESS_HEXADE_MODE_SCRIPTS, "a flexion of a process", "hexade modes")
 
 
 def check_address_script(l: List[Script], sfun_type):
@@ -520,6 +526,8 @@ def check_address_script(l: List[Script], sfun_type):
                            "an address of an IndependantQualitySyntagmaticFunction", "grammatical roles")
 
 def check_flexion_actant_scripts(l: List[Script], sfun=None):
+    assert_all_in(l, ADDRESS_ACTANT_SCRIPTS, "a flexion of an actant")
+
     assert_atmost_one_from(l, ADDRESS_ACTANTS_DEFINITION_SCRIPTS, "a flexion of an actant", "definitions")
 
     assert_atmost_one_from(l, ADDRESS_ACTANTS_GRAMMATICAL_NUMBER_SCRIPTS, "a flexion of an actant", "grammatical numbers")
@@ -536,6 +544,7 @@ def check_flexion_actant_scripts(l: List[Script], sfun=None):
 
     assert_atmost_one_from(l, ADDRESS_CIRCONSTANTIAL_LOCATION_SCRIPTS, "a flexion of an actant",
                            "space location")
+    assert_atmost_one_from(l, ADDRESS_TIME_FRAME_SCRIPTS, "a flexion of an actant", "time frames")
 
     assert_atmost_one_from(l, set(ADDRESS_CIRCONSTANTIAL_MANNER_SCRIPTS),
                                 "a flexion of an actant",
@@ -574,6 +583,8 @@ def check_flexion_quality(l: List[Script], sfun=None):
     assert_atmost_one_from(l, ADDRESS_CIRCONSTANTIAL_CAUSE_SCRIPTS, "a flexion of a quality", "causals")
 
     assert_atmost_one_from(l, ADDRESS_CIRCONSTANTIAL_LOCATION_SCRIPTS, "a flexion of a quality", "locations")
+    assert_atmost_one_from(l, ADDRESS_TIME_FRAME_SCRIPTS, "a flexion of a quality", "time frames")
+
     assert_atmost_one_from(l, ADDRESS_ENNEADE_ADVERBS_SCRIPTS, "a flexion of a quality", "enneade adverbs")
 
 
