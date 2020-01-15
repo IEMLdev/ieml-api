@@ -8,8 +8,8 @@ from ieml.usl.constants import SYNTAGMATIC_FUNCTION_SCRIPT, INDEPENDANT_QUALITY,
     ADDRESS_PROCESS_VALENCE_SCRIPTS, ADDRESS_SCRIPTS, ADDRESS_ACTANTS_MOTOR_SCRIPTS, INITIATOR_SCRIPT, \
     INTERACTANT_SCRIPT, RECIPIENT_SCRIPT, TIME_SCRIPT, LOCATION_SCRIPT, MANNER_SCRIPT, CAUSE_SCRIPT, INTENTION_SCRIPT, \
     check_address_script, SYNTAGMATIC_FUNCTION_PROCESS_TYPE_SCRIPT, SYNTAGMATIC_FUNCTION_ACTANT_TYPE_SCRIPT, \
-    SYNTAGMATIC_FUNCTION_QUALITY_TYPE_SCRIPT, ADDRESS_SCRIPTS_ORDER, class_from_address, JUNCTION_SYMMETRICAL, \
-    JUNCTION_INDEX, junction_at_idx, JUNCTION_SCRIPTS, JUNCTION_LINK_TO_ANCHOR, JUNCTION_ANCHOR_TO_LINKS
+    SYNTAGMATIC_FUNCTION_QUALITY_TYPE_SCRIPT, ADDRESS_SCRIPTS_ORDER, class_from_address,\
+    JUNCTION_INDEX, JUNCTION_SCRIPTS
 
 X = Any
 
@@ -137,11 +137,14 @@ class SyntagmaticFunction:
     def get_role_expansion(self, role: SyntagmaticRole, ignore_prefix=()):
 
         def _expand_junction(role):
-            node = self.actors[SyntagmaticRole(role)]
+            try:
+                node = self.actors[SyntagmaticRole(role)]
+            except KeyError:
+                pass
             if not isinstance(node, JunctionSyntagmaticFunction):
                 return [role]
             return list(chain.from_iterable(map(_expand_junction,
-                                                [role + (junction_at_idx(node.junction_link, i), JUNCTION_INDEX[i]) for i, _ in enumerate(node.children)])))
+                                                [role + (node.junction_link, JUNCTION_INDEX[i]) for i, _ in enumerate(node.children)])))
 
         _ignore_prefix = lambda e : SyntagmaticRole(constant=e.constant[len(ignore_prefix):])
 
@@ -226,7 +229,7 @@ class JunctionSyntagmaticFunction(SyntagmaticFunction):
 
         res = {
             tuple(): self,
-            **{(junction_at_idx(self.junction_link, i), JUNCTION_INDEX[i], *role.constant): sfun for i, f
+            **{(self.junction_link, JUNCTION_INDEX[i], *role.constant): sfun for i, f
                 in enumerate(self.children) for role, sfun in f.actors.items()}
         }
 
@@ -237,19 +240,19 @@ class JunctionSyntagmaticFunction(SyntagmaticFunction):
 
         junctions = {address[0] for address, _ in l}
 
-        links = junctions & JUNCTION_LINK_TO_ANCHOR.keys()
+        links = junctions & set(JUNCTION_SCRIPTS)
         if len(links) != 1:
             raise ValueError("No links defined in the junction")
         link = next(iter(links))
 
-        anchors = junctions & JUNCTION_ANCHOR_TO_LINKS.keys()
-        try:
-            anchor = next(iter(anchors))
-
-            if any(j not in {anchor, *JUNCTION_ANCHOR_TO_LINKS[anchor]} for j in junctions):
-                raise ValueError("multiple different anchor are taken togethers")
-        except StopIteration:
-            pass
+        # anchors = junctions & JUNCTION_ANCHOR_TO_LINKS.keys()
+        # try:
+        #     anchor = next(iter(anchors))
+        #
+        #     if any(j not in {anchor, *JUNCTION_ANCHOR_TO_LINKS[anchor]} for j in junctions):
+        #         raise ValueError("multiple different anchor are taken togethers")
+        # except StopIteration:
+        #     pass
 
         # if any(link not in {j, anchor} for j in junctions):
         #     raise ValueError("multiple different links are taken togethers")
