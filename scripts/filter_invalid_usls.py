@@ -23,8 +23,8 @@ if __name__ == '__main__':
     gitdb = GitInterface(origin=git_address,
                          credentials=credentials,
                          folder=folder)
-
-    gitdb.pull()
+    #
+    # gitdb.pull()
 
     signature = pygit2.Signature("Louis van Beurden", "louis.vanbeurden@gmail.com")
 
