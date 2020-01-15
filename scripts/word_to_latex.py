@@ -19,62 +19,6 @@ from ieml.usl.usl import usl
 
 
 
-NAMES_TO_ADDRESS = {
-    ONE_ACTANT_PROCESS: 'process',
-    TWO_ACTANTS_PROCESS: 'process',
-    THREE_ACTANTS_PROCESS: 'process',
-
-    INITIATOR_SCRIPT: 'initiator',
-    INTERACTANT_SCRIPT: 'interactant',
-    RECIPIENT_SCRIPT: 'recipient',
-
-    TIME_SCRIPT: 'time',
-    LOCATION_SCRIPT: 'location',
-    MANNER_SCRIPT: 'manner',
-    INTENTION_SCRIPT: 'intention',
-    CAUSE_SCRIPT: 'cause',
-
-    INDEPENDANT_QUALITY: 'quality',
-    DEPENDANT_QUALITY: 'actant',
-
-    JUNCTION_AND: 'and',
-    JUNCTION_OR: 'or (inclusive)',
-    JUNCTION_XOR: 'or (exclusive)',
-
-    JUNCTION_COMPARISON_ANCHOR: 'comparison reference',
-
-    JUNCTION_COMPARISON_RELATIVE_AS_GOOD_AS: 'as good as',
-    JUNCTION_COMPARISON_RELATIVE_AS_MUCH_AS: 'as much as',
-    JUNCTION_COMPARISON_RELATIVE_BETTER_THAN: 'better than',
-    JUNCTION_COMPARISON_RELATIVE_LESS_THAN: 'less than',
-    JUNCTION_COMPARISON_RELATIVE_WORSE_THAN: 'worse than',
-    JUNCTION_COMPARISON_RELATIVE_MORE_THAN: 'more than',
-
-    JUNCTION_COMPARISON_ABSOLUTE_THE_BEST_OF: "the best of",
-    JUNCTION_COMPARISON_ABSOLUTE_AVERGAGE_QUALITY_OF: "average quality of",
-    JUNCTION_COMPARISON_ABSOLUTE_NORMAL_QUANTITY_OF: "normal quantity of",
-    JUNCTION_COMPARISON_ABSOLUTE_THE_LEAST_OF: "the least of",
-    JUNCTION_COMPARISON_ABSOLUTE_THE_MOST_OF: "the most of",
-    JUNCTION_COMPARISON_ABSOLUTE_THE_WORST_OF: "the worst of",
-
-    JUNCTION_ANTINOMIC_ANCHOR: "certainly...",
-    JUNCTION_ANTINOMIC_BUT_LINK: "but",
-    JUNCTION_ANTINOMIC_EXCEPT_LINK: "except",
-    JUNCTION_ANTINOMIC_ALTOUGH_LINK: "altough",
-    JUNCTION_ANTINOMIC_ON_THE_OTHER_HAND_LINK: "on the other hand",
-    JUNCTION_ANTINOMIC_CONTRARIWISE_LINK: "contrariwise",
-
-    JUNCTION_CAUSAL_ANCHOR: "causal anchor",
-    JUNCTION_CAUSAL_CAUSE_TO_EFFECT_LINK: "cause to effect",
-    JUNCTION_CAUSAL_EFFECT_TO_CAUSE_LINK: "effect to cause",
-    JUNCTION_CAUSAL_A_FORTIORI_LINK: "a fortiori",
-
-    **{j: "*{}".format(i+1) for i, j in enumerate(JUNCTION_INDEX)}
-
-    # JUNCTION_EXPLICATION_ANCHOR: "",
-    # JUNCTION_EXPLICATION_BEST_LINK: "",
-}
-
 def _render_role(role: List[Script], language: LANGUAGES):
     if len(role) == 1:
         return NAMES_TO_ADDRESS[role[0]]
