@@ -1,33 +1,22 @@
 # IEML
 [![Build Status](https://travis-ci.org/IEMLdev/ieml.svg?branch=master)](https://travis-ci.org/IEMLdev/ieml)
 
-IEML is an artificial "natural" language having the following properties:
-  * All the IEML expressions (called USL Uniform Semantic Locator) are made by a regular grammar of composition function over a fixed set of basic [semantic primes](https://en.wikipedia.org/wiki/Semantic_primes), called morphemes (browsable [here](https://intlekt.io/?comments=I%3A "IEML dictionary"))
-  * The semantic relations between the USLs are embedded in the structure : theirs morphemes and the composition rules that combine them.
-  * The structure has a unique valid serialisation. This property comes from an intrinsic order defined on the USL.
-  * All the morphemes have disjoint meaning and the composition function have disjoint image.
-    
- Corollary:
-  * Two different IEML expression express two different meanings. There is no polysemy in IEML.
-  * We cannot express a USL with other USL. There is no synonymy in IEML.
-  * All the semantic relationships between IEML representations are computable.
-
-IEML is then a discrete coordinate system for the semantic space.
-
-The language is explained in the [ieml grammar](https://pierrelevyblog.files.wordpress.com/2014/01/00-grammaire-ieml1.pdf "IEML grammar"). The basic semantics units are defined in the [dictionary](https://intlekt.io/?comments=I%3A "IEML dictionary"). The USL can be written with the [Intlekt editor](https://intlekt.io) and are saved in a [github database](https://github.com/IEMLdev/ieml-language).
-This language has been made by the French philosopher [Pierre Levy](https://en.wikipedia.org/wiki/Pierre_L%C3%A9vy) and implemented in python by Louis van Beurden.
-
-This project is made to overcome some inherent limitations of natural languages for algorithmic manipulation : 
-  - interoperability of ontologies : Metadata systems suffer from multiple terminologies between different users
-  - semantic similarities : The semantic graphs between concepts is directly embedded in each USL serialisation, we can automatically compute semantic relations between two USLs.
-  - interpretability of natural language : A new USL can be translated to natural language by using semantic analogies with USLs already defined in the lexicon.
-
-The meaning of a USL (the translations it can get in natural language) must respect a set of constraints:
- - The USL are defined in opposition systems, called paradigms. All the meaning of the USL in a opposition system must [share a part of the meaning](https://en.wikipedia.org/wiki/Genus%E2%80%93differentia_definition).
- - The meaning of the USL must respect the semantic relations induced by his structure.
- - The meaning of the USL must be disjoint from the meaning of already defined USL (that can be computed)
+IEML is a regular philological language (built as a natural language), where the syntax is parallel to semantics. This means in IEML, a small change in the structure of an expression results in a semantically close expression.
+For instance:
+ - `[! E:S:. ()(u.A:.-) > E:.l.- (E:.-U:.s.-l.-')]` : to go up
+ - `[! E:S:. ()(u.A:.-) > E:.l.- (E:.-U:.d.-l.-')]` : to go down
  
-All the morphemes have a french and english translation, we want to add more natural languages. 
+Only `E:.-U:.`**s**`.-l.-'` (up) has been changed to `E:.-U:.`**d**`.-l.-'` (down).
+
+These properties make the semantic relationships between the different expressions of the language automatically computable by an edit distance calculation.
+Therefore, there are no synonyms in the language, because by construction, the synonyms would be written identically. On the other hand, words that are written differently in IEML have different meanings.
+
+So IEML has the perfect capabilities to uniquely identify concepts in a database, an ontology, a taxonomy, a categorization or any other documents, without having to rely on an external referential other than IEML's grammar and its dictionary of semantic primitives. 
+
+In order to guarantee the consistency of interpretations of IEML expressions, a database of translations (en and fr), comments and tags per USL is available [here](https://github.com/IEMLdev/ieml-language "IEML database"). This database has a normative purpose concerning the interpretation of IEML expressions. It can be browsed with the [intlekt editor](https://dev.intlekt.io/ "IEML editor"). It can also be used as an educational resource for learning IEML, in addition to reading the [grammar](https://www.dropbox.com/s/875vsj0atbcts43/0-00-IEML-Manifesto-2019-fr.pdf?dl=0 "IEML grammar"). 
+
+IEML is a regular language that is intended to serve as an easily interpretable coordinate system for the world of ideas on the internet, to improve communication and artificial intelligence.
+This language has been made by the French philosopher [Pierre Levy](https://en.wikipedia.org/wiki/Pierre_L%C3%A9vy) and implemented in python by [Louis van Beurden](https://louisvanbeurden.wordpress.com/).
 
 ## Install
 
