@@ -11,11 +11,13 @@ from ieml.dictionary.script import factorize, Script
 from ieml.ieml_database import GitInterface, IEMLDatabase
 from ieml.usl.word import simplify_word
 
+# This module remove unnormalized USL and save theirs normalized versions
+
 if __name__ == '__main__':
 
     folder = '/tmp/migrate_script_iemldb'
-    # if os.path.isdir(folder):
-    #     shutil.rmtree(folder)
+    if os.path.isdir(folder):
+        shutil.rmtree(folder)
     # os.mkdir(folder)
     git_address = "https://github.com/plevyieml/ieml-language.git"
 
@@ -88,7 +90,7 @@ if __name__ == '__main__':
         #     elif c == 'p':
         #         to_pass = True
 
-    with gitdb.commit(signature, "[Filter database]"):
+    with gitdb.commit(signature, "[Filter database - Normalize DB]"):
         for old, new in to_migrate.items():
             to_remove.append(old)
 

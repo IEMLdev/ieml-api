@@ -253,7 +253,13 @@ class GitInterface:
                 try:
                     repo.cherrypick(commit.id)
                 except GitError as e:
-                    raise e
+                    # Cherry picking merge commit :
+                    # Usually you cannot cherry-pick a merge because you do not know which side of the merge should
+                    # be considered the mainline. This option specifies the parent number (starting from 1) of the
+                    # mainline and allows cherry-pick to replay the change relative to the specified parent.
+                    # https://stackoverflow.com/questions/9229301/git-cherry-pick-says-38c74d-is-a-merge-but-no-m-option-was-given
+                    pass
+                    # raise e
 
                 if repo.index.conflicts is None:
                     tree_id = repo.index.write_tree()
@@ -280,17 +286,22 @@ class GitInterface:
         return str(current_commit)
 
     def list_conflict(self):
-        # ancestor_data = repo.get(ancestor.oid).data.decode('utf8')
+        # ancestor_data = self.repo.get(ancestor.oid).data.decode('utf8')
         # repo = self.repo(credentials=self.credentials)
-        return []
-        #
-        # for ancestor, ours, theirs in repo.index.conflicts:
-        #     if ancestor:
-        #     path = ancestor.path if ancestor is not None else ours.path
-        #
-        #     ours_data = repo.get(ours.oid).data.decode('utf8')
-        #     theirs_data = repo.get(theirs.oid).data.decode('utf8')
+        repo = self.repo
+        diffs = []
+        for ancestor, ours, theirs in repo.index.conflicts:
+            if not ancestor:
+                path = ancestor.path if ancestor is not None else ours.path
+            ours_data = repo.get(ours.oid).data.decode('utf8')
+            theirs_data = repo.get(theirs.oid).data.decode('utf8')
+            diffs.append({
+                'path': path if path else None,
+                'ours': ours_data,
+                'theirs': theirs_data
+            })
 
+        return diffs
 
     @monitor_decorator('push')
     def push(self, remote='origin', force=False):
