@@ -25,6 +25,9 @@ class USL:
         return self._str
     
     def __lt__(self, other):
+        if isinstance(other, Script):
+            return False
+
         return self.syntactic_level < other.syntactic_level or \
                (self.syntactic_level == other.syntactic_level and self.do_lt(other))
 
