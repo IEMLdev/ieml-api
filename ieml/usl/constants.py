@@ -696,5 +696,7 @@ def check_lexeme_scripts(l_pf: List[Script], l_pc: List[Script], sfun=None):
         check_flexion_actant_scripts(l_pf, sfun=sfun)
     elif sfun.__class__ == IndependantQualitySyntagmaticFunction:
         check_flexion_quality(l_pf, sfun=sfun)
+    elif sfun is None:
+        pass
     else:
         raise ValueError("Invalid sfun context: {}".format(str(sfun)))
