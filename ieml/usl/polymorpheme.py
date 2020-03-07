@@ -33,7 +33,8 @@ def check_polymorpheme(ms):
     if sorted(ms.constant) != list(ms.constant):
         raise ValueError("Invalid ordering of the polymorpheme constants")
 
-    all_group = [ms.constant, *(g for g, _ in ms.groups)]
+    # compare the intersection except empty "E:"
+    all_group = [ms.constant, *(_filter_empty(g) for g, _ in ms.groups)]
     all_morphemes = {str(w): w for g in all_group for w in g}
 
     if len(all_morphemes) != sum(len(g) for g in all_group):
@@ -43,13 +44,17 @@ def check_polymorpheme(ms):
         raise ValueError("A polymorpheme can't be made from a morpheme paradigm.")
 
 
+def _filter_empty(l):
+    return list(filter(lambda m: not m.empty, l))
+
+
 class PolyMorpheme(USL):
     syntactic_level = 1
 
     def __init__(self, constant: List[Script]=(), groups=()):
         super().__init__()
 
-        self.constant = tuple(sorted(filter(lambda m: not m.empty, constant)))
+        self.constant = tuple(sorted(_filter_empty(constant)))
 
         self.groups = tuple(sorted((tuple(sorted(g[0])), g[1]) for g in groups))
 

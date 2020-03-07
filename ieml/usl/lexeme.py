@@ -16,9 +16,9 @@ def check_lexeme(lexeme, sfun=None):
 
         check_polymorpheme(pm)
 
-    check_lexeme_scripts(lexeme.pm_flexion.constant,
-                         lexeme.pm_content.constant,
-                         sfun=sfun)
+    # check_lexeme_scripts(lexeme.pm_flexion.constant,
+    #                      lexeme.pm_content.constant,
+    #                      sfun=sfun)
 
 
 

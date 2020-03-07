@@ -5,6 +5,7 @@ import os
 import pickle
 from collections import OrderedDict
 from itertools import chain
+from sys import stderr
 from typing import List
 import hashlib
 from time import time
@@ -153,9 +154,9 @@ def monitor_decorator(name):
     def decorator(f):
         def wrapper(*args, **kwargs):
             before = time()
-            args_str = ", ".join(chain(map(lambda e: str(e)[:10000], args), map(lambda e: "{}={}".format(e[0], str(e[1])[:10000]), kwargs.items())))
+            args_str = ", ".join(chain(map(lambda e: str(e)[:100], args), map(lambda e: "{}={}".format(e[0], str(e[1])[:100]), kwargs.items())))
             res = f(*args, **kwargs)
-            logger.info("({:.2f}) {}# ({})".format(time() - before, name, args_str))
+            print("({:.2f}) {}# ({})".format(time() - before, name, args_str), file=stderr)
             return res
 
         functools.wraps(wrapper)

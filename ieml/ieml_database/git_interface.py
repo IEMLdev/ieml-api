@@ -3,6 +3,7 @@ import os
 import logging
 from _pygit2 import GIT_CHECKOUT_FORCE, GIT_CHECKOUT_RECREATE_MISSING, GIT_STATUS_WT_NEW, \
     GIT_STATUS_WT_DELETED, GIT_STATUS_WT_MODIFIED, GIT_STATUS_WT_RENAMED, GitError
+from sys import stderr
 
 import pygit2
 from appdirs import user_cache_dir
@@ -48,7 +49,7 @@ class git_transaction:
 
     @monitor_decorator("Commit transaction")
     def __exit__(self, type, value, traceback):
-
+        print("exiting commit context", file=stderr)
         if type is None:
             try:
                 status = self.db.status()
@@ -339,7 +340,7 @@ class GitInterface:
             added = []
             deleted = []
 
-            line = patch.delta.new_file.path
+            file_path = patch.delta.new_file.path
             l = None
             for h in patch.hunks:
                 for l in h.lines:
@@ -348,7 +349,7 @@ class GitInterface:
                     elif l.old_lineno == -1:
                         added.append(l.content)
             if l:
-                res[line] = {
+                res[file_path] = {
                     'ieml': l.content.split('"')[1],
                     'added': added,
                     'deleted': deleted,
