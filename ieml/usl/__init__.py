@@ -1,6 +1,7 @@
 from ieml.dictionary.script import Script
 from .usl import USL
 from .polymorpheme import PolyMorpheme, check_polymorpheme
+from .lexeme import Lexeme, check_lexeme
 from .word import Word, check_word
 from .phrase import Phrase, check_phrase
 
