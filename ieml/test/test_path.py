@@ -2,7 +2,7 @@ import unittest
 
 from ieml.dictionary.script import Script
 from ieml.usl import PolyMorpheme, Lexeme, Word
-from ieml.usl.literal.path import PolymorphemePath, GroupIndex, FlexionPath, LexemeIndex, LexemePath, RolePath
+from ieml.usl.decoration.path import PolymorphemePath, GroupIndex, FlexionPath, LexemeIndex, LexemePath, RolePath
 from ieml.usl.syntagmatic_function import SyntagmaticRole
 
 

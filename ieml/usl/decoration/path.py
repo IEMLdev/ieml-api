@@ -1,13 +1,21 @@
-from ieml.usl import PolyMorpheme, USL
-from ieml.dictionary.script import Script
+from ieml.usl.usl import USL
+from ieml.usl.polymorpheme import PolyMorpheme
+from ieml.usl.lexeme import Lexeme
+from ieml.usl.word import Word
+
 from enum import Enum
-from ieml.usl.usl import usl
 
-from ieml.usl import Lexeme
 
-from ieml.usl import Word
-from ieml.usl.syntagmatic_function import SyntagmaticRole
+def path(string):
+	if string == '/':
+		return UslPath()
 
+	elif string.startswith('/flexion') or string.startswith('/content'):
+		return LexemePath.from_string(string)
+	elif string.startswith('/constant') or string.startswith('/group'):
+		return PolymorphemePath.from_string(string)
+
+	return RolePath.from_string(string)
 
 class UslPath:
 	USL_TYPE = USL
@@ -23,9 +31,9 @@ class UslPath:
 		return usl
 
 	def deference(self, usl):
-		assert isinstance(usl,
-						  self.USL_TYPE), "Invalid Usl type for a " + self.__class__.__name__ + ", expected a " + self.USL_TYPE.__name__ + \
-										  ", got a " + usl.__class__.__name__
+		assert isinstance(usl, self.USL_TYPE), "Invalid Usl type for a " + self.__class__.__name__ + \
+											", expected a " + self.USL_TYPE.__name__ + \
+											", got a " + usl.__class__.__name__
 
 		node = self._deference(usl)
 
@@ -63,7 +71,7 @@ class GroupIndex(Enum):
 class PolymorphemePath(UslPath):
 	USL_TYPE = PolyMorpheme
 
-	def __init__(self, group_idx: GroupIndex, morpheme: Script, child=None):
+	def __init__(self, group_idx: GroupIndex, morpheme, child=None):
 		super().__init__(child=child)
 		self.group_idx = group_idx
 		self.morpheme = morpheme
@@ -112,6 +120,8 @@ class PolymorphemePath(UslPath):
 		else:
 			raise ValueError("Invalid argument for a PolymorphemePath _from_string constructor: " + key)
 
+		from ieml.usl.usl import usl
+
 		morph = usl(morph)
 		return PolymorphemePath(group_idx=idx, morpheme=morph)
 
@@ -121,8 +131,10 @@ class PolymorphemePath(UslPath):
 class FlexionPath(UslPath):
 	USL_TYPE = PolyMorpheme
 
-	def __init__(self, morpheme: Script, child=None):
+	def __init__(self, morpheme, child=None):
 		super().__init__(child=child)
+		from ieml.dictionary.script import Script
+
 		assert isinstance(morpheme, Script)
 		self.morpheme = morpheme
 
@@ -140,6 +152,8 @@ class FlexionPath(UslPath):
 	def _from_string(elem, children):
 		if elem == '':
 			return UslPath()
+
+		from ieml.usl.usl import usl
 
 		morph = usl(elem)
 		assert len(children) == 0
@@ -207,6 +221,8 @@ class RolePath(UslPath):
 
 	def __init__(self, role, child=None):
 		super().__init__(child)
+		from ieml.usl.syntagmatic_function import SyntagmaticRole
+
 		assert isinstance(role, SyntagmaticRole)
 
 		self.role = role
@@ -216,20 +232,26 @@ class RolePath(UslPath):
 				raise ValueError("Invalid path structure, a lexeme content child must be a PolymorphemePath, not a " + self.child.__class__.__name__)
 
 	def _deference(self: 'RolePath', usl: Word):
-		return usl.syntagmatic_fun.get(self.role)
+		return usl.syntagmatic_fun.get(self.role, ignore_prefix=True)
 
 	def _to_str(self):
 		return str(self.role)
 
 	@staticmethod
 	def _from_string(elem, children):
+		from ieml.usl.syntagmatic_function import SyntagmaticRole
+
 		if elem == '':
 			if len(children) == 0:
 				return UslPath()
 
-			sfun_role = SyntagmaticRole([])
-		else:
-			sfun_role = SyntagmaticRole([usl(s) for s in elem.split(' ')])
+			raise ValueError("Empty role in RolePath")
+		#
+		# 	sfun_role = SyntagmaticRole([])
+		# else:
+		from ieml.usl.usl import usl
+
+		sfun_role = SyntagmaticRole([usl(s) for s in elem.split(' ')])
 
 		child = None
 		if len(children) != 0:

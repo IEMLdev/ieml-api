@@ -32,11 +32,11 @@ class LastUpdatedOrderedDict(OrderedDict):
 
 
 class TreeStructure:
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         self._str = None
         self._paths = None
         self.children = None
-        super().__init__()
+        super().__init__(*args, **kwargs)
 
     def __str__(self):
         return self._str
@@ -205,3 +205,19 @@ def cache_results_watch_files(path, name):
         return wrapper
 
     return decorator
+
+
+class DecoratedComponent:
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self._literal = None
+
+    def clear_literal(self):
+        self._literal = None
+
+    def set_literal(self, value):
+        self._literal = value
+
+    def get_literal(self):
+        return self._literal

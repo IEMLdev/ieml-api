@@ -79,9 +79,12 @@ class SyntagmaticFunction:
     def empty(self):
         return self.actor.empty and len(self.actors) == 0
 
-    def get(self, role: SyntagmaticRole) -> X:
+    def get(self, role: SyntagmaticRole, ignore_prefix=False) -> X:
         # UNUSED ?
         # assert role.is_singular
+        if ignore_prefix:
+            role = SyntagmaticRole(list(role.constant)[1:])
+
         return self.actors[role].actor
 
     def get_paradigm(self, role: SyntagmaticRole) -> List[X]:
@@ -93,6 +96,16 @@ class SyntagmaticFunction:
             yield sfun.actor
             if sfun.actor is not None:
                 yield from sfun.actor.iter_structure()
+
+    def iter_structure_path(self, context):
+        from ieml.usl.decoration.path import RolePath
+
+        for l, lex in self.as_list(context):
+            yield (RolePath(SyntagmaticRole(l), child=None), lex)
+
+            for child, x in lex.iter_structure_path():
+                yield (RolePath(SyntagmaticRole(l), child=child), x)
+
 
     def role_is_junction(self, role: SyntagmaticRole=None):
         try:

@@ -1,10 +1,12 @@
+from ieml.commons import DecoratedComponent
 from ieml.dictionary.script import Script
 
 
-class USL:
+class USL(DecoratedComponent):
     syntactic_level = 0
     
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self._singular_sequences = None
         self._singular_sequences_set = None
         self._str = None
@@ -49,6 +51,10 @@ class USL:
 
     def iter_structure(self):
         raise NotImplementedError()
+
+    def iter_structure_path(self):
+        raise NotImplementedError()
+
 
     @property
     def cardinal(self):
