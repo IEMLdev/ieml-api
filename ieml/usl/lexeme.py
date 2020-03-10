@@ -61,28 +61,28 @@ class Lexeme(USL):
 					for path, pm in self.pm_content.iter_structure_path()]
 
 
-@property
-def empty(self):
-	return self.pm_content.empty and self.pm_flexion.empty
+	@property
+	def empty(self):
+		return self.pm_content.empty and self.pm_flexion.empty
 
 
-def do_lt(self, other):
-	return self.pm_flexion < other.pm_flexion or \
-		   (self.pm_flexion == other.pm_flexion and self.pm_content < other.pm_content)
+	def do_lt(self, other):
+		return self.pm_flexion < other.pm_flexion or \
+			   (self.pm_flexion == other.pm_flexion and self.pm_content < other.pm_content)
 
 
-def _compute_singular_sequences(self):
-	if self.pm_flexion.is_singular and (self.pm_content is None or self.pm_content.is_singular):
-		return [self]
-	else:
-		_product = [self.pm_flexion,
-					self.pm_content]
-		_product = [p.singular_sequences for p in _product if p is not None]
+	def _compute_singular_sequences(self):
+		if self.pm_flexion.is_singular and (self.pm_content is None or self.pm_content.is_singular):
+			return [self]
+		else:
+			_product = [self.pm_flexion,
+						self.pm_content]
+			_product = [p.singular_sequences for p in _product if p is not None]
 
-		return [Lexeme(*ss)
-				for ss in itertools.product(*_product)]
+			return [Lexeme(*ss)
+					for ss in itertools.product(*_product)]
 
 
-@property
-def morphemes(self):
-	return sorted(set(self.pm_flexion.morphemes + self.pm_content.morphemes))
+	@property
+	def morphemes(self):
+		return sorted(set(self.pm_flexion.morphemes + self.pm_content.morphemes))
