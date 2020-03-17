@@ -101,3 +101,12 @@ class Descriptors:
             res[k].append(v)
 
         return dict(res)
+
+    def get_descriptor(self, ieml) -> Descriptor:
+        res = {d : {l: [] for l in LANGUAGES} for d in DESCRIPTORS_CLASS}
+
+        for (_ieml, lang, desc), value in self.get_values_partial(ieml).items():
+            assert ieml == _ieml
+            res[desc][lang] = value
+
+        return res

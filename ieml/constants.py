@@ -1,3 +1,5 @@
+import _pygit2
+import pygit2
 from bidict import bidict
 import os
 from appdirs import user_cache_dir, user_data_dir
@@ -188,3 +190,4 @@ POLYMORPHEME_MAX_MULTIPLICITY=3
 DESCRIPTORS_CLASS = ['translations', 'comments', 'tags']
 
 TYPES = ['morpheme', 'polymorpheme', 'lexeme', 'word', 'phrase']
+DEFAULT_COMMITER_SIGNATURE = pygit2.Signature('ieml-commiter', 'commiter@ieml.io')
