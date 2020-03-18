@@ -305,7 +305,8 @@ class GitInterface:
                             if not ieml:
                                 ieml = _ieml
                             else:
-                                assert ieml == _ieml
+                                print("Different USLs ", ieml, _ieml, file=stderr)
+                                # assert ieml == _ieml
 
                             desc[_desc][_lang].append(value)
 
