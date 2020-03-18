@@ -291,8 +291,9 @@ class GitInterface:
                 to_commit = []
 
                 # resolve conflicts ...
-                ieml = None
                 for ancestor, ours, theirs in repo.index.conflicts:
+                    ieml = None
+
                     old_path = ancestor.path if ancestor is not None else theirs.path
                     new_path = ours.path if ours is not None else None
 
@@ -305,8 +306,7 @@ class GitInterface:
                             if not ieml:
                                 ieml = _ieml
                             else:
-                                print("Different USLs ", ieml, _ieml, file=stderr)
-                                # assert ieml == _ieml
+                                assert ieml == _ieml
 
                             desc[_desc][_lang].append(value)
 
