@@ -296,7 +296,6 @@ class GitInterface:
 
                 # resolve conflicts ...
                 for ancestor, local_entry, remote_entry in repo.index.conflicts:
-
                     old_path = ancestor.path if ancestor is not None else local_entry.path
 
                     #  None => deleted
@@ -305,25 +304,27 @@ class GitInterface:
                     if new_path is not None and old_path != new_path:
                         raise ValueError("Renaming not supported")
 
-                    # add local entry as conflicts
-                    if local_entry is not None:
-                        if ancestor is not None and ancestor.path != local_entry.path:
-                            raise ValueError("Renaming not supported")
+                    # add local entry as conflicts if a descriptor
+                    if old_path.endswith('.desc'):
+                        if local_entry is not None:
+                            if ancestor is not None and ancestor.path != local_entry.path:
+                                raise ValueError("Renaming not supported")
 
-                        # local entry is not deleted
-                        res = Descriptors.from_csv_string(repo.get(local_entry.oid).data.decode('utf8'),
-                                                          assert_unique_ieml=True)
-                        ieml = next(iter(res))
-                        conflicts[ieml] = res[ieml]
+                            # local entry is not deleted
+                            res = Descriptors.from_csv_string(repo.get(local_entry.oid).data.decode('utf8'),
+                                                              assert_unique_ieml=True)
+                            ieml = next(iter(res))
+                            conflicts[ieml] = res[ieml]
+                        else:
+                            # locally deleted
+                            assert remote_entry is not None
+                            res = Descriptors.from_csv_string(repo.get(remote_entry.oid).data.decode('utf8'),
+                                                              assert_unique_ieml=True)
+                            ieml = next(iter(res))
+
+                            conflicts[ieml] = {d: {l : [] for l in LANGUAGES} for d in DESCRIPTORS_CLASS}
                     else:
-                        # locally deleted
-                        assert remote_entry is not None
-                        res = Descriptors.from_csv_string(repo.get(remote_entry.oid).data.decode('utf8'),
-                                                          assert_unique_ieml=True)
-                        ieml = next(iter(res))
-
-                        conflicts[ieml] = {d: {l : [] for l in LANGUAGES} for d in DESCRIPTORS_CLASS}
-
+                        print("Ignoring", old_path, "not a descriptor", file=stderr)
                     # repo.index.read()
                     to_commit.append({
                         'old_path': old_path,
