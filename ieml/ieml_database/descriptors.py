@@ -1,6 +1,8 @@
+import csv
 import enum
 import json
 import operator
+from io import StringIO
 from typing import Dict, List
 
 import pandas
@@ -110,3 +112,16 @@ class Descriptors:
             res[desc][lang] = value
 
         return res
+
+    @staticmethod
+    def from_csv_string(s, assert_unique_ieml=False):
+        ours_data = StringIO(s)
+        csv_reader = csv.reader(ours_data, delimiter=' ', quotechar='"')
+        desc = defaultdict(lambda :{d: {l: [] for l in LANGUAGES} for d in DESCRIPTORS_CLASS})
+        for (_ieml, _lang, _desc, value) in csv_reader:
+            desc[_ieml][_desc][_lang].append(value)
+
+        if assert_unique_ieml and len(desc) != 1:
+            raise ValueError("Multiple IEML in csv string")
+
+        return dict(desc)

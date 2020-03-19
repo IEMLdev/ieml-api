@@ -5,7 +5,7 @@ from io import StringIO
 
 import tqdm
 
-from ieml.ieml_database.descriptors import Descriptor
+from ieml.ieml_database.descriptors import Descriptor, Descriptors
 
 try:
     from pygit2._pygit2 import GIT_CHECKOUT_FORCE, GIT_CHECKOUT_RECREATE_MISSING, GIT_STATUS_WT_NEW, \
@@ -290,34 +290,37 @@ class GitInterface:
             else:
                 to_commit = []
 
+                # ancestor : the IndexEntry on the file before the merge, or None if the file is created
+                # remote_entry : the IndexEntry of the merged remote file or None if remotely deleted
+                # local_entry : the IndexEntry of the local file or None if locally deleted
+
                 # resolve conflicts ...
-                for ancestor, ours, theirs in repo.index.conflicts:
-                    ieml = None
+                for ancestor, local_entry, remote_entry in repo.index.conflicts:
 
-                    old_path = ancestor.path if ancestor is not None else theirs.path
-                    new_path = ours.path if ours is not None else None
+                    old_path = ancestor.path if ancestor is not None else local_entry.path
 
-                    if theirs is not None:
-                        ours_data = StringIO(repo.get(theirs.oid).data.decode('utf8'))
-                        csv_reader = csv.reader(ours_data, delimiter=' ', quotechar='"')
-                        desc = {d: {l: [] for l in LANGUAGES} for d in DESCRIPTORS_CLASS}
+                    #  None => deleted
+                    new_path = remote_entry.path if remote_entry is not None else None
 
-                        for (_ieml, _lang, _desc, value) in csv_reader:
-                            if not ieml:
-                                ieml = _ieml
-                            else:
-                                assert ieml == _ieml
+                    if new_path is not None and old_path != new_path:
+                        raise ValueError("Renaming not supported")
 
-                            desc[_desc][_lang].append(value)
+                    # add local entry as conflicts
+                    if local_entry is not None:
+                        if ancestor is not None and ancestor.path != local_entry.path:
+                            raise ValueError("Renaming not supported")
 
-                        conflicts[ieml] = desc
+                        # local entry is not deleted
+                        res = Descriptors.from_csv_string(repo.get(local_entry.oid).data.decode('utf8'),
+                                                          assert_unique_ieml=True)
+                        ieml = next(iter(res))
+                        conflicts[ieml] = res[ieml]
                     else:
-                        assert ours is not None
-                        ours_data = StringIO(repo.get(ours.oid).data.decode('utf8'))
-                        csv_reader = csv.reader(ours_data, delimiter=' ', quotechar='"')
-                        for (_ieml, _lang, _desc, value) in csv_reader:
-                            if not ieml:
-                                ieml = _ieml
+                        # locally deleted
+                        assert remote_entry is not None
+                        res = Descriptors.from_csv_string(repo.get(remote_entry.oid).data.decode('utf8'),
+                                                          assert_unique_ieml=True)
+                        ieml = next(iter(res))
 
                         conflicts[ieml] = {d: {l : [] for l in LANGUAGES} for d in DESCRIPTORS_CLASS}
 
@@ -325,7 +328,7 @@ class GitInterface:
                     to_commit.append({
                         'old_path': old_path,
                         'new_path': new_path,
-                        'data': repo.get(ours.oid).data if ours is not None else None
+                        'data': repo.get(remote_entry.oid).data if remote_entry is not None else None
                     })
 
                 if to_commit != []:
@@ -341,10 +344,9 @@ class GitInterface:
 
                             repo.index.add(new_path)
 
-                        if old_path != new_path:
+                        if new_path is None:
                             del repo.index.conflicts[old_path]
                             os.remove(os.path.join(self.folder, old_path))
-
 
                     repo.index.write()
 
