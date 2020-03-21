@@ -6,42 +6,8 @@ import pygit2
 
 from ieml.constants import DESCRIPTORS_CLASS, LANGUAGES
 from ieml.ieml_database import GitInterface, IEMLDatabase
+from ieml.test.database.utils import init_repo
 
-
-def init_repo(folders):
-    if all(os.path.isdir(folder) for folder in folders):
-        commit_id= '7f3a0b96aba5cf299ecc4e2985ec49f9bb7559ba'
-
-    else:
-        commit_id = None
-        for folder in folders:
-            if os.path.isdir(folder):
-                shutil.rmtree(folder)
-
-        folder = '/tmp/iemldb_test/tmp'
-        if os.path.isdir(folder):
-            shutil.rmtree(folder)
-
-        print("Cloning IEML db : ", folder)
-        gitdb = GitInterface(folder=folder)
-
-    gitdbs = []
-    for f in folders:
-
-        if not commit_id:
-            print("Copying IEML db: ", f)
-
-            shutil.copytree(folder, f)
-            git = GitInterface(folder=f)
-        else:
-            git = GitInterface(folder=f)
-            git.reset(commit_id)
-
-        gitdbs.append(git)
-
-    if not commit_id:
-        shutil.rmtree('/tmp/iemldb_test/tmp')
-    return gitdbs
 
 def commit(git, db, ieml, name, value):
     signature = pygit2.Signature('test', 'test@ieml.io')

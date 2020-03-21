@@ -21,6 +21,7 @@ def normalize_key(ieml, key, value, parse_ieml=False, partial=False, structure=F
         ieml = str(ieml)
         if parse_ieml:
             parsed = IEMLParser().parse(str(ieml))
+            ieml = str(parsed)
             # if ieml != str(parsed):
             #     raise ValueError("IEML is not normalized: {}".format(ieml))
 
