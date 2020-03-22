@@ -92,7 +92,7 @@ def usl(arg):
         return IEMLParser().parse(arg)
 
     if isinstance(arg, Script):
-        from ieml.lexicon.syntax import PolyMorpheme
+        from ieml.usl import PolyMorpheme
         return PolyMorpheme([arg])
 
     if isinstance(arg, USL):

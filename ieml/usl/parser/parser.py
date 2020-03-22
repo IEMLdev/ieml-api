@@ -3,13 +3,16 @@ import ply.yacc as yacc
 
 from ieml.constants import PARSER_FOLDER
 from ieml.dictionary.script import script, Script, NullScript
-from ieml.usl import Word, Phrase, PolyMorpheme, check_word
+from ieml.usl import Word, PolyMorpheme
 from ieml.exceptions import CannotParse
-from ieml.usl.constants import ADDRESS_SCRIPTS
 from ieml.usl.word import Lexeme
 from ieml.usl.syntagmatic_function import SyntagmaticFunction, SyntagmaticRole
 from .lexer import get_lexer, tokens
 import threading
+
+from ..decoration.instance import Decoration, InstancedUSL
+from ..decoration.parser.parser import PathParser
+
 
 class IEMLParserSingleton(type):
     _instance = None
@@ -32,7 +35,7 @@ class IEMLParser():
                                 debug=True, optimize=True,
                                 picklefile=os.path.join(PARSER_FOLDER, "ieml_parser.pickle"))
         self._ieml = None
-
+        self.path_parser = PathParser()
         self.dictionary = dictionary
 
     def parse(self, s, factorize_script=False):
@@ -54,30 +57,27 @@ class IEMLParser():
     # Parsing rules
     def p_ieml_proposition(self, p):
         """proposition :  morpheme
-                        | poly_morpheme
-                        | lexeme
-                        | word
-
+                        | usl
+                        | instanced_usl
                         """
         p[0] = p[1]
 
-    def p_literal_list(self, p):
-        """literal_list : literal_list LITERAL
-                        | LITERAL"""
+    def p_usl(self, p):
+        """usl :  poly_morpheme
+                | lexeme
+                | word
+                """
+        p[0] = p[1]
 
-        if len(p) == 3:
-            p[0] = p[1] + [p[2][1:-1]]
-        else:
-            p[0] = [p[1][1:-1]]
+    def p_instanced_usl(self, p):
+        """instanced_usl : usl decoration_list"""
+        p[0] = InstancedUSL(p[1], p[2])
 
 
     def p_morpheme(self, p):
-        """morpheme : MORPHEME
-                    | MORPHEME literal_list"""
+        """morpheme : MORPHEME"""
 
         morpheme = script(p[1], factorize=self.factorize_script)
-        if len(p) == 3:
-            logging.error("Literals not supported on script for the moments, and are ignored.")
 
         if self.dictionary is not None and morpheme not in self.dictionary:
             raise ValueError("Morpheme {} not defined in dictionary".format(morpheme))
@@ -190,6 +190,23 @@ class IEMLParser():
                     context_type=ctx_type)
         # check_word(p[0])
         # assert p[2] == p[0].grammatical_class
+
+
+    def p_decoration_list(self, p):
+        """decoration_list : decoration_list decoration
+                            | decoration"""
+
+        if len(p) == 3:
+            p[0] = p[1] + [p[2]]
+        else:
+            p[0] = [p[1]]
+
+
+    def p_decoration(self, p):
+        """decoration : LBRACKET morpheme_sum DECORATION_VALUE RBRACKET"""
+        usl_path = self.path_parser.parse(p[2])
+        p[0] = Decoration(usl_path, p[3][1:-1])
+
 
     def p_error(self, p):
         if p:

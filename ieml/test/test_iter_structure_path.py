@@ -1,6 +1,6 @@
 import unittest
 
-from ieml.usl.decoration.instance import InstantiatedUSL
+from ieml.usl.decoration.instance import InstancedUSL
 from ieml.usl.decoration.path import path
 from ieml.usl.usl import usl
 
@@ -18,7 +18,7 @@ class TestIterStructurePath(unittest.TestCase):
 		x = path("/E:A:./content/constant/m.-B:.A:.-'").deference(w)
 		x.set_literal("test")
 
-		i_u = InstantiatedUSL.from_usl(w)
+		i_u = InstancedUSL.from_usl(w)
 		self.assertEqual(i_u.decorations[0].value, 'test')
 
 

@@ -22,7 +22,8 @@ class SyntagmaticRole:
         self._str = ' '.join(chain(map(str, self.constant)))
 
         if any(e not in ADDRESS_SCRIPTS for e in constant):
-            raise ValueError("Invalid script in a syntagmatic role.")
+            raise ValueError("Invalid script in a syntagmatic role: " +\
+                             ' '.join(map(str, filter(lambda e: e not in ADDRESS_SCRIPTS, constant))))
 
     def __str__(self):
         return self._str

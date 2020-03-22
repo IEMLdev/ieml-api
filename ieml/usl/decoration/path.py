@@ -7,12 +7,12 @@ from enum import Enum
 
 
 def path(string):
-	if string == '/':
+	if string == ':':
 		return UslPath()
 
-	elif string.startswith('/flexion') or string.startswith('/content'):
+	elif string.startswith(':flexion') or string.startswith(':content'):
 		return LexemePath.from_string(string)
-	elif string.startswith('/constant') or string.startswith('/group'):
+	elif string.startswith(':constant') or string.startswith(':group'):
 		return PolymorphemePath.from_string(string)
 
 	return RolePath.from_string(string)
@@ -46,7 +46,7 @@ class UslPath:
 		return ''
 
 	def __str__(self):
-		return '/' + self._to_str() + (str(self.child) if self.child is not None else '')
+		return ':' + self._to_str() + (str(self.child) if self.child is not None else '')
 
 	@staticmethod
 	def _from_string(string, children):
@@ -54,10 +54,10 @@ class UslPath:
 
 	@classmethod
 	def from_string(cls, string):
-		if string == '/':
+		if string == ':':
 			return UslPath._from_string(string, None)
 
-		split = string.split('/')
+		split = string.split(':')
 		return cls._from_string(split[1], split[2:])
 
 
@@ -91,9 +91,9 @@ class PolymorphemePath(UslPath):
 
 	def _to_str(self):
 		if self.group_idx == GroupIndex.CONSTANT:
-			return 'constant/' + str(self.morpheme)
+			return 'constant:' + str(self.morpheme)
 		else:
-			return 'group_{}/'.format(self.group_idx.value) + str(self.morpheme)
+			return 'group_{}:'.format(self.group_idx.value) + str(self.morpheme)
 
 	@staticmethod
 	def _from_string(elem, children):

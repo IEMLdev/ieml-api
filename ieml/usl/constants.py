@@ -1,5 +1,5 @@
 from collections import defaultdict
-from enum import Enum
+import re
 from itertools import chain, count
 from typing import List, Set
 
@@ -431,6 +431,9 @@ ROLE_NAMES_TO_SCRIPT= {
     **{"*{}".format(i + 1): j for i, j in enumerate(JUNCTION_INDEX)}
 
 }
+
+ROLE_REGEX=r"({})".format('|'.join(map(re.escape, map(str, set(ROLE_NAMES_TO_SCRIPT.values())))))
+
 
 NAMES_ORDERING = {
     'process': 0,
