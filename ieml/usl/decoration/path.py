@@ -6,6 +6,9 @@ from ieml.usl.word import Word
 from enum import Enum
 
 
+class DeferenceError(KeyError):
+	pass
+
 def path(string):
 	if string == ':':
 		return UslPath()
@@ -31,6 +34,11 @@ class UslPath:
 		return usl
 
 	def deference(self, usl):
+		from ieml.usl.decoration.instance import InstancedUSL
+
+		if isinstance(usl, InstancedUSL):
+			usl = usl.usl
+
 		assert isinstance(usl, self.USL_TYPE), "Invalid Usl type for a " + self.__class__.__name__ + \
 											", expected a " + self.USL_TYPE.__name__ + \
 											", got a " + usl.__class__.__name__
@@ -41,6 +49,13 @@ class UslPath:
 			return self.child.deference(node)
 		else:
 			return node
+
+	def contained(self, usl):
+		try:
+			self.deference(usl)
+			return True
+		except DeferenceError:
+			return False
 
 	def _to_str(self):
 		return ''
@@ -60,6 +75,9 @@ class UslPath:
 		split = string.split(':')
 		return cls._from_string(split[1], split[2:])
 
+
+	def __eq__(self, other):
+		return isinstance(other, UslPath) and str(other) == str(self)
 
 class GroupIndex(Enum):
 	CONSTANT = -1
@@ -82,10 +100,13 @@ class PolymorphemePath(UslPath):
 		if self.group_idx == GroupIndex.CONSTANT:
 			group = usl.constant
 		else:
-			assert self.group_idx.value < len(usl.groups)
+			if self.group_idx.value >= len(usl.groups):
+				raise DeferenceError("Group index " + str(self.group_idx.name) + " not in polymorpheme")
+
 			group = usl.groups[self.group_idx.value][0]
 
-		assert self.morpheme in group
+		if self.morpheme not in group:
+			raise DeferenceError("Morpheme " + str(self.morpheme) + " not in group at " + str(self.group_idx.name))
 
 		return self.morpheme
 
@@ -142,7 +163,9 @@ class FlexionPath(UslPath):
 		all_group = [usl.constant, *(list(filter(lambda m: not m.empty, g)) for g, _ in usl.groups)]
 		all_morphemes = {str(w): w for g in all_group for w in g}
 
-		assert self.morpheme in all_morphemes
+		if self.morpheme not in all_morphemes:
+			raise DeferenceError("Morpheme " + str(self.morpheme) + " not in flexion")
+
 		return self.morpheme
 
 	def _to_str(self):
@@ -223,13 +246,14 @@ class RolePath(UslPath):
 		super().__init__(child)
 		from ieml.usl.syntagmatic_function import SyntagmaticRole
 
-		assert isinstance(role, SyntagmaticRole)
+		if not isinstance(role, SyntagmaticRole):
+			raise DeferenceError("Invalid role for a RolePath " + role.__class__.__name__)
 
 		self.role = role
 
 		if child is not None and not child.__class__ == UslPath:
 			if not isinstance(child, LexemePath):
-				raise ValueError("Invalid path structure, a lexeme content child must be a PolymorphemePath, not a " + self.child.__class__.__name__)
+				raise DeferenceError("Invalid path structure, a lexeme content child must be a PolymorphemePath, not a " + self.child.__class__.__name__)
 
 	def _deference(self: 'RolePath', usl: Word):
 		return usl.syntagmatic_fun.get(self.role, ignore_prefix=True)

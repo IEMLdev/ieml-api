@@ -11,6 +11,10 @@ from ieml.usl import USL
 
 
 def check_polymorpheme(ms):
+    from ieml.usl.decoration.instance import InstancedUSL
+    if isinstance(ms, InstancedUSL):
+        ms = ms.usl
+
     if not all(isinstance(s, Script) for s in ms.constant):
         raise ValueError("A polymorpheme constant must be made of morphemes")
 

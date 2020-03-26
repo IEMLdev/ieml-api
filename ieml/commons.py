@@ -217,6 +217,9 @@ class DecoratedComponent:
         self._literal = None
 
     def set_literal(self, value):
+        from ieml.usl.decoration.instance import literal_context
+
+        literal_context().push(self)
         self._literal = value
 
     def get_literal(self):

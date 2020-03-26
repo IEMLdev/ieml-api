@@ -5,6 +5,26 @@ from ieml.usl import USL
 from ieml.usl.decoration.path import UslPath
 
 
+class LiteralContext:
+	def __init__(self):
+		self.stack = []
+
+	def __enter__(self):
+		self.stack = []
+
+	def __exit__(self, exc_type, exc_val, exc_tb):
+		for s in self.stack:
+			s.clear_literal()
+		self.stack = []
+
+	def push(self, u):
+		self.stack.append(u)
+
+__literal_context =LiteralContext()
+def literal_context():
+	return __literal_context
+
+
 class Decoration:
 	def __init__(self, path: UslPath, value):
 		self.path = path
@@ -43,7 +63,7 @@ class InstancedUSL(USL):
 		decorations = []
 
 		for path, value in u.iter_structure_path():
-			if value.get_literal():
+			if value.get_literal() is not None:
 				decorations.append(Decoration(path, value.get_literal()))
 
 		return decorations
@@ -70,7 +90,21 @@ class InstancedUSL(USL):
 		return self.usl.iter_structure_path()
 
 	def _compute_singular_sequences(self):
-		return self.usl.singular_sequences
+		res = []
+		for ss in self.usl.singular_sequences:
+			dec = []
+			with literal_context():
+				for d in self.decorations:
+
+					if d.path.contained(ss):
+						dec.append(d)
+
+				if dec:
+					res.append(InstancedUSL(ss, dec))
+				else:
+					res.append(ss)
+
+		return res
 
 	@property
 	def morphemes(self):

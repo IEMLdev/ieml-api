@@ -58,7 +58,7 @@ def get_lexer(module=None):
     t_USL_PATH = r':({role_regex}(\s{role_regex})*:)?((flexion|content):)?(((group_\d|constant):)?{term_regex})?'.format(role_regex=ROLE_REGEX,
                                                                                                                         term_regex=TERM_REGEX)
 
-    t_DECORATION_VALUE = r'"(\\"|[^"])+"'
+    t_DECORATION_VALUE = r'"(\\"|[^"])*"'
 
     t_ignore  = '{} \t\n'
 

@@ -7,7 +7,8 @@ from ieml.constants import PARSER_FOLDER
 from ieml.dictionary.script import script
 from ieml.exceptions import CannotParse
 from ieml.usl.decoration.parser.lexer import tokens, get_lexer
-from ieml.usl.decoration.path import UslPath, RolePath, LexemePath, PolymorphemePath, LexemeIndex, GroupIndex
+from ieml.usl.decoration.path import UslPath, RolePath, LexemePath, PolymorphemePath, LexemeIndex, GroupIndex, \
+    FlexionPath
 from ieml.usl.syntagmatic_function import SyntagmaticRole
 
 
@@ -44,8 +45,8 @@ class PathParser:
             p[0] = p[2]
 
     def p_role_path_list(self, p):
-        """role_path_list : role_path_list ROLE
-                            | ROLE"""
+        """role_path_list : role_path_list MORPHEME
+                            | MORPHEME"""
         if len(p) == 2:
             p[0] = [p[1]]
         else:
@@ -61,12 +62,24 @@ class PathParser:
 
     def p_lexeme_path(self, p):
         """lexeme_path : LEXEME_POSITION
-                        | LEXEME_POSITION SEPARATOR polymorpheme_path"""
+                        | LEXEME_POSITION SEPARATOR polymorpheme_path
+                        | LEXEME_POSITION SEPARATOR flexion_path """
         lex_index = LexemeIndex[p[1].upper()]
         if len(p) == 2:
             p[0] = LexemePath(lex_index)
         else:
-            p[0] = LexemePath(lex_index, child=p[3])
+            child = p[3]
+            if lex_index == LexemeIndex.CONTENT and not isinstance(child, PolymorphemePath):
+                raise CannotParse(None, "Invalid child of lexeme path in content position, expected a PolymorphemePath, not a " + child.__class__.__name__)
+
+            if lex_index == LexemeIndex.FLEXION and not isinstance(child, FlexionPath):
+                raise CannotParse(None, "Invalid child of lexeme path in flexion position, expected a FlexionPath, not a " + child.__class__.__name__)
+
+            p[0] = LexemePath(lex_index, child=child)
+
+    def p_flexion_path(self, p):
+        """flexion_path : MORPHEME """
+        p[0] = FlexionPath(script(p[1]))
 
     def p_polymorpheme_path(self, p):
         """polymorpheme_path : POLYMORPHEME_POSITION SEPARATOR MORPHEME"""
