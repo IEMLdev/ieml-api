@@ -1,70 +1,56 @@
-import ply.lex as lxr
 import logging
 
-from ieml.constants import TERM_REGEX
-from ieml.usl.constants import ROLE_REGEX
+from sly import Lexer
+from sly.lex import Token
+
+from ..constants import ROLE_REGEX
+from ...constants import TERM_REGEX
 
 logger = logging.getLogger(__name__)
 
 
-tokens = (
-   'MORPHEME',
-   'OLD_MORPHEME_GRAMMATICAL_CLASS',
+class USLLexer(Lexer):
+    tokens = (
+        'MORPHEME',
+        'OLD_MORPHEME_GRAMMATICAL_CLASS',
 
-   # 'PLUS',
-   # 'TIMES',
+        'LPAREN',
+        'RPAREN',
+        'RCHEVRON',
 
-   'LPAREN',
-   'RPAREN',
-   # 'LCHEVRON',
-   'RCHEVRON',
+        'LBRACKET',
+        'RBRACKET',
 
-   'LBRACKET',
-   'RBRACKET',
+        'GROUP_MULTIPLICITY',
+        'EXCLAMATION_MARK',
+        'LITERAL',
+        'USL_PATH',
+        'DECORATION_VALUE'
+    )
+    OLD_MORPHEME_GRAMMATICAL_CLASS = r'E:\.b\.E:[SBT]:\.-'
 
-   'GROUP_MULTIPLICITY',
-   'EXCLAMATION_MARK',
-   # 'HASH',
-   'LITERAL',
-   'USL_PATH',
-   'DECORATION_VALUE'
-   # 'L_CURLY_BRACKET',
-   # 'R_CURLY_BRACKET',
-   #
-   # 'SLASH',
-   # 'LITERAL',
-)
+    MORPHEME = TERM_REGEX
+    LPAREN  = r'\('
+    RPAREN  = r'\)'
+    # TODO : change to "ANGLE_BRACKET"
+    CHEVRON = r'\>'
 
+    LBRACKET = r'\['
+    RBRACKET  = r'\]'
+    EXCLAMATION_MARK  = r'\!'
 
-def get_lexer(module=None):
-    t_OLD_MORPHEME_GRAMMATICAL_CLASS = r'E:\.b\.E:[SBT]:\.-'
+    LITERAL = r'\#(\\\#|[^\#])+\#'
 
-    t_MORPHEME = TERM_REGEX
-    # t_PLUS   = r'\+'
-    # t_TIMES   = r'\*'
-    t_LPAREN  = r'\('
-    t_RPAREN  = r'\)'
-    # t_LCHEVRON = r'\<'
-    t_RCHEVRON = r'\>'
-
-    t_LBRACKET = r'\['
-    t_RBRACKET  = r'\]'
-    t_EXCLAMATION_MARK  = r'\!'
-    #
-
-    t_LITERAL = r'\#(\\\#|[^\#])+\#'
-
-    t_GROUP_MULTIPLICITY = r'm\d+'
-    t_USL_PATH = r':({role_regex}(\s{role_regex})*:)?((flexion|content):)?(((group_\d|constant):)?{term_regex})?'.format(role_regex=ROLE_REGEX,
+    GROUP_MULTIPLICITY = r'm\d+'
+    USL_PATH = r':({role_regex}(\s{role_regex})*:)?((flexion|content):)?(((group_\d|constant):)?{term_regex})?'.format(role_regex=ROLE_REGEX,
                                                                                                                         term_regex=TERM_REGEX)
 
-    t_DECORATION_VALUE = r'"(\\"|[^"])*"'
+    DECORATION_VALUE = r'"(\\"|[^"])*"'
 
-    t_ignore  = '{} \t\n'
+    ignore = '{} \t\n'
 
     # Error handling rule
-    def t_error(t):
+    def error(self, t: Token):
         logger.log(logging.ERROR, "Illegal character '%s'" % t.value[0])
         t.lexer.skip(1)
 
-    return lxr.lex(module=module, errorlog=logging)

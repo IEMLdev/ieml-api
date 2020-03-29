@@ -1,32 +1,33 @@
 import ply.lex as lxr
+from sly import Lexer
 import logging
 
 from ..constants import COORDINATES_KINDS
 
 logger = logging.getLogger(__name__)
 
-tokens = (
-   'COORD_KIND',
-   'COORD_INDEX',
-   'PLUS',
-   'LPAREN',
-   'RPAREN',
-   'COLON'
-)
 
+class PathLexer(Lexer):
+    tokens = (
+        'COORD_KIND',
+        'COORD_INDEX',
+        'PLUS',
+        'LPAREN',
+        'RPAREN',
+        'COLON'
+    )
 
-def get_lexer(module=None):
-    t_COORD_KIND = r'[%s]'%''.join(COORDINATES_KINDS)
-    t_COORD_INDEX = r'\d+'
-    t_PLUS   = r'\+'
-    t_LPAREN  = r'\('
-    t_RPAREN  = r'\)'
-    t_COLON = r':'
-    t_ignore  = ' \t\n'
+    ignore_whitespace = ' \t\n'
+
+    COORD_KIND = r'[%s]' % ''.join(COORDINATES_KINDS)
+    COORD_INDEX = r'\d+'
+    PLUS = r'\+'
+    LPAREN = r'\('
+    RPAREN = r'\)'
+    COLON = r':'
 
     # Error handling rule
-    def t_error(t):
+    def error(self, t):
         logger.log(logging.ERROR, "Illegal character '%s'" % t.value[0])
+        # TODO change skipping rule
         t.lexer.skip(1)
-
-    return lxr.lex(module=module, errorlog=logging)
