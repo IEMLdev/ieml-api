@@ -1,13 +1,12 @@
-import ply.lex as lxr
-from sly import Lexer
 import logging
 
+from ....commons import BaseIEMLLexer
 from ..constants import COORDINATES_KINDS
 
 logger = logging.getLogger(__name__)
 
 
-class PathLexer(Lexer):
+class PathLexer(BaseIEMLLexer):
     tokens = (
         'COORD_KIND',
         'COORD_INDEX',

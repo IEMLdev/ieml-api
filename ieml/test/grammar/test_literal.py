@@ -4,7 +4,7 @@ from ieml.usl import PolyMorpheme
 from ieml.usl.decoration.instance import InstancedUSL
 from ieml.usl.decoration.parser.parser import PathParser
 from ieml.usl.decoration.path import RolePath, PolymorphemePath, LexemePath, FlexionPath
-from ieml.usl.parser import IEMLParser
+from ieml.usl.parser import USLParser
 from ieml.usl.usl import usl
 
 
@@ -45,7 +45,7 @@ class LiteralTestCase(unittest.TestCase):
 
     def test_parse_empty_path(self):
         p = "T: l.-T:.U:.-',n.-T:.A:.-',t.o.-f.o.-',_ m1(S:.E:A:T:.- T:.E:A:S:.-) m1(p.E:S:B:.- s.-S:.U:.-') [:group_1:s.-S:.U:.-' \"\"]"
-        pathparser = IEMLParser()
+        pathparser = USLParser()
         res = pathparser.parse(p)
         self.assertIsInstance(res, InstancedUSL)
         self.assertIsInstance(res.usl, PolyMorpheme)

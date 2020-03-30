@@ -88,8 +88,8 @@ class USL(DecoratedComponent):
 
 def usl(arg):
     if isinstance(arg, str):
-        from ieml.usl.parser import IEMLParser
-        return IEMLParser().parse(arg)
+        from ieml.usl.parser import USLParser
+        return USLParser().parse(arg)
 
     if isinstance(arg, Script):
         from ieml.usl import PolyMorpheme

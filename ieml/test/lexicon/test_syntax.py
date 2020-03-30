@@ -1,6 +1,6 @@
 import unittest
 
-from ieml.usl.parser import IEMLParser
+from ieml.usl.parser import USLParser
 from ieml.lexicon.syntax import Word, check_character, check_polymorpheme, PolyMorpheme
 
 # TODO: add test for ordering of morph in polymorph
@@ -14,7 +14,7 @@ class TestSyntax(unittest.TestCase):
                       "o. m2(A: B: S: T:) m2(t. y.)"
                   ]
         for _t in POLYMORPH:
-            t = IEMLParser().parse(_t)
+            t = USLParser().parse(_t)
             assert str(t) == str(_t), "{} != {}".format(str(t), str(_t))
             assert isinstance(t, PolyMorpheme)
 
@@ -30,7 +30,7 @@ class TestSyntax(unittest.TestCase):
         CHARACTERS = ["[E:.wo.- > (U: wo. m1(m. y. l.)) (u. l.) > (U: m2(wo. wa.))]",
                       "[E:.wo.- > (m3(wo. wa. we. wu.) m1(m. y. l.)) (m3(wo. wa. we. wu.) m1(m. y. l.))]"]
         for c_str in CHARACTERS:
-            c = IEMLParser().parse(c_str)
+            c = USLParser().parse(c_str)
             elems = set()
             for ss in c.singular_sequences:
                 print(str(ss))
@@ -49,7 +49,7 @@ class TestSyntax(unittest.TestCase):
             "[E:.wo.- > (u.)]",
         ]
         for _t in TESTS:
-            t = IEMLParser().parse(_t)
+            t = USLParser().parse(_t)
             assert str(t) == str(_t), "{} != {}".format(str(t), str(_t))
             assert isinstance(t, Word)
 

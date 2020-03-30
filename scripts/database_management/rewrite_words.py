@@ -6,7 +6,7 @@ import pygit2
 from ieml.exceptions import CannotParse
 from ieml.usl import Word, PolyMorpheme
 from ieml.usl.lexeme import Lexeme
-from ieml.usl.parser import IEMLParser
+from ieml.usl.parser import USLParser
 from ieml.usl.syntagmatic_function import ProcessSyntagmaticFunction, DependantQualitySyntagmaticFunction, \
     IndependantQualitySyntagmaticFunction
 from ieml.usl.usl import usl
@@ -70,7 +70,7 @@ if __name__ == '__main__':
     to_migrate = {}
     to_remove = []
 
-    parser = IEMLParser(dictionary=db.get_dictionary())
+    parser = USLParser(dictionary=db.get_dictionary())
 
     all_db = db.list(type="word")
     # assert "[E:.b.E:B:.- E:S:. ()(a.T:.-) > ! E:.l.- ()(d.i.-l.i.-')]" in all_db

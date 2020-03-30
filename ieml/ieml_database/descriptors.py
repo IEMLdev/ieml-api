@@ -10,7 +10,7 @@ from collections import defaultdict
 from functools import reduce
 
 from ieml.constants import LANGUAGES, STRUCTURE_KEYS, INHIBITABLE_RELATIONS, DESCRIPTORS_CLASS
-from ieml.usl.parser import IEMLParser
+from ieml.usl.parser import USLParser
 
 
 def normalize_key(ieml, key, value, parse_ieml=False, partial=False, structure=False):
@@ -20,7 +20,7 @@ def normalize_key(ieml, key, value, parse_ieml=False, partial=False, structure=F
     if ieml:
         ieml = str(ieml)
         if parse_ieml:
-            parsed = IEMLParser().parse(str(ieml))
+            parsed = USLParser().parse(str(ieml))
             ieml = str(parsed)
             # if ieml != str(parsed):
             #     raise ValueError("IEML is not normalized: {}".format(ieml))

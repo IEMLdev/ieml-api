@@ -27,30 +27,35 @@ class USLLexer(Lexer):
         'USL_PATH',
         'DECORATION_VALUE'
     )
+
+    ignore = '{} \t\n'
+
     OLD_MORPHEME_GRAMMATICAL_CLASS = r'E:\.b\.E:[SBT]:\.-'
 
     MORPHEME = TERM_REGEX
-    LPAREN  = r'\('
-    RPAREN  = r'\)'
-    # TODO : change to "ANGLE_BRACKET"
-    CHEVRON = r'\>'
+    LPAREN = r'\('
+    RPAREN = r'\)'
+    R_ANGLE_BRACKET = r'\>'
 
     LBRACKET = r'\['
-    RBRACKET  = r'\]'
-    EXCLAMATION_MARK  = r'\!'
+    RBRACKET = r'\]'
+    EXCLAMATION_MARK = r'\!'
 
     LITERAL = r'\#(\\\#|[^\#])+\#'
 
-    GROUP_MULTIPLICITY = r'm\d+'
-    USL_PATH = r':({role_regex}(\s{role_regex})*:)?((flexion|content):)?(((group_\d|constant):)?{term_regex})?'.format(role_regex=ROLE_REGEX,
-                                                                                                                        term_regex=TERM_REGEX)
+    @_("r'm\d+'")
+    def GROUP_MULTIPLICITY(self, t: Token):
+        t.value = int(t.value[1:])
+        return t
+
+    USL_PATH = r':({role_regex}(\s{role_regex})*:)?((flexion|content):)?(((group_\d|constant):)?{term_regex})?'.format(
+        role_regex=ROLE_REGEX,
+        term_regex=TERM_REGEX)
 
     DECORATION_VALUE = r'"(\\"|[^"])*"'
 
-    ignore = '{} \t\n'
 
     # Error handling rule
     def error(self, t: Token):
         logger.log(logging.ERROR, "Illegal character '%s'" % t.value[0])
         t.lexer.skip(1)
-

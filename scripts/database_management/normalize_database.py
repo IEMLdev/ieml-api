@@ -5,7 +5,7 @@ import pygit2
 
 from ieml.exceptions import CannotParse
 from ieml.usl import Word
-from ieml.usl.parser import IEMLParser
+from ieml.usl.parser import USLParser
 from ieml.usl.usl import usl
 from ieml.dictionary.script import factorize, Script
 from ieml.ieml_database import GitInterface, IEMLDatabase
@@ -40,7 +40,7 @@ if __name__ == '__main__':
     to_migrate = {}
     to_remove = []
 
-    parser = IEMLParser(dictionary=db.get_dictionary())
+    parser = USLParser(dictionary=db.get_dictionary())
 
     all_db = db.list()
     # assert "[E:.b.E:B:.- E:S:. ()(a.T:.-) > ! E:.l.- ()(d.i.-l.i.-')]" in all_db

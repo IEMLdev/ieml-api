@@ -5,7 +5,7 @@ import numpy as np
 
 from ieml.lexicon import Fact, Theory, Text, theory, text, topic
 from ieml.exceptions import InvalidIEMLObjectArgument, TermNotFoundInDictionary
-from ieml.usl.parser import IEMLParser
+from ieml.usl.parser import USLParser
 from ieml.tools import RandomPoolIEMLObjectGenerator
 from ieml.dictionary.script import script as sc
 from ieml.test.helper import *
@@ -23,7 +23,7 @@ class TestIEMLType(unittest.TestCase):
 class TestPropositionsInclusion(unittest.TestCase):
 
     def setUp(self):
-        self.parser = IEMLParser()
+        self.parser = USLParser()
         self.sentence = self.parser.parse("""[([([h.O:T:.-])]*[([E:.-O:.T:M:.-l.-'])]*[([E:.F:.O:O:.-])])+
                                      ([([h.O:T:.-])]*[([s.wu.T:.-])]*[([h.O:B:.-])])]""")
 

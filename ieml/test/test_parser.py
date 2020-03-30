@@ -4,7 +4,7 @@ from ieml.dictionary.dictionary import Dictionary
 from ieml.dictionary.script.operator import script
 
 from ieml.exceptions import TermNotFoundInDictionary, CannotParse
-from ieml.usl.parser import IEMLParser
+from ieml.usl.parser import USLParser
 from ieml.lexicon.theory import Theory
 from ieml.lexicon.word import Word
 from ieml.tools import RandomPoolIEMLObjectGenerator, ieml
@@ -15,7 +15,7 @@ class TestPropositionParser(unittest.TestCase):
 
     def setUp(self):
         self.rand = RandomPoolIEMLObjectGenerator(level=Theory)
-        self.parser = IEMLParser()
+        self.parser = USLParser()
 
     def test_parse_word(self):
 
@@ -66,14 +66,14 @@ class TestPropositionParser(unittest.TestCase):
             term("A:A:A:.")
 
     def test_multiple_ieml_parser(self):
-        p0 = IEMLParser()
-        p1 = IEMLParser()
+        p0 = USLParser()
+        p1 = USLParser()
         self.assertEqual(p0, p1)
 
-        p2 = IEMLParser(Dictionary('dictionary_2017-06-07_00:00:00'))
+        p2 = USLParser(Dictionary('dictionary_2017-06-07_00:00:00'))
         self.assertNotEqual(p0, p2)
 
-        p3 = IEMLParser(from_version='dictionary_2017-06-07_00:00:00')
+        p3 = USLParser(from_version='dictionary_2017-06-07_00:00:00')
         self.assertNotEqual(p2, p3)
 
     def test_parse_script(self):

@@ -3,12 +3,17 @@ import glob
 import logging
 import os
 import pickle
+import threading
 from collections import OrderedDict
 from itertools import chain
 from sys import stderr
 from typing import List
 import hashlib
 from time import time
+
+from sly import Parser, Lexer
+from sly.lex import LexerMeta, Token
+from sly.yacc import ParserMeta
 
 from ieml import logger
 
@@ -23,8 +28,10 @@ class cached_property:
         setattr(instance, self._attr_name, attr)
         return attr
 
+
 class LastUpdatedOrderedDict(OrderedDict):
     'Store items in the order the keys were last added'
+
     def __setitem__(self, key, value, **kwargs):
         if key in self:
             del self[key]
@@ -83,6 +90,29 @@ class Singleton(type):
         return cls._instances[cls]
 
 
+class LexerSingleton(LexerMeta, Singleton):
+    pass
+
+
+class BaseIEMLLexer(Lexer, metaclass=LexerSingleton):
+    pass
+
+
+class ParserSingleton(ParserMeta, Singleton):
+    pass
+
+
+class BaseIEMLParser(Parser, metaclass=ParserSingleton):
+    lexer: BaseIEMLLexer = None
+
+    def __init__(self):
+        self.lock = threading.Lock()
+
+    def error(self, token: Token):
+        # TODO
+        pass
+
+
 class FolderWatcherCache:
     def __init__(self, db_path: str, pattern: str, cache_folder: str, name: str):
         """
@@ -94,7 +124,8 @@ class FolderWatcherCache:
         """
         self.db_path = db_path
         self.pattern = pattern
-        self.files = sorted([os.path.abspath(ff) for ff in glob.glob(os.path.join(self.db_path, self.pattern), recursive=True)])
+        self.files = sorted(
+            [os.path.abspath(ff) for ff in glob.glob(os.path.join(self.db_path, self.pattern), recursive=True)])
         self.cache_folder = os.path.abspath(cache_folder)
         self.name = name
 
@@ -138,7 +169,7 @@ class FolderWatcherCache:
         res = b""
         for file in self.files:
             with open(file, 'rb') as fp:
-                res += file[len(self.db_path)+1:].encode('utf8') + b":" + fp.read()
+                res += file[len(self.db_path) + 1:].encode('utf8') + b":" + fp.read()
 
         return os.path.join(self.cache_folder, ".{}-cache.{}".format(self.name, hashlib.md5(res).hexdigest()))
 
@@ -150,11 +181,13 @@ class FolderWatcherCache:
         return [os.path.join(self.cache_folder, n) for n in os.listdir(self.cache_folder)
                 if n.startswith('.{}-cache.'.format(self.name))]
 
+
 def monitor_decorator(name):
     def decorator(f):
         def wrapper(*args, **kwargs):
             before = time()
-            args_str = ", ".join(chain(map(lambda e: str(e)[:100], args), map(lambda e: "{}={}".format(e[0], str(e[1])[:100]), kwargs.items())))
+            args_str = ", ".join(chain(map(lambda e: str(e)[:100], args),
+                                       map(lambda e: "{}={}".format(e[0], str(e[1])[:100]), kwargs.items())))
             res = f(*args, **kwargs)
             print("({:.2f}) {}# ({})".format(time() - before, name, args_str), file=stderr)
             return res

@@ -27,7 +27,7 @@ from ieml.exceptions import CannotParse
 from ieml.ieml_database.descriptors import Descriptors, normalize_key
 from ieml.ieml_database.git_interface import logger
 from ieml.usl.lexeme import Lexeme
-from ieml.usl.parser import IEMLParser
+from ieml.usl.parser import USLParser
 from ieml.usl import PolyMorpheme, Word, get_index
 
 
@@ -116,7 +116,7 @@ class IEMLDatabase:
 
     def path_of(self, _ieml, descriptor=True, mkdir=False, normalize=True):
         if isinstance(_ieml, str):
-            ieml = IEMLParser().parse(_ieml)
+            ieml = USLParser().parse(_ieml)
         else:
             ieml = _ieml
 
@@ -160,7 +160,7 @@ class IEMLDatabase:
         res = [s.strip().decode('utf8') for s in p4.stdout.readlines() if s.strip()]
 
         if parse:
-            parser = IEMLParser(dictionary=self.get_dictionary())
+            parser = USLParser(dictionary=self.get_dictionary())
             _res = []
             for s in res:
                 try:
@@ -174,7 +174,7 @@ class IEMLDatabase:
     def _process_line(self, lines_iter, parse=False):
 
         if parse:
-            parser = IEMLParser(dictionary=self.get_dictionary())
+            parser = USLParser(dictionary=self.get_dictionary())
 
         for l in lines_iter:
             if not l.strip():
@@ -225,7 +225,7 @@ class IEMLDatabase:
     def get_list(self):
         res = {}
         dictionary = self.get_dictionary()
-        parser = IEMLParser(dictionary=dictionary)
+        parser = USLParser(dictionary=dictionary)
 
         for (ieml, lang, desc), (v,) in tqdm(self.get_descriptors().df.iterrows(),
                                              "List all descriptors at {}".format(self.folder)):

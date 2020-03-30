@@ -1,44 +1,30 @@
-import logging, os
-import ply.yacc as yacc
-
-from ieml.constants import PARSER_FOLDER
-from ieml.dictionary.script import script, Script, NullScript
-from ieml.usl import Word, PolyMorpheme
-from ieml.exceptions import CannotParse
-from ieml.usl.word import Lexeme
-from ieml.usl.syntagmatic_function import SyntagmaticFunction, SyntagmaticRole
-from .lexer import get_lexer, tokens
 import threading
 
+from sly.yacc import YaccProduction
+
+from .lexer import USLLexer
+from .. import Word, PolyMorpheme
 from ..decoration.instance import Decoration, InstancedUSL
 from ..decoration.parser.parser import PathParser
+from ..syntagmatic_function import SyntagmaticFunction, SyntagmaticRole
+from ..word import Lexeme
+from ...commons import BaseIEMLParser
+from ...dictionary.script import script, NullScript
+from ...exceptions import CannotParse
 
 
-class IEMLParserSingleton(type):
-    _instance = None
-
-    def __call__(cls, *args, **kwargs):
-        if cls._instance is None:
-            cls._instance = super(IEMLParserSingleton, cls).__call__()
-
-        return cls._instance
-
-
-class IEMLParser():
-    tokens = tokens
-    lock = threading.Lock()
+class USLParser(BaseIEMLParser):
+    tokens = USLLexer.tokens
+    lexer = USLLexer()
+    start = "proposition"
+    path_parser = PathParser()
 
     def __init__(self, dictionary=None):
-        # Build the lexer and parser
-        self.lexer = get_lexer()
-        self.parser = yacc.yacc(module=self, errorlog=logging, start='proposition',
-                                debug=True, optimize=True,
-                                picklefile=os.path.join(PARSER_FOLDER, "ieml_parser.pickle"))
-        self._ieml = None
-        self.path_parser = PathParser()
+        super().__init__()
+        self.factorize_script = False
         self.dictionary = dictionary
 
-    def parse(self, s, factorize_script=False):
+    def parse(self, s: str, factorize_script: bool = False):
         """Parses the input string, and returns a reference to the created AST's root"""
         if s == '':
             return NullScript(0)
@@ -46,172 +32,167 @@ class IEMLParser():
         with self.lock:
             self.factorize_script = factorize_script
             try:
-                return self.parser.parse(s, lexer=self.lexer)
+                return super().parse(self.lexer.tokenize(s))
             except ValueError as e:
                 raise CannotParse(s, str(e))
             except CannotParse as e:
                 e.s = s
                 raise e
 
+    ### Parsing rules ###
+    @_("morpheme",
+       "usl",
+       "instantiated_usl")
+    def proposition(self, p: YaccProduction):
+        return p[0]
 
-    # Parsing rules
-    def p_ieml_proposition(self, p):
-        """proposition :  morpheme
-                        | usl
-                        | instanced_usl
-                        """
-        p[0] = p[1]
+    @_("poly_morpheme",
+       "lexeme",
+       "word")
+    def usl(self, p: YaccProduction):
+        return p[0]
 
-    def p_usl(self, p):
-        """usl :  poly_morpheme
-                | lexeme
-                | word
-                """
-        p[0] = p[1]
+    @_("usl decoration_list")
+    def instantiated_usl(self, p):
+        return InstancedUSL(p[1], p[2])
 
-    def p_instanced_usl(self, p):
-        """instanced_usl : usl decoration_list"""
-        p[0] = InstancedUSL(p[1], p[2])
-
-
-    def p_morpheme(self, p):
-        """morpheme : MORPHEME"""
-
-        morpheme = script(p[1], factorize=self.factorize_script)
+    @_("MORPHEME")
+    def morpheme(self, p: YaccProduction):
+        # TODO : ideally this should be in a lexer matching rule
+        morpheme = script(p.MORPHEME, factorize=self.factorize_script)
 
         if self.dictionary is not None and morpheme not in self.dictionary:
             raise ValueError("Morpheme {} not defined in dictionary".format(morpheme))
 
-        p[0] = morpheme
+        return morpheme
 
-    def p_morpheme_sum(self, p):
-        """morpheme_sum : morpheme_sum morpheme
-                        | morpheme"""
-
-        if len(p) == 3:
-            p[0] = p[1] + [p[2]]
+    @_("morpheme_sum morpheme",
+       "morpheme")
+    def morpheme_sum(self, p):
+        if len(p) == 2:
+            p.morpheme_sum.append(p.morpheme)
+            return p.morpheme_sum
         else:
-            p[0] = [p[1]]
+            return [p.morpheme]
 
-    def p_group(self, p):
-        """ group : GROUP_MULTIPLICITY LPAREN morpheme_sum RPAREN """
-        p[0] = (p[3], int(p[1][1:]))
+    @_("GROUP_MULTIPLICITY LPAREN morpheme_sum RPAREN")
+    def group(self, p: YaccProduction):
+        return p.morpheme_sum, p.GROUP_MULTIPLICITY
 
-    def p_group_list(self, p):
-        """ group_list : group group_list
-                       | group """
-        if len(p) == 3:
-            p[0] = [p[1]] + p[2]
+    @_("group_list group",
+       "group")
+    def group_list(self, p: YaccProduction):
+        if len(p) == 2:
+            p.group_list.append(p.group)
+            return p.group_list
         else:
-            p[0] = [p[1]]
+            return [p.group]
 
-    def p_poly_morpheme(self, p):
-        """ poly_morpheme : morpheme_sum group_list
-                           | morpheme_sum
-                           | group_list"""
-        if len(p) == 3:
-            p[0] = PolyMorpheme(constant=p[1], groups=p[2])
-        elif isinstance(p[1][0], Script):
-            p[0] = PolyMorpheme(constant=p[1], groups=())
+    @_("group_list")
+    def poly_morpheme(self, p: YaccProduction):
+        return PolyMorpheme(constant=[], groups=p.group_list)
+
+    @_("morpheme_sum group_list")
+    def poly_morpheme(self, p: YaccProduction):
+        return PolyMorpheme(constant=p.morpheme_sum, groups=p.group_list)
+
+    @_("morpheme_sum")
+    def poly_morpheme(self, p: YaccProduction):
+        return PolyMorpheme(constant=p.morpheme_sum, groups=())
+
+    @_("LPAREN poly_morpheme RPAREN")
+    def filled_poly_morpheme(self, p: YaccProduction):
+        """Wrapper for lexemes"""
+        return p.poly_morpheme
+
+    @_("LPAREN RPAREN")
+    def empty_poly_morpheme(self, p: YaccProduction):
+        """Wrapper for empty lexemes"""
+        return PolyMorpheme(constant=[])
+
+    @_("filled_poly_morpheme filled_poly_morpheme filled_poly_morpheme")
+    def lexeme(self, p: YaccProduction):
+        return Lexeme(pm_flexion=PolyMorpheme(constant=p[0].constant + p[2].constant,
+                                              groups=p[0].groups + p[2].groups),
+                      pm_content=p[1])
+
+    @_("empty_poly_morpheme filled_poly_morpheme filled_poly_morpheme")
+    def lexeme(self, p: YaccProduction):
+        return Lexeme(pm_flexion=p[2], pm_content=p[1])
+
+    @_("empty_poly_morpheme empty_poly_morpheme filled_poly_morpheme")
+    def lexeme(self, p: YaccProduction):
+        return Lexeme(pm_flexion=p[2], pm_content=PolyMorpheme(constant=[]))
+
+    @_("filled_poly_morpheme filled_poly_morpheme")
+    def lexeme(self, p: YaccProduction):
+        return Lexeme(pm_flexion=p[0], pm_content=p[1])
+
+    @_("empty_poly_morpheme filled_poly_morpheme")
+    def lexeme(self, p: YaccProduction):
+        return Lexeme(pm_flexion=PolyMorpheme(constant=[]), pm_content=p[1])
+
+    @_("filled_poly_morpheme")
+    def lexeme(self, p: YaccProduction):
+        return Lexeme(pm_flexion=p[0], pm_content=PolyMorpheme(constant=[]))
+
+    @_("empty_poly_morpheme")
+    def lexeme(self, p: YaccProduction):
+        return Lexeme(pm_flexion=PolyMorpheme(constant=[]), pm_content=PolyMorpheme(constant=[]))
+
+    @_("morpheme_sum lexeme",
+       "lexeme")
+    def positioned_lexeme(self, p: YaccProduction):
+        if len(p) == 2:
+            return p.morpheme_sum, p.lexeme
         else:
-            p[0] = PolyMorpheme(constant=[], groups=p[1])
+            return [], p.lexeme
 
+    @_("lexeme_list R_ANGLE_BRACKET EXCLAMATION_MARK positioned_lexeme")
+    def lexeme_list(self, p: YaccProduction):
+        lex_list, _ = p.lexeme_list
+        role, _ = p.positioned_lexeme
+        return lex_list + [p.positioned_lexeme], role
 
-    def p_lexeme(self, p):
-        """lexeme : LPAREN poly_morpheme RPAREN LPAREN poly_morpheme RPAREN LPAREN poly_morpheme RPAREN
-                  | LPAREN RPAREN LPAREN poly_morpheme RPAREN LPAREN poly_morpheme RPAREN
-                  | LPAREN RPAREN LPAREN RPAREN LPAREN poly_morpheme RPAREN
-                  | LPAREN poly_morpheme RPAREN LPAREN poly_morpheme RPAREN
-                  | LPAREN RPAREN LPAREN poly_morpheme RPAREN
-                  | LPAREN poly_morpheme RPAREN
-                  | LPAREN RPAREN"""
+    @_("lexeme_list R_ANGLE_BRACKET positioned_lexeme")
+    def lexeme_list(self, p: YaccProduction):
+        lex_list, address = p.lexeme_list
+        return lex_list + [p.positioned_lexeme], address
 
-        if len(p) == 10:
-            p[0] = Lexeme(pm_flexion=PolyMorpheme(constant=p[2].constant + p[8].constant,
-                                                  groups=p[2].groups + p[8].groups), pm_content=p[5])
-        elif len(p) == 9:
-            p[0] = Lexeme(pm_flexion=p[7], pm_content=p[4])
-        elif len(p) == 8:
-            p[0] = Lexeme(pm_flexion=p[6], pm_content=PolyMorpheme(constant=[]))
-        elif len(p) == 7:
-            p[0] = Lexeme(pm_flexion=p[2], pm_content=p[5])
-        elif len(p) == 6:
-            p[0] = Lexeme(pm_flexion=PolyMorpheme(constant=[]), pm_content=p[4])
-        elif len(p) == 4:
-            p[0] = Lexeme(pm_flexion=p[2], pm_content=PolyMorpheme(constant=[]))
-        else:
-            p[0] = Lexeme(pm_flexion=PolyMorpheme(constant=[]), pm_content=PolyMorpheme(constant=[]))
+    @_("EXCLAMATION_MARK positioned_lexeme")
+    def lexeme_list(self, p: YaccProduction):
+        role, _ = p.positioned_lexeme
+        return [p.positioned_lexeme], role
 
-    def p_positioned_lexeme(self, p):
-        """positioned_lexeme : morpheme_sum lexeme
-                             | lexeme"""
-        if len(p) == 3:
-            p[0] = p[1], p[2]
-        else:
-            p[0] = [], p[1]
+    @_("positioned_lexeme")
+    def lexeme_list(self, p: YaccProduction):
+        return [p.positioned_lexeme], None
 
-    def p_lexeme_list(self, p):
-        """lexeme_list : lexeme_list RCHEVRON EXCLAMATION_MARK positioned_lexeme
-                       | lexeme_list RCHEVRON positioned_lexeme
-                       | EXCLAMATION_MARK positioned_lexeme
-                       | positioned_lexeme"""
-        if len(p) == 5:
-            lex_list, _ = p[1]
-            role, _ = p[4]
-            p[0] = (lex_list + [p[4]], role)
-        elif len(p) == 4:
-            lex_list, address = p[1]
-            p[0] = (lex_list + [p[3]], address)
-        elif len(p) == 3:
-            role, _ = p[2]
-            p[0] = ([p[2]], role)
-        else:
-            p[0] = ([p[1]], None)
-
-    def p_word(self, p):
-        """word : LBRACKET OLD_MORPHEME_GRAMMATICAL_CLASS lexeme_list RBRACKET
-                | LBRACKET lexeme_list RBRACKET"""
-
-        if len(p) == 5:
-            lex_list, role = p[3]
-        else:
-            lex_list, role = p[2]
+    @_("LBRACKET OLD_MORPHEME_GRAMMATICAL_CLASS lexeme_list RBRACKET",
+       "LBRACKET lexeme_list RBRACKET")
+    def word(self, p: YaccProduction):
+        lex_list, role = p.lexeme_list
 
         if not role:
             raise ValueError("No role specified in the syntagmatic function to build a word.")
 
-        # try:
         ctx_type, sfun = SyntagmaticFunction.from_list(lex_list)
-        # except IndexError as e:
-        #     raise ValueError("Invalid lexeme parsed to create a word " + repr(e))
 
         p[0] = Word(syntagmatic_fun=sfun,
                     role=SyntagmaticRole(constant=role),
                     context_type=ctx_type)
-        # check_word(p[0])
-        # assert p[2] == p[0].grammatical_class
 
-
-    def p_decoration_list(self, p):
-        """decoration_list : decoration_list decoration
-                            | decoration"""
-
-        if len(p) == 3:
-            p[0] = p[1] + [p[2]]
+    @_("decoration_list decoration",
+       "decoration")
+    def decoration_list(self, p: YaccProduction):
+        if len(p) == 2:
+            p.decoration_list.append(p.decoration)
+            return p.decoration_list
         else:
-            p[0] = [p[1]]
+            return [p.decoration]
 
+    @_("LBRACKET morpheme_sum DECORATION_VALUE RBRACKET")
+    def decoration(self, p: YaccProduction):
+        usl_path = self.path_parser.parse(p.morpheme_sum)
+        p[0] = Decoration(usl_path, p.DECORATION[1:-1])
 
-    def p_decoration(self, p):
-        """decoration : LBRACKET morpheme_sum DECORATION_VALUE RBRACKET"""
-        usl_path = self.path_parser.parse(p[2])
-        p[0] = Decoration(usl_path, p[3][1:-1])
-
-
-    def p_error(self, p):
-        if p:
-            msg = "Syntax error at '%s' (%d, %d)" % (p.value, p.lineno, p.lexpos)
-        else:
-            msg = "Syntax error at EOF"
-
-        raise CannotParse(None, msg)

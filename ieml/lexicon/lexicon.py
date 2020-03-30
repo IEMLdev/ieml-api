@@ -1,6 +1,6 @@
 from collections import defaultdict
 from ieml.dictionary import Dictionary
-from ieml.usl.parser import IEMLParser
+from ieml.usl.parser import USLParser
 from ieml.lexicon.relations.lattice_sctrucure import LatticeStructure
 
 
@@ -18,7 +18,7 @@ class Lexicon:
         self.lattice = LatticeStructure(self.items)
 
     def define_singular_sequences(self, dictionary, descriptors):
-        parser = IEMLParser(dictionary=dictionary)
+        parser = USLParser(dictionary=dictionary)
 
         paradigms_to_ss = defaultdict(list)
         paradigms_to_domain = {}

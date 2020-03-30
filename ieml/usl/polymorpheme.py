@@ -31,7 +31,7 @@ def check_polymorpheme(ms):
     if any(g[0] and (int(g[1]) != g[1] or g[1] <= 0 or g[1] > POLYMORPHEME_MAX_MULTIPLICITY) for g in ms.groups):
         raise ValueError("Multiplicity is not a positive integer in [1, 2, 3].")
 
-    if any(g[0] and g[1] > len(g[0])  for g in ms.groups):
+    if any(g[0] and g[1] > len(g[0]) for g in ms.groups):
         raise ValueError("Multiplicity is greater than the number of morphemes in the group.")
 
     if sorted(ms.constant) != list(ms.constant):
@@ -55,7 +55,7 @@ def _filter_empty(l):
 class PolyMorpheme(USL):
     syntactic_level = 1
 
-    def __init__(self, constant: List[Script]=(), groups=()):
+    def __init__(self, constant: List[Script] = (), groups=()):
         super().__init__()
 
         self.constant = tuple(sorted(_filter_empty(constant)))
@@ -63,7 +63,9 @@ class PolyMorpheme(USL):
         self.groups = tuple(sorted((tuple(sorted(g[0])), g[1]) for g in groups))
 
         self._str = ' '.join(chain(map(str, self.constant),
-                               ["m{}({})".format(mult, ' '.join(map(str, group))) for group, mult
+                                   ["m{}({})".format(mult,
+                                                     ' '.join(map(str, group)))
+                                    for group, mult
                                     in self.groups]))
 
         if not self.constant:
@@ -71,6 +73,7 @@ class PolyMorpheme(USL):
 
         self.grammatical_class = max((s.grammatical_class for s in self.constant),
                                      default=AUXILIARY_CLASS)
+
     @property
     def empty(self):
         return not self.groups and len(self.constant) == 1 and self.constant[0].empty
@@ -184,7 +187,7 @@ class PolyMorpheme(USL):
 
         traits = LastUpdatedOrderedDict()
 
-        SIZE_LIMIT = MORPHEME_SERIE_SIZE_LIMIT_CONTENT# if is_content else MORPHEME_SERIE_SIZE_LIMIT_FUNCTION
+        SIZE_LIMIT = MORPHEME_SERIE_SIZE_LIMIT_CONTENT  # if is_content else MORPHEME_SERIE_SIZE_LIMIT_FUNCTION
 
         for gs in iter_groups_combinations():
             morpheme_semes = list(set(chain(*gs, self.constant)))

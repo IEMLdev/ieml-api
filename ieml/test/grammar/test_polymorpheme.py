@@ -2,7 +2,7 @@ import unittest
 
 from ieml.exceptions import CannotParse
 from ieml.usl import PolyMorpheme, check_polymorpheme
-from ieml.usl.parser import IEMLParser
+from ieml.usl.parser import USLParser
 
 
 class TestPolyMorpheme(unittest.TestCase):
@@ -14,7 +14,7 @@ class TestPolyMorpheme(unittest.TestCase):
                       "o. m2(A: S: B: T:) m2(y. t.)"
                   ]
         for _t in POLYMORPH:
-            t = IEMLParser().parse(_t)
+            t = USLParser().parse(_t)
             assert str(t) == str(_t), "{} != {}".format(str(t), str(_t))
             assert isinstance(t, PolyMorpheme)
 
@@ -36,7 +36,7 @@ class TestPolyMorpheme(unittest.TestCase):
         for _t in POLYMORPH:
             # assert str(t) == str(_t), "{} != {}".format(str(t), str(_t))
             with self.assertRaises(CannotParse):
-                t = IEMLParser().parse(_t)
+                t = USLParser().parse(_t)
 
 
     def test_invalid_cannot_check_polymorpheme(self):
@@ -45,7 +45,7 @@ class TestPolyMorpheme(unittest.TestCase):
                      "m4(U: S: E: T:)",
                      ]
         for _t in POLYMORPH:
-            t = IEMLParser().parse(_t)
+            t = USLParser().parse(_t)
             assert isinstance(t, PolyMorpheme)
 
             with self.assertRaises(ValueError):

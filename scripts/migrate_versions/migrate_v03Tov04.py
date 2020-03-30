@@ -7,7 +7,7 @@ import pygit2
 from ieml import IEMLDatabase
 from ieml.dictionary.script import script
 from ieml.ieml_database.git_interface import GitInterface
-from ieml.usl.parser import IEMLParser
+from ieml.usl.parser import USLParser
 import tqdm
 
 def migrate(database, out_folder):
@@ -28,7 +28,7 @@ def migrate(database, out_folder):
         os.mkdir(out_folder)
 
     for ieml, (paradigms, inhibitions) in tqdm.tqdm(dictionary.structure.iterrows(), 'migrating structure'):
-        l = IEMLParser().parse(ieml, factorize_script=True)
+        l = USLParser().parse(ieml, factorize_script=True)
 
         db2.add_structure(str(l), 'is_root', True)
         for i in inhibitions:
@@ -40,7 +40,7 @@ def migrate(database, out_folder):
         all_db[ieml][(lang,desc)] = v.values[0]
 
     for ieml, dd in tqdm.tqdm(all_db.items(), 'migrating descriptors'):
-        l = IEMLParser().parse(ieml, factorize_script=True)
+        l = USLParser().parse(ieml, factorize_script=True)
 
         path = db2.path_of(l)
 
