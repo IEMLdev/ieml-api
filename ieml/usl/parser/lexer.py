@@ -55,7 +55,7 @@ def get_lexer(module=None):
     t_LITERAL = r'\#(\\\#|[^\#])+\#'
 
     t_GROUP_MULTIPLICITY = r'm\d+'
-    t_USL_PATH = r':({role_regex}(\s{role_regex})*:)?((flexion|content):)?(((group_\d|constant):)?{term_regex})?'.format(role_regex=ROLE_REGEX,
+    t_USL_PATH = r'(?<=\[)>(role>{role_regex}(\s{role_regex})*>)?((flexion|content)>)?(((group_\d|constant)>)?{term_regex})?'.format(role_regex=ROLE_REGEX,
                                                                                                                         term_regex=TERM_REGEX)
 
     t_DECORATION_VALUE = r'"(\\"|[^"])*"'

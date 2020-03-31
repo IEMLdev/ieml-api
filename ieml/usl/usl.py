@@ -30,6 +30,10 @@ class USL(DecoratedComponent):
         if isinstance(other, Script):
             return False
 
+        from ieml.usl.decoration.instance import InstancedUSL
+        if isinstance(other, InstancedUSL):
+            other = other.usl
+
         return self.syntactic_level < other.syntactic_level or \
                (self.syntactic_level == other.syntactic_level and self.do_lt(other))
 
@@ -52,7 +56,7 @@ class USL(DecoratedComponent):
     def iter_structure(self):
         raise NotImplementedError()
 
-    def iter_structure_path(self):
+    def iter_structure_path(self, flexion=False):
         raise NotImplementedError()
 
 

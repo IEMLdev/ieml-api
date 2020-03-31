@@ -9,16 +9,13 @@ from enum import Enum
 class DeferenceError(KeyError):
 	pass
 
+
+SEPARATOR = '>'
+
 def path(string):
-	if string == ':':
-		return UslPath()
+	from ieml.usl.decoration.parser.parser import PathParser
 
-	elif string.startswith(':flexion') or string.startswith(':content'):
-		return LexemePath.from_string(string)
-	elif string.startswith(':constant') or string.startswith(':group'):
-		return PolymorphemePath.from_string(string)
-
-	return RolePath.from_string(string)
+	return PathParser().parse(string)
 
 class UslPath:
 	USL_TYPE = USL
@@ -33,15 +30,32 @@ class UslPath:
 	def _deference(self, usl):
 		return usl
 
+	def remove_prefix(self, prefix: 'UslPath'):
+		if prefix is None:
+			return self
+
+		if not isinstance(self, prefix.__class__) or not self._do_eq(prefix):
+			return None
+
+		if self.child is None:
+			return None
+
+		return self.child.remove_prefix(prefix.child)
+
+
+	def _do_eq(self, other):
+		return True
+
 	def deference(self, usl):
 		from ieml.usl.decoration.instance import InstancedUSL
 
 		if isinstance(usl, InstancedUSL):
 			usl = usl.usl
 
-		assert isinstance(usl, self.USL_TYPE), "Invalid Usl type for a " + self.__class__.__name__ + \
+		if not isinstance(usl, self.USL_TYPE):
+			raise DeferenceError("Invalid Usl type for a " + self.__class__.__name__ + \
 											", expected a " + self.USL_TYPE.__name__ + \
-											", got a " + usl.__class__.__name__
+											", got a " + usl.__class__.__name__)
 
 		node = self._deference(usl)
 
@@ -61,7 +75,7 @@ class UslPath:
 		return ''
 
 	def __str__(self):
-		return ':' + self._to_str() + (str(self.child) if self.child is not None else '')
+		return SEPARATOR + self._to_str() + (str(self.child) if self.child is not None else '')
 
 	@staticmethod
 	def _from_string(string, children):
@@ -69,10 +83,10 @@ class UslPath:
 
 	@classmethod
 	def from_string(cls, string):
-		if string == ':':
+		if string == SEPARATOR:
 			return UslPath._from_string(string, None)
 
-		split = string.split(':')
+		split = string.split(SEPARATOR)
 		return cls._from_string(split[1], split[2:])
 
 
@@ -94,6 +108,10 @@ class PolymorphemePath(UslPath):
 		self.group_idx = group_idx
 		self.morpheme = morpheme
 
+	def _do_eq(self, other):
+		return self.group_idx == other.group_idx and self.morpheme == other.morpheme
+
+
 	def _deference(self: 'PolymorphemePath', usl: PolyMorpheme):
 		group = None
 
@@ -112,9 +130,9 @@ class PolymorphemePath(UslPath):
 
 	def _to_str(self):
 		if self.group_idx == GroupIndex.CONSTANT:
-			return 'constant:' + str(self.morpheme)
+			return 'constant' + SEPARATOR + str(self.morpheme)
 		else:
-			return 'group_{}:'.format(self.group_idx.value) + str(self.morpheme)
+			return 'group_{}'.format(self.group_idx.value) + SEPARATOR + str(self.morpheme)
 
 	@staticmethod
 	def _from_string(elem, children):
@@ -158,6 +176,9 @@ class FlexionPath(UslPath):
 
 		assert isinstance(morpheme, Script)
 		self.morpheme = morpheme
+
+	def _do_eq(self, other):
+		return self.morpheme == other.morpheme
 
 	def _deference(self: 'FlexionPath', usl: PolyMorpheme):
 		all_group = [usl.constant, *(list(filter(lambda m: not m.empty, g)) for g, _ in usl.groups)]
@@ -203,6 +224,9 @@ class LexemePath(UslPath):
 			else:
 				assert isinstance(self.child, FlexionPath), \
 					"Invalid path structure, a lexeme flexion child must be a FlexionPath, not a " + self.child.__class__.__name__
+
+	def _do_eq(self, other):
+		return self.index == other.index
 
 	def _deference(self: 'LexemePath', usl: Lexeme):
 		if self.index == LexemeIndex.CONTENT:
@@ -255,11 +279,17 @@ class RolePath(UslPath):
 			if not isinstance(child, LexemePath):
 				raise DeferenceError("Invalid path structure, a lexeme content child must be a PolymorphemePath, not a " + self.child.__class__.__name__)
 
+	def _do_eq(self, other):
+		return self.role == other.role
+
 	def _deference(self: 'RolePath', usl: Word):
-		return usl.syntagmatic_fun.get(self.role, ignore_prefix=True)
+		try:
+			return usl.syntagmatic_fun.get(self.role, ignore_prefix=True, ignore_process_valence=True)
+		except KeyError as key:
+			raise DeferenceError(key)
 
 	def _to_str(self):
-		return str(self.role)
+		return 'role' + SEPARATOR + str(self.role)
 
 	@staticmethod
 	def _from_string(elem, children):
@@ -273,6 +303,7 @@ class RolePath(UslPath):
 		#
 		# 	sfun_role = SyntagmaticRole([])
 		# else:
+
 		from ieml.usl.usl import usl
 
 		sfun_role = SyntagmaticRole([usl(s) for s in elem.split(' ')])

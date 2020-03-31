@@ -6,6 +6,7 @@ from ply.yacc import yacc
 from ieml.constants import PARSER_FOLDER
 from ieml.dictionary.script import script
 from ieml.exceptions import CannotParse
+from ieml.usl.constants import ROLE_NAMES_TO_SCRIPT
 from ieml.usl.decoration.parser.lexer import tokens, get_lexer
 from ieml.usl.decoration.path import UslPath, RolePath, LexemePath, PolymorphemePath, LexemeIndex, GroupIndex, \
     FlexionPath
@@ -37,6 +38,7 @@ class PathParser:
         """path : SEPARATOR
                 | SEPARATOR role_path
                 | SEPARATOR lexeme_path
+                | SEPARATOR flexion_path
                 | SEPARATOR polymorpheme_path"""
 
         if len(p) == 2:
@@ -46,19 +48,33 @@ class PathParser:
 
     def p_role_path_list(self, p):
         """role_path_list : role_path_list MORPHEME
-                            | MORPHEME"""
+                            | MORPHEME
+                            | role_path_list ROLE_NAME
+                            | ROLE_NAME"""
         if len(p) == 2:
-            p[0] = [p[1]]
+            s = p[1]
+            if s in ROLE_NAMES_TO_SCRIPT:
+                s = ROLE_NAMES_TO_SCRIPT[s]
+            else:
+                s = script(s)
+
+            p[0] = [s]
         else:
-            p[0] = p[1] + [p[2]]
+            s = p[2]
+            if s in ROLE_NAMES_TO_SCRIPT:
+                s = ROLE_NAMES_TO_SCRIPT[s]
+            else:
+                s = script(s)
+
+            p[0] = p[1] + [s]
 
     def p_role_path(self, p):
-        """role_path : role_path_list
-                     | role_path_list SEPARATOR lexeme_path """
-        if len(p) == 2:
-            p[0] = RolePath(SyntagmaticRole(p[1]))
+        """role_path : ROLE_TOKEN SEPARATOR role_path_list
+                     | ROLE_TOKEN SEPARATOR role_path_list SEPARATOR lexeme_path """
+        if len(p) == 4:
+            p[0] = RolePath(SyntagmaticRole(p[3]))
         else:
-            p[0] = RolePath(SyntagmaticRole(p[1]), child=p[3])
+            p[0] = RolePath(SyntagmaticRole(p[3]), child=p[5])
 
     def p_lexeme_path(self, p):
         """lexeme_path : LEXEME_POSITION

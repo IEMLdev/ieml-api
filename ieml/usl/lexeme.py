@@ -47,7 +47,7 @@ class Lexeme(USL):
 		yield self.pm_content
 		yield from self.pm_content.iter_structure()
 
-	def iter_structure_path(self):
+	def iter_structure_path(self, flexion=False):
 		from ieml.usl.decoration.path import LexemePath, LexemeIndex
 		from ieml.usl.decoration.path import FlexionPath
 

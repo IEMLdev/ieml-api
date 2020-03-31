@@ -67,7 +67,7 @@ class Word(USL):
     def iter_structure(self):
         yield from self.syntagmatic_fun.iter_structure()
 
-    def iter_structure_path(self):
+    def iter_structure_path(self, flexion=False):
         from ieml.usl.decoration.path import UslPath
 
         yield (UslPath(), self)

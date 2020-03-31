@@ -2,7 +2,7 @@ from typing import List
 
 from ieml.commons import DecoratedComponent
 from ieml.usl import USL
-from ieml.usl.decoration.path import UslPath
+from ieml.usl.decoration.path import UslPath, FlexionPath
 
 
 class LiteralContext:
@@ -49,20 +49,24 @@ class InstancedUSL(USL):
 		self.usl = u
 		self.grammatical_class = self.usl.grammatical_class
 
-		for decoration in decorations:
-			if not isinstance(decoration, Decoration):
-				raise ValueError("Invalid argument for a InstantiatedUSL, expected a Decoration, got a "+\
-								 decoration.__class__.__name__)
+		self.flexion = False
+		with literal_context():
+			for decoration in decorations:
+				if not isinstance(decoration, Decoration):
+					raise ValueError("Invalid argument for a InstantiatedUSL, expected a Decoration, got a "+\
+									 decoration.__class__.__name__)
 
-			decoration.apply(self.usl)
+				self.flexion = isinstance(decoration.path, FlexionPath) or self.flexion
 
-		self.decorations = InstancedUSL.list_decorations(self.usl)
+				decoration.apply(self.usl)
+
+			self.decorations = InstancedUSL.list_decorations(self.usl, flexion=self.flexion)
 
 	@staticmethod
-	def list_decorations(u: USL):
+	def list_decorations(u: USL, flexion=False):
 		decorations = []
 
-		for path, value in u.iter_structure_path():
+		for path, value in u.iter_structure_path(flexion):
 			if value.get_literal() is not None:
 				decorations.append(Decoration(path, value.get_literal()))
 
@@ -73,7 +77,7 @@ class InstancedUSL(USL):
 		return InstancedUSL(u, InstancedUSL.list_decorations(u))
 
 	def __str__(self):
-		return "{} {}".format(str(self.usl), ' '.join(map(str, self.decorations)))
+		return "{} {}".format(str(self.usl), ' '.join(map(str, self.decorations))).strip()
 
 	@property
 	def empty(self):
@@ -86,8 +90,11 @@ class InstancedUSL(USL):
 	def iter_structure(self):
 		return self.usl.iter_structure()
 
-	def iter_structure_path(self):
-		return self.usl.iter_structure_path()
+	def iter_structure_path(self, flexion=False):
+		return self.usl.iter_structure_path(flexion=flexion)
+
+	def do_lt(self, other):
+		return self.usl.do_lt(other)
 
 	def _compute_singular_sequences(self):
 		res = []

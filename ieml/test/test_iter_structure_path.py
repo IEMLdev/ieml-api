@@ -9,13 +9,13 @@ class TestIterStructurePath(unittest.TestCase):
 	def test_iter_word(self):
 		w = usl("[! E:A:. ()(m.-B:.A:.-') > E:A:. E:A:. (E:B:.-d.u.-')(p.E:A:T:.- m1(S:))]")
 
-		print('\n'.join("{} -> {}".format(str(s), str(v)) for s, v in w.iter_structure_path()))
+		print('\n'.join("{} {}".format(str(s), str(v)) for s, v in w.iter_structure_path()))
 
 
 	def test_instanciated_usl(self):
 		w = usl("[! E:A:. ()(m.-B:.A:.-') > E:A:. E:A:. (E:B:.-d.u.-')(p.E:A:T:.- m1(S:))]")
 
-		x = path("/E:A:./content/constant/m.-B:.A:.-'").deference(w)
+		x = path(">role>E:A:.>content>constant>m.-B:.A:.-'").deference(w)
 		x.set_literal("test")
 
 		i_u = InstancedUSL.from_usl(w)

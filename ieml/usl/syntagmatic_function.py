@@ -8,8 +8,8 @@ from ieml.usl.constants import SYNTAGMATIC_FUNCTION_SCRIPT, INDEPENDANT_QUALITY,
     ADDRESS_PROCESS_VALENCE_SCRIPTS, ADDRESS_SCRIPTS, ADDRESS_ACTANTS_MOTOR_SCRIPTS, INITIATOR_SCRIPT, \
     INTERACTANT_SCRIPT, RECIPIENT_SCRIPT, TIME_SCRIPT, LOCATION_SCRIPT, MANNER_SCRIPT, CAUSE_SCRIPT, INTENTION_SCRIPT, \
     check_address_script, SYNTAGMATIC_FUNCTION_PROCESS_TYPE_SCRIPT, SYNTAGMATIC_FUNCTION_ACTANT_TYPE_SCRIPT, \
-    SYNTAGMATIC_FUNCTION_QUALITY_TYPE_SCRIPT, ADDRESS_SCRIPTS_ORDER, class_from_address,\
-    JUNCTION_INDEX, JUNCTION_SCRIPTS
+    SYNTAGMATIC_FUNCTION_QUALITY_TYPE_SCRIPT, ADDRESS_SCRIPTS_ORDER, class_from_address, \
+    JUNCTION_INDEX, JUNCTION_SCRIPTS, ADDRESS_ROLE_IN_PROCESS
 
 X = Any
 
@@ -80,11 +80,21 @@ class SyntagmaticFunction:
     def empty(self):
         return self.actor.empty and len(self.actors) == 0
 
-    def get(self, role: SyntagmaticRole, ignore_prefix=False) -> X:
+    def get(self, role: SyntagmaticRole, ignore_prefix=False, ignore_process_valence=False) -> X:
         # UNUSED ?
         # assert role.is_singular
-        if ignore_prefix:
+        if ignore_prefix and role.constant[0] not in ADDRESS_ROLE_IN_PROCESS:
+            # in the case of a process syntagm, we do not ignore the prefix
             role = SyntagmaticRole(list(role.constant)[1:])
+
+        if ignore_process_valence and role.constant and role.constant[0] in ADDRESS_ROLE_IN_PROCESS:
+            for valence in ADDRESS_PROCESS_VALENCE_SCRIPTS:
+                if valence in self.actors:
+                    break
+            else:
+                raise KeyError("Not a process")
+
+            role = SyntagmaticRole([valence] + list(role.constant)[1:])
 
         return self.actors[role].actor
 

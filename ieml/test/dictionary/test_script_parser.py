@@ -1,6 +1,5 @@
 import unittest
 
-from ieml.constants import DICTIONARY_FOLDER
 from ieml.dictionary.dictionary import Dictionary
 from ieml.dictionary.script.parser import ScriptParser
 from ieml.dictionary.script import AdditiveScript, MultiplicativeScript, NullScript
@@ -8,6 +7,7 @@ from ieml.dictionary.script import AdditiveScript, MultiplicativeScript, NullScr
 # from ieml.dictionary import Dictionary
 from ieml.dictionary.script import script as sc
 from ieml.exceptions import CannotParse
+from ieml.ieml_database import IEMLDatabase, GitInterface
 
 
 class TestTermParser(unittest.TestCase):
@@ -74,7 +74,9 @@ class TestTermParser(unittest.TestCase):
 
     def test_all_scripts(self):
         parser = ScriptParser()
-        terms = [str(script) for script in Dictionary.load().scripts]
+        dic = IEMLDatabase(folder=GitInterface().folder).get_dictionary()
+
+        terms = [str(script) for script in dic.scripts]
         terms_ast = [str(parser.parse(term)) for term in terms]
         self.assertListEqual(terms_ast, terms)
 

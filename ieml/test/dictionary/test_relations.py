@@ -22,12 +22,12 @@ class TestRelations(DictionaryTestCase):
 
     def test_script_sorted(self):
         self.assertListEqual(list(self.dictionary.scripts), sorted(self.dictionary.scripts))
-
-    def test_inhibitions(self):
-        for t in self.dictionary.scripts:
-            for reltype in self.dictionary._inhibitions[self.dictionary.tables.root(t)]:
-                self.assertTupleEqual(tuple(self.dictionary.relations.object(t , reltype)), (),
-                                     "Term %s has relations %s. Must be inhibited"%(str(t), reltype))
+    #
+    # def test_inhibitions(self):
+    #     for t in self.dictionary.scripts:
+    #         for reltype in self.dictionary._inhibitions[self.dictionary.tables.root(t)]:
+    #             self.assertTupleEqual(tuple(self.dictionary.relations.object(t , reltype)), (),
+    #                                  "Term %s has relations %s. Must be inhibited"%(str(t), reltype))
 
     def test_table_relations(self):
         t_p = script("M:M:.u.-")

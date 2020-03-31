@@ -86,18 +86,20 @@ class PolyMorpheme(USL):
     def iter_structure(self):
         yield from self.morphemes
 
-    def iter_structure_path(self):
-        from ieml.usl.decoration.path import PolymorphemePath, GroupIndex
+    def iter_structure_path(self, flexion=False):
+        from ieml.usl.decoration.path import PolymorphemePath, GroupIndex, FlexionPath
 
-        yield from [(PolymorphemePath(GroupIndex.CONSTANT, m), m) for m in self.constant]
+        res_f= lambda u, grp_idx: FlexionPath(u) if flexion else PolymorphemePath(grp_idx, u)
+
+        yield from [(res_f(m, GroupIndex.CONSTANT), m) for m in self.constant]
         if len(self.groups) > 0:
-            yield from [(PolymorphemePath(GroupIndex.GROUP_0, s), s) for s in self.groups[0][0]]
+            yield from [(res_f(s, GroupIndex.GROUP_0), s) for s in self.groups[0][0]]
 
         if len(self.groups) > 1:
-            yield from [(PolymorphemePath(GroupIndex.GROUP_1, s), s) for s in self.groups[1][0]]
+            yield from [(res_f(s, GroupIndex.GROUP_1), s) for s in self.groups[1][0]]
 
         if len(self.groups) > 2:
-            yield from [(PolymorphemePath(GroupIndex.GROUP_2, s), s) for s in self.groups[2][0]]
+            yield from [(res_f(s, GroupIndex.GROUP_2), s) for s in self.groups[2][0]]
 
     @property
     def morphemes(self):

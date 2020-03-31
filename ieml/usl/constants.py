@@ -69,6 +69,8 @@ ADDRESS_CIRCONSTANTIAL_ACTANTS_SCRIPTS = [TIME_SCRIPT, LOCATION_SCRIPT, INTENTIO
 ACTANTS_SCRIPTS = [*ADDRESS_ACTANTS_MOTOR_SCRIPTS,
                    *ADDRESS_CIRCONSTANTIAL_ACTANTS_SCRIPTS]
 
+ADDRESS_ROLE_IN_PROCESS = [*ADDRESS_PROCESS_VALENCE_SCRIPTS, *ACTANTS_SCRIPTS]
+
 JUNCTION_INDEX = list(map(script, [
     "j.-U:.-'d.o.-l.o.-',",
     "j.-A:.-'d.o.-l.o.-',",
@@ -364,73 +366,83 @@ NAMES_TO_ADDRESS = {
     **{j: "*{}".format(i+1) for i, j in enumerate(JUNCTION_INDEX)}
 
 }
-
-
-
-
-
-ROLE_NAMES_TO_SCRIPT= {
-    'process_1': ONE_ACTANT_PROCESS,
-    'process_2': TWO_ACTANTS_PROCESS,
-    'process_3': THREE_ACTANTS_PROCESS,
-    'process': THREE_ACTANTS_PROCESS,
-    'initiator': INITIATOR_SCRIPT,
-    'interactant': INTERACTANT_SCRIPT,
-    'recipient' : RECIPIENT_SCRIPT,
-
-    'time': TIME_SCRIPT,
-    'location': LOCATION_SCRIPT,
-    'manner': MANNER_SCRIPT,
-    'intention': INTENTION_SCRIPT,
-    'cause': CAUSE_SCRIPT,
-
-    'independant': INDEPENDANT_QUALITY,
-    'dependant': DEPENDANT_QUALITY,
-
-    'and': JUNCTION_AND,
-    'or (inclusive)': JUNCTION_OR,
-    'or (exclusive)': JUNCTION_XOR,
-
-    'is the same as the precedent': JUNCTION_COMPARISON_FORMAL_SAME,
-    'is similar to the precedent': JUNCTION_COMPARISON_FORMAL_SIMILAR,
-    'is distinct from the precedent': JUNCTION_COMPARISON_FORMAL_DISTINCT,
-
-    'is worse than the precedent': JUNCTION_COMPARISON_QUALITATIVE_WORSE,
-    'is as good as the precedent': JUNCTION_COMPARISON_QUALITATIVE_AS_GOOD,
-    'is better than the precedent': JUNCTION_COMPARISON_QUALITATIVE_BETTER,
-
-    'is less than the precedent': JUNCTION_COMPARISON_QUANTITATIVE_LESS,
-    'is as much as the precedent': JUNCTION_COMPARISON_QUANTITATIVE_AS_MUCH,
-    'is more than the precedent': JUNCTION_COMPARISON_QUANTITATIVE_MORE,
-
-    "is the worst of the precedent": JUNCTION_RANKINGS_QUALITATIVE_WORST,
-    "is the qualitative average of the precedent": JUNCTION_RANKINGS_QUALITATIVE_AVERAGE,
-    "is the best of the precedent": JUNCTION_RANKINGS_QUALITATIVE_BEST,
-
-    "is the minimum of the precedent": JUNCTION_RANKINGS_QUANTITATIVE_MINIMUM,
-    "is the quantitative average of the precedent": JUNCTION_RANKINGS_QUANTITATIVE_AVERAGE,
-    "is the maximum of the precedent": JUNCTION_RANKINGS_QUANTITATIVE_MAXIMUM,
-
-    "explains the precedent": JUNCTION_ANTINOMIES_EXPLANATIONS_EXPLAINS,
-    "has nothing to do with the precedent": JUNCTION_ANTINOMIES_EXPLANATIONS_NOTHING_TO_DO,
-    "contradicts the precedent": JUNCTION_ANTINOMIES_EXPLANATIONS_CONTRADICT,
-
-    "unfortunately opposes the precedent": JUNCTION_ANTINOMIES_QUALITATIVE_UNFORTUNATELY_OPPOSES,
-    "balances the precedent (neutral)": JUNCTION_ANTINOMIES_QUALITATIVE_BALANCES,
-    "is fortunately opposed to the precedent": JUNCTION_ANTINOMIES_QUALITATIVE_FORTUNATELY_OPPOSES,
-
-    "has the opposite effect of the precedent": JUNCTION_ANTINOMIES_CAUSAL_OPPOSITE_EFFECT,
-    "reduces the effect of the previous one": JUNCTION_ANTINOMIES_CAUSAL_REDUCE_EFFECT,
-    "increases the effect of the previous one": JUNCTION_ANTINOMIES_CAUSAL_INCREASE_EFFECT,
-
-    "is the effect of the precedent (therefore)": JUNCTION_CAUSAL_IS_EFFECT,
-    "is the cause of the precedent (because)": JUNCTION_CAUSAL_IS_CAUSE,
-    "is an analogy of the precedent cause to effect relationship (a fortiori, a contrario, etc.)": JUNCTION_CAUSAL_IS_ANALOGY_CAUSE_TO_EFFECT,
-    "is an analogy of the precedent effect to cause relationship": JUNCTION_CAUSAL_IS_ANALOGY_EFFECT_TO_CAUSE,
-
-    **{"*{}".format(i + 1): j for i, j in enumerate(JUNCTION_INDEX)}
+NAMES_TO_ADDRESS_WITH_VALENCE_IN_PROCESS = {
+    **NAMES_TO_ADDRESS,
+    ONE_ACTANT_PROCESS: 'process_1',
+    TWO_ACTANTS_PROCESS: 'process_2',
+    THREE_ACTANTS_PROCESS: 'process_3',
 
 }
+
+
+
+
+
+ROLE_NAMES_TO_SCRIPT= {**dict(map(reversed, NAMES_TO_ADDRESS_WITH_VALENCE_IN_PROCESS.items())),
+                        'process': THREE_ACTANTS_PROCESS
+                       }
+# {
+#     'process_1': ONE_ACTANT_PROCESS,
+#     'process_2': TWO_ACTANTS_PROCESS,
+#     'process_3': THREE_ACTANTS_PROCESS,
+#     'process': THREE_ACTANTS_PROCESS,
+#     'initiator': INITIATOR_SCRIPT,
+#     'interactant': INTERACTANT_SCRIPT,
+#     'recipient' : RECIPIENT_SCRIPT,
+#
+#     'time': TIME_SCRIPT,
+#     'location': LOCATION_SCRIPT,
+#     'manner': MANNER_SCRIPT,
+#     'intention': INTENTION_SCRIPT,
+#     'cause': CAUSE_SCRIPT,
+#
+#     'independant': INDEPENDANT_QUALITY,
+#     'dependant': DEPENDANT_QUALITY,
+#
+#     'and': JUNCTION_AND,
+#     'or (inclusive)': JUNCTION_OR,
+#     'or (exclusive)': JUNCTION_XOR,
+#
+#     'is the same as the precedent': JUNCTION_COMPARISON_FORMAL_SAME,
+#     'is similar to the precedent': JUNCTION_COMPARISON_FORMAL_SIMILAR,
+#     'is distinct from the precedent': JUNCTION_COMPARISON_FORMAL_DISTINCT,
+#
+#     'is worse than the precedent': JUNCTION_COMPARISON_QUALITATIVE_WORSE,
+#     'is as good as the precedent': JUNCTION_COMPARISON_QUALITATIVE_AS_GOOD,
+#     'is better than the precedent': JUNCTION_COMPARISON_QUALITATIVE_BETTER,
+#
+#     'is less than the precedent': JUNCTION_COMPARISON_QUANTITATIVE_LESS,
+#     'is as much as the precedent': JUNCTION_COMPARISON_QUANTITATIVE_AS_MUCH,
+#     'is more than the precedent': JUNCTION_COMPARISON_QUANTITATIVE_MORE,
+#
+#     "is the worst of the precedent": JUNCTION_RANKINGS_QUALITATIVE_WORST,
+#     "is the qualitative average of the precedent": JUNCTION_RANKINGS_QUALITATIVE_AVERAGE,
+#     "is the best of the precedent": JUNCTION_RANKINGS_QUALITATIVE_BEST,
+#
+#     "is the minimum of the precedent": JUNCTION_RANKINGS_QUANTITATIVE_MINIMUM,
+#     "is the quantitative average of the precedent": JUNCTION_RANKINGS_QUANTITATIVE_AVERAGE,
+#     "is the maximum of the precedent": JUNCTION_RANKINGS_QUANTITATIVE_MAXIMUM,
+#
+#     "explains the precedent": JUNCTION_ANTINOMIES_EXPLANATIONS_EXPLAINS,
+#     "has nothing to do with the precedent": JUNCTION_ANTINOMIES_EXPLANATIONS_NOTHING_TO_DO,
+#     "contradicts the precedent": JUNCTION_ANTINOMIES_EXPLANATIONS_CONTRADICT,
+#
+#     "unfortunately opposes the precedent": JUNCTION_ANTINOMIES_QUALITATIVE_UNFORTUNATELY_OPPOSES,
+#     "balances the precedent (neutral)": JUNCTION_ANTINOMIES_QUALITATIVE_BALANCES,
+#     "is fortunately opposed to the precedent": JUNCTION_ANTINOMIES_QUALITATIVE_FORTUNATELY_OPPOSES,
+#
+#     "has the opposite effect of the precedent": JUNCTION_ANTINOMIES_CAUSAL_OPPOSITE_EFFECT,
+#     "reduces the effect of the previous one": JUNCTION_ANTINOMIES_CAUSAL_REDUCE_EFFECT,
+#     "increases the effect of the previous one": JUNCTION_ANTINOMIES_CAUSAL_INCREASE_EFFECT,
+#
+#     "is the effect of the precedent (therefore)": JUNCTION_CAUSAL_IS_EFFECT,
+#     "is the cause of the precedent (because)": JUNCTION_CAUSAL_IS_CAUSE,
+#     "is an analogy of the precedent cause to effect relationship (a fortiori, a contrario, etc.)": JUNCTION_CAUSAL_IS_ANALOGY_CAUSE_TO_EFFECT,
+#     "is an analogy of the precedent effect to cause relationship": JUNCTION_CAUSAL_IS_ANALOGY_EFFECT_TO_CAUSE,
+#
+#     **{"*{}".format(i + 1): j for i, j in enumerate(JUNCTION_INDEX)}
+#
+# }
 
 ROLE_REGEX=r"({})".format('|'.join(map(re.escape, map(str, set(ROLE_NAMES_TO_SCRIPT.values())))))
 

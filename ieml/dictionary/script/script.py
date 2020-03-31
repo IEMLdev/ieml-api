@@ -214,6 +214,9 @@ class Script(TreeStructure, DecoratedComponent):
     def iter_structure(self):
         return []
 
+    def iter_structure_path(self, flexion=False):
+        return []
+
     def _compute_cells(self):
         pass
 

@@ -1,14 +1,14 @@
 from unittest import TestCase
 
-from ieml import IEMLDatabase
 from ieml.dictionary.dictionary import Dictionary
 from ieml.dictionary.table.table import Table
+from ieml.ieml_database import IEMLDatabase, GitInterface
 
 
 class TestTables(TestCase):
     def setUp(self):
-        self.db = IEMLDatabase(use_cache=False)
-        self.d = self.db.dictionary()
+        self.db = IEMLDatabase(folder=GitInterface().folder)
+        self.d = self.db.get_dictionary()
 
     def test_iterable(self):
         try:
