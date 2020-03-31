@@ -1,3 +1,4 @@
+from ieml.commons import OrderedEnum
 from ieml.usl.usl import USL
 from ieml.usl.polymorpheme import PolyMorpheme
 from ieml.usl.lexeme import Lexeme
@@ -42,9 +43,6 @@ class UslPath:
 
 		return self.child.remove_prefix(prefix.child)
 
-
-	def _do_eq(self, other):
-		return True
 
 	def deference(self, usl):
 		from ieml.usl.decoration.instance import InstancedUSL
@@ -93,7 +91,16 @@ class UslPath:
 	def __eq__(self, other):
 		return isinstance(other, UslPath) and str(other) == str(self)
 
-class GroupIndex(Enum):
+	def __lt__(self, other):
+		return self._do_lt(other)
+
+	def _do_eq(self, other):
+		return True
+
+	def _do_lt(self, other):
+		return False
+
+class GroupIndex(OrderedEnum):
 	CONSTANT = -1
 	GROUP_0 = 0
 	GROUP_1 = 1
@@ -111,6 +118,8 @@ class PolymorphemePath(UslPath):
 	def _do_eq(self, other):
 		return self.group_idx == other.group_idx and self.morpheme == other.morpheme
 
+	def _do_lt(self, other):
+		return (self.group_idx, self.morpheme) < (other.group_idx, other.morpheme)
 
 	def _deference(self: 'PolymorphemePath', usl: PolyMorpheme):
 		group = None
@@ -180,6 +189,9 @@ class FlexionPath(UslPath):
 	def _do_eq(self, other):
 		return self.morpheme == other.morpheme
 
+	def _do_lt(self, other):
+		return self.morpheme < other.morpheme
+
 	def _deference(self: 'FlexionPath', usl: PolyMorpheme):
 		all_group = [usl.constant, *(list(filter(lambda m: not m.empty, g)) for g, _ in usl.groups)]
 		all_morphemes = {str(w): w for g in all_group for w in g}
@@ -204,7 +216,7 @@ class FlexionPath(UslPath):
 		return FlexionPath(morpheme=morph)
 
 
-class LexemeIndex(Enum):
+class LexemeIndex(OrderedEnum):
 	CONTENT = 0
 	FLEXION = 1
 
@@ -227,6 +239,9 @@ class LexemePath(UslPath):
 
 	def _do_eq(self, other):
 		return self.index == other.index
+
+	def _do_lt(self, other):
+		return self.index < other.index
 
 	def _deference(self: 'LexemePath', usl: Lexeme):
 		if self.index == LexemeIndex.CONTENT:
@@ -281,6 +296,9 @@ class RolePath(UslPath):
 
 	def _do_eq(self, other):
 		return self.role == other.role
+
+	def _do_lt(self, other):
+		return self.role < other.role
 
 	def _deference(self: 'RolePath', usl: Word):
 		try:

@@ -4,6 +4,7 @@ import logging
 import os
 import pickle
 from collections import OrderedDict
+from enum import Enum
 from itertools import chain
 from sys import stderr
 from typing import List
@@ -224,3 +225,21 @@ class DecoratedComponent:
 
     def get_literal(self):
         return self._literal
+
+class OrderedEnum(Enum):
+    def __ge__(self, other):
+        if self.__class__ is other.__class__:
+            return self.value >= other.value
+        return NotImplemented
+    def __gt__(self, other):
+        if self.__class__ is other.__class__:
+            return self.value > other.value
+        return NotImplemented
+    def __le__(self, other):
+        if self.__class__ is other.__class__:
+            return self.value <= other.value
+        return NotImplemented
+    def __lt__(self, other):
+        if self.__class__ is other.__class__:
+            return self.value < other.value
+        return NotImplemented

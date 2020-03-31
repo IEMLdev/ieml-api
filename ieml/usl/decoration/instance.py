@@ -35,8 +35,13 @@ class Decoration:
 		tgt.set_literal(self.value)
 
 	def __str__(self):
-		return '[{} "{}"]'.format(str(self.path), str(self.value))
+		return '[{} "{}"]'.format(str(self.path), str(self.value).replace('"', r'\"'))
 
+	def __lt__(self, other):
+		return (self.path, self.value) < (other.path, other.value)
+
+	def __eq__(self, other):
+		return str(self) == str(other)
 
 class InstancedUSL(USL):
 	# last in the  list
@@ -70,7 +75,7 @@ class InstancedUSL(USL):
 			if value.get_literal() is not None:
 				decorations.append(Decoration(path, value.get_literal()))
 
-		return decorations
+		return sorted(decorations)
 
 	@staticmethod
 	def from_usl(u: 'USL'):
