@@ -48,4 +48,6 @@ def get_lexer(module=None):
         logger.log(logging.ERROR, "Illegal character '%s'" % t.value[0])
         t.lexer.skip(1)
 
-    return lxr.lex(module=module, errorlog=logging, debug=True, debuglog=logging, optimize=False,)
+    return lxr.lex(module=module, errorlog=logging,
+                   # debug=True, debuglog=logging,
+                   optimize=True,)
