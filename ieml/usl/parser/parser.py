@@ -204,7 +204,7 @@ class IEMLParser():
 
 
     def p_decoration(self, p):
-        """decoration : LBRACKET morpheme_sum DECORATION_VALUE RBRACKET"""
+        """decoration : LBRACKET USL_PATH DECORATION_VALUE RBRACKET"""
         usl_path = self.path_parser.parse(p[2])
         p[0] = Decoration(usl_path, p[3][1:-1])
 
