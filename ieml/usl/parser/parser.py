@@ -33,7 +33,7 @@ class IEMLParser():
         self.lexer = get_lexer()
         self.parser = yacc.yacc(module=self, errorlog=logging, start='proposition',
                                 # debug=True,
-                                optimize=True,
+                                optimize=False,
                                 picklefile=os.path.join(PARSER_FOLDER, "ieml_parser.pickle"))
         self._ieml = None
         self.path_parser = PathParser()

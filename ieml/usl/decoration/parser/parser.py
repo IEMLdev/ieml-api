@@ -22,7 +22,7 @@ class PathParser:
         self.lexer = get_lexer()
         self.parser = yacc(module=self, errorlog=logging, start='path',
                                   # debug=True, debuglog=logging,
-                                  optimize=True,
+                                  optimize=False,
                                   picklefile=os.path.join(PARSER_FOLDER, "path_parser.pickle"))
 
     def parse(self, s):

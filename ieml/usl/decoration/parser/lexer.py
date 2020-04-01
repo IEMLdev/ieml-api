@@ -50,4 +50,4 @@ def get_lexer(module=None):
 
     return lxr.lex(module=module, errorlog=logging,
                    # debug=True, debuglog=logging,
-                   optimize=True,)
+                   optimize=False,)
