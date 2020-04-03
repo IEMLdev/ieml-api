@@ -127,7 +127,7 @@ class IEMLDatabase:
             ext = '.ieml'
 
         if isinstance(ieml, InstancedUSL):
-            class_folder, prefix_sixe = self.CLASS_TO_FOLDER[ieml.usl.__class__]
+                class_folder, prefix_sixe = self.CLASS_TO_FOLDER[ieml.usl.__class__]
         else:
             class_folder, prefix_sixe = self.CLASS_TO_FOLDER[ieml.__class__]
 
@@ -269,7 +269,7 @@ class IEMLDatabase:
 
         with open(self.path_of(ieml, mkdir=True), 'a', encoding='utf8') as fp:
             fp.write('"{}" {} {} "{}"\n'.format(
-                str(ieml),
+                self.escape_value(str(ieml)),
                 language,
                 descriptor,
                 self.escape_value(value)))
