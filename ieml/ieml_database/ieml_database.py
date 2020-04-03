@@ -26,6 +26,7 @@ from ieml.dictionary.script import NullScript, MultiplicativeScript, AdditiveScr
 from ieml.exceptions import CannotParse
 from ieml.ieml_database.descriptors import Descriptors, normalize_key
 from ieml.ieml_database.git_interface import logger
+from ieml.usl.decoration.instance import InstancedUSL
 from ieml.usl.lexeme import Lexeme
 from ieml.usl.parser import IEMLParser
 from ieml.usl import PolyMorpheme, Word, get_index
@@ -125,8 +126,10 @@ class IEMLDatabase:
         else:
             ext = '.ieml'
 
-        class_folder, prefix_sixe = self.CLASS_TO_FOLDER[ieml.__class__]
-
+        if isinstance(ieml, InstancedUSL):
+            class_folder, prefix_sixe = self.CLASS_TO_FOLDER[ieml.usl.__class__]
+        else:
+            class_folder, prefix_sixe = self.CLASS_TO_FOLDER[ieml.__class__]
 
         if normalize:
             filename = self.filename_of(ieml)
