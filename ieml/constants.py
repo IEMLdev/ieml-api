@@ -1,4 +1,3 @@
-import _pygit2
 import pygit2
 from bidict import bidict
 import os
