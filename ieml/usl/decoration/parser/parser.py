@@ -26,6 +26,9 @@ class PathParser:
                                   picklefile=os.path.join(PARSER_FOLDER, "path_parser.pickle"))
 
     def parse(self, s):
+        if not isinstance(s, str):
+            s = str(s)
+
         with self.lock:
             try:
                 return self.parser.parse(s, lexer=self.lexer)
@@ -71,11 +74,17 @@ class PathParser:
 
     def p_role_path(self, p):
         """role_path : ROLE_TOKEN SEPARATOR role_path_list
-                     | ROLE_TOKEN SEPARATOR role_path_list SEPARATOR lexeme_path """
+                     | ROLE_TOKEN SEPARATOR EXCLAMATION_MARK role_path_list
+                     | ROLE_TOKEN SEPARATOR role_path_list SEPARATOR lexeme_path
+                     | ROLE_TOKEN SEPARATOR EXCLAMATION_MARK role_path_list SEPARATOR lexeme_path"""
         if len(p) == 4:
             p[0] = RolePath(SyntagmaticRole(p[3]))
-        else:
+        elif len(p) == 5:
+            p[0] = RolePath(SyntagmaticRole(p[4]), has_focus=True)
+        elif len(p) == 6:
             p[0] = RolePath(SyntagmaticRole(p[3]), child=p[5])
+        else:
+            p[0] = RolePath(SyntagmaticRole(p[4]), has_focus=True, child=p[6])
 
     def p_lexeme_path(self, p):
         """lexeme_path : LEXEME_POSITION
@@ -99,10 +108,17 @@ class PathParser:
         p[0] = FlexionPath(script(p[1]))
 
     def p_polymorpheme_path(self, p):
-        """polymorpheme_path : POLYMORPHEME_POSITION SEPARATOR MORPHEME"""
-        group_idx = GroupIndex[p[1].upper()]
-        morpheme = script(p[3])
-        p[0] = PolymorphemePath(group_idx, morpheme)
+        """polymorpheme_path : POLYMORPHEME_POSITION SEPARATOR MORPHEME
+                             | POLYMORPHEME_POSITION MULTIPLICITY SEPARATOR MORPHEME"""
+        if len(p) == 4:
+            group_idx = GroupIndex[p[1].upper()]
+            morpheme = script(p[3])
+            p[0] = PolymorphemePath(group_idx, morpheme)
+        else:
+            group_idx = GroupIndex[p[1].upper()]
+            morpheme = script(p[4])
+            p[0] = PolymorphemePath(group_idx, morpheme, multiplicity=int(p[2]))
+
 
 
     def p_error(self, p):

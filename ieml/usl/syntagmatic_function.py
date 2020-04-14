@@ -108,15 +108,15 @@ class SyntagmaticFunction:
             if sfun.actor is not None:
                 yield from sfun.actor.iter_structure()
 
-    def iter_structure_path(self, context):
+    def iter_structure_path(self, context, focus_role=None):
         from ieml.usl.decoration.path import RolePath
 
         for l, lex in self.as_list(context):
-            yield (RolePath(SyntagmaticRole(l), child=None), lex)
+            has_focus = (SyntagmaticRole(constant=l) == focus_role)
+            yield (RolePath(SyntagmaticRole(l), has_focus=has_focus, child=None), lex)
 
             for child, x in lex.iter_structure_path():
-                yield (RolePath(SyntagmaticRole(l), child=child), x)
-
+                yield (RolePath(SyntagmaticRole(l), has_focus=has_focus, child=child), x)
 
     def role_is_junction(self, role: SyntagmaticRole=None):
         try:

@@ -3,7 +3,7 @@ import ply.yacc as yacc
 
 from ieml.constants import PARSER_FOLDER
 from ieml.dictionary.script import script, Script, NullScript
-from ieml.usl import Word, PolyMorpheme
+from ieml.usl import Word, PolyMorpheme, USL
 from ieml.exceptions import CannotParse
 from ieml.usl.word import Lexeme
 from ieml.usl.syntagmatic_function import SyntagmaticFunction, SyntagmaticRole
@@ -43,6 +43,9 @@ class IEMLParser():
         """Parses the input string, and returns a reference to the created AST's root"""
         if s == '':
             return NullScript(0)
+
+        if isinstance(s, (USL, Script)):
+            s = str(s)
 
         with self.lock:
             self.factorize_script = factorize_script

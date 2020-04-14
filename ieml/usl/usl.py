@@ -59,6 +59,10 @@ class USL(DecoratedComponent):
     def iter_structure_path(self, flexion=False):
         raise NotImplementedError()
 
+    def iter_structure_path_by_type(self, _type=Script, flexion=False,):
+        for path, item in self.iter_structure_path(flexion=flexion):
+            if isinstance(item, _type):
+                yield (path, item)
 
     @property
     def cardinal(self):
@@ -97,39 +101,53 @@ def usl(arg):
 
     if isinstance(arg, Script):
         from ieml.usl import PolyMorpheme
-        return PolyMorpheme([arg])
+        return PolyMorpheme(constant=[arg])
 
     if isinstance(arg, USL):
         return arg
 
-    from ieml.lexicon.paths import resolve_ieml_object, path
-    if isinstance(arg, dict):
-        # map path -> Ieml_object
-        return resolve_ieml_object(arg)
 
-    # if iterable, can be a list of usl to convert into a text
+    #if iterable, can be a list of (path, usl) to convert into an usl
     try:
         usl_list = list(arg)
     except TypeError:
         pass
     else:
-        if len(usl_list) == 0:
-            return usl('E:')
+        from ieml.usl.decoration.path import UslPath, usl_from_path_values
 
-        if all(isinstance(u, USL) for u in usl_list):
-            if len(usl_list) == 1:
-                return usl_list[0]
-            else:
-                from ieml.lexicon import text
-                return text(usl_list)
-        else:
-            # list of path objects
-            try:
-                rules = [(a, b) for a, b in usl_list]
-            except TypeError:
-                pass
-            else:
-                rules = [(path(a), usl(b)) for a, b in rules]
-                return resolve_ieml_object(rules)
+        if not all(isinstance(u, (USL, Script)) and isinstance(p, UslPath) for p, u in usl_list):
+            raise ValueError("Invalid iterable of (UslPath, USL) to create an USL from.")
+
+        return usl_from_path_values(usl_list)
+
+    # from ieml.lexicon.paths import resolve_ieml_object, path
+    # if isinstance(arg, dict):
+    #     # map path -> Ieml_object
+    #     return resolve_ieml_object(arg)
+
+    # if iterable, can be a list of usl to convert into a text
+    # try:
+    #     usl_list = list(arg)
+    # except TypeError:
+    #     pass
+    # else:
+    #     if len(usl_list) == 0:
+    #         return usl('E:')
+    #
+    #     if all(isinstance(u, USL) for u in usl_list):
+    #         if len(usl_list) == 1:
+    #             return usl_list[0]
+    #         else:
+    #             from ieml.lexicon import text
+    #             return text(usl_list)
+    #     else:
+    #         # list of path objects
+    #         try:
+    #             rules = [(a, b) for a, b in usl_list]
+    #         except TypeError:
+    #             pass
+    #         else:
+    #             rules = [(path(a), usl(b)) for a, b in rules]
+    #             return resolve_ieml_object(rules)
 
     raise NotImplementedError()

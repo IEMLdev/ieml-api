@@ -71,7 +71,7 @@ class Word(USL):
         from ieml.usl.decoration.path import UslPath
 
         yield (UslPath(), self)
-        yield from self.syntagmatic_fun.iter_structure_path(self.context_type)
+        yield from self.syntagmatic_fun.iter_structure_path(self.context_type, focus_role=self.role)
 
     @property
     def empty(self):

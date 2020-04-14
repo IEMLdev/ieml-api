@@ -51,6 +51,32 @@ ADDRESS_PROCESS_POLYMORPHEME_SCRIPTS = {
 
 }
 
+FLEXION_SCRIPTS = list(map(script, [
+    "E:M:.-d.u.-'", #definite/indefinite/demonstrative
+    "E:.-n.E:U:.+F:.-'", # genders
+
+    "E:O:O:.", # logic: affirmation, negation, interrogation, quotation
+    "E:M:O:.", # logic: inference types
+    "E:.+E:U:S:+T:.-M:M:.o.-'", # modes de l'enneage
+    "E:.b.O:M:.-", # modes from the hexad
+    "E:.b.O:O:.-", # modes from the tetrad
+    "E:S:.j.-'M:O:.-O:.-',", # number: clusters, one by one (each), in pairs, etc.
+    "E:.-',b.-S:.U:.-'y.-'O:.-',_", # number: continuous / discontinuous
+    "E:.O:O:.-", # number: one, two, three, many
+    "E:I:.-t.u.-'", # nubmer: qualitative quantification
+
+    "E:F:.-t.o.-'", # process: duration aspects
+    "E:.-'O:O:.-M:.-'t.o.-',", # process: grammatical moods
+    "E:.-O:O:.-t.o.-'", # process: voice (passive / active / reflexive / reciprocal)
+    "E:.-F:.M:M:.-l.-'", # relations in space: places, movements
+    "E:.O:O:.O:.-t.o.-'", # relations in time: markers, durations
+    "E:M:.-O:.-t.o.-'", # relations in time: past / present / future, relative/absolute
+    "E:M:.d.+M:O:.-", # relations: determinations, causes
+    "E:F:M:.", # relations: gradients (quality, quantity, distribution, frequency)
+    "E:.O:.M:O:.-", # relations: qualities, manners
+]))
+
+
 
 SYNTAGMATIC_FUNCTION_SCRIPT = script('E:.b.-')
 
@@ -186,40 +212,6 @@ JUNCTION_CAUSAL = [JUNCTION_CAUSAL_IS_EFFECT,
                   JUNCTION_CAUSAL_IS_ANALOGY_CAUSE_TO_EFFECT,
                   JUNCTION_CAUSAL_IS_ANALOGY_EFFECT_TO_CAUSE]
 
-# JUNCTION_COMPARISON_ABSOLUTE_THE_WORST_OF = script("E:U:S:.-A:.-k.u.-'")
-# JUNCTION_COMPARISON_ABSOLUTE_AVERGAGE_QUALITY_OF = script("E:U:B:.-A:.-k.u.-'")
-# JUNCTION_COMPARISON_ABSOLUTE_THE_BEST_OF = script("E:U:T:.-A:.-k.u.-'")
-# JUNCTION_COMPARISON_ABSOLUTE_THE_LEAST_OF = script("E:A:S:.-A:.-k.u.-'")
-# JUNCTION_COMPARISON_ABSOLUTE_NORMAL_QUANTITY_OF = script("E:A:B:.-A:.-k.u.-'")
-# JUNCTION_COMPARISON_ABSOLUTE_THE_MOST_OF = script("E:A:T:.-A:.-k.u.-'")
-#
-# JUNCTION_COMPARISON_ABSOLUTE_LINK = script("E:O:M:.-A:.-k.u.-'").singular_sequences_set
-
-
-# JUNCTION_CAUSAL_ANCHOR = script("E:T:.h.-k.u.-'")
-# JUNCTION_CAUSAL_CAUSE_TO_EFFECT_LINK = script("E:T:.c.-k.u.-'")
-# JUNCTION_CAUSAL_EFFECT_TO_CAUSE_LINK = script("E:B:.x.-k.u.-'")
-# JUNCTION_CAUSAL_A_FORTIORI_LINK = script("E:B:.x.-k.u.-'")
-#
-# JUNCTION_CAUSAL = [JUNCTION_CAUSAL_ANCHOR, JUNCTION_CAUSAL_CAUSE_TO_EFFECT_LINK,
-#                    JUNCTION_CAUSAL_EFFECT_TO_CAUSE_LINK, JUNCTION_CAUSAL_A_FORTIORI_LINK]
-#
-# JUNCTION_ANTINOMIC_ANCHOR = script("E:.A:.g.-k.u.-'")
-#
-# JUNCTION_ANTINOMIC_BUT_LINK =     script("E:.U:.j.-k.u.-'")
-# JUNCTION_ANTINOMIC_EXCEPT_LINK =  script("E:.U:.j.-wo.-k.u.-'")
-# JUNCTION_ANTINOMIC_ALTOUGH_LINK = script("E:.U:.j.-wa.-k.u.-'")
-# JUNCTION_ANTINOMIC_ON_THE_OTHER_HAND_LINK = script("E:.U:.j.-wu.-k.u.-'")
-# JUNCTION_ANTINOMIC_CONTRARIWISE_LINK = script("E:.U:.j.-we.-k.u.-'")
-#
-# JUNCTION_ANTINOMIC = [JUNCTION_ANTINOMIC_ANCHOR, JUNCTION_ANTINOMIC_BUT_LINK, JUNCTION_ANTINOMIC_EXCEPT_LINK,
-#                       JUNCTION_ANTINOMIC_ALTOUGH_LINK, JUNCTION_ANTINOMIC_ON_THE_OTHER_HAND_LINK,
-#                       JUNCTION_ANTINOMIC_CONTRARIWISE_LINK]
-
-# JUNCTION_EXPLICATION_ANCHOR = script("E:U:B:.-U:.-k.u.-'")
-# JUNCTION_EXPLICATION_BEST_LINK = script("E:U:T:.-U:.-k.u.-'")
-
-# JUNCTION_EXPLICATION = [JUNCTION_EXPLICATION_ANCHOR, JUNCTION_EXPLICATION_BEST_LINK]
 
 JUNCTION_SCRIPTS = [*JUNCTION_LOGICAL,
              *JUNCTION_COMPARISON,
@@ -228,68 +220,6 @@ JUNCTION_SCRIPTS = [*JUNCTION_LOGICAL,
              *JUNCTION_ANTINOMIES,
              # *JUNCTION_EXPLICATION
                     ]
-
-# JUNCTION_LINK_TO_ANCHOR = {
-#     JUNCTION_AND: JUNCTION_AND,
-#     JUNCTION_XOR: JUNCTION_XOR,
-#     JUNCTION_OR: JUNCTION_OR,
-#
-#     JUNCTION_COMPARISON_LINK: JUNCTION_COMPARISON_ANCHOR,
-#     **{l: JUNCTION_COMPARISON_ANCHOR for l in JUNCTION_COMPARISON_RELATIVE_LINK},
-#     **{l: JUNCTION_COMPARISON_ANCHOR for l in JUNCTION_COMPARISON_ABSOLUTE_LINK},
-#
-#     JUNCTION_CAUSAL_CAUSE_TO_EFFECT_LINK: JUNCTION_CAUSAL_ANCHOR,
-#     JUNCTION_CAUSAL_EFFECT_TO_CAUSE_LINK: JUNCTION_CAUSAL_ANCHOR,
-#     JUNCTION_CAUSAL_A_FORTIORI_LINK: JUNCTION_CAUSAL_ANCHOR,
-#
-#     JUNCTION_ANTINOMIC_BUT_LINK: JUNCTION_ANTINOMIC_ANCHOR,
-#     JUNCTION_ANTINOMIC_EXCEPT_LINK: JUNCTION_ANTINOMIC_ANCHOR,
-#     JUNCTION_ANTINOMIC_ALTOUGH_LINK: JUNCTION_ANTINOMIC_ANCHOR,
-#     JUNCTION_ANTINOMIC_ON_THE_OTHER_HAND_LINK: JUNCTION_ANTINOMIC_ANCHOR,
-#     JUNCTION_ANTINOMIC_CONTRARIWISE_LINK: JUNCTION_ANTINOMIC_ANCHOR,
-#
-#     # JUNCTION_EXPLICATION_BEST_LINK: JUNCTION_EXPLICATION_ANCHOR,
-# }
-
-# JUNCTION_ANCHOR_TO_LINKS = defaultdict(list)
-# for k, v in JUNCTION_LINK_TO_ANCHOR.items():
-#     JUNCTION_ANCHOR_TO_LINKS[v].append(k)
-
-# __tmp_link = list(JUNCTION_LINK_TO_ANCHOR.values())
-# for v in __tmp_link:
-#     JUNCTION_LINK_TO_ANCHOR[v] = v
-
-
-# def junction_at_idx(link, i):
-#     if i != 0:
-#         return JUNCTION_LINK_TO_ANCHOR[link]
-#     else:
-#         return link
-
-
-# class ScriptsEnum(Enum):
-#     @staticmethod
-#     def from_paradigm(cls):
-#         return cls( [(i.name, i.value) for i in chain(MotorActants, CirconstantialActants)])
-#
-
-
-# class MotorActants(Enum):
-#     INITIATOR = script('E:.n.-')
-#     INTERACTANT = script('E:.d.-')
-#     RECIPIENT = script('E:.k.-')
-#
-# class CirconstantialActants(Enum):
-#     TIME = script('E:.t.-')
-#     LOCATION = script('E:.l.-')
-#     MANNER = script('E:.f.-')
-#     CAUSE = script('E:.s.-')
-#     INTENTION = script('E:.m.-')
-#
-#
-# Actants = Enum('Actants', [(i.name, i.value) for i in chain(MotorActants, CirconstantialActants)])
-
-
 
 
 INDEPENDANT_QUALITY = script('E:U:.')
@@ -381,68 +311,6 @@ NAMES_TO_ADDRESS_WITH_VALENCE_IN_PROCESS = {
 ROLE_NAMES_TO_SCRIPT= {**dict(map(reversed, NAMES_TO_ADDRESS_WITH_VALENCE_IN_PROCESS.items())),
                         'process': THREE_ACTANTS_PROCESS
                        }
-# {
-#     'process_1': ONE_ACTANT_PROCESS,
-#     'process_2': TWO_ACTANTS_PROCESS,
-#     'process_3': THREE_ACTANTS_PROCESS,
-#     'process': THREE_ACTANTS_PROCESS,
-#     'initiator': INITIATOR_SCRIPT,
-#     'interactant': INTERACTANT_SCRIPT,
-#     'recipient' : RECIPIENT_SCRIPT,
-#
-#     'time': TIME_SCRIPT,
-#     'location': LOCATION_SCRIPT,
-#     'manner': MANNER_SCRIPT,
-#     'intention': INTENTION_SCRIPT,
-#     'cause': CAUSE_SCRIPT,
-#
-#     'independant': INDEPENDANT_QUALITY,
-#     'dependant': DEPENDANT_QUALITY,
-#
-#     'and': JUNCTION_AND,
-#     'or (inclusive)': JUNCTION_OR,
-#     'or (exclusive)': JUNCTION_XOR,
-#
-#     'is the same as the precedent': JUNCTION_COMPARISON_FORMAL_SAME,
-#     'is similar to the precedent': JUNCTION_COMPARISON_FORMAL_SIMILAR,
-#     'is distinct from the precedent': JUNCTION_COMPARISON_FORMAL_DISTINCT,
-#
-#     'is worse than the precedent': JUNCTION_COMPARISON_QUALITATIVE_WORSE,
-#     'is as good as the precedent': JUNCTION_COMPARISON_QUALITATIVE_AS_GOOD,
-#     'is better than the precedent': JUNCTION_COMPARISON_QUALITATIVE_BETTER,
-#
-#     'is less than the precedent': JUNCTION_COMPARISON_QUANTITATIVE_LESS,
-#     'is as much as the precedent': JUNCTION_COMPARISON_QUANTITATIVE_AS_MUCH,
-#     'is more than the precedent': JUNCTION_COMPARISON_QUANTITATIVE_MORE,
-#
-#     "is the worst of the precedent": JUNCTION_RANKINGS_QUALITATIVE_WORST,
-#     "is the qualitative average of the precedent": JUNCTION_RANKINGS_QUALITATIVE_AVERAGE,
-#     "is the best of the precedent": JUNCTION_RANKINGS_QUALITATIVE_BEST,
-#
-#     "is the minimum of the precedent": JUNCTION_RANKINGS_QUANTITATIVE_MINIMUM,
-#     "is the quantitative average of the precedent": JUNCTION_RANKINGS_QUANTITATIVE_AVERAGE,
-#     "is the maximum of the precedent": JUNCTION_RANKINGS_QUANTITATIVE_MAXIMUM,
-#
-#     "explains the precedent": JUNCTION_ANTINOMIES_EXPLANATIONS_EXPLAINS,
-#     "has nothing to do with the precedent": JUNCTION_ANTINOMIES_EXPLANATIONS_NOTHING_TO_DO,
-#     "contradicts the precedent": JUNCTION_ANTINOMIES_EXPLANATIONS_CONTRADICT,
-#
-#     "unfortunately opposes the precedent": JUNCTION_ANTINOMIES_QUALITATIVE_UNFORTUNATELY_OPPOSES,
-#     "balances the precedent (neutral)": JUNCTION_ANTINOMIES_QUALITATIVE_BALANCES,
-#     "is fortunately opposed to the precedent": JUNCTION_ANTINOMIES_QUALITATIVE_FORTUNATELY_OPPOSES,
-#
-#     "has the opposite effect of the precedent": JUNCTION_ANTINOMIES_CAUSAL_OPPOSITE_EFFECT,
-#     "reduces the effect of the previous one": JUNCTION_ANTINOMIES_CAUSAL_REDUCE_EFFECT,
-#     "increases the effect of the previous one": JUNCTION_ANTINOMIES_CAUSAL_INCREASE_EFFECT,
-#
-#     "is the effect of the precedent (therefore)": JUNCTION_CAUSAL_IS_EFFECT,
-#     "is the cause of the precedent (because)": JUNCTION_CAUSAL_IS_CAUSE,
-#     "is an analogy of the precedent cause to effect relationship (a fortiori, a contrario, etc.)": JUNCTION_CAUSAL_IS_ANALOGY_CAUSE_TO_EFFECT,
-#     "is an analogy of the precedent effect to cause relationship": JUNCTION_CAUSAL_IS_ANALOGY_EFFECT_TO_CAUSE,
-#
-#     **{"*{}".format(i + 1): j for i, j in enumerate(JUNCTION_INDEX)}
-#
-# }
 
 ROLE_REGEX=r"({})".format('|'.join(map(re.escape, map(str, set(ROLE_NAMES_TO_SCRIPT.values())))))
 

@@ -20,7 +20,8 @@ tokens = (
     'LEXEME_POSITION',
     'POLYMORPHEME_POSITION',
     'MORPHEME',
-    # 'BROAD_SEPARATOR'
+    'MULTIPLICITY',
+    'EXCLAMATION_MARK'
 )
 
 # ROLE_SUFFIX_REGEX = r"(\s|\>|$)"
@@ -34,6 +35,8 @@ def get_lexer(module=None):
     t_SEPARATOR = r'\>'
 
     t_ROLE_TOKEN = r'role'
+    t_MULTIPLICITY = r'\d'
+    t_EXCLAMATION_MARK = r'\!'
 
     t_LEXEME_POSITION  = r'(flexion|content)'
     t_POLYMORPHEME_POSITION = r'(group_\d|constant)'
