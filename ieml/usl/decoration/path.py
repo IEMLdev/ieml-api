@@ -1,11 +1,12 @@
 from collections import defaultdict
-from ieml.commons import OrderedEnum
+from ieml.commons import OrderedEnum, monitor_decorator
 from ieml.dictionary.script import Script
 from ieml.usl.constants import FLEXION_SCRIPTS
 from ieml.usl.syntagmatic_function import SyntagmaticFunction, SyntagmaticRole
 from ieml.usl.usl import USL
 from ieml.usl.polymorpheme import PolyMorpheme
 from ieml.usl.lexeme import Lexeme
+from ieml.usl.variation import PolyMorphemeVariation
 from ieml.usl.word import Word
 
 
@@ -40,12 +41,18 @@ class UslPath:
 			return True
 
 		if not isinstance(self, prefix.__class__) or not self._do_eq(prefix):
-			return False
+			return self._has_prefix(prefix)
 
 		if self.child is None:
 			return prefix.child is None
 
 		return self.child.has_prefix(prefix.child)
+
+	def _has_prefix(self, other):
+		return False
+
+	def as_constant(self):
+		return UslPath(child=None if self.child is None else self.child.as_constant())
 
 	def remove_prefix(self, prefix: 'UslPath'):
 		if not self.has_prefix(prefix):
@@ -62,6 +69,12 @@ class UslPath:
 
 		return self.child.remove_prefix(prefix.child)
 
+	@property
+	def tail(self):
+		last = self
+		while last.child is not None:
+			last = last.child
+		return last
 
 	def deference(self, usl: USL) -> USL:
 		from ieml.usl.decoration.instance import InstancedUSL
@@ -128,6 +141,17 @@ class UslPath:
 	def build_usl_from_path_to_node(cls, path_to_node):
 		raise NotImplementedError()
 
+	@property
+	def is_constant_path(self):
+		if self.child is not None:
+			return self._is_constant_path and self.child.is_constant_path
+		else:
+			return self._is_constant_path
+
+	@property
+	def _is_constant_path(self):
+		raise NotImplementedError()
+
 
 class GroupIndex(OrderedEnum):
 	CONSTANT = -1
@@ -139,42 +163,65 @@ class GroupIndex(OrderedEnum):
 class PolymorphemePath(UslPath):
 	USL_TYPE = PolyMorpheme
 
-	def __init__(self, group_idx: GroupIndex, morpheme: Script, multiplicity=None, child=None):
+	def __init__(self, group_idx: GroupIndex, morpheme: Script=None, multiplicity=None, child=None):
 		super().__init__(child=child)
 		self.group_idx = group_idx
 		self.morpheme = morpheme
 		self.multiplicity = multiplicity
 
+	@property
+	def _is_constant_path(self):
+		return self.group_idx == GroupIndex.CONSTANT
+
 	def _do_eq(self, other):
 		return self.group_idx == other.group_idx and self.morpheme == other.morpheme and \
 			   self.multiplicity == other.multiplicity
+
+	def _has_prefix(self, other):
+		return self.group_idx == other.group_idx and self.multiplicity == other.multiplicity
+
+	def as_constant(self):
+		return PolymorphemePath(group_idx=GroupIndex.CONSTANT, morpheme=self.morpheme, multiplicity=None,
+								child=(None if self.child is None else self.child.as_constant()))
+
 
 	def _do_lt(self, other):
 		return (self.group_idx, self.morpheme) < (other.group_idx, other.morpheme)
 
 	def _deference(self: 'PolymorphemePath', usl: PolyMorpheme):
-		group = None
+		if self.group_idx != GroupIndex.CONSTANT and self.group_idx.value >= len(usl.groups):
+			raise DeferenceError("Group index " + str(self.group_idx.name) + " not in polymorpheme")
 
-		if self.group_idx == GroupIndex.CONSTANT:
-			group = usl.constant
+		if self.morpheme is not None:
+			if self.group_idx == GroupIndex.CONSTANT:
+				group = usl.constant
+			else:
+				group = usl.groups[self.group_idx.value][0]
+
+			if self.morpheme not in group:
+				raise DeferenceError("Morpheme " + str(self.morpheme) + " not in group at " + str(self.group_idx.name))
+
+			return self.morpheme
 		else:
-			if self.group_idx.value >= len(usl.groups):
-				raise DeferenceError("Group index " + str(self.group_idx.name) + " not in polymorpheme")
-
-			group = usl.groups[self.group_idx.value][0]
-
-		if self.morpheme not in group:
-			raise DeferenceError("Morpheme " + str(self.morpheme) + " not in group at " + str(self.group_idx.name))
-
-		return self.morpheme
+			if self.group_idx == GroupIndex.CONSTANT:
+				return PolyMorpheme(constant=usl.constant)
+			else:
+				return usl.groups_paradigms[self.group_idx.value]
 
 	def _to_str(self):
 		if self.group_idx == GroupIndex.CONSTANT:
-			return 'constant' + SEPARATOR + str(self.morpheme)
+			if self.morpheme is not None:
+				return 'constant' + SEPARATOR + str(self.morpheme)
+			else:
+				return 'constant'
 		else:
-			return 'group_{}'.format(self.group_idx.value) + \
-				(' {}'.format(self.multiplicity) if self.multiplicity is not None else '') + \
-				SEPARATOR + str(self.morpheme)
+			if self.morpheme is not None:
+				return 'group_{}'.format(self.group_idx.value) + \
+					(' {}'.format(self.multiplicity) if self.multiplicity is not None else '') + \
+					SEPARATOR + str(self.morpheme)
+			else:
+				return 'group_{}'.format(self.group_idx.value) + \
+					(' {}'.format(self.multiplicity) if self.multiplicity is not None else '')
 
 	@staticmethod
 	def _from_string(elem, children):
@@ -182,8 +229,10 @@ class PolymorphemePath(UslPath):
 			return UslPath()
 
 		key = elem
-		assert len(children) == 1, '[{:s}]'.format(" ".join(map(str, children)))
-		morph = children[0]
+		morph = None
+		if len(children) == 1:
+			from ieml.usl.usl import usl
+			morph = usl(children[0])
 
 		idx = None
 		multiplicity = None
@@ -210,9 +259,6 @@ class PolymorphemePath(UslPath):
 		else:
 			raise ValueError("Invalid argument for a PolymorphemePath _from_string constructor: " + key)
 
-		from ieml.usl.usl import usl
-
-		morph = usl(morph)
 		return PolymorphemePath(group_idx=idx, morpheme=morph, multiplicity=multiplicity)
 
 	def no_child_clone(self):
@@ -267,6 +313,14 @@ class FlexionPath(UslPath):
 
 		assert isinstance(morpheme, Script)
 		self.morpheme = morpheme
+
+	@property
+	def _is_constant_path(self):
+		return True
+
+	def as_constant(self):
+		return FlexionPath(morpheme=self.morpheme,
+						   child=(None if self.child is None else self.child.as_constant()))
 
 	def _do_eq(self, other):
 		return self.morpheme == other.morpheme
@@ -350,6 +404,14 @@ class LexemePath(UslPath):
 			else:
 				assert isinstance(self.child, FlexionPath), \
 					"Invalid path structure, a lexeme flexion child must be a FlexionPath, not a " + self.child.__class__.__name__
+
+	def as_constant(self):
+		return LexemePath(index=self.index,
+						  child=(None if self.child is None else self.child.as_constant()))
+
+	@property
+	def _is_constant_path(self):
+		return True
 
 	def _do_eq(self, other):
 		return self.index == other.index
@@ -442,6 +504,15 @@ class RolePath(UslPath):
 
 		self.has_focus = has_focus
 
+	def as_constant(self):
+		return RolePath(role=self.role,
+						has_focus=self.has_focus,
+						child=(None if self.child is None else self.child.as_constant()))
+
+	@property
+	def _is_constant_path(self):
+		return True
+
 	def _do_eq(self, other):
 		return self.role == other.role and self.has_focus == other.has_focus
 
@@ -505,6 +576,7 @@ class RolePath(UslPath):
 					context_type=ctx_type)
 
 
+# @monitor_decorator('usl_from_path_values')
 def usl_from_path_values(paths_values):
 	from ieml.usl.decoration.parser.parser import PathParser
 	from ieml.usl.parser import IEMLParser
@@ -538,6 +610,7 @@ def usl_from_path_values(paths_values):
 				if isinstance(p, UslPath):
 					path_to_node[p] = build_nodes(bin_child)
 
+			assert 'type' in bin
 			bin['node'] = bin['type'].build_usl_from_path_to_node(path_to_node)
 
 		return bin['node']

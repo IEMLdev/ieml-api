@@ -5,9 +5,11 @@ from typing import List
 
 from ieml.commons import LastUpdatedOrderedDict
 from ieml.constants import MORPHEME_SERIE_SIZE_LIMIT_CONTENT, AUXILIARY_CLASS, POLYMORPHEME_MAX_MULTIPLICITY
-from ieml.dictionary.script import Script
+from ieml.dictionary.script import Script, AdditiveScript
+from ieml.dictionary.script.operator import add
 from ieml.dictionary.script.script import NULL_SCRIPTS
 from ieml.usl import USL
+from ieml.usl.variation import PolyMorphemeVariation
 
 
 def check_polymorpheme(ms):
@@ -62,6 +64,8 @@ class PolyMorpheme(USL):
 
         self.groups = tuple(sorted((tuple(sorted(g[0])), g[1]) for g in groups))
 
+        self.groups_paradigms = [PolyMorphemeVariation(items=g[0], multiplicity=g[1]) for g in groups]
+
         self._str = ' '.join(chain(map(str, self.constant),
                                ["m{}({})".format(mult, ' '.join(map(str, group))) for group, mult
                                     in self.groups]))
@@ -92,14 +96,18 @@ class PolyMorpheme(USL):
         res_f = lambda u, grp_idx, multiplicity: (FlexionPath(morpheme=u) if flexion else
                                 PolymorphemePath(group_idx=grp_idx, morpheme=u, multiplicity=multiplicity))
 
+        yield (res_f(None, GroupIndex.CONSTANT, None), PolyMorpheme(constant=list(self.constant)))
         yield from [(res_f(m, GroupIndex.CONSTANT, None), m) for m in self.constant]
         if len(self.groups) > 0:
+            yield (res_f(None, GroupIndex.GROUP_0, self.groups[0][1]), self.groups_paradigms[0])
             yield from [(res_f(s, GroupIndex.GROUP_0, self.groups[0][1]), s) for s in self.groups[0][0]]
 
         if len(self.groups) > 1:
+            yield (res_f(None, GroupIndex.GROUP_1, self.groups[1][1]), self.groups_paradigms[1])
             yield from [(res_f(s, GroupIndex.GROUP_1, self.groups[1][1]), s) for s in self.groups[1][0]]
 
         if len(self.groups) > 2:
+            yield (res_f(None, GroupIndex.GROUP_2, self.groups[2][1]), self.groups_paradigms[2])
             yield from [(res_f(s, GroupIndex.GROUP_2, self.groups[2][1]), s) for s in self.groups[2][0]]
 
     @property

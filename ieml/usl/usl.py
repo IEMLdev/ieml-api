@@ -64,6 +64,14 @@ class USL(DecoratedComponent):
             if isinstance(item, _type):
                 yield (path, item)
 
+    def iter_structure_path_by_script_ss(self, flexion=False):
+        from ieml.usl.decoration.path import PolymorphemePath
+        from ieml.usl.decoration.path import FlexionPath
+
+        for path, item in self.iter_structure_path(flexion=flexion):
+            if isinstance(path.tail, (FlexionPath, PolymorphemePath)) and path.tail.morpheme is not None:
+                yield (path, item)
+
     @property
     def cardinal(self):
         return len(self.singular_sequences)
@@ -83,7 +91,7 @@ class USL(DecoratedComponent):
         return self._singular_sequences_set
 
     def _compute_singular_sequences(self):
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @property
     def is_singular(self):

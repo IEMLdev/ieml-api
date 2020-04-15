@@ -53,7 +53,7 @@ class Lexeme(USL):
 
 		yield (LexemePath(LexemeIndex.FLEXION), self.pm_flexion)
 
-		yield from [(LexemePath(LexemeIndex.FLEXION, child=FlexionPath(path.morpheme)), pm)
+		yield from [(LexemePath(LexemeIndex.FLEXION, child=None if path.morpheme is None else FlexionPath(path.morpheme)), pm)
 					for path, pm in self.pm_flexion.iter_structure_path()]
 
 		yield (LexemePath(LexemeIndex.CONTENT), self.pm_content)

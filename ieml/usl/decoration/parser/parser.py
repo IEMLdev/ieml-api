@@ -108,12 +108,20 @@ class PathParser:
         p[0] = FlexionPath(script(p[1]))
 
     def p_polymorpheme_path(self, p):
-        """polymorpheme_path : POLYMORPHEME_POSITION SEPARATOR MORPHEME
+        """polymorpheme_path : POLYMORPHEME_POSITION
+                             | POLYMORPHEME_POSITION MULTIPLICITY
+                             | POLYMORPHEME_POSITION SEPARATOR MORPHEME
                              | POLYMORPHEME_POSITION MULTIPLICITY SEPARATOR MORPHEME"""
-        if len(p) == 4:
+        if len(p) == 2:
+            group_idx = GroupIndex[p[1].upper()]
+            p[0] = PolymorphemePath(group_idx, multiplicity=1)
+        elif len(p) == 3:
+            group_idx = GroupIndex[p[1].upper()]
+            p[0] = PolymorphemePath(group_idx, multiplicity=int(p[2]))
+        elif len(p) == 4:
             group_idx = GroupIndex[p[1].upper()]
             morpheme = script(p[3])
-            p[0] = PolymorphemePath(group_idx, morpheme)
+            p[0] = PolymorphemePath(group_idx, morpheme, multiplicity=1)
         else:
             group_idx = GroupIndex[p[1].upper()]
             morpheme = script(p[4])
