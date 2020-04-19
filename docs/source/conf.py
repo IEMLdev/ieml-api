@@ -20,12 +20,14 @@
 import os
 import sys
 
-assert 'ieml' in os.listdir(os.path.abspath('../..'))
+path = os.path.join(os.path.dirname(__file__), '../..')
+
+assert 'ieml' in os.listdir(path)
 print("Doc path:")
-print(os.path.abspath('../..'))
-print(os.listdir(os.path.abspath('../..')))
-print(os.listdir(os.path.abspath('../../ieml')))
-sys.path.insert(0, os.path.abspath('../../ieml'))
+print(path)
+print(os.listdir(path))
+print(os.listdir(os.path.join(path, 'ieml')))
+sys.path.insert(0, os.path.abspath(os.path.join(path, 'ieml')))
 
 # -- General configuration ------------------------------------------------
 
