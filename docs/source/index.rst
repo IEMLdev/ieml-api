@@ -17,7 +17,7 @@ Bear in mind that the project is still under heavy development (and conception).
 as a way to get a better understanding of the IEML project, and a basic overview of our Python implementation's usage.
 
 .. toctree::
-    :maxdepth: 2
+    :maxdepth: 3
     :caption: Table of Content
 
     ieml_overview

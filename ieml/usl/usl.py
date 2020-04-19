@@ -1,6 +1,8 @@
+from typing import Iterable, Tuple
+
 from ieml.commons import DecoratedComponent
 from ieml.dictionary.script import Script
-
+0
 
 class USL(DecoratedComponent):
     syntactic_level = 0
@@ -64,7 +66,7 @@ class USL(DecoratedComponent):
             if isinstance(item, _type):
                 yield (path, item)
 
-    def iter_structure_path_by_script_ss(self, flexion=False):
+    def iter_structure_path_by_script_ss(self, flexion=False) -> Iterable[Tuple['UslPath', Script]]:
         from ieml.usl.decoration.path import PolymorphemePath
         from ieml.usl.decoration.path import FlexionPath
 

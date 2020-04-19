@@ -1,4 +1,6 @@
 from collections import defaultdict
+from itertools import chain
+
 from ieml.commons import OrderedEnum, monitor_decorator
 from ieml.dictionary.script import Script
 from ieml.usl.constants import FLEXION_SCRIPTS
@@ -40,7 +42,7 @@ class UslPath:
 		if prefix is None:
 			return True
 
-		if not isinstance(self, prefix.__class__) or not self._do_eq(prefix):
+		if self.__class__ != prefix.__class__ or (self.__class__ == prefix.__class__ and not self._do_eq(prefix)):
 			return self._has_prefix(prefix)
 
 		if self.child is None:
@@ -51,8 +53,8 @@ class UslPath:
 	def _has_prefix(self, other):
 		return False
 
-	def as_constant(self):
-		return UslPath(child=None if self.child is None else self.child.as_constant())
+	def as_constant(self, u=None):
+		return UslPath(child=None if self.child is None else self.child.as_constant(u))
 
 	def remove_prefix(self, prefix: 'UslPath'):
 		if not self.has_prefix(prefix):
@@ -150,7 +152,7 @@ class UslPath:
 
 	@property
 	def _is_constant_path(self):
-		raise NotImplementedError()
+		return False
 
 
 class GroupIndex(OrderedEnum):
@@ -180,9 +182,11 @@ class PolymorphemePath(UslPath):
 	def _has_prefix(self, other):
 		return self.group_idx == other.group_idx and self.multiplicity == other.multiplicity
 
-	def as_constant(self):
-		return PolymorphemePath(group_idx=GroupIndex.CONSTANT, morpheme=self.morpheme, multiplicity=None,
-								child=(None if self.child is None else self.child.as_constant()))
+	def as_constant(self, u=None):
+		return PolymorphemePath(group_idx=GroupIndex.CONSTANT,
+								morpheme=self.morpheme if self.morpheme is not None else u,
+								multiplicity=None,
+								child=(None if self.child is None else self.child.as_constant(u)))
 
 
 	def _do_lt(self, other):
@@ -272,15 +276,18 @@ class PolymorphemePath(UslPath):
 		:param path_to_node:
 		:return:
 		"""
+
+		expend_values = lambda e: [e] if isinstance(e, Script) else e.constant
+
 		constant = []
 		groups = [[[], None],[[], None],[[], None]]
 
-		for k, v in path_to_node.items():
+		for k, values in path_to_node.items():
 			if not isinstance(k, PolymorphemePath):
 				raise ValueError("invalid path type to instantiate a polymorphem " + k.__class__.__name__)
 
 			if k.group_idx == GroupIndex.CONSTANT:
-				constant.append(v)
+				constant.extend(chain.from_iterable(map(expend_values, values)))
 			else:
 				if k.group_idx == GroupIndex.GROUP_0:
 					idx = 0
@@ -291,7 +298,7 @@ class PolymorphemePath(UslPath):
 				else:
 					raise ValueError("Invalid polymorpheme path " + str(k))
 
-				groups[idx][0].append(v)
+				groups[idx][0].extend(chain.from_iterable(map(expend_values, values)))
 				if k.multiplicity:
 					if groups[idx][1] is not None and k.multiplicity != groups[idx][1]:
 						raise ValueError("Incoherent multiplicity across the path")
@@ -318,9 +325,9 @@ class FlexionPath(UslPath):
 	def _is_constant_path(self):
 		return True
 
-	def as_constant(self):
+	def as_constant(self, u=None):
 		return FlexionPath(morpheme=self.morpheme,
-						   child=(None if self.child is None else self.child.as_constant()))
+						   child=(None if self.child is None else self.child.as_constant(u)))
 
 	def _do_eq(self, other):
 		return self.morpheme == other.morpheme
@@ -357,11 +364,11 @@ class FlexionPath(UslPath):
 	@classmethod
 	def build_usl_from_path_to_node(cls, path_to_node):
 		all_morphemes = []
-		for k, v in path_to_node.items():
+		for k, values in path_to_node.items():
 			if not isinstance(k, FlexionPath):
 				raise ValueError("invalid path type to instantiate a polymorphem " + k.__class__.__name__)
 
-			all_morphemes.append(v)
+			all_morphemes.extend(values)
 
 		root_flexion_groups = defaultdict(set)
 
@@ -405,9 +412,9 @@ class LexemePath(UslPath):
 				assert isinstance(self.child, FlexionPath), \
 					"Invalid path structure, a lexeme flexion child must be a FlexionPath, not a " + self.child.__class__.__name__
 
-	def as_constant(self):
+	def as_constant(self, u=None):
 		return LexemePath(index=self.index,
-						  child=(None if self.child is None else self.child.as_constant()))
+						  child=(None if self.child is None else self.child.as_constant(u)))
 
 	@property
 	def _is_constant_path(self):
@@ -504,10 +511,10 @@ class RolePath(UslPath):
 
 		self.has_focus = has_focus
 
-	def as_constant(self):
+	def as_constant(self, u=None):
 		return RolePath(role=self.role,
 						has_focus=self.has_focus,
-						child=(None if self.child is None else self.child.as_constant()))
+						child=(None if self.child is None else self.child.as_constant(u)))
 
 	@property
 	def _is_constant_path(self):
@@ -584,12 +591,14 @@ def usl_from_path_values(paths_values):
 	path_parser = PathParser()
 	usl_parser = IEMLParser()
 
-	path_to_value = {path_parser.parse(p): usl_parser.parse(v) for p, v in paths_values}
+	path_to_value = {path_parser.parse(p): [] for p, _ in paths_values}
+	for p, v in paths_values:
+		path_to_value[path_parser.parse(p)].append(usl_parser.parse(v))
 
 	x = lambda : defaultdict(x)
 	bins = x()
 
-	def recursive_group_by(bin, path, value):
+	def recursive_group_by(bin, path, values):
 		p_cloned = path.no_child_clone()
 
 		if 'type' in bin:
@@ -599,9 +608,9 @@ def usl_from_path_values(paths_values):
 			bin['type'] = path.__class__
 
 		if path.child is None:
-			bin[p_cloned]["node"] = value
+			bin[p_cloned]["node"] = values
 		else:
-			recursive_group_by(bin[p_cloned], path.child, value)
+			recursive_group_by(bin[p_cloned], path.child, values)
 
 	def build_nodes(bin):
 		if 'node' not in bin:
@@ -615,7 +624,7 @@ def usl_from_path_values(paths_values):
 
 		return bin['node']
 
-	for p, value in path_to_value.items():
-		recursive_group_by(bins, p, value)
+	for p, values in path_to_value.items():
+		recursive_group_by(bins, p, values)
 
 	return build_nodes(bins)

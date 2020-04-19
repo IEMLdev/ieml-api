@@ -3,7 +3,7 @@ from .usl import USL
 from .polymorpheme import PolyMorpheme, check_polymorpheme
 from .lexeme import Lexeme, check_lexeme
 from .word import Word, check_word
-from .phrase import Phrase, check_phrase
+# from .phrase import Phrase, check_phrase
 
 from string import ascii_uppercase, ascii_lowercase, digits
 

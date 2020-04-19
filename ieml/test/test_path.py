@@ -143,5 +143,38 @@ class TestPath(unittest.TestCase):
 		u = usl_from_path_values(structure)
 		self.assertEqual(u, usl("[! E:A:.  ()(b.-S:.A:.-'S:.-'S:.-',) > E:A:. E:A:. (m1(E:U:T:. E:A:T:. E:S:T:. E:B:T:. E:T:T:.))(k.a.-k.a.-')]"))
 
+
+	def test_usl_from_path_pm(self):
+		structure = [
+			(">constant>b.-S:.A:.-'S:.-'S:.-',", "b.-S:.A:.-'S:.-'S:.-',"),
+			(">constant>k.a.-k.a.-'", "k.a.-k.a.-'"),
+			(">constant", "U:"),
+			(">constant", "E:")
+		]
+		usl_parser = IEMLParser().parse
+		path_parser = PathParser().parse
+
+		structure = [(path_parser(p), usl_parser(u)) for p, u in structure]
+
+		u = usl_from_path_values(structure)
+		self.assertEqual(str(u), "U: k.a.-k.a.-' b.-S:.A:.-'S:.-'S:.-',")
+
+	def test_usl_from_path_pm2(self):
+		structure = [
+			(">constant>b.-S:.A:.-'S:.-'S:.-',", "b.-S:.A:.-'S:.-'S:.-',"),
+			(">constant", "k.a.-k.a.-' A:"),
+			(">constant", "U:"),
+			(">constant", "E:")
+		]
+		usl_parser = IEMLParser().parse
+		path_parser = PathParser().parse
+
+		structure = [(path_parser(p), usl_parser(u)) for p, u in structure]
+
+		u = usl_from_path_values(structure)
+		self.assertEqual(str(u), "U: A: k.a.-k.a.-' b.-S:.A:.-'S:.-'S:.-',")
+
+
+
 if __name__ == '__main__':
 	unittest.main()
