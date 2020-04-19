@@ -29,6 +29,7 @@ print(os.listdir(path))
 print(os.listdir(os.path.join(path, 'ieml')))
 sys.path.insert(0, os.path.abspath(os.path.join(path, 'ieml')))
 
+print(sys.path)
 
 import ieml
 print(ieml.__dict__)
