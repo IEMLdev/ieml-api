@@ -24,7 +24,7 @@ path = os.path.join(os.path.dirname(__file__), '../..')
 
 assert 'ieml' in os.listdir(path)
 print("Doc path:")
-print(path)
+print(os.path.abspath(os.path.join(path, 'ieml')))
 print(os.listdir(path))
 print(os.listdir(os.path.join(path, 'ieml')))
 sys.path.insert(0, os.path.abspath(os.path.join(path, 'ieml')))
