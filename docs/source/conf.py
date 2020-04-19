@@ -21,8 +21,10 @@ import os
 import sys
 
 assert 'ieml' in os.listdir(os.path.abspath('../..'))
+print("Doc path:")
 print(os.path.abspath('../..'))
-
+print(os.listdir(os.path.abspath('../..')))
+print(os.listdir(os.path.abspath('../../ieml')))
 sys.path.insert(0, os.path.abspath('../../ieml'))
 
 # -- General configuration ------------------------------------------------
