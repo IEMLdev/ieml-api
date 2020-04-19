@@ -29,6 +29,9 @@ print(os.listdir(path))
 print(os.listdir(os.path.join(path, 'ieml')))
 sys.path.insert(0, os.path.abspath(os.path.join(path, 'ieml')))
 
+
+import ieml
+print(ieml.__dict__)
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
