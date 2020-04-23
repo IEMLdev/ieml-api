@@ -6,7 +6,12 @@ from ieml.dictionary.script.script import NULL_SCRIPTS
 from ieml.usl import USL
 
 
-class PolyMorphemeVariation(USL):
+class Variation(USL):
+    pass
+
+
+
+class PolyMorphemeVariation(Variation):
     def __init__(self, items, multiplicity):
         super().__init__()
         self.items = tuple(sorted(items))
@@ -42,7 +47,8 @@ class PolyMorphemeVariation(USL):
         yield from self.items
 
     def iter_structure_path(self, flexion=False):
-        pass
+        for i in self.items:
+            yield
 
     @property
     def morphemes(self):

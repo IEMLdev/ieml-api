@@ -1,8 +1,9 @@
-from typing import Iterable, Tuple
+from typing import Iterable, Tuple, Union, List, Set
 
 from ieml.commons import DecoratedComponent
 from ieml.dictionary.script import Script
-0
+# from ieml.usl.decoration.path import UslPath
+
 
 class USL(DecoratedComponent):
     syntactic_level = 0
@@ -75,18 +76,18 @@ class USL(DecoratedComponent):
                 yield (path, item)
 
     @property
-    def cardinal(self):
+    def cardinal(self) -> int:
         return len(self.singular_sequences)
 
     @property
-    def singular_sequences(self):
+    def singular_sequences(self) -> List['USL']:
         if self._singular_sequences is None:
             self._singular_sequences = self._compute_singular_sequences()
 
         return self._singular_sequences
 
     @property
-    def singular_sequences_set(self):
+    def singular_sequences_set(self) -> Set['USL']:
         if self._singular_sequences_set is None:
             self._singular_sequences_set = set(self.singular_sequences)
 
@@ -96,15 +97,28 @@ class USL(DecoratedComponent):
         raise NotImplementedError()
 
     @property
-    def is_singular(self):
+    def is_singular(self) -> bool:
         return self.cardinal == 1
 
     @property
-    def morphemes(self):
+    def morphemes(self) -> Set[Script]:
         raise NotImplementedError()
 
 
-def usl(arg):
+def usl(arg: Union[str, Script, USL, Iterable[Tuple['UslPath', Union[USL, Script]]]]) -> USL:
+    """
+
+    Cast argument to an USL type, depending on the argument type.
+     - If argument is a string, it is parsed by ieml.usl.parser.IEMLParser.parse
+     - if argument is a ieml.dictionary.Script, the returned object is a
+       ieml.usl.polymorpheme.PolyMorpheme with the argument as the constant.
+     - if argument is an ieml.usl.usl.USL, the argument is returned
+     - if argument is a list of (ieml.usl.decoration.path.UslPath, ieml.usl.usl.USL)
+
+    :param arg:
+    :type arg: Union[str, Script, USL, Iterable[Tuple['UslPath', Union[USL, Script]]]]
+    :return: an ieml.usl.usl.USL
+    """
     if isinstance(arg, str):
         from ieml.usl.parser import IEMLParser
         return IEMLParser().parse(arg)
@@ -123,6 +137,10 @@ def usl(arg):
     except TypeError:
         pass
     else:
+        if not usl_list:
+            from ieml.usl import PolyMorpheme
+            return PolyMorpheme(constant=[])
+
         from ieml.usl.decoration.path import UslPath, usl_from_path_values
 
         if not all(isinstance(u, (USL, Script)) and isinstance(p, UslPath) for p, u in usl_list):

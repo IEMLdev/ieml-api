@@ -1,6 +1,7 @@
 from typing import List
 
 from ieml.commons import DecoratedComponent
+from ieml.dictionary.script import Script
 from ieml.usl import USL
 from ieml.usl.decoration.path import UslPath, FlexionPath
 

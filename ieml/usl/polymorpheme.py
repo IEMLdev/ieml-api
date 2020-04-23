@@ -33,14 +33,14 @@ def check_polymorpheme(ms):
     if any(g[0] and (int(g[1]) != g[1] or g[1] <= 0 or g[1] > POLYMORPHEME_MAX_MULTIPLICITY) for g in ms.groups):
         raise ValueError("Multiplicity is not a positive integer in [1, 2, 3].")
 
-    if any(g[0] and g[1] > len(g[0])  for g in ms.groups):
+    if any(g[0] and g[1] > len(g[0]) for g in ms.groups):
         raise ValueError("Multiplicity is greater than the number of morphemes in the group.")
 
     if sorted(ms.constant) != list(ms.constant):
         raise ValueError("Invalid ordering of the polymorpheme constants")
 
     # compare the intersection except empty "E:"
-    all_group = [ms.constant, *(_filter_empty(g) for g, _ in ms.groups)]
+    all_group = [ms.constant, *(g for g, _ in ms.groups)]
     all_morphemes = {str(w): w for g in all_group for w in g}
 
     if len(all_morphemes) != sum(len(g) for g in all_group):
@@ -53,6 +53,100 @@ def check_polymorpheme(ms):
 def _filter_empty(l):
     return list(filter(lambda m: not m.empty, l))
 
+def compute_PM_singular_sequences(constants, groups):
+    if not groups:
+        return None
+
+    # G0, G1, G2 Groups
+    # Gi = {Gi_a, Gi_b, ... Words}
+
+    # combinaisons 1: C1
+    # 001 -> G0_a, G0_b, ...
+    # 010 -> G1_a, ...
+    # 100
+    # combinaisons 2: C2
+    # 011 -> G0_a + G1_a, G0_a + G1_b, ..., G0_b + G1_a, ...
+    # 110 -> G1_a + G2_a, G1_a + G2_b, ..., G1_b + G2_a, ...
+    # 101
+    # combinaisons 3: C3
+    # 111 -> G0_a + G1_a + G2_a, ...
+
+    # combinaisons 4: C4
+    # 112
+    # 121
+    # 211
+
+    # combinaisons i: Ci
+    # // i = q * 3 + r
+    # // s = q + 1
+    # r == 0:
+    # qqq
+    # r == 1:
+    # qqs
+    # qsq
+    # sqq
+    # r == 2:
+    # qss
+    # sqs
+    # ssq
+
+    # abcde... = iter (a Words parmi G0) x (b words parmi G1) x (c words parmi G2) x ...
+    # Ci = iter {abb, bab, bba}
+    #   i = q * 3 + r
+    #   a = q + (1 si r = 1 sinon 0)
+    #   b = q + (1 si r = 2 sinon 0)
+
+    # Min = min len Groups
+    # Max = max len Groups
+
+    # C3 + C2
+    # etc...
+
+    # number of groups
+    N = len(groups)
+    min_len = min(map(len, list(zip(*groups))[0]))
+
+    max_sizes_groups = defaultdict(set)
+    for i, (grp, mult) in enumerate(groups):
+        for j in range(mult + 1, min_len + 1):
+            max_sizes_groups[j].add(i)
+
+    def iter_groups_combinations():
+        for i in count():
+            # minimum number of elements taken from each groups
+            q = i // N
+
+            # number of groups which will yield q + 1 elements
+            r = i % N
+
+            if q == min_len + 1 or q in max_sizes_groups:
+                break
+
+            for indexes in combinations(range(N), r):
+                if any(j in max_sizes_groups.get(q + 1, set()) for j in indexes):
+                    continue
+
+                if any(len(groups[i][0]) <= q for i in indexes):
+                    continue
+
+                yield from product(*(combinations(groups[i][0], q + 1) for i in indexes),
+                                   *(combinations(groups[i][0], q) for i in range(N) if i not in indexes))
+
+    traits = LastUpdatedOrderedDict()
+
+    SIZE_LIMIT = MORPHEME_SERIE_SIZE_LIMIT_CONTENT# if is_content else MORPHEME_SERIE_SIZE_LIMIT_FUNCTION
+
+    for gs in iter_groups_combinations():
+        morpheme_semes = list(set(chain(*gs, constants)))
+        if len(morpheme_semes) == 0 or len(morpheme_semes) > SIZE_LIMIT:
+            continue
+
+        m = PolyMorpheme(constant=morpheme_semes)
+        traits[str(m)] = m
+
+    return tuple(traits.values())
+
+
 
 class PolyMorpheme(USL):
     syntactic_level = 1
@@ -62,9 +156,9 @@ class PolyMorpheme(USL):
 
         self.constant = tuple(sorted(_filter_empty(constant)))
 
-        self.groups = tuple(sorted((tuple(sorted(g[0])), g[1]) for g in groups))
+        self.groups = tuple(sorted((tuple(sorted(_filter_empty(g[0]))), g[1]) for g in groups))
 
-        self.groups_paradigms = [PolyMorphemeVariation(items=g[0], multiplicity=g[1]) for g in groups]
+        # self.groups_paradigms = [PolyMorpheme(groups=[g]) for g in groups]
 
         self._str = ' '.join(chain(map(str, self.constant),
                                ["m{}({})".format(mult, ' '.join(map(str, group))) for group, mult
@@ -99,15 +193,15 @@ class PolyMorpheme(USL):
         yield (res_f(None, GroupIndex.CONSTANT, None), PolyMorpheme(constant=list(self.constant)))
         yield from [(res_f(m, GroupIndex.CONSTANT, None), m) for m in self.constant]
         if len(self.groups) > 0:
-            yield (res_f(None, GroupIndex.GROUP_0, self.groups[0][1]), self.groups_paradigms[0])
+            yield (res_f(None, GroupIndex.GROUP_0, self.groups[0][1]), PolyMorpheme(groups=[self.groups[0]]))
             yield from [(res_f(s, GroupIndex.GROUP_0, self.groups[0][1]), s) for s in self.groups[0][0]]
 
         if len(self.groups) > 1:
-            yield (res_f(None, GroupIndex.GROUP_1, self.groups[1][1]), self.groups_paradigms[1])
+            yield (res_f(None, GroupIndex.GROUP_1, self.groups[1][1]), PolyMorpheme(groups=[self.groups[1]]))
             yield from [(res_f(s, GroupIndex.GROUP_1, self.groups[1][1]), s) for s in self.groups[1][0]]
 
         if len(self.groups) > 2:
-            yield (res_f(None, GroupIndex.GROUP_2, self.groups[2][1]), self.groups_paradigms[2])
+            yield (res_f(None, GroupIndex.GROUP_2, self.groups[2][1]), PolyMorpheme(groups=[self.groups[2]]))
             yield from [(res_f(s, GroupIndex.GROUP_2, self.groups[2][1]), s) for s in self.groups[2][0]]
 
     @property
@@ -115,94 +209,8 @@ class PolyMorpheme(USL):
         return sorted(set(list(self.constant) + [m for g in self.groups for m in g[0]]))
 
     def _compute_singular_sequences(self):
-        if not self.groups:
+        res = compute_PM_singular_sequences(self.constant, self.groups)
+        if res is None:
             return [self]
-
-        # G0, G1, G2 Groups
-        # Gi = {Gi_a, Gi_b, ... Words}
-
-        # combinaisons 1: C1
-        # 001 -> G0_a, G0_b, ...
-        # 010 -> G1_a, ...
-        # 100
-        # combinaisons 2: C2
-        # 011 -> G0_a + G1_a, G0_a + G1_b, ..., G0_b + G1_a, ...
-        # 110 -> G1_a + G2_a, G1_a + G2_b, ..., G1_b + G2_a, ...
-        # 101
-        # combinaisons 3: C3
-        # 111 -> G0_a + G1_a + G2_a, ...
-
-        # combinaisons 4: C4
-        # 112
-        # 121
-        # 211
-
-        # combinaisons i: Ci
-        # // i = q * 3 + r
-        # // s = q + 1
-        # r == 0:
-        # qqq
-        # r == 1:
-        # qqs
-        # qsq
-        # sqq
-        # r == 2:
-        # qss
-        # sqs
-        # ssq
-
-        # abcde... = iter (a Words parmi G0) x (b words parmi G1) x (c words parmi G2) x ...
-        # Ci = iter {abb, bab, bba}
-        #   i = q * 3 + r
-        #   a = q + (1 si r = 1 sinon 0)
-        #   b = q + (1 si r = 2 sinon 0)
-
-        # Min = min len Groups
-        # Max = max len Groups
-
-        # C3 + C2
-        # etc...
-
-        # number of groups
-        N = len(self.groups)
-        min_len = min(map(len, list(zip(*self.groups))[0]))
-
-        max_sizes_groups = defaultdict(set)
-        for i, (grp, mult) in enumerate(self.groups):
-            for j in range(mult + 1, min_len + 1):
-                max_sizes_groups[j].add(i)
-
-        def iter_groups_combinations():
-            for i in count():
-                # minimum number of elements taken from each groups
-                q = i // N
-
-                # number of groups which will yield q + 1 elements
-                r = i % N
-
-                if q == min_len + 1 or q in max_sizes_groups:
-                    break
-
-                for indexes in combinations(range(N), r):
-                    if any(j in max_sizes_groups.get(q + 1, set()) for j in indexes):
-                        continue
-
-                    if any(len(self.groups[i][0]) <= q for i in indexes):
-                        continue
-
-                    yield from product(*(combinations(self.groups[i][0], q + 1) for i in indexes),
-                                       *(combinations(self.groups[i][0], q) for i in range(N) if i not in indexes))
-
-        traits = LastUpdatedOrderedDict()
-
-        SIZE_LIMIT = MORPHEME_SERIE_SIZE_LIMIT_CONTENT# if is_content else MORPHEME_SERIE_SIZE_LIMIT_FUNCTION
-
-        for gs in iter_groups_combinations():
-            morpheme_semes = list(set(chain(*gs, self.constant)))
-            if len(morpheme_semes) == 0 or len(morpheme_semes) > SIZE_LIMIT:
-                continue
-
-            m = PolyMorpheme(constant=morpheme_semes)
-            traits[str(m)] = m
-
-        return tuple(traits.values())
+        else:
+            return res

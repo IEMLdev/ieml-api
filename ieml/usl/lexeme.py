@@ -22,6 +22,8 @@ class Lexeme(USL):
 
 	def __init__(self, pm_flexion: PolyMorpheme, pm_content: PolyMorpheme):
 		super().__init__()
+		if not isinstance(pm_flexion, PolyMorpheme) or not isinstance(pm_content, PolyMorpheme):
+			raise ValueError("Invalid arguments to creates a lexeme object")
 		self.pm_flexion = pm_flexion
 		self.pm_content = pm_content
 

@@ -11,7 +11,6 @@ from ieml.usl.decoration.path import PolymorphemePath, GroupIndex, FlexionPath, 
 from ieml.usl.parser import IEMLParser
 from ieml.usl.syntagmatic_function import SyntagmaticRole
 from ieml.usl.usl import usl
-from ieml.usl.variation import PolyMorphemeVariation
 
 parser = PathParser()
 class TestPath(unittest.TestCase):
@@ -37,11 +36,11 @@ class TestPath(unittest.TestCase):
 		self.check(">constant>S:", PolymorphemePath, usl('S: A:'), Script)
 		self.check(">constant", PolymorphemePath, usl('S: A:'), PolyMorpheme)
 		self.check(">group_0 1>S:", PolymorphemePath, usl('A: m1(S:)'), Script)
-		self.check(">group_0 1", PolymorphemePath, usl('m1(S: A:)'), PolyMorphemeVariation)
+		self.check(">group_0 1", PolymorphemePath, usl('m1(S: A:)'), PolyMorpheme)
 		self.check(">group_2 1>B:", PolymorphemePath, usl('A: m1(U:) m1(B:) m1(S:)'), Script)
 		self.check(">group_1 1>S:", PolymorphemePath, usl('A: m1(U:) m1(S:)'), Script)
-		self.check(">group_2 1", PolymorphemePath, usl('A: m1(U:) m1(B:) m1(S:)'), PolyMorphemeVariation)
-		self.check(">group_1 1", PolymorphemePath, usl('A: m1(U:) m1(S:)'), PolyMorphemeVariation)
+		self.check(">group_2 1", PolymorphemePath, usl('A: m1(U:) m1(B:) m1(S:)'), PolyMorpheme)
+		self.check(">group_1 1", PolymorphemePath, usl('A: m1(U:) m1(S:)'), PolyMorpheme)
 
 		self.check(">", PolymorphemePath, usl('S: A:'), PolyMorpheme)
 
@@ -158,6 +157,21 @@ class TestPath(unittest.TestCase):
 
 		u = usl_from_path_values(structure)
 		self.assertEqual(str(u), "U: k.a.-k.a.-' b.-S:.A:.-'S:.-'S:.-',")
+
+	def test_usl_from_path_flexion_paradigm(self):
+		structure = [
+			(">flexion", "E:.wo.U:.-t.o.-'"),
+			(">flexion", "E:.wo.A:.-t.o.-'"),
+			(">content>constant", "U:"),
+		]
+		usl_parser = IEMLParser().parse
+		path_parser = PathParser().parse
+
+		structure = [(path_parser(p), usl_parser(u)) for p, u in structure]
+
+		u = usl_from_path_values(structure)
+		self.assertEqual(str(u), "(m1(E:.wo.U:.-t.o.-' E:.wo.A:.-t.o.-'))(U:)")
+
 
 	def test_usl_from_path_pm2(self):
 		structure = [

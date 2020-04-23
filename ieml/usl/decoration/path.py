@@ -1,6 +1,8 @@
 from collections import defaultdict
 from itertools import chain
 
+from sqlalchemy.util import NoneType
+
 from ieml.commons import OrderedEnum, monitor_decorator
 from ieml.dictionary.script import Script
 from ieml.usl.constants import FLEXION_SCRIPTS
@@ -55,6 +57,27 @@ class UslPath:
 
 	def as_constant(self, u=None):
 		return UslPath(child=None if self.child is None else self.child.as_constant(u))
+
+	def without_morpheme(self):
+		return UslPath(child=None if self.child is None else self.child.without_morpheme())
+
+	def concat(self, suffix: 'UslPath', force: bool=False) -> 'UslPath':
+		if self.__class__ == UslPath:
+			return suffix
+
+		if not isinstance(suffix, UslPath):
+			raise ValueError("Invalid suffix to concat, got "+ suffix.__class__.__name__)
+
+		if self.__class__ != suffix.__class__:
+			if self.child is None:
+				return self.clone(child=suffix, use_child=True)
+			else:
+				return self.clone(child=self.child.concat(suffix, force=force), use_child=True)
+		else:
+			if not suffix.has_prefix(self) and not force:
+				return self.clone()
+
+			return suffix
 
 	def remove_prefix(self, prefix: 'UslPath'):
 		if not self.has_prefix(prefix):
@@ -125,7 +148,10 @@ class UslPath:
 		return isinstance(other, UslPath) and str(other) == str(self)
 
 	def __lt__(self, other):
-		return self._do_lt(other)
+		if other.__class__ != self.__class__:
+			return self.USL_TYPE.syntactic_level < other.USL_TYPE.syntactic_level
+		else:
+			return self._do_lt(other)
 
 	def _do_eq(self, other):
 		return True
@@ -136,8 +162,11 @@ class UslPath:
 	def __hash__(self):
 		return hash(str(self))
 
+	def clone(self, use_child=False, child=None):
+		return UslPath(child=(child if use_child else self.child))
+
 	def no_child_clone(self):
-		return UslPath()
+		return self.clone(use_child=True, child=None)
 
 	@classmethod
 	def build_usl_from_path_to_node(cls, path_to_node):
@@ -153,6 +182,16 @@ class UslPath:
 	@property
 	def _is_constant_path(self):
 		return False
+
+	def split_tail(self):
+		if self.child is None:
+			return (UslPath(), self)
+		elif self.child.child is None:
+			return (self.no_child_clone(), self.child)
+		else:
+			p, tail = self.child.split_tail()
+			return (self.clone(use_child=True, child=p), tail)
+
 
 
 class GroupIndex(OrderedEnum):
@@ -192,6 +231,12 @@ class PolymorphemePath(UslPath):
 	def _do_lt(self, other):
 		return (self.group_idx, self.morpheme) < (other.group_idx, other.morpheme)
 
+	def without_morpheme(self):
+		return PolymorphemePath(group_idx=self.group_idx,
+								morpheme=None,
+								multiplicity=self.multiplicity,
+								child=(None if self.child is None else self.child.without_morpheme()))
+
 	def _deference(self: 'PolymorphemePath', usl: PolyMorpheme):
 		if self.group_idx != GroupIndex.CONSTANT and self.group_idx.value >= len(usl.groups):
 			raise DeferenceError("Group index " + str(self.group_idx.name) + " not in polymorpheme")
@@ -210,7 +255,7 @@ class PolymorphemePath(UslPath):
 			if self.group_idx == GroupIndex.CONSTANT:
 				return PolyMorpheme(constant=usl.constant)
 			else:
-				return usl.groups_paradigms[self.group_idx.value]
+				return PolyMorpheme(groups=[usl.groups[self.group_idx.value]])
 
 	def _to_str(self):
 		if self.group_idx == GroupIndex.CONSTANT:
@@ -265,8 +310,9 @@ class PolymorphemePath(UslPath):
 
 		return PolymorphemePath(group_idx=idx, morpheme=morph, multiplicity=multiplicity)
 
-	def no_child_clone(self):
-		return PolymorphemePath(group_idx=self.group_idx, morpheme=self.morpheme, multiplicity=self.multiplicity)
+	def clone(self, use_child=False, child=None):
+		return PolymorphemePath(group_idx=self.group_idx, morpheme=self.morpheme,
+								multiplicity=self.multiplicity, child=(child if use_child else self.child))
 
 	@classmethod
 	def build_usl_from_path_to_node(cls, path_to_node):
@@ -318,7 +364,7 @@ class FlexionPath(UslPath):
 		super().__init__(child=child)
 		from ieml.dictionary.script import Script
 
-		assert isinstance(morpheme, Script)
+		assert isinstance(morpheme, Script), morpheme.__class__.__name__
 		self.morpheme = morpheme
 
 	@property
@@ -328,6 +374,11 @@ class FlexionPath(UslPath):
 	def as_constant(self, u=None):
 		return FlexionPath(morpheme=self.morpheme,
 						   child=(None if self.child is None else self.child.as_constant(u)))
+
+	def without_morpheme(self):
+		raise ValueError("Unable to create a flexion path without a morpheme")
+		# return FlexionPath(morpheme=None,
+		# 				   child=(None if self.child is None else self.child.without_morpheme()))
 
 	def _do_eq(self, other):
 		return self.morpheme == other.morpheme
@@ -358,15 +409,15 @@ class FlexionPath(UslPath):
 		assert len(children) == 0
 		return FlexionPath(morpheme=morph)
 
-	def no_child_clone(self):
-		return FlexionPath(morpheme=self.morpheme)
+	def clone(self, use_child=False, child=None):
+		return FlexionPath(morpheme=self.morpheme, child=(child if use_child else self.child))
 
 	@classmethod
 	def build_usl_from_path_to_node(cls, path_to_node):
 		all_morphemes = []
 		for k, values in path_to_node.items():
 			if not isinstance(k, FlexionPath):
-				raise ValueError("invalid path type to instantiate a polymorphem " + k.__class__.__name__)
+				raise ValueError("invalid path type to instantiate a polymorpheme " + k.__class__.__name__)
 
 			all_morphemes.extend(values)
 
@@ -416,6 +467,10 @@ class LexemePath(UslPath):
 		return LexemePath(index=self.index,
 						  child=(None if self.child is None else self.child.as_constant(u)))
 
+	def without_morpheme(self):
+		return LexemePath(index=self.index,
+						  child=(None if self.child is None or self.index == LexemeIndex.FLEXION else self.child.without_morpheme()))
+
 	@property
 	def _is_constant_path(self):
 		return True
@@ -460,8 +515,21 @@ class LexemePath(UslPath):
 
 		return LexemePath(index=idx, child=child)
 
-	def no_child_clone(self):
-		return LexemePath(index=self.index)
+	def clone(self, use_child=False, child=None):
+		if child is not None:
+			if self.index == LexemeIndex.CONTENT:
+				if not isinstance(child, PolymorphemePath):
+					raise ValueError("Can't cast to polymorpheme path")
+			else:
+				if isinstance(child, PolymorphemePath):
+					if child.morpheme is not None:
+						child = FlexionPath(morpheme=child.morpheme)
+					else:
+						child = None
+				elif not isinstance(child, FlexionPath):
+					raise ValueError("Can't cast to flexion path")
+
+		return LexemePath(index=self.index, child=(child if use_child else self.child))
 
 	@classmethod
 	def build_usl_from_path_to_node(cls, path_to_node):
@@ -476,12 +544,19 @@ class LexemePath(UslPath):
 				if pm_content is not None:
 					raise ValueError("Multiple candidates for the content of the Lexeme")
 
-				pm_content = v
+				if not isinstance(v, PolyMorpheme):
+					pm_content = PolyMorpheme(constant=v)
+				else:
+					pm_content = v
+
 			elif k.index == LexemeIndex.FLEXION:
 				if pm_flexion is not None:
 					raise ValueError("Multiple candidates for the flexion of the Lexeme")
 
-				pm_flexion = v
+				if not isinstance(v, PolyMorpheme):
+					pm_flexion = FlexionPath.build_usl_from_path_to_node({FlexionPath(morpheme=ss): [ss] for ss in v})
+				else:
+					pm_flexion = v
 
 		if pm_content is None:
 			pm_content = PolyMorpheme([])
@@ -515,6 +590,10 @@ class RolePath(UslPath):
 		return RolePath(role=self.role,
 						has_focus=self.has_focus,
 						child=(None if self.child is None else self.child.as_constant(u)))
+	def without_morpheme(self):
+		return RolePath(role=self.role,
+						has_focus=self.has_focus,
+						child=(None if self.child is None else self.child.without_morpheme()))
 
 	@property
 	def _is_constant_path(self):
@@ -534,6 +613,11 @@ class RolePath(UslPath):
 
 	def _to_str(self):
 		return 'role' + SEPARATOR + ('! ' if self.has_focus else '') + str(self.role)
+
+	# def __hash__(self):
+	# 	"""Ignore focus when used as key"""
+	# 	return hash( 'role' + SEPARATOR + str(self.role))
+
 
 	@staticmethod
 	def _from_string(elem, children):
@@ -555,8 +639,10 @@ class RolePath(UslPath):
 
 		return RolePath(role=sfun_role, has_focus='!' in elem,child=child)
 
-	def no_child_clone(self):
-		return RolePath(role=self.role, has_focus=self.has_focus)
+	def clone(self, use_child=False, child=None):
+		return RolePath(role=self.role,
+						has_focus=self.has_focus, # if use_child and child is not None else False,
+						child=(child if use_child else self.child))
 
 	@classmethod
 	def build_usl_from_path_to_node(cls, path_to_node):
@@ -569,17 +655,32 @@ class RolePath(UslPath):
 			if k.has_focus:
 				if focus_role is not None and focus_role != k.role:
 					raise ValueError("Incoherent focus role, multiple differents values")
-				focus_role = k.role
-
-		lex_list = [(k.role.constant, v) for k, v in path_to_node.items()]
-
-		ctx_type, sfun = SyntagmaticFunction.from_list(lex_list)
+				focus_role = k
 
 		if focus_role is None:
 			raise ValueError("No focus role defined in this word")
 
+		path_to_node_grouped = defaultdict(list)
+		for k, v in path_to_node.items():
+			if v is not None:
+				if focus_role.role == k.role and not k.has_focus:
+					path_to_node_grouped[focus_role].append(v)
+				else:
+					path_to_node_grouped[k].append(v)
+
+		path_to_node_res = {}
+		for k, v in path_to_node_grouped.items():
+			if len(v) != 1:
+				raise ValueError('Two many lexemes at role: ' + str(k))
+			path_to_node_res[k] = v[0]
+
+		lex_list = [(k.role.constant, v) for k, v in path_to_node_res.items()]
+
+		ctx_type, sfun = SyntagmaticFunction.from_list(lex_list)
+
+
 		return Word(syntagmatic_fun=sfun,
-					role=focus_role,
+					role=focus_role.role,
 					context_type=ctx_type)
 
 
@@ -591,12 +692,12 @@ def usl_from_path_values(paths_values):
 	path_parser = PathParser()
 	usl_parser = IEMLParser()
 
-	path_to_value = {path_parser.parse(p): [] for p, _ in paths_values}
+	path_to_value = {path_parser.parse(p): set() for p, _ in paths_values}
 	for p, v in paths_values:
-		path_to_value[path_parser.parse(p)].append(usl_parser.parse(v))
+		path_to_value[path_parser.parse(p)].add(usl_parser.parse(v))
 
-	x = lambda : defaultdict(x)
-	bins = x()
+	Tree = lambda: defaultdict(Tree)
+	bins = Tree()
 
 	def recursive_group_by(bin, path, values):
 		p_cloned = path.no_child_clone()
@@ -625,6 +726,6 @@ def usl_from_path_values(paths_values):
 		return bin['node']
 
 	for p, values in path_to_value.items():
-		recursive_group_by(bins, p, values)
+		recursive_group_by(bins, p, list(values))
 
 	return build_nodes(bins)
