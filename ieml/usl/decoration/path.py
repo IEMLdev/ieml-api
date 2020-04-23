@@ -1,8 +1,6 @@
 from collections import defaultdict
 from itertools import chain
 
-from sqlalchemy.util import NoneType
-
 from ieml.commons import OrderedEnum, monitor_decorator
 from ieml.dictionary.script import Script
 from ieml.usl.constants import FLEXION_SCRIPTS
