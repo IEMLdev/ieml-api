@@ -59,7 +59,7 @@ class USL(DecoratedComponent):
     def iter_structure(self):
         raise NotImplementedError()
 
-    def iter_structure_path(self, flexion=False):
+    def iter_structure_path(self, flexion=False) -> Iterable[Tuple['UslPath', 'USL']]:
         raise NotImplementedError()
 
     def iter_structure_path_by_type(self, _type=Script, flexion=False,):

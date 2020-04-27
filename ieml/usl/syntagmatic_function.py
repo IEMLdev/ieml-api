@@ -87,7 +87,7 @@ class SyntagmaticFunction:
             # in the case of a process syntagm, we do not ignore the prefix
             role = SyntagmaticRole(list(role.constant)[1:])
 
-        if ignore_process_valence and role.constant and role.constant[0] in ADDRESS_ROLE_IN_PROCESS:
+        if ignore_process_valence and role.constant and role.constant[0] in ADDRESS_PROCESS_VALENCE_SCRIPTS:
             for valence in ADDRESS_PROCESS_VALENCE_SCRIPTS:
                 if valence in self.actors:
                     break

@@ -152,7 +152,13 @@ class UslTable2D:
             #                             key=lambda bin: min(ss for v in bin for _, ss in v if not ss.empty))):
             res.append(sum(vars, constants))
 
-        return sorted(res, key=lambda l: usl([(path.as_constant(vv), vv) for path, vv in l] + self.constant_paths))
+        res2 = []
+        for l in res:
+            res2.append([(path.concat(p2).as_constant(ss), ss)
+                         for path, vv in l
+                         for p2, ss in vv.iter_structure_path_by_script_ss()])
+
+        return sorted(res2, key=lambda l: usl([(path.as_constant(), vv) for path, vv in l] + self.constant_paths))
 
     @cached_property
     def constant_paths(self):
@@ -183,3 +189,32 @@ class UslTable2D:
             cells.append(cells_row)
 
         return cells
+
+
+def enumerate_partitions(usl: USL):
+    Tree = lambda: defaultdict(Tree)
+    prefix_tree = Tree()
+
+    for p, ss in usl.iter_structure_path():
+        if p.deference(usl).cardinal != 1:
+            child = p
+            curr = prefix_tree
+            while child is not None:
+                curr = curr[child.no_child_clone()]
+                child = child.child
+
+    def iter_prefix_tree(tree) -> List[List[UslPath]]:
+        res = [[]]
+        for p, tree_p in tree.items():
+            res = [
+                *[r + [p] for r in res], # without expansion
+                *[r + [p.concat(pp) for pp in items_l] for r in res for items_l in iter_prefix_tree(tree_p)], # with expansion
+            ]
+        return res
+
+    def count_leaves(tree):
+        return sum(count_leaves(tree_p) if tree_p else 1 for p, tree_p in tree.items())
+
+    # return the dim (number of leaves of prefix_tree) and the variations partitions
+    return count_leaves(prefix_tree), iter_prefix_tree(prefix_tree)
+

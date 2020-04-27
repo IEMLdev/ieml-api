@@ -66,6 +66,12 @@ class TestPath(unittest.TestCase):
 		self.check(">role>E:A:. E:A:.>flexion>E:B:.-d.u.-'", RolePath, w, Script)
 		self.check(">role>E:A:.>content>constant>m.-B:.A:.-'", RolePath, w, Script)
 
+		u = usl(
+			"[! E:B:. ()(k.a.-k.a.-' l.o.-k.o.-') > E:.f.- ()(m1(p.E:A:S:.- p.E:A:B:.- p.E:A:T:.- t.i.-l.i.-' c.-'B:.-'k.o.-t.o.-',))]")
+
+		self.check(">role>E:.f.->content>group_0 1>p.E:A:S:.-", RolePath, u, Script)
+
+
 		self.check(">role>E:A:.", RolePath, w, Lexeme)
 		self.check(">role>E:A:.>content", RolePath, w, PolyMorpheme)
 		self.check(">", RolePath, w, Word)
@@ -89,12 +95,12 @@ class TestPath(unittest.TestCase):
 		self.assertEqual(str(res), "[! E:A:.  ()(S:) > E:A:. E:A:. ()(B: m1(T:))]")
 
 	def test_expand_compose_into_paths(self):
-		parser = IEMLParser().parse
-		gitdb = GitInterface()
+		# parser = IEMLParser().parse
+		gitdb = GitInterface(origin='https://github.com/plevyieml/ieml-language.git')
 		gitdb.pull()
 		db = IEMLDatabase(folder=gitdb.folder)
 
-		usls = db.list(type=Word, parse=True) + db.list(type=PolyMorpheme, parse=True)
+		usls = db.list(type=Word, parse=True) + db.list(type=PolyMorpheme, parse=True) + db.list(type=Lexeme, parse=True)
 		for u in tqdm.tqdm(usls):
 			p_u = list(u.iter_structure_path_by_script_ss())
 			res = usl_from_path_values(p_u)

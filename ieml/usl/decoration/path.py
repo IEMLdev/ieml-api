@@ -63,6 +63,9 @@ class UslPath:
 		if self.__class__ == UslPath:
 			return suffix
 
+		if suffix.__class__ == UslPath:
+			return self
+
 		if not isinstance(suffix, UslPath):
 			raise ValueError("Invalid suffix to concat, got "+ suffix.__class__.__name__)
 
@@ -245,7 +248,7 @@ class PolymorphemePath(UslPath):
 			else:
 				group = usl.groups[self.group_idx.value][0]
 
-			if self.morpheme not in group:
+			if not self.morpheme.empty and self.morpheme not in group:
 				raise DeferenceError("Morpheme " + str(self.morpheme) + " not in group at " + str(self.group_idx.name))
 
 			return self.morpheme

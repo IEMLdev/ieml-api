@@ -217,6 +217,10 @@ class Script(TreeStructure, DecoratedComponent):
     def iter_structure_path(self, flexion=False):
         return []
 
+    def iter_structure_path_by_script_ss(self, flexion=False):
+        from ieml.usl.decoration.path import UslPath
+        yield (UslPath(), self)
+
     def _compute_cells(self):
         pass
 
