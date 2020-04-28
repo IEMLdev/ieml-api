@@ -373,7 +373,12 @@ class GitInterface:
     def push(self, remote='origin', force=False):
         repo = pygit2.Repository(self.folder)
         remote = repo.remotes[remote]
+
+        if self.credentials is None:
+            raise ValueError("Credentials are None, cannot push")
+
         callbacks = pygit2.RemoteCallbacks(credentials=self.credentials)
+        print("Pushing: ", remote.url, self.credentials,file=stderr)
         remote.push(['{}{}'.format('+' if force else '', self.repo.head.name)],
                     callbacks=callbacks)
 
