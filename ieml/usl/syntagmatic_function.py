@@ -102,11 +102,11 @@ class SyntagmaticFunction:
         # UNUSED ?
         return [self.actors[r] for r in role.constant if r in self.actors]
 
-    def iter_structure(self):
+    def iter_structure(self, auto_promote_to_USL=False):
         for sfun in self.actors.values():
             yield sfun.actor
             if sfun.actor is not None:
-                yield from sfun.actor.iter_structure()
+                yield from sfun.actor.iter_structure(auto_promote_to_USL=auto_promote_to_USL)
 
     def iter_structure_path(self, context, focus_role=None):
         from ieml.usl.decoration.path import RolePath

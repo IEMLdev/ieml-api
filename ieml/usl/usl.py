@@ -56,7 +56,7 @@ class USL(DecoratedComponent):
     def __contains__(self, item):
         return item.singular_sequences_set.issubset(self.singular_sequences_set)
 
-    def iter_structure(self):
+    def iter_structure(self, auto_promote_to_USL=False):
         raise NotImplementedError()
 
     def iter_structure_path(self, flexion=False) -> Iterable[Tuple['UslPath', 'USL']]:

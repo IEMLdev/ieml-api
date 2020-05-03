@@ -93,8 +93,8 @@ class InstancedUSL(USL):
 		# TODO : check value coherency
 		return self.usl.check()
 
-	def iter_structure(self):
-		return self.usl.iter_structure()
+	def iter_structure(self, auto_promote_to_USL=False):
+		return self.usl.iter_structure(auto_promote_to_USL=auto_promote_to_USL)
 
 	def iter_structure_path(self, flexion=False):
 		return self.usl.iter_structure_path(flexion=flexion)

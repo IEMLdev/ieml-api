@@ -181,8 +181,11 @@ class PolyMorpheme(USL):
                (len(self.constant) == len(other.constant) and self.constant < other.constant) or \
                (self.constant == other.constant and self.groups < other.groups)
 
-    def iter_structure(self):
-        yield from self.morphemes
+    def iter_structure(self, auto_promote_to_USL=False):
+        if auto_promote_to_USL:
+            yield from [PolyMorpheme(constant=[m]) for m in self.morphemes]
+        else:
+            yield from self.morphemes
 
     def iter_structure_path(self, flexion=False):
         from ieml.usl.decoration.path import PolymorphemePath, GroupIndex, FlexionPath

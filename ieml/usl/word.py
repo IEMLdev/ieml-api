@@ -64,8 +64,8 @@ class Word(USL):
 
         return [Word(sfun, self.role, self.context_type) for sfun in sfun_ss]
 
-    def iter_structure(self):
-        yield from self.syntagmatic_fun.iter_structure()
+    def iter_structure(self, auto_promote_to_USL=False):
+        yield from self.syntagmatic_fun.iter_structure(auto_promote_to_USL=auto_promote_to_USL)
 
     def iter_structure_path(self, flexion=False):
         from ieml.usl.decoration.path import UslPath
@@ -84,7 +84,7 @@ class Word(USL):
     @property
     def morphemes(self):
         return sorted(set(chain.from_iterable(e.actor.morphemes
-                                              for e in self.syntagmatic_fun.actors.values())))
+                                              for e in self.syntagmatic_fun.actors.values() if e.actor is not None)))
 
     def check(self):
         check_word(self)

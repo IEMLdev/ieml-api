@@ -43,11 +43,11 @@ class Lexeme(USL):
 	def check(self):
 		pass
 
-	def iter_structure(self):
+	def iter_structure(self, auto_promote_to_USL=False):
 		yield self.pm_flexion
-		yield from self.pm_flexion.iter_structure()
+		yield from self.pm_flexion.iter_structure(auto_promote_to_USL=auto_promote_to_USL)
 		yield self.pm_content
-		yield from self.pm_content.iter_structure()
+		yield from self.pm_content.iter_structure(auto_promote_to_USL=auto_promote_to_USL)
 
 	def iter_structure_path(self, flexion=False):
 		from ieml.usl.decoration.path import LexemePath, LexemeIndex

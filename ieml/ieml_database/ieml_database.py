@@ -146,7 +146,7 @@ class IEMLDatabase:
         return os.path.join(p, filename + ext)
 
     @monitor_decorator("list content")
-    def list(self, type=None, paradigm=None, parse=False, ):
+    def list(self, type=None, paradigm=None, parse=False, auto_promote_to_USL=False):
         p = self.folder
         if type:
             if not isinstance(type, str):
@@ -167,7 +167,7 @@ class IEMLDatabase:
             _res = []
             for s in res:
                 try:
-                    _res.append(parser.parse(s))
+                    _res.append(parser.parse(s, auto_promote_to_USL=auto_promote_to_USL))
                 except CannotParse as e:
                     error("Cannot parse {} : {}".format(s, repr(e)))
             return _res

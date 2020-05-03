@@ -43,7 +43,7 @@ class PolyMorphemeVariation(Variation):
     def do_lt(self, other):
         return (self.items, self.multiplicity) < (other.items, other.multiplicity)
 
-    def iter_structure(self):
+    def iter_structure(self, auto_promote_to_USL=False):
         yield from self.items
 
     def iter_structure_path(self, flexion=False):

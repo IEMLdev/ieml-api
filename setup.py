@@ -32,7 +32,8 @@ setup(name='ieml',
             'pygit2',
             'pandas',
             'pyyaml',
-            'pylatex'
+            'pylatex',
+            'neo4j'
       ],
       test_suite='nose2.collector.collector',
       tests_require=['nose2'],

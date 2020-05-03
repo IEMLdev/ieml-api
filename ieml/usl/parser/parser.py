@@ -39,23 +39,28 @@ class IEMLParser():
         self.path_parser = PathParser()
         self.dictionary = dictionary
 
-    def parse(self, s, factorize_script=False):
+    def parse(self, s, factorize_script=False, auto_promote_to_USL=False):
         """Parses the input string, and returns a reference to the created AST's root"""
         if s == '':
-            return NullScript(0)
+            res = NullScript(0)
+        else:
+            if isinstance(s, (USL, Script)):
+                s = str(s)
 
-        if isinstance(s, (USL, Script)):
-            s = str(s)
+            with self.lock:
+                self.factorize_script = factorize_script
+                try:
+                    res = self.parser.parse(s, lexer=self.lexer)
+                except ValueError as e:
+                    raise CannotParse(s, str(e))
+                except CannotParse as e:
+                    e.s = s
+                    raise e
 
-        with self.lock:
-            self.factorize_script = factorize_script
-            try:
-                return self.parser.parse(s, lexer=self.lexer)
-            except ValueError as e:
-                raise CannotParse(s, str(e))
-            except CannotParse as e:
-                e.s = s
-                raise e
+        if auto_promote_to_USL and isinstance(res, Script):
+            res = PolyMorpheme(constant=[res])
+
+        return res
 
 
     # Parsing rules
