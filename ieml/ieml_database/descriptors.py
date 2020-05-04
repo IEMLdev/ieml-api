@@ -2,6 +2,7 @@ import csv
 import enum
 import json
 import operator
+from enum import Enum
 from io import StringIO
 from typing import Dict, List
 
@@ -9,8 +10,10 @@ import pandas
 from collections import defaultdict
 from functools import reduce
 
-from ieml.constants import LANGUAGES, STRUCTURE_KEYS, INHIBITABLE_RELATIONS, DESCRIPTORS_CLASS
+from ieml.constants import STRUCTURE_KEYS, INHIBITABLE_RELATIONS, DescriptorsType, DESCRIPTORS_CLASS, LANGUAGES, \
+    Languages
 from ieml.usl.parser import IEMLParser
+
 
 
 def normalize_key(ieml, key, value, parse_ieml=False, partial=False, structure=False):
@@ -57,17 +60,6 @@ def normalize_key(ieml, key, value, parse_ieml=False, partial=False, structure=F
                 raise ValueError("Unsupported descriptor: '{}'".format(str(value)))
 
     return ieml, key, value
-
-
-class Languages(enum.Enum):
-    FR = 'fr'
-    EN = 'en'
-
-class DescriptorsType(enum.Enum):
-    TRANSLATIONS = 'translations'
-    TAGS = 'tags'
-    COMMENTS = 'comments'
-
 
 Descriptor = Dict[DescriptorsType, Dict[Languages, List[str]]]
 

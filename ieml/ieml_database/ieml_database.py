@@ -19,8 +19,8 @@ from tqdm import tqdm
 
 from ieml import error
 from ieml.commons import monitor_decorator, cache_results_watch_files
-from ieml.constants import LANGUAGES, INHIBITABLE_RELATIONS, STRUCTURE_KEYS, DESCRIPTORS_CLASS, GRAMMATICAL_CLASS_NAMES, \
-    TYPES
+from ieml.constants import INHIBITABLE_RELATIONS, STRUCTURE_KEYS, GRAMMATICAL_CLASS_NAMES, \
+    TYPES, LANGUAGES, DESCRIPTORS_CLASS
 from ieml.dictionary.dictionary import Dictionary
 from ieml.dictionary.script import NullScript, MultiplicativeScript, AdditiveScript, Script
 from ieml.exceptions import CannotParse
