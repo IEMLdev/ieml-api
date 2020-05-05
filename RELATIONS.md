@@ -85,6 +85,17 @@ Relation racine:
 - `(:Word)-[:composed_word_synfun]->(:SyntagmaticFunction)`
 - `(:Word)-[:composed_word_role]->(:PolyMorpheme)` : the address of the !
 
+#### Structure des `(:Morpheme)`
+
+- `(:Morpheme)-[:composed_morpheme]->(:Morpheme)`
+- `(:Morpheme)-[:composed_morpheme_father]->(:Morpheme)`
+- `(:Morpheme)-[:composed_morpheme_father_substance]->(:Morpheme)`
+- `(:Morpheme)-[:composed_morpheme_father_attribute]->(:Morpheme)`
+- `(:Morpheme)-[:composed_morpheme_father_mode]->(:Morpheme)`
+- `(:Morpheme)-[:composed_morpheme_child]->(:Morpheme)`
+- `(:Morpheme)-[:composed_morpheme_child_substance]->(:Morpheme)`
+- `(:Morpheme)-[:composed_morpheme_child_attribute]->(:Morpheme)`
+- `(:Morpheme)-[:composed_morpheme_child_mode]->(:Morpheme)`
 
 
 #### Inclusions paradigmatiques
@@ -94,20 +105,6 @@ Relation racine:
  - `(:USL)-[:contains]->(:USL)`
  
  
-#### Relations du dictionnaire entre `(:Morpheme)`
-
-- `(:Morpheme)-[:dic]->(:Morpheme)`
-- `(:Morpheme)-[:dic_father]->(:Morpheme)`
-- `(:Morpheme)-[:dic_father_substance]->(:Morpheme)`
-- `(:Morpheme)-[:dic_father_attribute]->(:Morpheme)`
-- `(:Morpheme)-[:dic_father_mode]->(:Morpheme)`
-- `(:Morpheme)-[:dic_child]->(:Morpheme)`
-- `(:Morpheme)-[:dic_child_substance]->(:Morpheme)`
-- `(:Morpheme)-[:dic_child_attribute]->(:Morpheme)`
-- `(:Morpheme)-[:dic_child_mode]->(:Morpheme)`
-
-- `(:Morpheme)-[:dic]->(:Morpheme)`
-- `(:Morpheme)-[:dic]->(:Morpheme)`
 
 
 
