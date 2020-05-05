@@ -6,8 +6,7 @@ from pylatex import Document, Package, escape_latex
 from pylatex.utils import dumps_list
 
 from ieml import logger
-from ieml.constants import LANGUAGES
-from ieml.dictionary.script import Script
+from ieml.constants import Languages, LANGUAGES
 from ieml.ieml_database import IEMLDatabase, GitInterface
 from ieml.ieml_database.ieml_database import Descriptors
 from ieml.usl import Word
@@ -19,7 +18,7 @@ from ieml.usl.usl import usl
 
 
 
-def _render_role(role: List[Script], language: LANGUAGES):
+def _render_role(role: List[Script], language: Languages):
     if len(role) == 1:
         return NAMES_TO_ADDRESS[role[0]]
     else:

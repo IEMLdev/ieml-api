@@ -3,7 +3,6 @@ import io
 import boto3
 from ieml.dictionary.dictionary import Dictionary
 
-from ieml.constants import LANGUAGES
 from ieml.dictionary.tools import term
 from ieml.dictionary.version import get_available_dictionary_version, create_dictionary_version, \
     DictionaryVersion, latest_dictionary_version

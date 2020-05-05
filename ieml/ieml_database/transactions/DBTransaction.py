@@ -3,7 +3,7 @@ import tqdm
 
 from ieml import error
 from ieml.ieml_database import IEMLDatabase
-from ieml.constants import LANGUAGES, INHIBITABLE_RELATIONS, DESCRIPTORS_CLASS
+from ieml.constants import INHIBITABLE_RELATIONS, LANGUAGES, DESCRIPTORS_CLASS
 from ieml.dictionary.script import Script, factorize
 from ieml.usl import USL
 

@@ -1,3 +1,5 @@
+import enum
+
 import pygit2
 from bidict import bidict
 import os
@@ -38,10 +40,15 @@ AUXILIARY_CLASS = GRAMMATICAL_CLASS_NAMES.inv['AUXILIARY']
 VERB_CLASS = GRAMMATICAL_CLASS_NAMES.inv['VERB']
 NOUN_CLASS = GRAMMATICAL_CLASS_NAMES.inv['NOUN']
 
-LANGUAGES = [
-    'fr',
-    'en'
-]
+
+class Languages(enum.Enum):
+    """
+    The language currently supported by the IEML database
+    """
+    FR = 'fr'
+    EN = 'en'
+
+LANGUAGES = [l.value for l in Languages]
 
 CHARACTER_SIZE_LIMIT = 6
 MAX_NODES_IN_SENTENCE = 20
@@ -217,7 +224,16 @@ MORPHEME_SERIE_SIZE_LIMIT_FUNCTION = 3
 
 POLYMORPHEME_MAX_MULTIPLICITY=3
 
-DESCRIPTORS_CLASS = ['translations', 'comments', 'tags']
+
+
+class DescriptorsType(enum.Enum):
+    TRANSLATIONS = 'translations'
+    TAGS = 'tags'
+    COMMENTS = 'comments'
+    REFERENTIAL = 'rdf_repositories'
+
+DESCRIPTORS_CLASS = [d.value for d in DescriptorsType]
+
 
 TYPES = ['morpheme', 'polymorpheme', 'lexeme', 'word', 'phrase']
 DEFAULT_COMMITER_SIGNATURE = pygit2.Signature('ieml-commiter', 'commiter@ieml.io')

@@ -4,7 +4,7 @@ from collections import defaultdict
 
 import pygit2
 
-from ieml import IEMLDatabase
+from ieml.ieml_database import IEMLDatabase
 from ieml.dictionary.script import script
 from ieml.ieml_database.git_interface import GitInterface
 from ieml.usl.parser import IEMLParser

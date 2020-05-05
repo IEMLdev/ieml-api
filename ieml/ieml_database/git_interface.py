@@ -22,8 +22,7 @@ from appdirs import user_cache_dir
 
 from ieml import logger, error
 from ieml.commons import monitor_decorator
-from ieml.constants import IEMLDB_DEFAULT_GIT_ADDRESS, LIBRARY_VERSION, DEFAULT_COMMITER_SIGNATURE, DESCRIPTORS_CLASS, \
-    LANGUAGES
+from ieml.constants import IEMLDB_DEFAULT_GIT_ADDRESS, LIBRARY_VERSION, DEFAULT_COMMITER_SIGNATURE
 
 
 def get_local_cache_dir(origin):
