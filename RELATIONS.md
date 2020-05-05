@@ -168,7 +168,7 @@ Plusieurs relations peuvent être définies ensemble.
  3) Genre/espece pour les polymorphemes (relation quantifiable)
  
     Relations:
-     - name: ":genus_pm"
+     - name: `:genus_pm`
      - USL: ``
      
      - name: `:species_pm`
@@ -179,4 +179,4 @@ Plusieurs relations peuvent être définies ensemble.
         MATCH (a:PolyMorpheme), (b:PolyMorpheme)
         WHERE (a)-[:contained]->(:USL {ieml: "M:O:.-'U:.-'k.o.-t.o.-'"})
         CREATE (b)-[:part_of]->(a)
-        CREATE (a)-[]->(b)```
+        CREATE (a)-[:species_pm]->(b)```
