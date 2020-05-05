@@ -54,55 +54,55 @@ Exemple de requête pour seléctionner un noeud de relations:
 #### Composition (relations syntaxiques)
 Relation racine:
 
-- `(:USL)-[:composed]->(:USL)`
+- `(:USL)-[:syntax_composed]->(:USL)`
 
 ##### Structure des `(:PolyMorpheme)`
-- `(:PolyMorpheme)-[:composed_pm]->(:Morpheme)`
-- `(:PolyMorpheme)-[:composed_pm_constant]->(:Morpheme)`
-- `(:PolyMorpheme)-[:composed_pm_group0]->(:Morpheme)`
-- `(:PolyMorpheme)-[:composed_pm_group1]->(:Morpheme)`
-- `(:PolyMorpheme)-[:composed_pm_group2]->(:Morpheme)`
+- `(:PolyMorpheme)-[:syntax_composed_pm]->(:Morpheme)`
+- `(:PolyMorpheme)-[:syntax_composed_pm_constant]->(:Morpheme)`
+- `(:PolyMorpheme)-[:syntax_composed_pm_group0]->(:Morpheme)`
+- `(:PolyMorpheme)-[:syntax_composed_pm_group1]->(:Morpheme)`
+- `(:PolyMorpheme)-[:syntax_composed_pm_group2]->(:Morpheme)`
 
 ##### Structure des `(:Lexeme)`
-- `(:Lexeme)-[:composed_lex]->(:PolyMorpheme)`
-- `(:Lexeme)-[:composed_lex_content]->(:PolyMorpheme)`
-- `(:Lexeme)-[:composed_lex_flexion]->(:PolyMorpheme)`
+- `(:Lexeme)-[:syntax_composed_lex]->(:PolyMorpheme)`
+- `(:Lexeme)-[:syntax_composed_lex_content]->(:PolyMorpheme)`
+- `(:Lexeme)-[:syntax_composed_lex_flexion]->(:PolyMorpheme)`
 
 ##### Structure des `(:SyntagmaticFunction)`
-- `(:SyntagmaticFunction)-[:composed_synfun]->(:Lexeme)|(:SyntagmaticFunction)`
-- `(:SyntagmaticFunction)-[:composed_synfun_root]->(:Lexeme)|(:SyntagmaticFunction)`
-- `(:SyntagmaticFunction)-[:composed_synfun_initiator]->(:Lexeme)|(:SyntagmaticFunction)`
-- `(:SyntagmaticFunction)-[:composed_synfun_interactant]->(:Lexeme)|(:SyntagmaticFunction)`
-- `(:SyntagmaticFunction)-[:composed_synfun_receiver]->(:Lexeme)|(:SyntagmaticFunction)`
-- `(:SyntagmaticFunction)-[:composed_synfun_time]->(:Lexeme)|(:SyntagmaticFunction)`
-- `(:SyntagmaticFunction)-[:composed_synfun_location]->(:Lexeme)|(:SyntagmaticFunction)`
-- `(:SyntagmaticFunction)-[:composed_synfun_manner]->(:Lexeme)|(:SyntagmaticFunction)`
-- `(:SyntagmaticFunction)-[:composed_synfun_intention]->(:Lexeme)|(:SyntagmaticFunction)`
-- `(:SyntagmaticFunction)-[:composed_synfun_cause]->(:Lexeme)|(:SyntagmaticFunction)`
+- `(:SyntagmaticFunction)-[:syntax_composed_synfun]->(:Lexeme)|(:SyntagmaticFunction)`
+- `(:SyntagmaticFunction)-[:syntax_composed_synfun_root]->(:Lexeme)|(:SyntagmaticFunction)`
+- `(:SyntagmaticFunction)-[:syntax_composed_synfun_initiator]->(:Lexeme)|(:SyntagmaticFunction)`
+- `(:SyntagmaticFunction)-[:syntax_composed_synfun_interactant]->(:Lexeme)|(:SyntagmaticFunction)`
+- `(:SyntagmaticFunction)-[:syntax_composed_synfun_receiver]->(:Lexeme)|(:SyntagmaticFunction)`
+- `(:SyntagmaticFunction)-[:syntax_composed_synfun_time]->(:Lexeme)|(:SyntagmaticFunction)`
+- `(:SyntagmaticFunction)-[:syntax_composed_synfun_location]->(:Lexeme)|(:SyntagmaticFunction)`
+- `(:SyntagmaticFunction)-[:syntax_composed_synfun_manner]->(:Lexeme)|(:SyntagmaticFunction)`
+- `(:SyntagmaticFunction)-[:syntax_composed_synfun_intention]->(:Lexeme)|(:SyntagmaticFunction)`
+- `(:SyntagmaticFunction)-[:syntax_composed_synfun_cause]->(:Lexeme)|(:SyntagmaticFunction)`
 
 ##### Structure des `(:Word)`
-- `(:Word)-[:composed_word]->(:SyntagmaticFunction)`
-- `(:Word)-[:composed_word_synfun]->(:SyntagmaticFunction)`
-- `(:Word)-[:composed_word_role]->(:PolyMorpheme)` : the address of the !
+- `(:Word)-[:syntax_composed_word]->(:SyntagmaticFunction)`
+- `(:Word)-[:syntax_composed_word_synfun]->(:SyntagmaticFunction)`
+- `(:Word)-[:syntax_composed_word_role]->(:PolyMorpheme)` : the address of the !
 
 #### Structure des `(:Morpheme)`
 
-- `(:Morpheme)-[:composed_morpheme]->(:Morpheme)`
-- `(:Morpheme)-[:composed_morpheme_father]->(:Morpheme)`
-- `(:Morpheme)-[:composed_morpheme_father_substance]->(:Morpheme)`
-- `(:Morpheme)-[:composed_morpheme_father_attribute]->(:Morpheme)`
-- `(:Morpheme)-[:composed_morpheme_father_mode]->(:Morpheme)`
-- `(:Morpheme)-[:composed_morpheme_child]->(:Morpheme)`
-- `(:Morpheme)-[:composed_morpheme_child_substance]->(:Morpheme)`
-- `(:Morpheme)-[:composed_morpheme_child_attribute]->(:Morpheme)`
-- `(:Morpheme)-[:composed_morpheme_child_mode]->(:Morpheme)`
+- `(:Morpheme)-[:syntax_composed_morpheme]->(:Morpheme)`
+- `(:Morpheme)-[:syntax_composed_morpheme_father]->(:Morpheme)`
+- `(:Morpheme)-[:syntax_composed_morpheme_father_substance]->(:Morpheme)`
+- `(:Morpheme)-[:syntax_composed_morpheme_father_attribute]->(:Morpheme)`
+- `(:Morpheme)-[:syntax_composed_morpheme_father_mode]->(:Morpheme)`
+- `(:Morpheme)-[:syntax_composed_morpheme_child]->(:Morpheme)`
+- `(:Morpheme)-[:syntax_composed_morpheme_child_substance]->(:Morpheme)`
+- `(:Morpheme)-[:syntax_composed_morpheme_child_attribute]->(:Morpheme)`
+- `(:Morpheme)-[:syntax_composed_morpheme_child_mode]->(:Morpheme)`
 
 
 #### Inclusions paradigmatiques
 
 Relation racine:
 
- - `(:USL)-[:contains]->(:USL)`
+ - `(:USL)-[:syntax_contains]->(:USL)`
  
  
 
@@ -141,8 +141,8 @@ Plusieurs relations peuvent être définies ensemble.
  
     ```
     MATCH (a:USL), (b:USL)
-    WHERE (a) -[:contains]-> (b)
-    MERGE (b)-[:contained]->(a)  
+    WHERE (a) -[:syntax_contains]-> (b)
+    MERGE (b)-[:syntax_contained]->(a)  
       ```
 
     NB: `MERGE` signifie: créer la relation si elle n'existe pas déjà dans la bdd.
@@ -174,6 +174,6 @@ Plusieurs relations peuvent être définies ensemble.
      Query:
      ```
         MATCH (a:PolyMorpheme), (b:PolyMorpheme)
-        WHERE (a)-[:contained]->(:USL {ieml: "M:O:.-'U:.-'k.o.-t.o.-'"})
-        CREATE (b)-[:part_of]->(a)
+        
+        CREATE (b)-[:genus_pm]->(a)
         CREATE (a)-[:species_pm]->(b)```
