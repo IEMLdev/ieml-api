@@ -108,11 +108,11 @@ Relation racine:
 
 
 
-### Relations quantitifiés
-Il peut y avoir plusieurs fois la même relations entre deux neouds.
-Donc pour deux noeuds, on peut en mesurer le poid de ce type de relation : le nombre de cette relation qui relit les deux mêmes noeuds
+### Relations quantitifiées
+Il peut y avoir plusieurs fois la même relations entre deux noeuds.
+Donc pour deux noeuds, on peut en mesurer le poids de ce type de relation : le nombre de cette relation qui relie les deux mêmes noeuds
 
-ce type de relation peut être utile pour calculer les proximitées sémantiques.
+ce type de relation peut être utile pour calculer les proximités sémantiques.
 
 
 ### Query Language
