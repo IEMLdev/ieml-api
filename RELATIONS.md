@@ -163,7 +163,7 @@ Plusieurs relations peuvent être définies ensemble.
     MATCH (a:USL), (b:USL {ieml: "S:.-'U:.-'k.o.-t.o.-'"})
     WHERE (a)-[:contained]->(:USL {ieml: "M:O:.-'U:.-'k.o.-t.o.-'"})
     MERGE (b)-[:part_of]->(a)
-    MERGE (a)-[]->(b)
+    MERGE (a)-[:whole_from]->(b)
     ```
  3) Genre/espece pour les polymorphemes (relation quantifiable)
  
