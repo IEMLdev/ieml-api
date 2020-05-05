@@ -142,7 +142,7 @@ Plusieurs relations peuvent être définies ensemble.
     ```
     MATCH (a:USL), (b:USL)
     WHERE (a) -[:contains]-> (b)
-    MERGE (a)-[:contained]->(b)  
+    MERGE (b)-[:contained]->(a)  
       ```
 
     NB: `MERGE` signifie: créer la relation si elle n'existe pas déjà dans la bdd.
