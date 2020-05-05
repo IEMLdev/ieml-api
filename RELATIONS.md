@@ -175,9 +175,8 @@ Plusieurs relations peuvent être définies ensemble.
      - USL: ``
      
      Query:
-        ```
+     ```
         MATCH (a:PolyMorpheme), (b:PolyMorpheme)
         WHERE (a)-[:contained]->(:USL {ieml: "M:O:.-'U:.-'k.o.-t.o.-'"})
         CREATE (b)-[:part_of]->(a)
-        CREATE (a)-[]->(b)
-    ```
+        CREATE (a)-[]->(b)```
