@@ -121,19 +121,23 @@ Le language de query est le language CYPHER de neo4j.
 
 
 ### Définition de relations:
-Plusieurs relations peuvent être définies ensemble.
-
- Relations:
-  - nom0
-  - USL0
-  
-  - nom1
-  - USL1 
-  ...
-  
-  Query: "..." 
 
 
+Toutes les relations sont définie par la structure suivante:
+ - Définition d'un type de relation:
+   - `name` : nom utilisé pour identifier la relation dans la base de données
+   - `usl`  : USL utilisé pour représenter la relation
+   
+   
+Il y deux types de calcul de relations:
+ - le calcul axiomatique : ce sont les relations qui découlent de la syntax
+ - le calcul génératif : on calcul de nouvelles relations à partir de celles présentes dans la base de données.
+ 
+Le calcul axiomatique est implémenté dans les librairies IEML, le calcul génératif est enregistrer dans la base de données de la langue (ieml-language)
+Un programme de calcul génératif de relation est spécifié par :
+ - Un ensemble de définition de types relations
+ - Un ensemble de type de relations dont le calcul dépend
+ - Une requete de création dans le language CYPHER
 
 ### Exemples de requêtes :
 
@@ -172,8 +176,7 @@ Plusieurs relations peuvent être définies ensemble.
      - USL: ``  
    
     Query:
-    
-    ```
+       ```
     MATCH (a:PolyMorpheme)-[:syntax_composed_pm_constant]->(m:Morpheme)<-[:syntax_composed_pm_constant]-(b:PolyMorpheme)
     WHERE a != b
     WITH a, b, count(m) as commonsMorphCount
@@ -182,5 +185,13 @@ Plusieurs relations peuvent être définies ensemble.
     WITH a, b, commonsMorphCount, count(ma) as MorphACount
     WHERE MorphACount <= commonsMorphCount
     MERGE (b)-[:genus_pm]->(a)
-    MERGE (a)-[:species_pm]->(b)
-   ```
+    MERGE (a)-[:species_pm]->(b)```
+
+### TODO
+
+ - relations axiomatique (50%)
+ - bdd git pour les relations générative (save/load)
+ - calcul du graphe de dépendance entre les relations génératives
+ - fonction d'execution des relations génératives dans l'ordre de dep
+ - test
+ 
