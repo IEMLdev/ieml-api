@@ -162,18 +162,25 @@ Plusieurs relations peuvent être définies ensemble.
     MERGE (b)-[:part_of]->(a)
     MERGE (a)-[:whole_from]->(b)
     ```
- 3) Genre/espece pour les polymorphemes (relation quantifiable)
+ 3) Genre/espece pour les polymorphemes
  
     Relations:
      - name: `:genus_pm`
      - USL: ``
      
      - name: `:species_pm`
-     - USL: ``
-     
-     Query:
-     ```
-        MATCH (a:PolyMorpheme), (b:PolyMorpheme)
-        
-        CREATE (b)-[:genus_pm]->(a)
-        CREATE (a)-[:species_pm]->(b)```
+     - USL: ``  
+   
+    Query:
+    
+    ```
+    MATCH (a:PolyMorpheme)-[:syntax_composed_pm_constant]->(m:Morpheme)<-[:syntax_composed_pm_constant]-(b:PolyMorpheme)
+    WHERE a != b
+    WITH a, b, count(m) as commonsMorphCount
+    MATCH (a)-[:syntax_composed_pm_constant]->(ma:Morpheme)
+    WHERE commonsMorphCount > 0
+    WITH a, b, commonsMorphCount, count(ma) as MorphACount
+    WHERE MorphACount <= commonsMorphCount
+    MERGE (b)-[:genus_pm]->(a)
+    MERGE (a)-[:species_pm]->(b)
+   ```
