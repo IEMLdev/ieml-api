@@ -20,12 +20,7 @@ IEML is a regular language that is intended to serve as an easily interpretable 
 ## Install
 
 The library works with python 3.5+
-
-You can install the ieml package with pip:
-```bash
-pip install ieml
-```
-If you want to install it from github:
+From github:
 ```bash
 git clone https://github.com/IEMLdev/ieml
 python setup.py
