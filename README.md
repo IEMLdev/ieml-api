@@ -16,7 +16,6 @@ So IEML has the perfect capabilities to uniquely identify concepts in a database
 In order to guarantee the consistency of interpretations of IEML expressions, a database of translations (en and fr), comments and tags per USL is available [here](https://github.com/IEMLdev/ieml-language "IEML database"). This database has a normative purpose concerning the interpretation of IEML expressions. It can be browsed with the [intlekt editor](https://dev.intlekt.io/ "IEML editor"). It can also be used as an educational resource for learning IEML, in addition to reading the [grammar](https://www.dropbox.com/s/875vsj0atbcts43/0-00-IEML-Manifesto-2019-fr.pdf?dl=0 "IEML grammar"). 
 
 IEML is a regular language that is intended to serve as an easily interpretable coordinate system for the world of ideas on the internet, to improve communication and artificial intelligence.
-This language has been made by the French philosopher [Pierre Levy](https://en.wikipedia.org/wiki/Pierre_L%C3%A9vy) and implemented in python by [Louis van Beurden](https://louisvanbeurden.wordpress.com/).
 
 ## Install
 
@@ -154,6 +153,11 @@ ordered_usls = [usl_list[k] for k in m[i, :]]
 ```
 ordered_usls is the list of usl ordered from USLs number i to the farrest USL from USL i in the collection.
 This method use the semantic distance between words of the dictionary.
+
+### Contributors
+This language is being made by the French philosopher [Pierre Levy](https://en.wikipedia.org/wiki/Pierre_L%C3%A9vy).
+This library is being developped by [Louis van Beurden](https://louisvanbeurden.wordpress.com/).
+
 
  
  
