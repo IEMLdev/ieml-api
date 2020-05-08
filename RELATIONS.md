@@ -12,15 +12,22 @@ Représentation du graphe de la bdd :
 
 
 ## Types des noeuds
-
-
  - `()` : n'importe quel noeud de la bdd
- - `(:USL {ieml: "...", cardinal: 1})` : n'importe quel usl de la base de données
+
+### Noeuds URIs
+ - `(:URI)` : un URI,
+    attribut:
+       - `uri`: l'URI 
+
+### Noeuds USLs
+Les types qui suivent sont des sous-types de `:URI` 
+
+ - `(:USL {ieml: "...", cardinal: 1})` : n'importe quel usl de la base de données,
     attributs:
      - `ieml`: la chaine IEML
      - `cardinal`: le nombre de ss de l'USL
      
-Les types qui suivent sont des sous-types de `:USL` 
+Les types qui suivent sont des sous-types de `:URI:USL` 
  - `(:Morpheme)` : un polymorpheme simple
  - `(:PolyMorpheme)`
  - `(:Lexeme)`
@@ -29,7 +36,28 @@ Les types qui suivent sont des sous-types de `:USL`
 
 - `(:Relation {name: "..."})` 
     attributs:
-     - `name`: la chaine arbitraire utilisé pour identifié la relation
+     - `name`: la chaine arbitraire utilisée pour identifier la relation
+
+### Noeuds descripteurs
+ - `(:Descriptor)` : une description en langue naturelle,
+  attributs:
+   - `language` : la langue du descripteur
+   - `value`: la valeur du descripteur
+   
+Les types qui suivent sont des sous-types de `:Descriptor` 
+
+ - `(:Translation)` : une traduction
+ - `(:Tag)` : une traduction
+ - `(:Translation)` : une traduction
+    
+### Autres
+
+ - `(:ExternalRDFRepository)`: un référentiel de concepts RDF externe,
+    attributs:
+     - `namespace` : le prefix des concepts contenus dans le referentiel
+     - `sparql_enpoint`: le endpoint sparql pour intéroger la base
+     - `list_all_concepts_sparql_query`: la query list()
+     - `list_predicat_object_for_subject_sparql_query`: la query get(URI)
 
 
 ### Types de relations binaires (présente/absente)
@@ -105,8 +133,27 @@ Relation racine:
  - `(:USL)-[:syntax_contains]->(:USL)`
  
  
+#### Descripteurs
 
+Relation racine:
+ - `(:USL)-[:descriptor]->(:Descriptor)`
+ 
+Sous relations:
+ - `(:USL)-[:descriptor_translation]->(:Descriptor)`
+ - `(:USL)-[:descriptor_comment]->(:Descriptor)`
+ - `(:USL)-[:descriptor_tag]->(:Descriptor)`
+ 
+ #### Référentiels RDFs
+ 
+ Alignement avec un référentiel externe:
 
+ - `(:USL)-[:alignement_match]-(:URI)`
+ - `(:USL)-[:alignement_match_exact]-(:URI)`
+ - `(:USL)-[:alignement_match_close]-(:URI)`
+
+ 
+ Inclusion d'une URI externe dans un référentiel externe:
+ - `(:ExternalRDFRepository)-[:rdf_repository_defines]->(:URI)`
 
 ### Relations quantitifiées
 Il peut y avoir plusieurs fois la même relations entre deux noeuds.
@@ -120,7 +167,7 @@ ce type de relation peut être utile pour calculer les proximités sémantiques.
 Le language de query est le language CYPHER de neo4j.
 
 
-### Définition de relations:
+### Définition des relations:
 
 
 Toutes les relations sont définie par la structure suivante:
@@ -187,11 +234,14 @@ Un programme de calcul génératif de relation est spécifié par :
     MERGE (b)-[:genus_pm]->(a)
     MERGE (a)-[:species_pm]->(b)```
 
+        
+  
 ### TODO
 
- - relations axiomatique (50%)
- - bdd git pour les relations générative (save/load)
- - calcul du graphe de dépendance entre les relations génératives
- - fonction d'execution des relations génératives dans l'ordre de dep
- - test
+ - bdd git pour enregistrer les relations génératives (save/load)
+ - definition des USLs des relations (Pierre)
+ - projection des relations en SKOS/RDF
+ - export graphe en SKOS/RDF
+ - endpoint RDF
+ 
  
