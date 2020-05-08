@@ -47,8 +47,8 @@ Les types qui suivent sont des sous-types de `:URI:USL`
 Les types qui suivent sont des sous-types de `:Descriptor` 
 
  - `(:Translation)` : une traduction
- - `(:Tag)` : une traduction
- - `(:Translation)` : une traduction
+ - `(:Tag)` : un tag
+ - `(:Comment)` : un commentaire
     
 ### Autres
 
@@ -147,9 +147,9 @@ Sous relations:
  
  Alignement avec un référentiel externe:
 
- - `(:USL)-[:alignement_match]-(:URI)`
- - `(:USL)-[:alignement_match_exact]-(:URI)`
- - `(:USL)-[:alignement_match_close]-(:URI)`
+ - `(:USL)-[:alignment_match]-(:URI)`
+ - `(:USL)-[:alignment_match_exact]-(:URI)`
+ - `(:USL)-[:alignment_match_close]-(:URI)`
 
  
  Inclusion d'une URI externe dans un référentiel externe:
