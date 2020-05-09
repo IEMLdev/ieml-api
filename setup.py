@@ -33,7 +33,8 @@ setup(name='ieml',
             'pandas',
             'pyyaml',
             'pylatex',
-            'neo4j'
+            'neo4j',
+            'rdflib'
       ],
       test_suite='nose2.collector.collector',
       tests_require=['nose2'],

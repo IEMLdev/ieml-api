@@ -3,7 +3,7 @@ from collections import defaultdict
 from tqdm import tqdm
 
 from ieml.dictionary.relation.relations import RelationsGraph
-from ieml.dictionary.script import script
+from ieml.dictionary.script import script, AdditiveScript
 import numpy as np
 
 from ieml.dictionary.table.table_structure import TableStructure
@@ -25,6 +25,9 @@ class Dictionary:
             for ss in p.singular_sequences:
                 scripts[str(ss)] = ss
 
+            if isinstance(p, AdditiveScript):
+                for s in p.children:
+                    scripts[str(s)] = s
 
             if key == 'inhibition':
                 inhibitions[p].append(value)

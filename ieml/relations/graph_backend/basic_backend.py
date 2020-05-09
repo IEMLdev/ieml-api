@@ -1,7 +1,7 @@
 from collections import defaultdict
-from typing import List, Tuple
+from typing import List, Tuple, Iterable
 
-from ieml.relations.relation_type.constants import RelationType
+from ieml.relations.relation_type.relation_type import RelationType
 from ieml.usl import USL
 
 
@@ -16,7 +16,7 @@ class BasicGraphBackend:
     def add_nodes(self, nodes: List[USL]):
         self.nodes.union(nodes)
 
-    def add_relations(self, relations: List[Tuple[USL, USL, RelationType]]):
+    def add_relations(self, relations: Iterable[Tuple[USL, USL, RelationType]]):
         for r in relations:
             self.add_relation(*r)
 

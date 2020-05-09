@@ -4,9 +4,9 @@ import time
 import tqdm
 
 from ieml.ieml_database import GitInterface, IEMLDatabase
+from ieml.relations.export.rdf import RDFExporter
 from ieml.relations.graph_backend.neo4j_backend import Neo4jGraphBackend
-from ieml.relations.relation_type.constants import GENUS_PM
-from ieml.relations.relations_graph import RelationGraph, Neo4jRelationsEngine
+from ieml.relations.relations_graph import RelationGraph
 from ieml.usl.usl import usl
 
 
@@ -60,22 +60,6 @@ class TestRelations(unittest.TestCase):
         print(len(list(graph.backend.relations)))
         print((time.time() - before) / 60)
 
-    def test_neo4j_relations_engine_all_USLS(self):
-        git = GitInterface("https://github.com/plevyieml/ieml-language.git")
-        db = IEMLDatabase(git.folder)
-
-        graph = RelationGraph(backend=Neo4jGraphBackend)
-        graph.backend.drop()
-        graph.backend.init()
-
-        before = time.time()
-
-        engine = Neo4jRelationsEngine(graph.backend)
-        engine.build(db.list(parse=True, auto_promote_to_USL=True))
-
-        print(len(list(graph.backend.nodes)))
-        print(len(list(graph.backend.relations)))
-        print((time.time() - before) / 60)
 
 
     def test_neo4j_relations_engine_dictionary(self):
@@ -88,10 +72,27 @@ class TestRelations(unittest.TestCase):
         graph.backend.init()
 
         before = time.time()
-
-        engine = Neo4jRelationsEngine(graph.backend)
-        engine.build_dictionary_relations(dic.relations)
+        graph.build(db.list(parse=True, auto_promote_to_USL=True), dic)
+        # engine.build_dictionary_relations(dic.relations)
 
         print(len(list(graph.backend.nodes)))
         print(len(list(graph.backend.relations)))
         print((time.time() - before) / 60)
+
+    def test_rdf_export(self):
+        git = GitInterface("https://github.com/plevyieml/ieml-language.git")
+        db = IEMLDatabase(git.folder)
+        # dic = db.get_dictionary()
+
+        graph = RelationGraph(database=db)
+        graph.drop()
+
+        before = time.time()
+        graph.build()
+        # engine.build_dictionary_relations(dic.relations)
+
+        print(len(list(graph.backend.nodes)))
+        print(len(list(graph.backend.relations)))
+        print((time.time() - before) / 60)
+
+        # RDFExporter()

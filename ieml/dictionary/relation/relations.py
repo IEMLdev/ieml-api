@@ -193,7 +193,7 @@ class RelationsGraph:
                     continue
 
                 for i, rel in enumerate(('father_substance', 'father_attribute', 'father_mode')):
-                    if rel in dictionary._inhibitions:
+                    if rel in dictionary._inhibitions[dictionary.tables.root(sub_s)]:
                         continue
 
                     fathers_indexes = _recurse_script(sub_s.children[i])

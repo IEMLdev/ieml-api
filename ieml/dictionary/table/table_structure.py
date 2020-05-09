@@ -4,6 +4,7 @@ from itertools import chain
 
 from ieml import error
 from ieml.commons import logger
+from ieml.dictionary.script import AdditiveScript
 from ieml.dictionary.table.table import *
 
 class TableStructure:
@@ -18,7 +19,10 @@ class TableStructure:
         tables, root_paradigms = self._build_tables(roots, scripts)
         self.tables = tables
         self.roots = root_paradigms
-        self.table_to_root = {t: r for r, t_s in self.roots.items() for t in t_s}
+        self.table_to_root = {
+            **{r: r for r in self.roots},
+            **{t: r for r, t_s in self.roots.items() for t in t_s}
+        }
         # self.table_to_root = {t: r for r, t_s in self.roots.items() for t in t_s}
 
     def root(self, s):
@@ -114,5 +118,9 @@ class TableStructure:
         tables = {}
         for t in chain.from_iterable(root_paradigms.values()):
             tables[t.script] = t
+            # if isinstance(t.script, AdditiveScript):
+            #     for sub_s in t.script.children:
+            #         tables[sub_s] =
+
 
         return tables, root_paradigms
