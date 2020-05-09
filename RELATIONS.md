@@ -132,6 +132,16 @@ Relation racine:
 
  - `(:USL)-[:syntax_contains]->(:USL)`
  
+#### Translation (classes grammaticales de traduction)
+
+Relation racine
+ - `(:USL)-[:syntax_translation]->(:USL)`
+ 
+ 
+ - `(:USL)-[:syntax_translation_verb]->(:USL)`
+ - `(:USL)-[:syntax_translation_adjective]->(:USL)`
+ - `(:USL)-[:syntax_translation_noun]->(:USL)`
+ - `(:USL)-[:syntax_translation_adverb]->(:USL)`
  
 #### Descripteurs
 
