@@ -1,7 +1,7 @@
 import unittest
 
+from ieml.usl import PolyMorpheme, Word
 from ieml.usl.parser import IEMLParser
-from ieml.lexicon.syntax import Word, check_character, check_polymorpheme, PolyMorpheme
 
 # TODO: add test for ordering of morph in polymorph
 
@@ -10,8 +10,8 @@ class TestSyntax(unittest.TestCase):
         POLYMORPH = [ "U: wo. wa.",
                       "U: m2(wo. wa.)",
                       "m1(U:) m1(S:)",
-                      "o. m1(U: S:) m2(m. t.)",
-                      "o. m2(A: B: S: T:) m2(t. y.)"
+                      "o. m1(U: S:) m2(t. m.)",
+                      "o. m2(A: S: B: T:) m2(y. t.)"
                   ]
         for _t in POLYMORPH:
             t = IEMLParser().parse(_t)
@@ -20,50 +20,24 @@ class TestSyntax(unittest.TestCase):
 
             elems = set()
             for ss in t.singular_sequences:
-                print(str(ss))
                 assert ss.cardinal == 1
-                check_polymorpheme(ss)
+                ss.check()
                 assert ss not in elems
                 elems.add(ss)
-
-    def test_singular_sequences(self):
-        CHARACTERS = ["[E:.wo.- > (U: wo. m1(m. y. l.)) (u. l.) > (U: m2(wo. wa.))]",
-                      "[E:.wo.- > (m3(wo. wa. we. wu.) m1(m. y. l.)) (m3(wo. wa. we. wu.) m1(m. y. l.))]"]
-        for c_str in CHARACTERS:
-            c = IEMLParser().parse(c_str)
-            elems = set()
-            for ss in c.singular_sequences:
-                print(str(ss))
-                assert ss.cardinal == 1
-                check_character(ss)
-                assert ss not in elems
-                elems.add(ss)
-
-
 
     def test_word(self):
-        TESTS=[
-            "[E:]",
-            "[E:.wo.- > (U: wo. wa.) (u. l.) > (U: m2(wo. wa.))]",
-            "[E:.wo.- > (e.) > (U:) > (l. m2(a. e.)) > (m.)]",
-            "[E:.wo.- > (u.)]",
-        ]
-        for _t in TESTS:
-            t = IEMLParser().parse(_t)
-            assert str(t) == str(_t), "{} != {}".format(str(t), str(_t))
-            assert isinstance(t, Word)
+        CHARACTERS = ["[! E:A:.  ()(b.-S:.A:.-'S:.-'S:.-', m1(S: B: T:)) > E:A:. E:A:. ()(k.a.-k.a.-')]",
+                      "[! E:S:. (m1(E:.-',b.-S:.U:.-'y.-'U:.-',_ E:.-',b.-S:.U:.-'y.-'A:.-',_))(wa.) > E:.n.- ()(n.i.-s.i.-') > E:.f.- (E:U:S:.)]"]
+        for c_str in CHARACTERS:
+            c = IEMLParser().parse(c_str)
+            assert isinstance(c, Word)
 
-        # INVALID=["[<E:> <<U:>>]"]
-
-    # def test_word(self):
-    #     _t = "([<E:.wo.-> <<U: wo. wa.>> <<S:>> <<u. l.>>]*[<E:>]*[<E:.wo.-> <<u.>>])"
-    #     t = IEMLParser().parse(_t)
-    #     assert str(t) == str(_t), "Diff " + str(t) + ' original: ' + str(_t)
-    #     assert isinstance(t, Phrase)
+            elems = set()
+            for ss in c.singular_sequences:
+                assert ss.cardinal == 1
+                ss.check()
+                assert ss not in elems
+                elems.add(ss)
+                assert isinstance(ss, Word)
 
 
-    # def test_word(self):
-    #     _t = "([<E:.wo.-> <<U: wo. wa.>> <<S:>> <<u. l.>>]*[<E:>]*[<E:.wo.-> <<u.>>])"
-    #     t = IEMLParser().parse(_t)
-    #     assert str(t) == str(_t), "Diff " + str(t) + ' original: ' + str(_t)
-    #     assert isinstance(t, Word)

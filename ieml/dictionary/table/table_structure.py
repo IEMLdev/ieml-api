@@ -2,6 +2,7 @@ import sys
 from collections import defaultdict
 from itertools import chain
 
+from ieml import error
 from ieml.commons import logger
 from ieml.dictionary.table.table import *
 
@@ -21,7 +22,12 @@ class TableStructure:
         # self.table_to_root = {t: r for r, t_s in self.roots.items() for t in t_s}
 
     def root(self, s):
-        return self.table_to_root[self.tables[s]]
+        try:
+            return self.table_to_root[self.tables[s]]
+        except KeyError as e:
+            error("No root defined for the script {}".format(str(s)))
+            return None
+
 
     def __iter__(self):
         yield from self.tables.values()

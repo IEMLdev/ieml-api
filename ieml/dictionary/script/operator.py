@@ -1,6 +1,9 @@
+from typing import List
+
 from ieml.dictionary.script.parser import ScriptParser
-from ieml.dictionary.script import MultiplicativeScript, Script
+from ieml.dictionary.script import MultiplicativeScript, Script, AdditiveScript
 from ieml.dictionary.script import tools
+from ieml.dictionary.script.tools import promote
 
 
 def m(substance, attribute=None, mode=None):
@@ -9,6 +12,12 @@ def m(substance, attribute=None, mode=None):
         return MultiplicativeScript(children=children)
     else:
         raise NotImplemented
+
+
+def add(scripts: List[Script]):
+    layer = max(s.layer for s in scripts)
+    _scripts = [promote(s, layer=layer) for s in scripts]
+    return AdditiveScript(children=_scripts)
 
 
 def script(arg, promote=False, factorize=False):

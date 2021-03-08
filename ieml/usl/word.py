@@ -31,7 +31,7 @@ def simplify_word(w: 'Word') -> 'Word':
         w.role.constant[1:]
 
     for r, sfun in w.syntagmatic_fun.actors.items():
-        if all(l.actor.empty for l in sfun.actors.values()) and \
+        if all(l.actor.empty for l in sfun.actors.values() if l.actor is not None) and \
                 (len(word_role) < len(r.constant) or any(rw != rn for rw, rn in zip(word_role, r.constant))):
             continue
 
@@ -42,6 +42,8 @@ def simplify_word(w: 'Word') -> 'Word':
     return Word(sfun, role=w.role, context_type=w.syntagmatic_fun.__class__)
 
 class Word(USL):
+    syntactic_level = 3
+
     def __init__(self, syntagmatic_fun: SyntagmaticFunction, role: SyntagmaticRole, context_type: Type[SyntagmaticFunction]):
         super().__init__()
         self.syntagmatic_fun = syntagmatic_fun
@@ -51,11 +53,25 @@ class Word(USL):
         self._singular_sequences_set = None
 
         self._str = self.syntagmatic_fun.render_with_context(self.role, context=context_type)
+        self.context_type = context_type
 
         self.grammatical_class = class_from_address(self.role)
 
     def _compute_singular_sequences(self):
-        return [self]
+        sfun_ss = self.syntagmatic_fun.singular_sequences(context_type=self.context_type)
+        if len(sfun_ss) == 1:
+            return [self]
+
+        return [Word(sfun, self.role, self.context_type) for sfun in sfun_ss]
+
+    def iter_structure(self):
+        yield from self.syntagmatic_fun.iter_structure()
+
+    def iter_structure_path(self, flexion=False):
+        from ieml.usl.decoration.path import UslPath
+
+        yield (UslPath(), self)
+        yield from self.syntagmatic_fun.iter_structure_path(self.context_type, focus_role=self.role)
 
     @property
     def empty(self):

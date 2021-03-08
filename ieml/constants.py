@@ -1,3 +1,6 @@
+import enum
+
+import pygit2
 from bidict import bidict
 import os
 from appdirs import user_cache_dir, user_data_dir
@@ -37,10 +40,15 @@ AUXILIARY_CLASS = GRAMMATICAL_CLASS_NAMES.inv['AUXILIARY']
 VERB_CLASS = GRAMMATICAL_CLASS_NAMES.inv['VERB']
 NOUN_CLASS = GRAMMATICAL_CLASS_NAMES.inv['NOUN']
 
-LANGUAGES = [
-    'fr',
-    'en'
-]
+
+class Languages(enum.Enum):
+    """
+    The language currently supported by the IEML database
+    """
+    FR = 'fr'
+    EN = 'en'
+
+LANGUAGES = [l.value for l in Languages]
 
 CHARACTER_SIZE_LIMIT = 6
 MAX_NODES_IN_SENTENCE = 20
@@ -106,6 +114,37 @@ PHONETIC_PUNCTUATION = [
     '_',
     '~'
 ]
+TERM_REGEX = r'(?!E:\.b\.E:.:\.-)[EUASBTOMFIacbedgfihkjmlonpsutwyx][EUASBTOMFIacbedgfihkjmlonpsutwyx\.\-\;\:\,\'\’\_\+]+'
+
+# TERM_REGEX_LAYER_0 = r'[EUASBTOMFI]\:'
+# TERM_REGEX_LAYER_0_ADD = r'{layer0}(\s*\+\s*{layer0})*'.format(layer0=TERM_REGEX_LAYER_0)
+#
+# TERM_REGEX_LAYER_1 = r'([acbedgfihkjmlonpsutwyx]|{layer0}{rec})\.'.format(layer0=TERM_REGEX_LAYER_0_ADD, rec="{1,3}")
+# TERM_REGEX_LAYER_1_ADD = r'{layer1}(\s*\+\s*{layer1})*'.format(layer1=TERM_REGEX_LAYER_1)
+#
+# TERM_REGEX_LAYER_2 = r'{layer1}{rec}\-'.format(layer1=TERM_REGEX_LAYER_1_ADD, rec="{1,3}")
+# TERM_REGEX_LAYER_2_ADD = r'{layer2}(\s*\+\s*{layer2})*'.format(layer2=TERM_REGEX_LAYER_2)
+#
+# TERM_REGEX_LAYER_3 = r"{layer2}{rec}\'".format(layer2=TERM_REGEX_LAYER_2_ADD, rec="{1,3}")
+# TERM_REGEX_LAYER_3_ADD = r'{layer3}(\s*\+\s*{layer3})*'.format(layer3=TERM_REGEX_LAYER_3)
+#
+# TERM_REGEX_LAYER_4 = r"{layer3}{rec}\,".format(layer3=TERM_REGEX_LAYER_3_ADD, rec="{1,3}")
+# TERM_REGEX_LAYER_4_ADD = r'{layer4}(\s*\+\s*{layer4})*'.format(layer4=TERM_REGEX_LAYER_4)
+#
+# TERM_REGEX_LAYER_5 = r"{layer4}{rec}\_".format(layer4=TERM_REGEX_LAYER_4_ADD, rec="{1,3}")
+# TERM_REGEX_LAYER_5_ADD = r'{layer5}(\s*\+\s*{layer5})*'.format(layer5=TERM_REGEX_LAYER_5)
+#
+# TERM_REGEX_LAYER_6 = r"{layer5}{rec}\;".format(layer5=TERM_REGEX_LAYER_5_ADD, rec="{1,3}")
+# TERM_REGEX_LAYER_6_ADD = r'{layer6}(\s*\+\s*{layer6})*'.format(layer6=TERM_REGEX_LAYER_6)
+#
+# TERM_REGEX = r'({layer0}|{layer1}|{layer2}|{layer3}|{layer4}|{layer5}|{layer6})'.format(layer0=TERM_REGEX_LAYER_0_ADD,
+#                                                                                         layer1=TERM_REGEX_LAYER_1_ADD,
+#                                                                                         layer2=TERM_REGEX_LAYER_2_ADD,
+#                                                                                         layer3=TERM_REGEX_LAYER_3_ADD,
+#                                                                                         layer4=TERM_REGEX_LAYER_4_ADD,
+#                                                                                         layer5=TERM_REGEX_LAYER_5_ADD,
+#                                                                                         layer6=TERM_REGEX_LAYER_6_ADD,)
+
 
 STRUCTURE_KEYS = ['inhibition', 'is_root', 'is_ignored']
 
@@ -185,6 +224,16 @@ MORPHEME_SERIE_SIZE_LIMIT_FUNCTION = 3
 
 POLYMORPHEME_MAX_MULTIPLICITY=3
 
-DESCRIPTORS_CLASS = ['translations', 'comments', 'tags']
+
+
+class DescriptorsType(enum.Enum):
+    TRANSLATIONS = 'translations'
+    TAGS = 'tags'
+    COMMENTS = 'comments'
+    REFERENTIAL = 'rdf_repositories'
+
+DESCRIPTORS_CLASS = [d.value for d in DescriptorsType]
+
 
 TYPES = ['morpheme', 'polymorpheme', 'lexeme', 'word', 'phrase']
+DEFAULT_COMMITER_SIGNATURE = pygit2.Signature('ieml-commiter', 'commiter@ieml.io')

@@ -1,9 +1,11 @@
 import ply.lex as lxr
 import logging
 
+from ieml.constants import TERM_REGEX
+from ieml.usl.constants import ROLE_REGEX
+
 logger = logging.getLogger(__name__)
 
-TERM_REGEX = r'(?!E:\.b\.E:.:\.-)[EUASBTOMFIacbedgfihkjmlonpsutwyx][EUASBTOMFIacbedgfihkjmlonpsutwyx\.\-\;\:\,\'\’\_\+]+'
 
 tokens = (
    'MORPHEME',
@@ -23,7 +25,9 @@ tokens = (
    'GROUP_MULTIPLICITY',
    'EXCLAMATION_MARK',
    # 'HASH',
-   'LITERAL'
+   'LITERAL',
+   'USL_PATH',
+   'DECORATION_VALUE'
    # 'L_CURLY_BRACKET',
    # 'R_CURLY_BRACKET',
    #
@@ -51,6 +55,10 @@ def get_lexer(module=None):
     t_LITERAL = r'\#(\\\#|[^\#])+\#'
 
     t_GROUP_MULTIPLICITY = r'm\d+'
+    t_USL_PATH = r'(?<=\[)>(role>{role_regex}(\s{role_regex})*>)?((flexion|content)>)?(((group_\d|constant)>)?{term_regex})?'.format(role_regex=ROLE_REGEX,
+                                                                                                                        term_regex=TERM_REGEX)
+
+    t_DECORATION_VALUE = r'"(\\"|[^"])*"'
 
     t_ignore  = '{} \t\n'
 
@@ -59,4 +67,4 @@ def get_lexer(module=None):
         logger.log(logging.ERROR, "Illegal character '%s'" % t.value[0])
         t.lexer.skip(1)
 
-    return lxr.lex(module=module, errorlog=logging)
+    return lxr.lex(module=module, optimize=False, errorlog=logging)

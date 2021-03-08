@@ -2,19 +2,20 @@ import itertools
 import numpy as np
 
 from ieml.exceptions import InvalidScriptCharacter, InvalidScript, IncompatiblesScriptsLayers, TooManySingularSequences
-from ieml.commons import TreeStructure
+from ieml.commons import TreeStructure, DecoratedComponent
 from ieml.constants import MAX_LAYER, MAX_SINGULAR_SEQUENCES, MAX_SIZE_HEADER, LAYER_MARKS, PRIMITIVES, \
     remarkable_multiplication_lookup_table, REMARKABLE_ADDITION, character_value, AUXILIARY_CLASS, VERB_CLASS, \
     NOUN_CLASS
 from itertools import chain
 
 
-class Script(TreeStructure):
+
+class Script(TreeStructure, DecoratedComponent):
     """ A parser is defined by a character (PRIMITIVES, REMARKABLE_ADDITION OR REMARKABLE_MULTIPLICATION)
      or a list of parser children. All the element in the children list must be an AdditiveScript or
      a MultiplicativeScript."""
-    def __init__(self, children=None, character=None):
-        super().__init__()
+    def __init__(self, children=None, character=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
         if children:
             self.children = children
@@ -210,12 +211,24 @@ class Script(TreeStructure):
     def is_singular(self):
         return self.cardinal == 1
 
+    def iter_structure(self):
+        return []
+
+    def iter_structure_path(self, flexion=False):
+        return []
+
+    def iter_structure_path_by_script_ss(self, flexion=False):
+        from ieml.usl.decoration.path import UslPath
+        yield (UslPath(), self)
+
     def _compute_cells(self):
         pass
 
     def _compute_singular_sequences(self):
         pass
 
+    def check(self):
+        pass
 
 class AdditiveScript(Script):
     """ Represent an addition of same layer scripts."""

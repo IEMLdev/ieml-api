@@ -1,8 +1,9 @@
 import json
 import tqdm
 
+from ieml import error
 from ieml.ieml_database import IEMLDatabase
-from ieml.constants import LANGUAGES, INHIBITABLE_RELATIONS, DESCRIPTORS_CLASS
+from ieml.constants import INHIBITABLE_RELATIONS, LANGUAGES, DESCRIPTORS_CLASS
 from ieml.dictionary.script import Script, factorize
 from ieml.usl import USL
 
@@ -298,8 +299,16 @@ class DBTransactions:
         old_trans = {l: desc.get_values(ieml=ieml, language=l, descriptor=descriptor) for l in LANGUAGES}
 
         if all(sorted(value[l]) == sorted(old_trans[l]) for l in LANGUAGES):
-            return
+            error("No update needed, db already contains {}:{} for {}".format(descriptor, json.dumps(value), str(ieml)))
+            return False
 
+        # test if after modification there is still at least a descriptor
+        if all(not (desc.get_values(ieml=ieml, language=l, descriptor=d) if d != descriptor else value[l])
+               for l in LANGUAGES for d in DESCRIPTORS_CLASS):
+            error('[descriptors] Remove {}'.format(str(ieml)))
+            with self.gitdb.commit(self.signature, '[descriptors] Remove {}'.format(str(ieml))):
+                db.remove_descriptor(ieml)
+            return True
         # to_add = {l: [e for e in value[l] if e not in old_trans[l]] for l in LANGUAGES}
         # to_remove = {l: [e for e in old_trans[l] if e not in value[l]] for l in LANGUAGES}
 
@@ -311,6 +320,8 @@ class DBTransactions:
             for l in LANGUAGES:
                 for e in value[l]:
                     db.add_descriptor(ieml, l, descriptor, e)
+
+            return True
 
     def set_inhibitions(self,
                         ieml,
@@ -347,7 +358,7 @@ class DBTransactions:
 
         with self.gitdb.commit(self.signature, '[IEML migration] Update all ieml in db: {}'.format(message)):
 
-            for old_ieml in tqdm.tqdm(db.list(parse=True)):
+            for old_ieml in tqdm.tqdm(db.list(parse=True), "Migrate all usls"):
                 new_ieml = f(old_ieml)
 
                 value = desc.get_values_partial(old_ieml)

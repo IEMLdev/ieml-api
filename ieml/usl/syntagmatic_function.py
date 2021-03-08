@@ -1,5 +1,5 @@
 from collections import defaultdict
-from itertools import chain
+from itertools import chain, product
 from typing import List, Any, Dict, Type, Tuple, Union
 
 from ieml.dictionary.script import Script
@@ -8,8 +8,8 @@ from ieml.usl.constants import SYNTAGMATIC_FUNCTION_SCRIPT, INDEPENDANT_QUALITY,
     ADDRESS_PROCESS_VALENCE_SCRIPTS, ADDRESS_SCRIPTS, ADDRESS_ACTANTS_MOTOR_SCRIPTS, INITIATOR_SCRIPT, \
     INTERACTANT_SCRIPT, RECIPIENT_SCRIPT, TIME_SCRIPT, LOCATION_SCRIPT, MANNER_SCRIPT, CAUSE_SCRIPT, INTENTION_SCRIPT, \
     check_address_script, SYNTAGMATIC_FUNCTION_PROCESS_TYPE_SCRIPT, SYNTAGMATIC_FUNCTION_ACTANT_TYPE_SCRIPT, \
-    SYNTAGMATIC_FUNCTION_QUALITY_TYPE_SCRIPT, ADDRESS_SCRIPTS_ORDER, class_from_address, JUNCTION_SYMMETRICAL, \
-    JUNCTION_INDEX, junction_at_idx, JUNCTION_SCRIPTS, JUNCTION_LINK_TO_ANCHOR, JUNCTION_ANCHOR_TO_LINKS
+    SYNTAGMATIC_FUNCTION_QUALITY_TYPE_SCRIPT, ADDRESS_SCRIPTS_ORDER, class_from_address, \
+    JUNCTION_INDEX, JUNCTION_SCRIPTS, ADDRESS_ROLE_IN_PROCESS
 
 X = Any
 
@@ -22,14 +22,19 @@ class SyntagmaticRole:
         self._str = ' '.join(chain(map(str, self.constant)))
 
         if any(e not in ADDRESS_SCRIPTS for e in constant):
-            raise ValueError("Invalid script in a syntagmatic role.")
+            raise ValueError("Invalid script in a syntagmatic role: " +\
+                             ' '.join(map(str, filter(lambda e: e not in ADDRESS_SCRIPTS, constant))))
 
     def __str__(self):
         return self._str
 
     def __lt__(self, other):
-        return self.__class__ == other.__class__ and \
-        (len(self.constant) < len(other.constant) or self.constant < other.constant)
+        return self.__class__ == other.__class__ and (
+                (all(s in ADDRESS_SCRIPTS for s in chain(self.constant, other.constant)) and \
+                 [ADDRESS_SCRIPTS_ORDER[s] for s in self.constant] < [ADDRESS_SCRIPTS_ORDER[s] for s in other.constant]) or \
+                (any(s not in ADDRESS_SCRIPTS for s in chain(self.constant, other.constant)) and (\
+                 len(self.constant) < len(other.constant) or self.constant < other.constant))
+        )
 
     def __eq__(self, other):
         return str(self) == str(other)
@@ -64,6 +69,7 @@ class SyntagmaticFunction:
     #     return (SYNTAGMATIC_FUNCTION_SCRIPT,)
 
     def role_in(self, tgt: 'SyntagmaticFunction'):
+        """ return the role of the tgt syntagmatic function occupy in self."""
         for role, node in self.actors.items():
             if node == tgt:
                 return role
@@ -74,12 +80,43 @@ class SyntagmaticFunction:
     def empty(self):
         return self.actor.empty and len(self.actors) == 0
 
-    def get(self, role: SyntagmaticRole) -> X:
+    def get(self, role: SyntagmaticRole, ignore_prefix=False, ignore_process_valence=False) -> X:
+        # UNUSED ?
         # assert role.is_singular
+        if ignore_prefix and role.constant[0] not in ADDRESS_ROLE_IN_PROCESS:
+            # in the case of a process syntagm, we do not ignore the prefix
+            role = SyntagmaticRole(list(role.constant)[1:])
+
+        if ignore_process_valence and role.constant and role.constant[0] in ADDRESS_PROCESS_VALENCE_SCRIPTS:
+            for valence in ADDRESS_PROCESS_VALENCE_SCRIPTS:
+                if valence in self.actors:
+                    break
+            else:
+                raise KeyError("Not a process")
+
+            role = SyntagmaticRole([valence] + list(role.constant)[1:])
+
         return self.actors[role].actor
 
     def get_paradigm(self, role: SyntagmaticRole) -> List[X]:
+        # UNUSED ?
         return [self.actors[r] for r in role.constant if r in self.actors]
+
+    def iter_structure(self):
+        for sfun in self.actors.values():
+            yield sfun.actor
+            if sfun.actor is not None:
+                yield from sfun.actor.iter_structure()
+
+    def iter_structure_path(self, context, focus_role=None):
+        from ieml.usl.decoration.path import RolePath
+
+        for l, lex in self.as_list(context):
+            has_focus = (SyntagmaticRole(constant=l) == focus_role)
+            yield (RolePath(SyntagmaticRole(l), has_focus=has_focus, child=None), lex)
+
+            for child, x in lex.iter_structure_path():
+                yield (RolePath(SyntagmaticRole(l), has_focus=has_focus, child=child), x)
 
     def role_is_junction(self, role: SyntagmaticRole=None):
         try:
@@ -87,16 +124,22 @@ class SyntagmaticFunction:
         except KeyError:
             return False
 
+    @staticmethod
+    def get_context_role_prefix(context):
+        if context in [ProcessSyntagmaticFunction, JunctionSyntagmaticFunction]:
+            return tuple()
+        elif context == DependantQualitySyntagmaticFunction:
+            return (DEPENDANT_QUALITY,)
+        elif context == IndependantQualitySyntagmaticFunction:
+            return (INDEPENDANT_QUALITY,)
+        else:
+            return None
+
     def render_with_context(self, role: SyntagmaticRole=None, context=None):
         prefix = tuple()
         if context is not None:
-            if context == ProcessSyntagmaticFunction:
-                pass
-            elif context == DependantQualitySyntagmaticFunction:
-                prefix = (DEPENDANT_QUALITY,)
-            elif context == IndependantQualitySyntagmaticFunction:
-                prefix = (INDEPENDANT_QUALITY,)
-            else:
+            prefix = self.get_context_role_prefix(context)
+            if prefix is None:
                 raise ValueError("Invalid context to render a syntagmatic function \"{}\", expected [{}]".format(
                     str(context),
                     ','
@@ -118,20 +161,34 @@ class SyntagmaticFunction:
     def get_role_expansion(self, role: SyntagmaticRole, ignore_prefix=()):
 
         def _expand_junction(role):
-            node = self.actors[SyntagmaticRole(role)]
+            try:
+                node = self.actors[SyntagmaticRole(role)]
+            except KeyError:
+                pass
             if not isinstance(node, JunctionSyntagmaticFunction):
                 return [role]
             return list(chain.from_iterable(map(_expand_junction,
-                                                [role + (junction_at_idx(node.junction_link, i), JUNCTION_INDEX[i]) for i, _ in enumerate(node.children)])))
+                                                [role + (node.junction_link, JUNCTION_INDEX[i]) for i, _ in enumerate(node.children)])))
 
         _ignore_prefix = lambda e : SyntagmaticRole(constant=e.constant[len(ignore_prefix):])
 
         return sorted(SyntagmaticRole(r) for r in _expand_junction(_ignore_prefix(role).constant))
 
+    def as_list(self, context_type) -> List[Tuple[List[Script], X]]:
+        prefix = self.get_context_role_prefix(context_type)
+        if prefix is None:
+            raise ValueError("Invalid syntagmatic function \"{}\" type".format(str(context_type)))
+        prefix = list(prefix)
+
+        return [(prefix + list(role.constant), sfun.actor) for role, sfun in self.actors.items()
+                    if not isinstance(sfun, JunctionSyntagmaticFunction)]
+
     @staticmethod
     def from_list(l: List[Tuple[List[Script], X]]) -> Tuple[Type['SyntagmaticFunction'], 'SyntagmaticFunction']:
 
         # assert all(all(s in ADDRESS_SCRIPTS for s in address) for address, _ in l), "invalid address"
+        if not l:
+            raise ValueError("Empty syntagmatic function")
 
         roles = [address[0] for address, _ in l]
         children_l = [(address[1:], x) for address, x in l]
@@ -173,6 +230,17 @@ class SyntagmaticFunction:
 
             check_address_script(address.constant, sfun_type=sfun_type)
 
+    def singular_sequences(self, context_type):
+        sfun_l = self.as_list(context_type)
+
+        res = []
+        roles, x_l = zip(*sfun_l)
+        for x_l_ss in product(*[x.singular_sequences for x in x_l]):
+            ctx, sfun = self.from_list(list(zip(roles, x_l_ss)))
+            res.append(sfun)
+
+        return res
+
 
 class JunctionSyntagmaticFunction(SyntagmaticFunction):
     def __init__(self, junction_link: Script, children: List[SyntagmaticFunction]):
@@ -185,7 +253,7 @@ class JunctionSyntagmaticFunction(SyntagmaticFunction):
 
         res = {
             tuple(): self,
-            **{(junction_at_idx(self.junction_link, i), JUNCTION_INDEX[i], *role.constant): sfun for i, f
+            **{(self.junction_link, JUNCTION_INDEX[i], *role.constant): sfun for i, f
                 in enumerate(self.children) for role, sfun in f.actors.items()}
         }
 
@@ -196,19 +264,19 @@ class JunctionSyntagmaticFunction(SyntagmaticFunction):
 
         junctions = {address[0] for address, _ in l}
 
-        links = junctions & JUNCTION_LINK_TO_ANCHOR.keys()
+        links = junctions & set(JUNCTION_SCRIPTS)
         if len(links) != 1:
             raise ValueError("No links defined in the junction")
         link = next(iter(links))
 
-        anchors = junctions & JUNCTION_ANCHOR_TO_LINKS.keys()
-        try:
-            anchor = next(iter(anchors))
-
-            if any(j not in {anchor, *JUNCTION_ANCHOR_TO_LINKS[anchor]} for j in junctions):
-                raise ValueError("multiple different anchor are taken togethers")
-        except StopIteration:
-            pass
+        # anchors = junctions & JUNCTION_ANCHOR_TO_LINKS.keys()
+        # try:
+        #     anchor = next(iter(anchors))
+        #
+        #     if any(j not in {anchor, *JUNCTION_ANCHOR_TO_LINKS[anchor]} for j in junctions):
+        #         raise ValueError("multiple different anchor are taken togethers")
+        # except StopIteration:
+        #     pass
 
         # if any(link not in {j, anchor} for j in junctions):
         #     raise ValueError("multiple different links are taken togethers")

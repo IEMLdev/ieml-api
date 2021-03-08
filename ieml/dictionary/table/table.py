@@ -1,7 +1,6 @@
 import numpy as np
 
 from ieml.dictionary.script import script
-from ieml.dictionary.script import factorize
 
 
 class Table:
@@ -22,6 +21,7 @@ class Table:
             return max(self.parent.rank, 1) + 2
         else:
             return max(self.parent.rank, 1) + 1
+
 
 class Table2D(Table):
     def __init__(self, script, parent, regular=False):
@@ -220,6 +220,10 @@ class TableSet(Table):
     def cells(self):
         return self.script.cells
 
+    @property
+    def shape(self):
+        raise ValueError("Shape is not defined on a TableSet, it can have different shapes for each tables.")
+
     def accept_script(self, script):
         """
         True when the term is a subset of this term tables. If the parent of this term is already a TableSet,return
@@ -245,6 +249,10 @@ class Table3D(TableSet):
     @property
     def ndim(self):
         return 3
+
+    @property
+    def shape(self):
+        return self.cells[0].shape
 
 
 def table_class(script):

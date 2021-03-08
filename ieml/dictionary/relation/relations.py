@@ -28,6 +28,10 @@ class RelationsGraph:
     def relation_object(self, subject):
         return {relation: self.object(subject, relation) for relation in RELATIONS}
 
+    def relation(self, subject, object):
+        return [relation for relation in RELATIONS if object in self.object(subject, relation)]
+
+
     def pandas(self):
         subjects = []
         relations = []

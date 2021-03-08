@@ -1,45 +1,26 @@
 # IEML
 [![Build Status](https://travis-ci.org/IEMLdev/ieml.svg?branch=master)](https://travis-ci.org/IEMLdev/ieml)
 
-IEML is an artificial "natural" language having the following properties:
-  * All the semantic relationships between IEML representations are computable.
-  * Every meaning has only one IEML representation and every IEML representation has only one meaning.
-
-The [ieml grammar](https://pierrelevyblog.files.wordpress.com/2014/01/00-grammaire-ieml1.pdf "IEML grammar") is constituted of a [dictionary](https://intlekt.io/?comments=I%3A "IEML dictionary") of elementary meanings units - words - and syntactic rules to combine them into topics, then facts and finally, theories.
-
-This language have been made by the French philosopher [Pierre Levy](https://en.wikipedia.org/wiki/Pierre_L%C3%A9vy).
-
-The language overcomes some inherent limitations of naturals languages for algorithmic manipulation :
-  - text generation : rules-based natural language generation can leverage the regularity of the IEML syntax.
-  - out-of-vocabularies : every proposition in IEML is build from ~3500 words, all defined in the dictionary with their paradigmatic relationships.
-  - semantic similarities : we can automatically compute semantic relations between IEML propositions.
-  - as an interlingua : IEML does not use any existing natural language as its core semantics. But everything that can be said can be described in IEML.
-  - interaperobility of ontologies : Each IEML expression will have an unique URL.
-
-Every meaning has only one IEML representation and every IEML representation has only one meaning :
-  - synonymy : the IEML language has an instrinsic order that ensures that every expression has only one valid representation.
-  - polysemy : All the IEML expressions are built from semantic primitives (dictionary) with meanining composition operators (syntax). The dictionary is not polysemic, the operators are injetive and theirs resulting propositions can not be reduced to its constituents. Therefore, there is no polysemy in IEML.
-From there, we have in IEML a bijection between the signifiers and the signified.
-IEML is then a discrete coordinate system of the semantic space. The IEML expressions are called Uniform Semantic Locators (USLs).
-
-IEML is build from a set of [semantic primes](https://en.wikipedia.org/wiki/Semantic_primes) called the dictionary, and explicit rules of [compositions](https://fr.wikipedia.org/wiki/Combinatoire_s%C3%A9mantique).
-
-The meaning of the words in the dictionary are conventional but not arbitrary, because they respects a set of constraints:
- - Each meaning must not already be present in the dictionary, and you can not express this meaning by composition of existing meanings of the dictionary.
- - The words are defined in systems (paradigms) and a paradigm must be the broadest possible in the concept.
- - A words defined in a paradigms is build from 3 more abstract words and the words must contains these meanings.
+IEML is a regular philological language (built as a natural language), where the syntax is parallel to semantics. This means in IEML, a small change in the structure of an expression results in a semantically close expression.
+For instance:
+ - `[! E:S:. ()(u.A:.-) > E:.l.- (E:.-U:.s.-l.-')]` : to go up
+ - `[! E:S:. ()(u.A:.-) > E:.l.- (E:.-U:.d.-l.-')]` : to go down
  
-All the words have a french and english translation. A definition and synonyms in french and english will soon be available.
+Only `E:.-U:.`**s**`.-l.-'` (up) has been changed to `E:.-U:.`**d**`.-l.-'` (down).
+
+These properties make the semantic relationships between the different expressions of the language automatically computable by an edit distance calculation.
+Therefore, there are no synonyms in the language, because by construction, the synonyms would be written identically. On the other hand, words that are written differently in IEML have different meanings.
+
+So IEML has the perfect capabilities to uniquely identify concepts in a database, an ontology, a taxonomy, a categorization or any other documents, without having to rely on an external referential other than IEML's grammar and its dictionary of semantic primitives. 
+
+In order to guarantee the consistency of interpretations of IEML expressions, a database of translations (en and fr), comments and tags per USL is available [here](https://github.com/IEMLdev/ieml-language "IEML database"). This database has a normative purpose concerning the interpretation of IEML expressions. It can be browsed with the [intlekt editor](https://dev.intlekt.io/ "IEML editor"). It can also be used as an educational resource for learning IEML, in addition to reading the [grammar](https://www.dropbox.com/s/875vsj0atbcts43/0-00-IEML-Manifesto-2019-fr.pdf?dl=0 "IEML grammar"). 
+
+IEML is a regular language that is intended to serve as an easily interpretable coordinate system for the world of ideas on the internet, to improve communication and artificial intelligence.
 
 ## Install
 
 The library works with python 3.5+
-
-You can install the ieml package with pip:
-```bash
-pip install ieml
-```
-If you want to install it from github:
+From github:
 ```bash
 git clone https://github.com/IEMLdev/ieml
 python setup.py
@@ -167,6 +148,11 @@ ordered_usls = [usl_list[k] for k in m[i, :]]
 ```
 ordered_usls is the list of usl ordered from USLs number i to the farrest USL from USL i in the collection.
 This method use the semantic distance between words of the dictionary.
+
+### Contributors
+This language is being made by the French philosopher [Pierre Levy](https://en.wikipedia.org/wiki/Pierre_L%C3%A9vy).
+This library is being developped by [Louis van Beurden](https://louisvanbeurden.wordpress.com/).
+
 
  
  

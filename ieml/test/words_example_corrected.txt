@@ -1,0 +1,144 @@
+[E:.b.E:T:.- ! E:U:. E:.n.-  > E:T:. (E:.-wa.-t.o.-' E:.-'we.-S:.-'t.o.-',)(e.)(E:.b.wa.-) > E:.n.- (E:.wo.- E:S:.-d.u.-') > E:.d.- (E:.wo.- E:S:.-d.u.-')(m.-S:.U:.-')] # fr: effrayant | en: scary
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:.-'we.-S:.-'t.o.-',)(b.-S:.A:.-'T:.-'T:.-',)] # fr: rougir, rougeoyer | en: to redden
+[E:.b.E:B:.- ! E:A:. (E:.wo.- E:S:.-d.u.-')(b.-S:.A:.-'T:.-'T:.-',)] # fr: un rouge (couleur) | en: a red (color)
+[E:.b.E:B:.- ! E:.l.- (E:.wo.- E:.-T:.f.-l.-' E:B:.-d.u.-')(b.-S:.A:.-'T:.-'T:.-',)] # fr: dans le rouge | en: in the red
+[E:.b.E:B:.- ! E:.f.- (E:.wo.- E:S:.-d.u.-')(b.-S:.A:.-'T:.-'T:.-',)] # fr: de manière rouge | en: in a red manner
+[E:.b.E:B:.- ! E:.s.- (E:.wo.- E:S:.-d.u.-')(b.-S:.A:.-'T:.-'T:.-',)] # fr: à cause du rouge | en: because of the red
+[E:.b.E:T:.- ! E:U:. ] # fr: rouge (adjective) | en: red
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:.-'we.-S:.-'t.o.-',)(E:.S:.h.-)] # fr: varier | en: to vary
+[E:.b.E:S:.- ! E:T:. (E:.-wa.-t.o.-' E:.-'we.-S:.-'t.o.-',)(E:.S:.h.-)(E:.b.i.-)] # fr: faire varier | en: to do vary
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:.-'we.-S:.-'t.o.-',)(s.we.-)] # fr: se soucier de l’environnement | en: to care for the environment
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:.-'we.-S:.-'t.o.-',)(s.c.-)] # fr: porter un projet politique | en: to cary a political project
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:.-'we.-S:.-'t.o.-',)(b.-S:.A:.-')] # fr: se colorer | en: to color oneself
+[E:.b.E:S:.- ! E:T:. (E:.-wa.-t.o.-' E:.-'we.-S:.-'t.o.-',)(b.-S:.A:.-')] # fr: colorer, colorier | en: to color
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:.-'we.-S:.-'t.o.-',)(b.-T:.A:.-')] # fr: s’assombrir, devenir obscur | en: to get darker
+[E:.b.E:S:.- ! E:T:. (E:.-wa.-t.o.-' E:.-'we.-S:.-'t.o.-',)(b.-T:.A:.-')] # fr: assombrir, rendre obscur | en: to darken
+[E:.b.E:S:.- ! E:T:. (E:.-wa.-t.o.-' E:.-'we.-S:.-'t.o.-',)(t.e.-f.u.-')] # fr: jouer de la musique | en: to play music
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:.-'we.-S:.-'t.o.-',)(l.-T:.U:.-',n.-T:.A:.-',t.o.-f.o.-',_)] # fr: pleuvoir | en: to rain
+[E:.b.E:S:.- ! E:T:. (E:.-wo.-t.o.-' E:.-'we.-S:.-'t.o.-',)(s.a.-d.a.-')] # fr: être conseillé, recevoir un conseil | en: to be advised
+[E:.b.E:S:.- ! E:T:. (E:.-wa.-t.o.-' E:.-'we.-S:.-'t.o.-',)(s.a.-d.a.-')] # fr: conseiller, donner un conseil | en: to advise
+[E:.b.E:S:.- ! E:T:. (E:.-wa.-t.o.-' E:.-'we.-S:.-'t.o.-',)(t.)] # fr: retenir, garder en mémoire | en: to remember
+[E:.b.E:S:.- ! E:T:. (E:.-wo.-t.o.-' E:.-'we.-S:.-'t.o.-',)(t.)] # fr: être conservé en mémoire | en: to be remembered
+[E:.b.E:S:.- ! E:T:. (E:.-wa.-t.o.-' E:.-'we.-S:.-'t.o.-',)(l.i.-n.i.-')] # fr: couper, découper au moyen d’un outil | en: to cut with a tool
+[E:.b.E:B:.- ! E:A:. (E:.wo.- E:S:.-d.u.-')(wa.)] # fr: une action | en: an action
+[E:.b.E:B:.- ! E:A:. (E:.wo.- E:S:.-d.u.-')(a.)] # fr: un engagement | en: a commitment
+[E:.b.E:B:.- ! E:A:. (E:.wo.- E:S:.-d.u.-')(E:S:T:.)] # fr: une éternité | en: an eternity
+[E:.b.E:B:.- ! E:A:. (E:.wo.- E:S:.-d.u.-')(E:.A:.j.-)] # fr: une comparaison, une analogie | en: a comparison
+[E:.b.E:B:.- ! E:.f.- (E:.wo.- E:S:.-d.u.-')(t.e.-f.u.-')] # fr: musicalement | en: musically
+[E:.b.E:B:.- ! E:.f.- (E:.wo.- E:S:.-d.u.-')(t.o.-k.o.-')] # fr: traditionnellement | en: traditionally
+[E:.b.E:B:.- ! E:.f.- (E:.wo.- E:S:.-d.u.-')(k.o.-t.o.-')] # fr: historiquement | en: historically
+[E:.b.E:B:.- ! E:.f.- (E:.wo.- E:S:.-d.u.-')(wu.wu.t.-)] # fr: de manière mûre, avec maturité | en: in a mature manner
+[E:.b.E:T:.- ! E:U:. ] # fr: neuronal | en: neural
+[E:.b.E:S:.- ! E:T:. (E:.-wa.-t.o.-' E:.-'we.-S:.-'t.o.-',)(a.T:.-) > E:.f.- (E:.wo.- E:S:.-d.u.-')(E:T:.-t.u.-')] # fr: se goinfrer, manger trop | en: to cram
+[E:.b.E:S:.- ! E:T:. (E:.-wa.-t.o.-' E:.-'wu.-S:.-'t.o.-',)(wu.f.B:.-) > E:.d.- (E:.wo.- E:S:.-d.u.-')(f.-S:.A:.-')] # fr: avoir la dent sucrée, aimer le sucre | en: to have a sweet tooth
+[E:.b.E:B:.- E:B:. (E:.-wa.-t.o.-' E:.-'we.-S:.-'t.o.-',)(e.i.-) > ! E:.n.- (E:.wo.- E:S:.-d.u.-')] # fr: un donateur | en: a donor
+[E:.b.E:B:.- E:B:. (E:.-wa.-t.o.-' E:.-'we.-S:.-'t.o.-',)(e.i.-) > ! E:.k.- (E:.wo.- E:S:.-d.u.-')] # fr: un donataire | en: a donee
+[E:.b.E:B:.- E:B:. (E:.-wa.-t.o.-' E:.-'we.-S:.-'t.o.-',)(i.k.-) > ! E:.n.- (E:.wo.- E:.-n.S:.-' E:S:.-d.u.-')] # fr: un voleur | en: a thief
+[E:.b.E:B:.- E:B:. (E:.-wa.-t.o.-' E:.-'we.-S:.-'t.o.-',)(i.k.-) > ! E:.n.- (E:.wo.- E:.-n.S:.-' E:S:.-d.u.-')(t.a.-b.a.-f.o.-')] # fr: un éditeur ayant commis un vol | en: a publisher who has committed a theft
+[E:.b.E:B:.- E:B:. (E:.-wa.-t.o.-' E:.-'we.-S:.-'t.o.-',)(i.k.-) > ! E:.k.- (E:.wo.- E:.-n.S:.-' E:S:.-d.u.-')] # fr: une personne victime d’un vol | en: a person who is a victim of theft
+[E:.b.E:B:.- E:B:. (E:.-wa.-t.o.-' E:.-'we.-S:.-'t.o.-',)(i.k.-) > ! E:.k.- (E:.wo.- E:.-n.S:.-' E:S:.-d.u.-')(b.a.-b.a.-f.o.-')] # fr: un auteur victime d’un vol | en: an author who is a victim of theft
+[E:.b.E:B:.- E:B:. (E:.-wa.-t.o.-' E:.-'we.-S:.-'t.o.-',)(i.k.-) > ! E:.d.- (E:.wo.- E:S:.-d.u.-')] # fr: un bien volé | en: a stolen property
+[E:.b.E:B:.- E:B:. (E:.-wa.-t.o.-' E:.-'we.-S:.-'t.o.-',)(i.k.-) > ! E:.d.- (E:.wo.- E:.-n.E:U:.-' E:S:.-d.u.-')(t.e.-n.u.-')] # fr: un texte littéraire volé | en: a stolen literary text
+[E:.b.E:B:.- E:B:. (E:.-wa.-t.o.-' E:.-'we.-S:.-'t.o.-',)(i.k.-) > E:.k.- (E:.wo.- E:.-n.S:.-' E:S:.-d.u.-')(b.a.-b.a.-f.o.-') > E:.n.- (E:.wo.- E:.-n.S:.-' E:S:.-d.u.-')(t.a.-b.a.-f.o.-') > ! E:.d.- (E:.wo.- E:.-n.E:U:.-' E:S:.-d.u.-')(t.e.-n.u.-')] # fr: un texte littéraire volé par un éditeur à un auteur | en: a literary text stolen by a publisher from an author
+[E:.b.E:T:.- ! E:U:. E:A:.  > E:A:. (E:.wo.- E:.-n.S:.-' E:S:.-d.u.-')(b.a.- b.o.-n.o.-s.u.-' f.a.-b.a.-f.o.-') > E:A:. E:A:. (E:.wo.- E:S:.-d.u.-')(n.-S:.U:.-'B:.-'B:.-',B:.-',B:.-',_ n.-S:.U:.-'B:.-'B:.-',T:.-',S:.-',_)] # fr: griot, griotte, djeli | en: djeli
+[E:.b.E:B:.- ! E:A:. (E:.wo.- E:S:.-d.u.-')(b.-S:.A:.-'S:.-'S:.-',) > E:A:. E:A:. (E:.wo.- E:S:.-d.u.-')(k.a.-k.a.-')] # fr: bleu de Prusse | en: Prussian blue
+[E:.b.E:T:.- ! E:U:. (E:A:T:.)(t.o.-p.-')] # fr: très ancien | en: very old
+[E:.b.E:S:.- ! E:T:. (E:.-wa.-t.o.-' E:.-'wu.-S:.-'t.o.-',)(i.S:.-)] # fr: soulever | en: to lift
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:.-'wu.-S:.-'t.o.-',)(i.S:.-)] # fr: se lever | en: to rise up
+[E:.b.E:S:.- ! E:T:. (E:.-wa.-t.o.-' E:.-'wu.-S:.-'t.o.-',)(a.T:.-)] # fr: manger | en: to eat
+[E:.b.E:S:.- ! E:B:. (E:.-wa.-t.o.-' E:.-'wu.-S:.-'t.o.-',)(a.T:.-)(E:.b.i.-)] # fr: faire manger, nourrir | en: to feed
+[E:.b.E:B:.- E:T:. (E:.-wa.-t.o.-' E:.-'wu.-S:.-'t.o.-',)(a.T:.-) > ! E:.l.- (E:.wo.- E:S:.-d.u.-')] # fr: salle à manger, réfectoire | en: dinning room
+[E:.b.E:B:.- E:S:. (E:.-wa.-t.o.-' E:.-'wu.-S:.-'t.o.-',)(u.S:.-) > ! E:.s.- (E:.wa.- E:S:.-d.u.-')(E:.T:.x.-)] # fr: des ailes | en: wings
+[E:.b.E:B:.- ! E:.s.- (E:.wo.- E:S:.-d.u.-')(E:.A:.x.- s.e.-s.u.-')] # fr: peinture (matériau) | en: paint
+[E:.b.E:B:.- ! E:.s.- (E:.wo.- E:S:.-d.u.-')(E:.T:.x.- s.e.-s.u.-')] # fr: pinceau | en: paintbrush
+[E:.b.E:S:.- ! E:T:. (E:.-wa.-t.o.-' E:.-'wu.-S:.-'t.o.-',)(a.B:.-) > E:.f.- (E:A:S:. E:.wo.- E:S:.-d.u.-')] # fr: boire peu | en: to drink little
+[E:.b.E:B:.- E:U:. E:A:.  > ! E:A:. (E:.wo.- E:S:.-d.u.-')(k.i.-l.i.-')] # fr: une grande maison | en: a big house
+[E:.b.E:T:.- ! E:U:. (E:A:T:.)(p.E:A:T:.-)] # fr: très grand, énorme | en: huge
+[E:.b.E:B:.- E:U:. E:A:. (E:B:.-d.u.-')(p.E:A:T:.-) > ! E:A:. (E:.wo.- E:S:.-d.u.-')(m.-T:.U:.-')] # fr: le comble de la joie (actant) | en: the height of joy (actor)
+[E:.b.E:T:.- ! E:U:. (E:A:T:. E:B:.-d.u.-')(m.-T:.U:.-')] # fr: au comble de la joie (qualité) | en: the height of joy (quality)
+[E:.b.E:B:.- ! E:A:. (E:.wo.- E:S:.-d.u.-')(m.-B:.A:.-') > E:A:. E:A:. (E:.wo.- E:B:.-d.u.-')(p.E:A:T:.-)] # fr: paroxysme de la colère (actant) | en: height of anger (actor)
+[E:.b.E:B:.- E:U:. E:A:.  > ! E:A:. (E:.wo.- E:S:.-d.u.-')(l.-y.-'E:U:.t.-l.-'E:U:.t.-l.-',)] # fr: une butte | en: a mound
+[E:.b.E:B:.- E:U:. E:A:.  > ! E:A:. (E:.wo.- E:S:.-d.u.-')(f.i.-b.i.-')] # fr: un poison | en: a poison
+[E:.b.E:T:.- ! E:U:. (E:U:S:.)(f.i.-b.i.-')] # fr: empoisonné | en: poisoned
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:.-'wu.-S:.-'t.o.-',)(u.A:.-) > E:.l.- (E:.wo.- E:.-A:.s.-l.-' E:S:.-d.u.-')] # fr: avancer | en: to move forward
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:.-'wu.-S:.-'t.o.-',)(u.A:.-) > E:.l.- (E:.wo.- E:.-A:.d.-l.-' E:S:.-d.u.-')] # fr: reculer | en: to move backwards
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:.-'wu.-S:.-'t.o.-',)(u.A:.-) > E:.l.- (E:.wo.- E:.-U:.s.-l.-' E:S:.-d.u.-')] # fr: monter | en: to go up
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:.-'wu.-S:.-'t.o.-',)(u.A:.-) > E:.l.- (E:.wo.- E:.-U:.d.-l.-' E:S:.-d.u.-')] # fr: descendre | en: to go down
+[E:.b.E:B:.- ! E:.f.- (E:.U:.c.- E:.wo.- E:S:.-d.u.-')(m.a.-f.a.-')] # fr: une gêne | en: an inconvenience
+[E:.b.E:B:.- ! E:.f.- (E:.U:.c.- E:.wo.- E:.-n.E:U:.-' E:S:.-d.u.-')(l.o.-m.o.-')] # fr: une tyrannie | en: a tyranny
+[E:.b.E:B:.- ! E:.f.- (E:.U:.c.- E:.wo.- E:.-n.S:.-' E:S:.-d.u.-')(l.o.-m.o.-')] # fr: un tyran | en: a tyrant
+[E:.b.E:B:.- ! E:.f.- (E:.U:.c.- E:.wo.- E:.-n.E:U:.-' E:S:.-d.u.-')(f.a.-m.a.-')] # fr: une misogynie | en: a misogyny
+[E:.b.E:B:.- ! E:.f.- (E:.U:.c.- E:.wo.- E:.-n.S:.-' E:S:.-d.u.-')(f.a.-m.a.-')] # fr: un misogyne | en: a misogynist
+[E:.b.E:T:.- ! E:U:. (E:.U:.c.-)(f.a.-m.a.-')] # fr: misogyne | en: misogynist
+[E:.b.E:B:.- ! E:.f.- (E:.wo.- E:.A:.c.- E:.-n.E:U:.-' E:S:.-d.u.-')(f.a.-m.a.-')] # fr: un féminisme | en: a feminism
+[E:.b.E:B:.- ! E:.f.- (E:.wo.- E:.A:.c.- E:.-n.S:.-' E:S:.-d.u.-')(f.a.-m.a.-')] # fr: un féministe | en: a feminist
+[E:.b.E:T:.- ! E:U:. (E:.A:.c.-)(f.a.-m.a.-')] # fr: féministe | en: feminist
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:.-'wu.-S:.-'t.o.-',)(we.) > E:.f.- (E:.U:.j.- E:.wo.- E:S:.-d.u.-')] # fr: disparaître | en: to disappear
+[E:.b.E:B:.- ! E:.f.- (E:.U:.j.- E:.wo.- E:S:.-d.u.-')(l.o.-m.o.-')] # fr: un esclavage, une servitude | en: a slavery
+[E:.b.E:T:.- ! E:U:. (E:.U:.j.-)(n.i.-d.i.-t.u.-')] # fr: lent | en: slow
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:.-'wu.-S:.-'t.o.-',)(a.T:.-)(E:U:A:.)] # fr: jeûner | en: to fast
+[E:.b.E:B:.- ! E:A:. (E:.wo.- E:S:.-d.u.-')(f.u.-wu.f.S:.-')(E:U:A:.)] # fr: cécité | en: blindness
+[E:.b.E:B:.- ! E:A:. (E:.wo.- E:S:.-d.u.-')(f.u.-wu.f.U:.-')(E:U:A:.)] # fr: surdité | en: deafness
+[E:.b.E:B:.- ! E:A:. (E:.wo.- E:S:.-d.u.-')(s.e.-k.u.-wa.e.-')(E:U:A:.)] # fr: analphabétisme, illetrisme | en: illiteracy
+[E:.b.E:B:.- ! E:.s.- (E:.wo.- E:T:.d.- E:S:.-d.u.-')(s.-S:.U:.-' s.-S:.A:.-')] # fr: une température | en: a temperature
+[E:.b.E:B:.- ! E:.l.- (E:.wo.- E:.-A:.t.-l.-' E:S:.-d.u.-')(k.i.-l.i.-')] # fr: devant une maison | en: in front of a house
+[E:.b.E:B:.- ! E:.l.- (E:.wo.- E:.-A:.b.-l.-' E:S:.-d.u.-')(k.i.-l.i.-')] # fr: une façade d’une maison | en: a facade of a house
+[E:.b.E:B:.- ! E:.l.- (E:.wo.- E:.-A:.f.-l.-' E:S:.-d.u.-')(k.i.-l.i.-')] # fr: derrière une maison | en: behind a house
+[E:.b.E:B:.- ! E:.l.- (E:.wo.- E:.-A:.l.-l.-' E:S:.-d.u.-')(k.i.-l.i.-')] # fr: une arrière d’une maison | en: a back of a house
+[E:.b.E:B:.- ! E:.l.- (E:.wo.- E:.-U:.b.-l.-' E:S:.-d.u.-')(k.i.-l.i.-')] # fr: au-dessus d’une maison | en: above a house
+[E:.b.E:B:.- ! E:.l.- (E:.wo.- E:.-U:.t.-l.-' E:S:.-d.u.-')(k.i.-l.i.-')] # fr: un toit d’une maison | en: a roof of a house
+[E:.b.E:B:.- ! E:.l.- (E:.wo.- E:.-U:.f.-l.-' E:S:.-d.u.-')(k.i.-l.i.-')] # fr: sous une maison | en: under a house
+[E:.b.E:B:.- ! E:.l.- (E:.wo.- E:.-U:.l.-l.-' E:S:.-d.u.-')(k.i.-l.i.-')] # fr: une fondation d’une maison | en: a foundation of a house
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:.-'wu.-S:.-'t.o.-',)(m.a.-f.a.-')] # fr: au secours! | en: help!
+[E:.b.E:B:.- ! E:.s.- (E:.wo.- E:S:.x.- E:S:.-d.u.-')(l.-T:.U:.-',n.-T:.A:.-',t.o.-f.o.-',_)] # fr: une goutte de pluie | en: a drop of rain
+[E:.b.E:B:.- ! E:.s.- (E:.we.- E:S:.p.- E:S:.-d.u.-')(B:.B:.n.-k.-u.S:.-' f.-S:.A:.-')] # fr: un essaim d’abeilles | en: a swarm of bees
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:S:.-t.o.-' E:.-'wu.-S:.-'t.o.-',)(e.U:.-)] # fr: commencer à tirer | en: to start to shoot
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:B:.-t.o.-' E:.-'wu.-S:.-'t.o.-',)(e.U:.-)] # fr: continuer à tirer | en: to continue to shoot
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:T:.-t.o.-' E:.-'wu.-S:.-'t.o.-',)(e.U:.-)] # fr: arrêter de tirer | en: to stop shooting
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:S:.-t.o.-' E:.-'wu.-S:.-'t.o.-',)(n.u.-s.u.-')(E:.b.we.-)] # fr: prendre forme | en: to take shape
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:B:.-t.o.-' E:.-'wu.-S:.-'t.o.-',)(A:.a.-) > E:.d.- (E:.wo.- E:S:.-d.u.-')(l.j.-)] # fr: garder de l’infuence | en: to keep influence
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:T:.-t.o.-' E:.-'wu.-S:.-'t.o.-',)(A:.a.-) > E:.d.- (E:.wo.- E:S:.-d.u.-')(l.j.-)] # fr: perdre de l’infuence | en: to loose influence
+[E:.b.E:B:.- E:B:. (E:.-wa.-t.o.-' E:.-'wu.-S:.-'t.o.-',)(e.) > ! E:.n.- (E:.wo.- E:S:.-d.u.-') > E:.d.- (E:.wo.- E:S:.-d.u.-')(m.-S:.U:.-')] # fr: un peureux | en: a fearful person
+[E:.b.E:S:.- ! E:B:. (E:.-wa.-t.o.-' E:.-'wu.-S:.-'t.o.-',)(we.)(E:.b.wa.-)] # fr: faire apparaître, manifester | en: to bring to light
+[E:.b.E:S:.- ! E:B:. (E:.-wa.-t.o.-' E:.-'wu.-S:.-'t.o.-',)(e.c.-) > E:.d.- (E:.wo.- E:S:.-d.u.-')(t.i.-s.i.-')] # fr: préparer un véhicule | en: to prepare a vehicle
+[E:.b.E:S:.- E:U:. E:.d.-  > ! E:B:. (E:.-wa.-t.o.-' E:.-'wu.-S:.-'t.o.-',)(we.)(E:.b.wa.-) > E:.d.- (E:.wo.- E:S:.-d.u.-')(m.-T:.U:.-')] # fr: laisser éclater (sa) joie | en: to let (his) joy burst out
+[E:.b.E:S:.- E:A:. E:.l.- (E:.wo.- E:S:.-d.u.-')(m.-T:.A:.-'m.-S:.U:.-'E:A:T:.-',) > ! E:S:. (E:.-wa.-t.o.-' E:.-'wu.-S:.-'t.o.-',)(wo.) > E:.l.- (E:.wo.- E:.-B:.k.-l.-' E:S:.-d.u.-')] # fr: être au bord du désespoir | en: to be on the verge of despair
+[E:.b.E:B:.- ! E:A:. (E:.wo.- E:S:.-d.u.-')(k.a.-) > E:A:. E:A:. (E:.wo.- E:S:.-d.u.-')(t.i.-s.i.-'u.B:.-U:.-'wa.-',)] # fr: un capitaine de bateau | en: a boat captain
+[E:.b.E:B:.- ! E:A:. (E:.wo.- E:S:.-d.u.-')(k.x.-) > E:A:. E:A:. (E:.wo.- E:S:.-d.u.-')(t.i.-s.i.-'u.B:.-U:.-'wa.-',)] # fr: un équipage de bateau | en: a boat crew
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:.-'wu.-S:.-'t.o.-',)(wa.) > E:.n.- (E:.wo.- E:S:.-d.u.-')(n.i.-s.i.-') > E:.f.- (E:.wo.- E:S:.-d.u.-' E:T:.-t.u.-')] # fr: s’emballer (pour un moteur) | en: to overspeed (a motor)
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:.-'wu.-S:.-'t.o.-',)(wa.) > E:.n.- (E:.wo.- E:S:.-d.u.-')(n.i.-s.i.-') > E:.f.- (E:U:S:. E:.wo.- E:S:.-d.u.-')] # fr: avoir des ratés (pour un moteur) | en: to misfire (a motor)
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:.-'wu.-S:.-'t.o.-',)(wo.) > E:.n.- (E:.wo.- E:S:.-d.u.-')(f.i.-k.i.-') > E:.f.- (E:U:S:. E:.wo.- E:S:.-d.u.-')] # fr: se gâter (pour de la nourriture) | en: to spoil (food)
+[E:.b.E:S:.- ! E:T:. (E:.-wa.-t.o.-' E:.-'wu.-S:.-'t.o.-',)(i.) > E:.n.- (E:.wo.- E:S:.-d.u.-')(t.i.-s.i.-'u.T:.-U:.-'we.-',B:.-',_B:.-',_;) > E:.f.- (E:U:S:. E:.wo.- E:S:.-d.u.-')] # fr: faucher, happer (pour une voiture) | en: to struck, to hit (by a car)
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:.-'wu.-S:.-'t.o.-',)(m.-T:.A:.-'m.-S:.U:.-'E:A:T:.-',)(E:.b.wa.-)] # fr: pousser, réduire au désespoir | en: to reduce to despair
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:.-'wu.-S:.-'t.o.-',)(f.o.-d.o.-')(E:.b.wa.-)] # fr: attirer l’attention | en: to draw attention
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:T:.-t.o.-' E:.-'wu.-S:.-'t.o.-',)(m.-B:.A:.-')(E:.b.wa.-)] # fr: étouffer (sa/la) colère | en: to stifle (his) anger
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:.-'wu.-S:.-'t.o.-',)(s.)(E:S:U:. E:.b.wa.-)] # fr: permettre la réflexion | en: to allow reflection
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:.-'wu.-S:.-'t.o.-',)(wa.wo.t.-) > E:.s.- (E:.wo.- E:T:.c.- E:S:.-d.u.-')(s.c.we.-)] # fr: être éveillé | en: be awake
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:.-'wu.-S:.-'t.o.-',)(wa.we.t.-)(E:.b.o.-) > E:.s.- (E:.wo.- E:T:.c.- E:S:.-d.u.-')(m.u.-)] # fr: dodeliner de la tête, cogner des clous | en: to fall asleep ...
+[E:.b.E:S:.- ! E:B:. (E:.-wa.-t.o.-' E:.-'wu.-S:.-'t.o.-',)(u.a.-) > E:.s.- (E:.wo.- E:T:.c.- E:S:.-d.u.-')(p.we.-)] # fr: être obligé par sa promesse | en: to be bound by his promise
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:.-'wu.-B:.-'t.o.-',)(a.u.-)] # fr: Devoir tenir sa promesse | en: to have to keep your promise
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:.-'wu.-S:.-'t.o.-', m2(E:U:.-t.o.-' E:A:.-t.o.-' E:S:.-t.o.-' E:B:.-t.o.-' E:T:.-t.o.-'))(u.A:.-) > E:.s.- (E:.wo.- E:S:.-d.u.-' m1(E:T:.x.-)) > E:.f.- (E:.wo.- E:S:.-d.u.-' m1(i.c.- n.i.-d.i.-t.u.-' l.o.-m.o.-s.u.-')) > E:.l.- (E:.wo.- E:S:.-d.u.-' m1(E:.-U:.s.-l.-' E:.-U:.d.-l.-'))] # p168
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:.-'wu.-S:.-'t.o.-',)(u.A:.-) > E:.s.- (E:.wo.- E:T:.x.- E:S:.-d.u.-')(n.i.-f.i.-') > E:.f.- (E:.wo.- E:S:.-d.u.-')(i.c.-) > E:.l.- (E:.wo.- E:.-U:.s.-l.-' E:S:.-d.u.-')(l.-y.-'E:U:.n.-l.-'E:U:.s.-l.-',)] # fr: grimper, escalader | en: to climb
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:.-'wu.-S:.-'t.o.-',)(u.A:.-) > E:.s.- (E:.wo.- E:T:.x.- E:S:.-d.u.-')(B:.B:.n.-k.-u.T:.-') > E:.f.- (E:.wo.- E:S:.-d.u.-')(i.c.-) > E:.l.- (E:.wo.- E:.-U:.s.-l.-' E:S:.-d.u.-')(l.-y.-'E:U:.n.-l.-'E:U:.s.-l.-',)] # fr: monter (sur une montagne) à dos d’animal | en: to ride (on a mountain) on the back of an animal
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:S:.-t.o.-' E:.-'wu.-S:.-'t.o.-',)(u.A:.-) > E:.s.- (E:.wo.- E:T:.x.- E:S:.-d.u.-')(t.i.-s.i.-'u.S:.-U:.-'wa.-',) > E:.f.- (E:.U:.j.- E:.wo.- E:S:.-d.u.-')(l.o.-m.o.-s.u.-') > E:.l.- (E:.wo.- E:.-U:.s.-l.-' E:S:.-d.u.-')(n.-T:.U:.-')] # fr: décoller, s’envoler (en avion) | en: to take off
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:.-'wu.-S:.-'t.o.-',)(u.A:.-) > E:.f.- (E:.wo.- E:S:.-d.u.-')(l.o.-m.o.-s.u.-') > E:.l.- (E:.wo.- E:.-U:.s.-l.-' E:S:.-d.u.-')(n.-T:.U:.-')] # fr: s’élever (pour un ballon en hélium ou un objet plus léger que l’air) | en: to rise up
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:T:.-t.o.-' E:.-'wu.-S:.-'t.o.-',)(u.A:.-) > E:.s.- (E:.wo.- E:T:.x.- E:S:.-d.u.-')(t.i.-s.i.-'u.S:.-U:.-'wa.-',) > E:.f.- (E:.U:.j.- E:.wo.- E:S:.-d.u.-')(l.o.-m.o.-s.u.-') > E:.l.- (E:.wo.- E:.-U:.d.-l.-' E:S:.-d.u.-')(n.-T:.U:.-')] # fr: atterrir (en avion) | en: to land
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:S:.-t.o.-' E:.-'wu.-S:.-'t.o.-',)(u.A:.-) > E:.s.- (E:.wo.- E:T:.x.- E:S:.-d.u.-')(n.i.-f.i.-') > E:.f.- (E:.U:.j.- E:.wo.- E:S:.-d.u.-')(l.o.-m.o.-s.u.-') > E:.l.- (E:.wo.- E:.-U:.d.-l.-' E:S:.-d.u.-')(n.-T:.A:.-')] # fr: plonger (sans utiliser de sous-marin) | en: to dive
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:S:.-t.o.-' E:.-'wu.-S:.-'t.o.-',)(u.A:.-) > E:.s.- (E:.wo.- E:T:.x.- E:S:.-d.u.-')(n.i.-f.i.-') > E:.f.- (E:.wo.- E:S:.-d.u.-')(l.o.-m.o.-s.u.-') > E:.l.- (E:.wo.- E:.-U:.d.-l.-' E:S:.-d.u.-')(n.-T:.A:.-')] # fr: couler | en: to sink
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:S:.-t.o.-' E:.-'wu.-S:.-'t.o.-',)(u.A:.-) > E:.s.- (E:.wo.- E:T:.x.- E:S:.-d.u.-')(n.i.-f.i.-') > E:.f.- (E:.wo.- E:S:.-d.u.-')(n.i.-d.i.-t.u.-') > E:.l.- (E:.wo.- E:.-U:.d.-l.-' E:S:.-d.u.-')(n.-T:.U:.-')] # fr: tomber, chuter (sans utiliser de véhicule) | en: to fall
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:S:.-t.o.-' E:.-'wu.-S:.-'t.o.-',)(u.A:.-) > E:.s.- (E:.wo.- E:T:.x.- E:S:.-d.u.-')(n.i.-f.i.-') > E:.f.- (E:.wo.- E:S:.-d.u.-')(l.o.-m.o.-s.u.-') > E:.l.- (E:.wo.- E:.-U:.d.-l.-' E:S:.-d.u.-')(n.-T:.U:.-')] # fr: débouler, dévaler (sans utiliser de véhicule) | en: to slide down
+[E:.b.E:S:.- ! E:S:. (E:.-wa.-t.o.-' E:S:.-t.o.-' E:.-'wu.-S:.-'t.o.-',)(u.A:.-) > E:.s.- (E:.wo.- E:T:.x.- E:S:.-d.u.-')(b.i.-n.i.-'l.i.-f.i.-'n.-B:.U:.-',) > E:.f.- (E:.wo.- E:S:.-d.u.-')(l.o.-m.o.-s.u.-') > E:.l.- (E:.wo.- E:.-U:.d.-l.-' E:S:.-d.u.-')(l.-y.-'E:U:.n.-l.-'E:U:.s.-l.-',)] # fr: descendre à ski | en: to ski down
+[E:.b.E:B:.- E:U:. E:.n.-  > E:S:. (E:.-wa.-t.o.-' E:.-'wu.-S:.-'t.o.-',)(u.A:.-) > E:.s.- (E:.wo.- E:S:.-d.u.-') > E:.t.- (E:.wo.- E:S:.-d.u.-') > ! E:.n.- (E:.wo.- E:S:.-d.u.-')(l.-T:.U:.-',n.-T:.A:.-',t.o.-f.o.-',_) > E:.f.- (E:.wo.- E:S:.-d.u.-')(n.i.-d.i.-t.u.-') > E:.l.- (E:.wo.- E:.-U:.d.-l.-' E:S:.-d.u.-')(n.-T:.U:.-')] # 171
+[E:.b.E:B:.- E:U:. E:.n.-  > E:S:. (E:.-wa.-t.o.-' E:.-'wu.-S:.-'t.o.-',)(u.A:.-) > ! E:.n.- (E:.wo.- E:S:.-d.u.-')(l.-T:.U:.-',n.-T:.A:.-',t.o.-f.o.-',_) > E:.f.- (E:.wo.- E:S:.-d.u.-')(n.i.-d.i.-t.u.-') > E:.l.- (E:.wo.- E:.-U:.d.-l.-' E:S:.-d.u.-')(n.-T:.U:.-')] # fr: une bruine | en: a drizzle
+[E:.b.E:B:.- E:U:. E:.n.-  > E:S:. (E:.-wa.-t.o.-' E:.-'wu.-S:.-'t.o.-',)(u.A:.-) > ! E:.n.- (E:.wo.- E:S:.-d.u.-')(l.-T:.U:.-',n.-T:.A:.-',t.o.-f.o.-',_) > E:.f.- (E:.wo.- E:S:.-d.u.-')(n.i.-d.i.-t.u.-') > E:.l.- (E:.wo.- E:.-U:.d.-l.-' E:S:.-d.u.-')(n.-T:.U:.-')] # fr: une forte pluie | en: a heavy rain
+[E:.b.E:B:.- E:S:. (E:.-wa.-t.o.-' E:.-'wu.-S:.-'t.o.-',)(u.A:.-) > E:.t.- (E:.wo.- E:S:.-d.u.-')(S:.E:A:S:.-) > ! E:.n.- (E:.wo.- E:S:.-d.u.-')(l.-T:.U:.-',n.-T:.A:.-',t.o.-f.o.-',_) > E:.f.- (E:.wo.- E:S:.-d.u.-')(n.i.-d.i.-t.u.-') > E:.l.- (E:.wo.- E:.-U:.d.-l.-' E:S:.-d.u.-')(n.-T:.U:.-')] # fr: une averse | en: a downpour
+[E:.b.E:B:.- E:S:. (E:.-wa.-t.o.-' E:.-'wu.-S:.-'t.o.-',)(u.A:.-) > E:.t.- (E:.wo.- E:S:.-d.u.-')(S:.E:A:T:.-) > ! E:.n.- (E:.wo.- E:S:.-d.u.-')(l.-T:.U:.-',n.-T:.A:.-',t.o.-f.o.-',_) > E:.f.- (E:.wo.- E:S:.-d.u.-')(n.i.-d.i.-t.u.-') > E:.l.- (E:.wo.- E:.-U:.d.-l.-' E:S:.-d.u.-')(n.-T:.U:.-')] # fr: une pluie persistante | en: a persistent rain
+[E:.b.E:B:.- E:S:. (E:.-wa.-t.o.-' E:.-'wu.-S:.-'t.o.-',)(u.A:.-) > E:.t.- (E:.wo.- E:S:.-d.u.-')(p.E:S:B:.-) > ! E:.n.- (E:.wo.- E:S:.-d.u.-')(l.-T:.U:.-',n.-T:.A:.-',t.o.-f.o.-',_) > E:.f.- (E:.wo.- E:S:.-d.u.-')(n.i.-d.i.-t.u.-') > E:.l.- (E:.wo.- E:.-U:.d.-l.-' E:S:.-d.u.-')(n.-T:.U:.-')] # fr: une pluie intermittente | en: an intermittent rain
+[E:.b.E:B:.- E:U:. E:.n.-  > E:S:. (E:.-wa.-t.o.-' E:.-'wu.-S:.-'t.o.-',)(u.A:.-) > E:.t.- (E:.wo.- E:S:.-d.u.-')(S:.E:A:S:.-) > ! E:.n.- (E:.wo.- E:S:.-d.u.-')(l.-T:.U:.-',n.-T:.A:.-',t.o.-f.o.-',_) > E:.f.- (E:.wo.- E:S:.-d.u.-')(n.i.-d.i.-t.u.-') > E:.l.- (E:.wo.- E:.-U:.d.-l.-' E:S:.-d.u.-')(n.-T:.U:.-')] # fr: une courte bruine | en: a short drizzle
+[E:.b.E:B:.- E:U:. E:.n.-  > E:S:. (E:.-wa.-t.o.-' E:.-'wu.-S:.-'t.o.-',)(u.A:.-) > E:.t.- (E:.wo.- E:S:.-d.u.-')(S:.E:A:T:.-) > ! E:.n.- (E:.wo.- E:S:.-d.u.-')(l.-T:.U:.-',n.-T:.A:.-',t.o.-f.o.-',_) > E:.f.- (E:.wo.- E:S:.-d.u.-')(n.i.-d.i.-t.u.-') > E:.l.- (E:.wo.- E:.-U:.d.-l.-' E:S:.-d.u.-')(n.-T:.U:.-')] # fr: une bruine continue | en: a continuous drizzle
+[E:.b.E:B:.- E:U:. E:.n.-  > E:S:. (E:.-wa.-t.o.-' E:.-'wu.-S:.-'t.o.-',)(u.A:.-) > E:.t.- (E:.wo.- E:S:.-d.u.-')(p.E:S:B:.-) > ! E:.n.- (E:.wo.- E:S:.-d.u.-')(l.-T:.U:.-',n.-T:.A:.-',t.o.-f.o.-',_) > E:.f.- (E:.wo.- E:S:.-d.u.-')(n.i.-d.i.-t.u.-') > E:.l.- (E:.wo.- E:.-U:.d.-l.-' E:S:.-d.u.-')(n.-T:.U:.-')] # fr: une bruine intermittente | en: an intermittent drizzle
+[E:.b.E:B:.- E:U:. E:.n.-  > E:S:. (E:.-wa.-t.o.-' E:.-'wu.-S:.-'t.o.-',)(u.A:.-) > E:.t.- (E:.wo.- E:S:.-d.u.-')(S:.E:A:S:.-) > ! E:.n.- (E:.wo.- E:S:.-d.u.-')(l.-T:.U:.-',n.-T:.A:.-',t.o.-f.o.-',_) > E:.f.- (E:.wo.- E:S:.-d.u.-')(n.i.-d.i.-t.u.-') > E:.l.- (E:.wo.- E:.-U:.d.-l.-' E:S:.-d.u.-')(n.-T:.U:.-')] # fr: une brève averse violente | en: a brief violent downpour
+[E:.b.E:B:.- E:U:. E:.n.-  > E:S:. (E:.-wa.-t.o.-' E:.-'wu.-S:.-'t.o.-',)(u.A:.-) > E:.t.- (E:.wo.- E:S:.-d.u.-')(S:.E:A:T:.-) > ! E:.n.- (E:.wo.- E:S:.-d.u.-')(l.-T:.U:.-',n.-T:.A:.-',t.o.-f.o.-',_) > E:.f.- (E:.wo.- E:S:.-d.u.-')(n.i.-d.i.-t.u.-') > E:.l.- (E:.wo.- E:.-U:.d.-l.-' E:S:.-d.u.-')(n.-T:.U:.-')] # fr: une forte pluie persistante | en: a persistent heavy rainfall
+[E:.b.E:B:.- E:U:. E:.n.-  > E:S:. (E:.-wa.-t.o.-' E:.-'wu.-S:.-'t.o.-',)(u.A:.-) > E:.t.- (E:.wo.- E:S:.-d.u.-')(p.E:S:B:.-) > ! E:.n.- (E:.wo.- E:S:.-d.u.-')(l.-T:.U:.-',n.-T:.A:.-',t.o.-f.o.-',_) > E:.f.- (E:.wo.- E:S:.-d.u.-')(n.i.-d.i.-t.u.-') > E:.l.- (E:.wo.- E:.-U:.d.-l.-' E:S:.-d.u.-')(n.-T:.U:.-')] # fr: une forte pluie intermittente | en: a heavy intermittent rainfall
+[E:.b.E:B:.- E:S:. (E:.-wa.-t.o.-' E:.-'wu.-S:.-'t.o.-',)(u.A:.-) > E:.s.- (E:.wo.- E:T:.h.- E:S:.-d.u.-')(s.j.- d.-S:.U:.-') > ! E:.n.- (E:.wo.- E:S:.-d.u.-')(l.-T:.U:.-',n.-T:.A:.-',t.o.-f.o.-',_) > E:.f.- (E:.wo.- E:S:.-d.u.-')(n.i.-d.i.-t.u.-') > E:.l.- (E:.wo.- E:.-U:.d.-l.-' E:S:.-d.u.-')(n.-T:.U:.-')] # fr: une pluie verglaçante | en: a freezing rain
+[E:.b.E:B:.- E:U:. E:.n.-  > E:S:. (E:.-wa.-t.o.-' E:.-'wu.-S:.-'t.o.-',)(u.A:.-) > E:.s.- (E:.wo.- E:T:.h.- E:S:.-d.u.-')(s.j.- d.-S:.U:.-') > ! E:.n.- (E:.wo.- E:S:.-d.u.-')(l.-T:.U:.-',n.-T:.A:.-',t.o.-f.o.-',_) > E:.f.- (E:.wo.- E:S:.-d.u.-')(n.i.-d.i.-t.u.-') > E:.l.- (E:.wo.- E:.-U:.d.-l.-' E:S:.-d.u.-')(n.-T:.U:.-')] # fr: une bruine verglaçante | en: a freezing drizzle

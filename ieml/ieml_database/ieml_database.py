@@ -2,6 +2,7 @@ import logging
 import operator
 from collections import defaultdict
 from shlex import quote
+from sys import stdout
 
 import pandas
 from functools import reduce
@@ -16,60 +17,20 @@ import sys
 from pandas.errors import ParserError, EmptyDataError
 from tqdm import tqdm
 
+from ieml import error
 from ieml.commons import monitor_decorator, cache_results_watch_files
-from ieml.constants import LANGUAGES, INHIBITABLE_RELATIONS, STRUCTURE_KEYS, DESCRIPTORS_CLASS, GRAMMATICAL_CLASS_NAMES, \
-    TYPES
+from ieml.constants import INHIBITABLE_RELATIONS, STRUCTURE_KEYS, GRAMMATICAL_CLASS_NAMES, \
+    TYPES, LANGUAGES, DESCRIPTORS_CLASS
 from ieml.dictionary.dictionary import Dictionary
 from ieml.dictionary.script import NullScript, MultiplicativeScript, AdditiveScript, Script
 from ieml.exceptions import CannotParse
+from ieml.ieml_database.descriptors import Descriptors, normalize_key
 from ieml.ieml_database.git_interface import logger
+from ieml.usl.decoration.instance import InstancedUSL
+from ieml.usl.lexeme import Lexeme
 from ieml.usl.parser import IEMLParser
 from ieml.usl import PolyMorpheme, Word, get_index
 
-
-def _normalize_key(ieml, key, value, parse_ieml=False, partial=False, structure=False):
-    if not (partial or (ieml and key and (structure or value))):
-        raise ValueError("IEML and Key can't be null")
-
-    if ieml:
-        ieml = str(ieml)
-        if parse_ieml:
-            parsed = IEMLParser().parse(str(ieml))
-            # if ieml != str(parsed):
-            #     raise ValueError("IEML is not normalized: {}".format(ieml))
-
-            # if len(parsed) == 1 and structure:
-            #     raise ValueError("Only paradigms can have a structure: {}".format(ieml))
-
-    if structure:
-        if key:
-            key = str(key)
-            if key not in STRUCTURE_KEYS:
-                raise ValueError("Unsupported structure key: '{}'".format(str(key)))
-
-        if value:
-            if key and key == 'inhibition':
-                value = str(value)
-                if value not in INHIBITABLE_RELATIONS:
-                    raise ValueError("Unsupported inhibition: {}".format(value))
-
-            if key and key in ['is_root', 'is_ignored']:
-                value = json.loads(str(value).lower())
-                if not isinstance(value, bool):
-                    raise ValueError("is_root or is_ignored field only accept boolean, not {}".format(value))
-                value = str(value)
-    else:
-        if key:
-            key = str(key)
-            if key not in LANGUAGES:
-                raise ValueError("Unsupported language: '{}'".format(str(key)))
-
-        if value:
-            value = str(value)
-            if value not in DESCRIPTORS_CLASS:
-                raise ValueError("Unsupported descriptor: '{}'".format(str(value)))
-
-    return ieml, key, value
 
 
 def _normalize_value(value):
@@ -84,37 +45,6 @@ def _normalize_inhibitions(inhibitions):
     return inhibitions
 
 
-class Descriptors:
-    def __init__(self, df):
-        assert list(df.columns) == ['ieml', 'language', 'descriptor', 'value']
-        self.df = df.set_index(['ieml', 'language', 'descriptor']).sort_index()
-
-    # @monitor_decorator('get_values')
-    def get_values(self, ieml, language, descriptor):
-        ieml, language, descriptor = _normalize_key(ieml, language, descriptor,
-                                                    parse_ieml=False, partial=False)
-        try:
-            return self.df.loc(axis=0)[(ieml, language, descriptor)].to_dict('list')['value']
-        except KeyError:
-            return []
-
-    # @monitor_decorator('get_values_partial')
-    def get_values_partial(self, ieml, language=None, descriptor=None):
-        ieml, language, descriptor = _normalize_key(ieml, language, descriptor,
-                                                    parse_ieml=False, partial=True)
-
-        key = {'ieml': ieml, 'language': language, 'descriptor': descriptor}
-        key = reduce(operator.and_,
-                     [self.df.index.get_level_values(k) == v for k, v in key.items() if v is not None],
-                     True)
-
-        res = defaultdict(list)
-        for k, (v,) in self.df[key].iterrows():
-            res[k].append(v)
-
-        return dict(res)
-
-
 class Structure:
     def __init__(self, df):
         assert list(df.columns) == ['ieml', 'key', 'value']
@@ -122,7 +52,7 @@ class Structure:
 
     @monitor_decorator('get_structure_values')
     def get_values(self, ieml, key):
-        ieml, key, _ = _normalize_key(ieml, key, None, parse_ieml=False, partial=False, structure=True)
+        ieml, key, _ = normalize_key(ieml, key, None, parse_ieml=False, partial=False, structure=True)
 
         try:
             return self.df.loc(axis=0)[(ieml, key)].to_dict('list')['value']
@@ -131,7 +61,7 @@ class Structure:
 
     @monitor_decorator('get_values_partial')
     def get_values_partial(self, ieml, key=None):
-        ieml, key, _ = _normalize_key(ieml, key, None, parse_ieml=False, partial=True, structure=True)
+        ieml, key, _ = normalize_key(ieml, key, None, parse_ieml=False, partial=True, structure=True)
 
         key = {'ieml': ieml, 'key': key}
         key = reduce(operator.and_,
@@ -151,6 +81,7 @@ class IEMLDatabase:
         AdditiveScript: ('morpheme', 0),
         MultiplicativeScript: ('morpheme', 0),
         PolyMorpheme: ('polymorpheme', 5),
+        Lexeme: ('lexeme', 8),
         Word: ('word', 10)
     }
 
@@ -168,7 +99,8 @@ class IEMLDatabase:
             if cache_folder is None:
                 self.cache_folder = self.folder
             elif not os.path.isdir(self.cache_folder):
-                raise ValueError("Folder '{}' does not exists.".format(self.cache_folder))
+                os.makedirs(self.cache_folder)
+                # raise ValueError("Folder '{}' does not exists.".format(self.cache_folder))
         else:
             self.cache_folder = None
 
@@ -183,18 +115,27 @@ class IEMLDatabase:
                                sha224(l.encode('utf8')).hexdigest()[:self.HASH_SIZE])
         return l
 
-    def path_of(self, _ieml, descriptor=True, mkdir=False):
+    def path_of(self, _ieml, descriptor=True, mkdir=False, normalize=True):
         if isinstance(_ieml, str):
             ieml = IEMLParser().parse(_ieml)
+        else:
+            ieml = _ieml
 
         if descriptor:
             ext = '.desc'
         else:
             ext = '.ieml'
 
-        class_folder, prefix_sixe = self.CLASS_TO_FOLDER[ieml.__class__]
+        if isinstance(ieml, InstancedUSL):
+                class_folder, prefix_sixe = self.CLASS_TO_FOLDER[ieml.usl.__class__]
+        else:
+            class_folder, prefix_sixe = self.CLASS_TO_FOLDER[ieml.__class__]
 
-        filename = self.filename_of(_ieml)
+        if normalize:
+            filename = self.filename_of(ieml)
+        else:
+            filename = self.filename_of(_ieml)
+
         prefix = filename[:prefix_sixe]
 
         p = os.path.join(self.folder, class_folder,
@@ -228,10 +169,26 @@ class IEMLDatabase:
                 try:
                     _res.append(parser.parse(s))
                 except CannotParse as e:
-                    logger.error(repr(e))
+                    error("Cannot parse {} : {}".format(s, repr(e)))
             return _res
 
         return res
+
+    def _process_line(self, lines_iter, parse=False):
+
+        if parse:
+            parser = IEMLParser(dictionary=self.get_dictionary())
+
+        for l in lines_iter:
+            if not l.strip():
+                continue
+
+            l = l.strip().decode('utf8')
+            if parse:
+                return parser.parse(l)
+            else:
+                return l
+
 
     @monitor_decorator("Get descriptors")
     def get_descriptors(self, files_list=None):
@@ -255,8 +212,8 @@ class IEMLDatabase:
 
     @monitor_decorator("Get structure")
     def get_structure(self):
-        p1 = subprocess.Popen("find -path *.ieml -print0".split(), stdout=subprocess.PIPE, cwd=self.folder)
-        p2 = subprocess.Popen("xargs -0 cat".split(), stdin=p1.stdout, stdout=subprocess.PIPE, cwd=self.folder)
+        p1 = subprocess.Popen("find -path *.ieml -print0".split(), stdout=subprocess.PIPE, cwd=os.path.join(self.folder, "morpheme"))
+        p2 = subprocess.Popen("xargs -0 cat".split(), stdin=p1.stdout, stdout=subprocess.PIPE, cwd=os.path.join(self.folder, "morpheme"))
         r = pandas.read_csv(p2.stdout, sep=' ', header=None)
         r.columns = ['ieml', 'key', 'value']
         return Structure(r)
@@ -273,7 +230,8 @@ class IEMLDatabase:
         dictionary = self.get_dictionary()
         parser = IEMLParser(dictionary=dictionary)
 
-        for (ieml, lang, desc), (v,) in tqdm(self.get_descriptors().df.iterrows()):
+        for (ieml, lang, desc), (v,) in tqdm(self.get_descriptors().df.iterrows(),
+                                             "List all descriptors at {}".format(self.folder)):
             if ieml not in res:
                 try:
                     pieml = parser.parse(ieml)
@@ -303,29 +261,30 @@ class IEMLDatabase:
         return sorted(res.values(), key=lambda e: e['index'])
 
     def add_descriptor(self, ieml, language, descriptor, value):
-        ieml, language, descriptor = _normalize_key(ieml, language, descriptor,
-                                                         parse_ieml=True, partial=False)
+        ieml, language, descriptor = normalize_key(ieml, language, descriptor,
+                                                   parse_ieml=True, partial=False)
         value = _normalize_value(value)
         if not value:
             return
 
         with open(self.path_of(ieml, mkdir=True), 'a', encoding='utf8') as fp:
             fp.write('"{}" {} {} "{}"\n'.format(
-                str(ieml),
+                self.escape_value(str(ieml)),
                 language,
                 descriptor,
                 self.escape_value(value)))
 
     @monitor_decorator('remove_key')
-    def remove_descriptor(self, ieml, language=None, descriptor=None, value=None):
-        ieml, language, descriptor = _normalize_key(ieml, language, descriptor,
-                                                         parse_ieml=True, partial=True)
+    def remove_descriptor(self, ieml, language=None, descriptor=None, value=None, normalize=True):
+        ieml, language, descriptor = normalize_key(ieml, language, descriptor,
+                                                   parse_ieml=True, partial=True)
 
-        if not os.path.isfile(self.path_of(ieml, mkdir=True)):
+        path = self.path_of(ieml, mkdir=True, normalize=normalize)
+        if not os.path.isfile(path):
             return
 
         if descriptor is None and language is None and value is None:
-            os.remove(self.path_of(ieml, mkdir=True))
+            os.remove(path)
             return
 
         if descriptor is None or language is None:
@@ -340,36 +299,38 @@ class IEMLDatabase:
         if value:
             value = _normalize_value(value)
 
-
-        with open(self.path_of(ieml, mkdir=True), "r", encoding='utf8') as f:
+        with open(path, "r", encoding='utf8') as f:
             lines = [l for l in f.readlines()
                      if not l.startswith('"{}" {} {} '.format(str(ieml), language, descriptor) + \
                                         ('"{}"'.format(self.escape_value(value)) if value is not None else ''))]
-        with open(self.path_of(ieml), "w", encoding='utf8') as f:
+
+        with open(path, "w", encoding='utf8') as f:
             f.writelines(lines)
 
     def add_structure(self, ieml, key, value):
-        ieml, key, value = _normalize_key(ieml, key, value, parse_ieml=True, partial=False, structure=True)
+        ieml, key, value = normalize_key(ieml, key, value, parse_ieml=True, partial=False, structure=True)
 
         with open(self.path_of(ieml, descriptor=False, mkdir=True), 'a', encoding='utf8') as fp:
             fp.write('"{}" {} "{}"\n'.format(str(ieml), key, value))
 
-    def remove_structure(self, ieml, key=None, value=None):
-        ieml, key, value = _normalize_key(ieml, key, value, parse_ieml=True, partial=True, structure=True)
+    def remove_structure(self, ieml, key=None, value=None, normalize=True):
+        ieml, key, value = normalize_key(ieml, key, value, parse_ieml=True, partial=True, structure=True)
 
-        if not os.path.isfile(self.path_of(ieml, descriptor=False, mkdir=True)):
+        path = self.path_of(ieml, descriptor=False, mkdir=True, normalize=normalize)
+
+        if not os.path.isfile(path):
             return
 
         if key is None:
-            os.remove(self.path_of(ieml, descriptor=False, mkdir=True))
+            os.remove(path)
             return
 
-        with open(self.path_of(ieml, descriptor=False, mkdir=True), "r", encoding='utf8') as f:
+        with open(path, "r", encoding='utf8') as f:
             lines = [l for l in f.readlines()
                      if not l.startswith('"{}" {} '.format(str(ieml), key) + \
                                         ('"{}"'.format(value) if value else ''))]
 
-        with open(self.path_of(ieml, descriptor=False), "w", encoding='utf8') as f:
+        with open(path, "w", encoding='utf8') as f:
             f.writelines(lines)
 
     def escape_value(self, v):

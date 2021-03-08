@@ -6,8 +6,14 @@
 #from .ieml_database.ieml_database import IEMLDatabase
 
 import logging
+from sys import stderr
 
 logger = logging.getLogger('ieml')
+
+def error(m):
+    logger.error(m)
+    print(m, file=stderr)
+
 # logger.setLevel(logging.INFO)
 
 

@@ -4,7 +4,9 @@ import logging
 import os
 import pickle
 from collections import OrderedDict
+from enum import Enum
 from itertools import chain
+from sys import stderr
 from typing import List
 import hashlib
 from time import time
@@ -31,11 +33,11 @@ class LastUpdatedOrderedDict(OrderedDict):
 
 
 class TreeStructure:
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         self._str = None
         self._paths = None
         self.children = None
-        super().__init__()
+        super().__init__(*args, **kwargs)
 
     def __str__(self):
         return self._str
@@ -153,9 +155,9 @@ def monitor_decorator(name):
     def decorator(f):
         def wrapper(*args, **kwargs):
             before = time()
-            args_str = ", ".join(chain(map(lambda e: str(e)[:10000], args), map(lambda e: "{}={}".format(e[0], str(e[1])[:10000]), kwargs.items())))
+            args_str = ", ".join(chain(map(lambda e: str(e)[:100], args), map(lambda e: "{}={}".format(e[0], str(e[1])[:100]), kwargs.items())))
             res = f(*args, **kwargs)
-            logger.info("({:.2f}) {}# ({})".format(time() - before, name, args_str))
+            print("({:.2f}) {}# ({})".format(time() - before, name, args_str), file=stderr)
             return res
 
         functools.wraps(wrapper)
@@ -204,3 +206,40 @@ def cache_results_watch_files(path, name):
         return wrapper
 
     return decorator
+
+
+class DecoratedComponent:
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self._literal = None
+
+    def clear_literal(self):
+        self._literal = None
+
+    def set_literal(self, value):
+        from ieml.usl.decoration.instance import literal_context
+
+        literal_context().push(self)
+        self._literal = value
+
+    def get_literal(self):
+        return self._literal
+
+class OrderedEnum(Enum):
+    def __ge__(self, other):
+        if self.__class__ is other.__class__:
+            return self.value >= other.value
+        return NotImplemented
+    def __gt__(self, other):
+        if self.__class__ is other.__class__:
+            return self.value > other.value
+        return NotImplemented
+    def __le__(self, other):
+        if self.__class__ is other.__class__:
+            return self.value <= other.value
+        return NotImplemented
+    def __lt__(self, other):
+        if self.__class__ is other.__class__:
+            return self.value < other.value
+        return NotImplemented

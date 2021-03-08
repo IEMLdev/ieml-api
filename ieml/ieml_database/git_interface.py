@@ -1,15 +1,28 @@
+import csv
 import hashlib
 import os
-import logging
-from _pygit2 import GIT_CHECKOUT_FORCE, GIT_CHECKOUT_RECREATE_MISSING, GIT_STATUS_WT_NEW, \
-    GIT_STATUS_WT_DELETED, GIT_STATUS_WT_MODIFIED, GIT_STATUS_WT_RENAMED, GitError
+from io import StringIO
+
+import tqdm
+
+from ieml.ieml_database.descriptors import Descriptor, Descriptors
+
+try:
+    from pygit2._pygit2 import GIT_CHECKOUT_FORCE, GIT_CHECKOUT_RECREATE_MISSING, GIT_STATUS_WT_NEW, \
+        GIT_STATUS_WT_DELETED, GIT_STATUS_WT_MODIFIED, GIT_STATUS_WT_RENAMED, GitError
+
+except ImportError:
+    from pygit2 import GIT_CHECKOUT_FORCE, GIT_CHECKOUT_RECREATE_MISSING, GIT_STATUS_WT_NEW, \
+        GIT_STATUS_WT_DELETED, GIT_STATUS_WT_MODIFIED, GIT_STATUS_WT_RENAMED, GitError
+
+from sys import stderr
 
 import pygit2
 from appdirs import user_cache_dir
 
-from ieml import logger
+from ieml import logger, error
 from ieml.commons import monitor_decorator
-from ieml.constants import IEMLDB_DEFAULT_GIT_ADDRESS, LIBRARY_VERSION
+from ieml.constants import IEMLDB_DEFAULT_GIT_ADDRESS, LIBRARY_VERSION, DEFAULT_COMMITER_SIGNATURE
 
 
 def get_local_cache_dir(origin):
@@ -40,6 +53,7 @@ class git_transaction:
     def __enter__(self):
         self.commit_id = self.db.repo.head.target
 
+
         # ignore files at the root
         if self.db.status() != {}:
             raise ValueError("Try to start a transaction on a not clean working dir state, "
@@ -47,7 +61,7 @@ class git_transaction:
 
     @monitor_decorator("Commit transaction")
     def __exit__(self, type, value, traceback):
-
+        print("exiting commit context", file=stderr)
         if type is None:
             try:
                 status = self.db.status()
@@ -77,9 +91,10 @@ class git_transaction:
                                                  tree,
                                                  [self.commit_id])
 
-                self.db.commit_id = oid
+                # self.db.commit_id = oid
+                error("committing db : {}".format(str(oid)))
             except Exception as e:
-                logger.error("Error commiting, reset to {}".format(self.commit_id))
+                error("Error commiting, reset to {}".format(self.commit_id))
                 self.db.reset(self.commit_id)
                 # TODO : ensure that the reset is perfect
                 # even when creating a new file in the folder ? untracked
@@ -185,11 +200,11 @@ class GitInterface:
             return pygit2.Repository(self.folder)
 
     @monitor_decorator('pull')
-    def pull(self, remote='origin'):
+    def pull(self, remote='origin') -> {str: Descriptor}:
         """
 
         :param remote: the remote to pull from
-        :return: the old commit id
+        :return: the conflicts : a dict that map ieml to the descriptor in conflict. In case of a conflict, the remote version is chosen as current version and the old current is returned by the function.
         """
         repo = self.repo
 
@@ -211,90 +226,158 @@ class GitInterface:
         #     commit_target = self.target_commit
 
         merge_result, _ = repo.merge_analysis(commit_target)
+        conflicts = {}
 
         # Up to date, do nothing
         if merge_result & pygit2.GIT_MERGE_ANALYSIS_UP_TO_DATE:
-            logger.info("Merging: repository up-to-date")
+            error("Merging: repository up-to-date")
             # self.commit_id = commit_target
-            return str(current_commit)
 
         # We can just fastforward
         elif merge_result & pygit2.GIT_MERGE_ANALYSIS_FASTFORWARD:
-            logger.info("Merging: fast-forward")
+            error("Merging: fast-forward")
             self.checkout(None, commit_target)
-            return str(current_commit)
 
         elif merge_result & pygit2.GIT_MERGE_ANALYSIS_NORMAL:
-            logger.info("Merging: cherry-pick local branch on remote branch")
+            error("Merging: cherry-pick local branch on remote branch")
 
-            base = repo.merge_base(current_commit, commit_target)
+            # base = repo.merge_base(current_commit, commit_target)
 
-            # rebased_commits : locals commits since base
-            rebased_commits = []
-            commit = repo.get(current_commit)
-            while len(commit.parents):
-                if base == commit.id:
-                    break
-                rebased_commits.insert(0, commit)
-                commit = commit.parents[0]
+            # # rebased_commits : locals commits since base
+            # rebased_commits = []
+            # commit = repo.get(current_commit)
+            # while len(commit.parents):
+            #     if base == commit.id:
+            #         break
+            #     rebased_commits.insert(0, commit)
+            #     commit = commit.parents[0]
 
-            branch = repo.branches.get(self.repo.head.shorthand)
+            # branch = repo.branches.get(self.repo.head.shorthand)
+            #
+            # # checkout to pulled branch
+            # repo.checkout_tree(repo.get(commit_target),
+            #                    strategy=GIT_CHECKOUT_FORCE | GIT_CHECKOUT_RECREATE_MISSING)
+            # repo.head.set_target(commit_target)
 
-            # checkout to pulled branch
-            repo.checkout_tree(repo.get(commit_target),
-                               strategy=GIT_CHECKOUT_FORCE | GIT_CHECKOUT_RECREATE_MISSING)
-            repo.head.set_target(commit_target)
 
-            last = commit_target
-            for commit in rebased_commits:
-                repo.head.set_target(last)
-                try:
-                    repo.cherrypick(commit.id)
-                except GitError as e:
-                    raise e
+            repo.merge(commit_target)
 
-                if repo.index.conflicts is None:
+            # we are now in the remote state, we are going to try to add the local commit on top of the remote HEAD
+            # until a merge conflict
+            # last = commit_target
+            # for commit in tqdm.tqdm(rebased_commits, "Cherry picking commits"):
+            #     repo.head.set_target(last)
+            #     try:
+            #         repo.cherrypick(commit.id)
+            #     except GitError as e:
+            #         # Cherry picking merge commit :
+            #         # Usually you cannot cherry-pick a merge because you do not know which side of the merge should
+            #         # be considered the mainline. This option specifies the parent number (starting from 1) of the
+            #         # mainline and allows cherry-pick to replay the change relative to the specified parent.
+            #         # https://stackoverflow.com/questions/9229301/git-cherry-pick-says-38c74d-is-a-merge-but-no-m-option-was-given
+            #         pass
+            #         # raise e
+
+            if repo.index.conflicts is None:
+                tree_id = repo.index.write_tree()
+
+                cherry = repo.get(commit_target)
+
+                last = repo.create_commit('HEAD', cherry.author, DEFAULT_COMMITER_SIGNATURE,
+                                   "Merge branch", tree_id, [repo.head.target, commit_target])
+
+            else:
+                to_commit = []
+
+                # ancestor : the IndexEntry on the file before the merge, or None if the file is created
+                # remote_entry : the IndexEntry of the merged remote file or None if remotely deleted
+                # local_entry : the IndexEntry of the local file or None if locally deleted
+
+                # resolve conflicts ...
+                for ancestor, local_entry, remote_entry in repo.index.conflicts:
+                    old_path = ancestor.path if ancestor is not None else local_entry.path
+
+                    #  None => deleted
+                    new_path = remote_entry.path if remote_entry is not None else None
+
+                    if new_path is not None and old_path != new_path:
+                        raise ValueError("Renaming not supported")
+
+                    # add local entry as conflicts if a descriptor
+                    if old_path.endswith('.desc'):
+                        if local_entry is not None:
+                            if ancestor is not None and ancestor.path != local_entry.path:
+                                raise ValueError("Renaming not supported")
+
+                            # local entry is not deleted
+                            res = Descriptors.from_csv_string(repo.get(local_entry.oid).data.decode('utf8'),
+                                                              assert_unique_ieml=True)
+                            ieml = next(iter(res))
+                            conflicts[ieml] = res[ieml]
+                        else:
+                            # locally deleted
+                            assert remote_entry is not None
+                            res = Descriptors.from_csv_string(repo.get(remote_entry.oid).data.decode('utf8'),
+                                                              assert_unique_ieml=True)
+                            ieml = next(iter(res))
+
+                            conflicts[ieml] = {d: {l : [] for l in LANGUAGES} for d in DESCRIPTORS_CLASS}
+                    else:
+                        print("Ignoring", old_path, "not a descriptor", file=stderr)
+                    # repo.index.read()
+                    to_commit.append({
+                        'old_path': old_path,
+                        'new_path': new_path,
+                        'data': repo.get(remote_entry.oid).data if remote_entry is not None else None
+                    })
+
+                if to_commit != []:
+                    for comm in to_commit:
+                        data = comm['data']
+                        old_path = comm['old_path']
+                        new_path = comm['new_path']
+
+                        # accept theirs (ours from git point of view)
+                        if data is not None:
+                            with open(os.path.join(self.folder, new_path), 'wb') as fp:
+                                fp.write(data)
+
+                            repo.index.add(new_path)
+
+                        if new_path is None:
+                            del repo.index.conflicts[old_path]
+                            os.remove(os.path.join(self.folder, old_path))
+
+                    repo.index.write()
+
                     tree_id = repo.index.write_tree()
+                    last = self.repo.create_commit('HEAD',
+                                            DEFAULT_COMMITER_SIGNATURE,
+                                            DEFAULT_COMMITER_SIGNATURE,
+                                            "Merge {}".format(ieml),
+                                            tree_id,
+                                            [repo.head.target, commit_target])
 
-                    cherry = repo.get(commit.id)
-                    committer = pygit2.Signature('Louis van Beurden', 'lvb@pyth.ai')
+                # repo.state_cleanup()
 
-                    last = repo.create_commit(branch.name, cherry.author, committer,
-                                       cherry.message, tree_id, [last])
-                    repo.state_cleanup()
-                else:
-                    conflicts = self.list_conflict()
-                    self.reset(current_commit)
-
-                    raise MergeConflict(message="can't cherry-pick locals commits on remote branch",
-                                        conflicts=conflicts)
-
-                # self.commit_id = last
-            repo.head.set_target(last)
+            # repo.head.set_target(last)
         else:
             #TODO handle merge conflicts here
             raise ValueError("Incompatible history, can't merge origin into {}#{} in folder {}".format(self.branch, commit_target,self.folder))
 
-        return str(current_commit)
-
-    def list_conflict(self):
-        # ancestor_data = repo.get(ancestor.oid).data.decode('utf8')
-        # repo = self.repo(credentials=self.credentials)
-        return []
-        #
-        # for ancestor, ours, theirs in repo.index.conflicts:
-        #     if ancestor:
-        #     path = ancestor.path if ancestor is not None else ours.path
-        #
-        #     ours_data = repo.get(ours.oid).data.decode('utf8')
-        #     theirs_data = repo.get(theirs.oid).data.decode('utf8')
+        return conflicts
 
 
     @monitor_decorator('push')
     def push(self, remote='origin', force=False):
         repo = pygit2.Repository(self.folder)
         remote = repo.remotes[remote]
+
+        if self.credentials is None:
+            raise ValueError("Credentials are None, cannot push")
+
         callbacks = pygit2.RemoteCallbacks(credentials=self.credentials)
+        print("Pushing: ", remote.url, self.credentials,file=stderr)
         remote.push(['{}{}'.format('+' if force else '', self.repo.head.name)],
                     callbacks=callbacks)
 
@@ -326,21 +409,21 @@ class GitInterface:
             added = []
             deleted = []
 
-            line = patch.delta.new_file.path
-
+            file_path = patch.delta.new_file.path
+            l = None
             for h in patch.hunks:
                 for l in h.lines:
                     if l.new_lineno == -1:
                         deleted.append(l.content)
                     elif l.old_lineno == -1:
                         added.append(l.content)
-
-            res[line] = {
-                'ieml': l.content.split('"')[1],
-                'added': added,
-                'deleted': deleted,
-                'is_new': patch.delta.old_file.mode == 0,
-                'is_removed': patch.delta.new_file.mode == 0,
-            }
+            if l:
+                res[file_path] = {
+                    'ieml': l.content.split('"')[1],
+                    'added': added,
+                    'deleted': deleted,
+                    'is_new': patch.delta.old_file.mode == 0,
+                    'is_removed': patch.delta.new_file.mode == 0,
+                }
 
         return res
