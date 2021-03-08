@@ -212,8 +212,8 @@ class IEMLDatabase:
 
     @monitor_decorator("Get structure")
     def get_structure(self):
-        p1 = subprocess.Popen("find -path *.ieml -print0".split(), stdout=subprocess.PIPE, cwd=self.folder)
-        p2 = subprocess.Popen("xargs -0 cat".split(), stdin=p1.stdout, stdout=subprocess.PIPE, cwd=self.folder)
+        p1 = subprocess.Popen("find -path *.ieml -print0".split(), stdout=subprocess.PIPE, cwd=os.path.join(self.folder, "morpheme"))
+        p2 = subprocess.Popen("xargs -0 cat".split(), stdin=p1.stdout, stdout=subprocess.PIPE, cwd=os.path.join(self.folder, "morpheme"))
         r = pandas.read_csv(p2.stdout, sep=' ', header=None)
         r.columns = ['ieml', 'key', 'value']
         return Structure(r)
