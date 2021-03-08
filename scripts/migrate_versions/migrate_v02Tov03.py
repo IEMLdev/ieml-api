@@ -35,7 +35,7 @@ def migrate_morpheme(s):
 
 def import_old_series(lex, desc, dictionary):
     from pymongo import MongoClient
-    db_mongo = MongoClient()['intlekt']
+    db_mongo = MongoClient()['Intlekt']
     ms_c = db_mongo['morphemes_series']
     usls_c = db_mongo['usl']
 

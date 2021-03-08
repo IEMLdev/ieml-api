@@ -88,11 +88,8 @@ class DBTransactions:
 
         dictionary = db.get_dictionary()
         for ss in root.singular_sequences:
-            try:
-                r = dictionary.tables.root(ss)
+            if dictionary.tables.root(ss) is not None:
                 raise ValueError("Root paradigms {} intersection with script {} ".format(str(r), str(root)))
-            except KeyError:
-                pass
 
         with self.gitdb.commit(self.signature, "[dictionary] Create root paradigm {} ({}), create {} singular sequences"
                 .format(str(root),
