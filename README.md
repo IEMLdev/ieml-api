@@ -31,11 +31,6 @@ The meaning of the words in the dictionary are conventional but not arbitrary, b
  
 All the words have a french and english translation. A definition and synonyms in french and english will soon be available.
 
-The linguist Anna Wierzbicka showed, with her theory [NSM](https://en.wikipedia.org/wiki/Natural_semantic_metalanguage), that we can define any concept described by a proposition in any natural languages with a set of 61 semantic primes, organised in paradigms.
-
-The semantic of IEML is not a logic description, it can not be reduced to a description of a state of the world.
-A word is not true nor false. Only at least a sentence can be, and only in a descriptive enonciation.
-
 ## Install
 
 The library works with python 3.5+
